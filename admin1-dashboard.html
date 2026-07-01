@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CampusVoice – Dashboard | Admin 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
+<style>
+/* ── Dashboard-specific overrides ── */
+.bar-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 52px;
+  align-items: center;
+  gap: 14px;
+}
+
+.bar-label { width: auto; font-size: 13px; font-weight: 600; color: #334155; }
+.bar-track { flex: 1; height: 12px; background: #dbeafe; border-radius: 999px; overflow: hidden; }
+.bar-fill  { height: 100%; border-radius: 999px; background: linear-gradient(90deg,#2563eb,#60a5fa); transition: width .6s ease; }
+.bar-value { width: 52px; text-align: right; font-weight: 700; color: #1e40af; font-size: 13px; }
+
+/* Office panel table */
+.office-table { width: 100%; border-collapse: collapse; }
+.office-table th {
+  text-align: left; padding: 12px 14px;
+  font-size: 11px; color: #64748b; letter-spacing: .06em; text-transform: uppercase;
+  border-bottom: 2px solid #dbeafe;
+}
+.office-table td { padding: 14px; border-bottom: 1px solid #eff6ff; font-size: 14px; color: #334155; }
+.office-table tr:hover td { background: #f0f9ff; }
+
+.action-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.action-btn {
+  border: none; padding: 7px 12px; border-radius: 10px;
+  cursor: pointer; font-weight: 700; font-size: 12px; font-family: 'DM Sans',sans-serif;
+  transition: opacity .2s;
+}
+.action-btn:hover { opacity: .8; }
+.edit-btn   { background: #fef9c3; color: #a16207; }
+.delete-btn { background: #fee2e2; color: #dc2626; }
+
+.primary-btn {
+  border: none; background: #2563eb; color: white;
+  padding: 11px 16px; border-radius: 12px; cursor: pointer; font-weight: 700;
+  font-family: 'DM Sans',sans-serif; font-size: 14px;
+  box-shadow: 0 4px 14px rgba(37,99,235,.3); transition: background .2s, transform .2s;
+}
+.primary-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+.dark-btn {
+  border: none; background: #1e3a8a; color: white;
+  padding: 11px 16px; border-radius: 12px; cursor: pointer; font-weight: 700;
+  font-family: 'DM Sans',sans-serif; font-size: 14px;
+  box-shadow: 0 4px 12px rgba(30,58,138,.25); transition: background .2s, transform .2s;
+}
+.dark-btn:hover { background: #1e40af; transform: translateY(-1px); }
+
+.office-panel { display: none; margin-top: 18px; }
+
+.total-badge {
+  background: #eff6ff; color: #1d4ed8;
+  padding: 9px 14px; border-radius: 12px;
+  font-size: 13px; font-weight: 700;
+  border: 1px solid rgba(37,99,235,.15);
+}
+
+@media (max-width: 768px) {
+  .bar-row { grid-template-columns: 1fr; }
+  .bar-label, .bar-value { width: 100%; text-align: left; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+      <div class="stat-card blue">
+        <div class="stat-icon">📝</div>
+        <div class="stat-label">Daily Submissions</div>
+        <div class="stat-value" id="dailySubmissions">0</div>
+        <div class="stat-sub">Today</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">📅</div>
+        <div class="stat-label">Weekly Submissions</div>
+        <div class="stat-value" id="weeklySubmissions">0</div>
+        <div class="stat-sub">This Week</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">📊</div>
+        <div class="stat-label">Monthly Submissions</div>
+        <div class="stat-value" id="monthlySubmissions">0</div>
+        <div class="stat-sub">This Month</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">🏢</div>
+        <div class="stat-label">Offices Covered</div>
+        <div class="stat-value" id="officeCount" style="color:#15803d">0</div>
+        <div class="stat-sub">All Departments</div>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-grid">
+
+      <!-- BAR CHART -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+          <div class="card-title" style="margin:0;">
+            Office Evaluation Scores
+            <span class="card-sub">— Avg. ratings</span>
+          </div>
+          <div class="total-badge">Total Offices: <span id="officeScoreCount">0</span></div>
+        </div>
+        <div class="bar-chart" id="officeBars"></div>
+      </div>
+
+      <!-- DONUT -->
+      <div class="card">
+        <div class="card-title">Submission Breakdown</div>
+        <div class="donut-wrap">
+          <svg viewBox="0 0 100 100" width="130" height="130">
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#dbeafe" stroke-width="16"/>
+            <circle id="donutPositive" cx="50" cy="50" r="38" fill="none" stroke="#22c55e"
+              stroke-width="16" stroke-dasharray="0 240" transform="rotate(-90 50 50)"/>
+            <circle id="donutNeutral"  cx="50" cy="50" r="38" fill="none" stroke="#f59e0b"
+              stroke-width="16" stroke-dasharray="0 240" transform="rotate(-90 50 50)"/>
+            <circle id="donutNegative" cx="50" cy="50" r="38" fill="none" stroke="#ef4444"
+              stroke-width="16" stroke-dasharray="0 240" transform="rotate(-90 50 50)"/>
+            <text x="50" y="54" text-anchor="middle" fill="#1e3a8a"
+              font-size="13" font-family="Syne,sans-serif" font-weight="800" id="donutPercent">0</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#22c55e"></div>
+              Positive <span id="positiveCount" style="font-weight:700;color:#15803d">(0)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#f59e0b"></div>
+              Neutral <span id="neutralCount" style="font-weight:700;color:#a16207">(0)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#ef4444"></div>
+              Negative <span id="negativeCount" style="font-weight:700;color:#dc2626">(0)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFICE MANAGEMENT -->
+    <div class="card" style="margin-top:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+        <div class="card-title" style="margin:0;">
+          Office Management
+          <span class="card-sub">— Manage campus offices</span>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button id="toggleOfficePanel" class="dark-btn">🏢 Offices</button>
+          <button id="addOfficeBtn"      class="primary-btn">+ Add Office</button>
+        </div>
+      </div>
+
+      <div id="officePanel" class="office-panel">
+        <div style="overflow-x:auto;">
+          <table class="office-table">
+            <thead>
+              <tr>
+                <th>Office</th>
+                <th>Avg Rating</th>
+                <th>Total Evaluations</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="officeTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script type="module">
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+import { getDatabase, ref, onValue, push, set, update, remove }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",authDomain:"kristal-adb78.firebaseapp.com",
+  databaseURL:"https://kristal-adb78-default-rtdb.firebaseio.com",projectId:"kristal-adb78",
+  storageBucket:"kristal-adb78.firebasestorage.app",messagingSenderId:"1016283938031",
+  appId:"1:1016283938031:web:54c4d13409d9784ad7af1a",measurementId:"G-LK8D1CBQ2J"
+};
+const app      = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const database  = getDatabase(app);
+
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','dashboard');
+document.getElementById('topbar-mount').innerHTML  = buildTopbar('Dashboard','admin1');
+
+const evaluationRef = ref(database,"services/evaluations");
+const officeRef     = ref(database,"services/offices");
+const officeBars    = document.getElementById("officeBars");
+const officeTableBody = document.getElementById("officeTableBody");
+const officePanel   = document.getElementById("officePanel");
+
+let offices   = {};
+let officeKeys = {};
+
+function avgScore(item) {
+  let s=0,c=0;
+  for(let x=1;x<=8;x++){
+    const v=parseFloat(item["sq"+x]??item["sqd"+x]);
+    if(!isNaN(v)){s+=v;c++;}
+  }
+  return c?s/c:0;
+}
+
+document.getElementById("toggleOfficePanel").addEventListener("click",()=>{
+  officePanel.style.display = officePanel.style.display==="block"?"none":"block";
+});
+
+document.getElementById("addOfficeBtn").addEventListener("click",async()=>{
+  const name = prompt("Enter Office Name");
+  if(!name||!name.trim()) return;
+  const newRef = push(officeRef);
+  await set(newRef,{name:name.trim()});
+  alert("Office Added!");
+});
+
+onValue(officeRef,(snapshot)=>{
+  const data = snapshot.val();
+  offices={};officeKeys={};
+  if(!data){
+    document.getElementById("officeCount").textContent=0;
+    document.getElementById("officeScoreCount").textContent=0;
+    officeBars.innerHTML="";officeTableBody.innerHTML="";return;
+  }
+  Object.keys(data).forEach(key=>{
+    const name=data[key].name;
+    officeKeys[name]=key;offices[name]={total:0,count:0};
+  });
+  const total=Object.keys(offices).length;
+  document.getElementById("officeCount").textContent=total;
+  document.getElementById("officeScoreCount").textContent=total;
+  renderOfficeTable();renderOfficeBars();
+});
+
+onValue(evaluationRef,(snapshot)=>{
+  const data=snapshot.val();
+  const today=new Date();
+  let daily=0,weekly=0,monthly=0;
+  Object.keys(offices).forEach(o=>{offices[o].total=0;offices[o].count=0;});
+  let total=0,pos=0,neu=0,neg=0;
+  if(data){
+    Object.keys(data).forEach(key=>{
+      const item=data[key];total++;
+      const diff=(today-new Date(item.date))/(1000*60*60*24);
+      if(diff<=1)daily++;if(diff<=7)weekly++;if(diff<=30)monthly++;
+      const avg=avgScore(item);
+      if(avg>=4)pos++;else if(avg>=3)neu++;else neg++;
+      if(offices[item.office]){offices[item.office].total+=avg;offices[item.office].count++;}
+    });
+  }
+  document.getElementById("dailySubmissions").textContent=daily;
+  document.getElementById("weeklySubmissions").textContent=weekly;
+  document.getElementById("monthlySubmissions").textContent=monthly;
+
+  const C=2*Math.PI*38;
+  const pLen=total>0?(pos/total)*C:0;
+  const nLen=total>0?(neu/total)*C:0;
+  const ngLen=total>0?(neg/total)*C:0;
+
+  const dp=document.getElementById("donutPositive");
+  const dn=document.getElementById("donutNeutral");
+  const dng=document.getElementById("donutNegative");
+  dp.setAttribute("stroke-dasharray",`${pLen} ${C-pLen}`);
+  dp.setAttribute("stroke-dashoffset",0);
+  dn.setAttribute("stroke-dasharray",`${nLen} ${C-nLen}`);
+  dn.setAttribute("stroke-dashoffset",-pLen);
+  dng.setAttribute("stroke-dasharray",`${ngLen} ${C-ngLen}`);
+  dng.setAttribute("stroke-dashoffset",-(pLen+nLen));
+  document.getElementById("donutPercent").textContent=total;
+  document.getElementById("positiveCount").textContent=`(${pos})`;
+  document.getElementById("neutralCount").textContent=`(${neu})`;
+  document.getElementById("negativeCount").textContent=`(${neg})`;
+  renderOfficeBars();renderOfficeTable();
+});
+
+function renderOfficeBars(){
+  officeBars.innerHTML="";
+  Object.keys(offices).forEach(office=>{
+    const d=offices[office];
+    const avg=d.count>0?d.total/d.count:0;
+    officeBars.innerHTML+=`
+      <div class="bar-row">
+        <div class="bar-label">${office}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${(avg/5)*100}%"></div></div>
+        <div class="bar-value">${avg.toFixed(1)}</div>
+      </div>`;
+  });
+}
+
+function renderOfficeTable(){
+  officeTableBody.innerHTML="";
+  Object.keys(offices).forEach(office=>{
+    const d=offices[office];
+    const avg=d.count>0?d.total/d.count:0;
+    officeTableBody.innerHTML+=`
+      <tr>
+        <td><strong>${office}</strong></td>
+        <td>⭐ ${avg.toFixed(1)}</td>
+        <td>${d.count}</td>
+        <td><div class="action-buttons">
+          <button class="action-btn edit-btn"   onclick="editOffice('${office}')">✏ Edit</button>
+          <button class="action-btn delete-btn" onclick="deleteOffice('${office}')">🗑 Delete</button>
+        </div></td>
+      </tr>`;
+  });
+}
+
+window.editOffice=async function(office){
+  const newName=prompt("Edit Office Name",office);
+  if(!newName||!newName.trim()) return;
+  const key=officeKeys[office];
+  await update(ref(database,`services/offices/${key}`),{name:newName.trim()});
+  alert("Office Updated!");
+};
+
+window.deleteOffice=async function(office){
+  if(!confirm("Delete "+office+"?")) return;
+  const key=officeKeys[office];
+  await remove(ref(database,`services/offices/${key}`));
+  alert("Office Deleted!");
+};
+</script>
+</body>
+</html>

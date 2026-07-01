@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CampusVoice – Generate Code | Admin 1</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css" />
+
+<style>
+
+/* FILTER BAR */
+.filter-bar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:22px; }
+.filter-bar select,
+.filter-bar input { padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:12px; font-size:14px; font-family:'DM Sans',sans-serif; color:#0f172a; background:#f8fafc; outline:none; }
+.filter-bar input[type="search"] { flex:1; min-width:200px; }
+
+/* GENERATE SECTION */
+.generate-section { background:#fff; border:1.5px solid #e2e8f0; border-radius:16px; padding:20px 24px; margin-bottom:24px; }
+.generate-section h3 { margin:0 0 4px; font-size:16px; color:#0f172a; }
+.generate-section p.sub { margin:0 0 16px; font-size:13px; color:#64748b; }
+
+.office-gen-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+
+.office-gen-card { background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:14px 16px; }
+.office-gen-top  { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.office-gen-label { font-size:13px; font-weight:700; color:#0f172a; }
+
+.qty-row { display:flex; align-items:center; gap:8px; }
+.qty-row label { font-size:12px; color:#64748b; white-space:nowrap; }
+.qty-input {
+  width:60px; padding:5px 8px;
+  border:1.5px solid #e2e8f0; border-radius:8px;
+  font-size:13px; font-family:'DM Sans',sans-serif;
+  color:#0f172a; background:#fff; outline:none; text-align:center;
+}
+
+.btn-generate {
+  padding:7px 14px; background:#0f172a; color:#fff;
+  border:none; border-radius:10px; font-size:12px; font-weight:700;
+  font-family:'DM Sans',sans-serif; cursor:pointer; transition:background 0.2s; white-space:nowrap;
+}
+.btn-generate:hover    { background:#1e3a5f; }
+.btn-generate:disabled { background:#94a3b8; cursor:not-allowed; }
+
+/* TABLE */
+.code-table { width:100%; border-collapse:collapse; font-size:14px; }
+.code-table th { text-align:left; padding:14px 16px; font-size:11px; text-transform:uppercase; color:#64748b; border-bottom:2px solid #e2e8f0; }
+.code-table td { padding:13px 16px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+.code-table tr:hover td { background:#f8fafc; }
+
+.code-pill {
+  font-family:'Courier New',monospace; font-size:13px; font-weight:700;
+  background:#f1f5f9; padding:4px 10px; border-radius:8px;
+  letter-spacing:0.05em; color:#0f172a;
+}
+
+/* STATUS */
+.status-badge  { display:inline-flex; padding:5px 12px; border-radius:999px; font-size:12px; font-weight:700; }
+.status-unused { background:#dcfce7; color:#15803d; }
+.status-used   { background:#fee2e2; color:#dc2626; }
+
+/* STAT CARDS */
+.txn-stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:14px; margin-bottom:24px; }
+.txn-stat-card { background:#fff; border:1.5px solid #e2e8f0; border-radius:16px; padding:18px 20px; }
+.txn-stat-num  { font-size:30px; font-weight:800; }
+
+/* TABLE TOOLBAR */
+.table-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:10px; }
+.export-row    { display:flex; gap:8px; }
+
+/* BUTTONS */
+.btn-action      { padding:6px 12px; border:none; border-radius:8px; font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer; font-weight:600; transition:background 0.2s; }
+.btn-delete      { background:#fee2e2; color:#dc2626; }
+.btn-delete:hover { background:#fecaca; }
+.btn-export-csv  { background:#eff6ff; color:#2563eb; }
+.btn-export-csv:hover  { background:#dbeafe; }
+.btn-export-json { background:#f0fdf4; color:#16a34a; }
+.btn-export-json:hover { background:#dcfce7; }
+
+/* EMPTY STATE for office grid */
+.no-offices-msg { color:#94a3b8; font-size:14px; padding:12px 0; }
+
+/* TOAST */
+#toast {
+  position:fixed; bottom:28px; right:28px;
+  background:#0f172a; color:#fff;
+  padding:12px 20px; border-radius:12px;
+  font-size:14px; font-family:'DM Sans',sans-serif;
+  opacity:0; transition:opacity 0.3s;
+  z-index:9999; pointer-events:none;
+}
+#toast.show { opacity:1; }
+
+/* PROGRESS */
+.gen-progress { font-size:11px; color:#64748b; margin-top:6px; display:none; }
+
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <div id="sidebar-mount"></div>
+
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+
+    <!-- STAT CARDS -->
+    <div class="txn-stat-grid">
+      <div class="txn-stat-card">
+        <div class="txn-stat-num" id="scTotal">0</div>
+        <div>🎟️ Total Codes</div>
+      </div>
+      <div class="txn-stat-card">
+        <div class="txn-stat-num" id="scUnused">0</div>
+        <div>✅ Unused</div>
+      </div>
+      <div class="txn-stat-card">
+        <div class="txn-stat-num" id="scUsed">0</div>
+        <div>🔒 Used</div>
+      </div>
+      <div class="txn-stat-card">
+        <div class="txn-stat-num" id="scOffices">0</div>
+        <div>🏢 Offices</div>
+      </div>
+    </div>
+
+    <!-- GENERATE SECTION -->
+    <div class="generate-section">
+      <h3>⚡ Generate Codes per Office</h3>
+      <p class="sub">Set how many codes to generate per office, then click Generate.</p>
+      <div class="office-gen-grid" id="officeGenGrid">
+        <p class="no-offices-msg">Loading offices…</p>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card">
+      <div class="table-toolbar">
+        <h3 style="margin:0;">Transaction Codes</h3>
+        <div class="export-row">
+          <button class="btn-action btn-export-csv"  onclick="exportCSV()">⬇ Export CSV</button>
+          <button class="btn-action btn-export-json" onclick="exportJSON()">⬇ Export JSON</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <input type="search" id="searchInput" placeholder="Search code or office…" />
+        <select id="filterOffice"><option value="">All Offices</option></select>
+        <select id="filterStatus">
+          <option value="">All Status</option>
+          <option value="unused">Unused</option>
+          <option value="used">Used</option>
+        </select>
+      </div>
+
+      <table class="code-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>CODE</th>
+            <th>OFFICE</th>
+            <th>STATUS</th>
+            <th>CREATED</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="codeTableBody"></tbody>
+      </table>
+      <p id="emptyMsg" style="display:none;text-align:center;color:#94a3b8;padding:24px;">No codes found.</p>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast"></div>
+<script src="shared.js"></script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+import { getDatabase, ref, onValue, remove, push, set }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* ── Firebase config ── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain:        "kristal-adb78.firebaseapp.com",
+  databaseURL:       "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId:         "kristal-adb78",
+  storageBucket:     "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId:             "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId:     "G-LK8D1CBQ2J"
+};
+
+const app       = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db        = getDatabase(app);
+
+/* ── Mount shared UI ── */
+document.getElementById("sidebar-mount").innerHTML = buildSidebar('admin1', 'gen-code');
+document.getElementById("topbar-mount").innerHTML  = buildTopbar("Generate Code", "admin1");
+
+/* ── Toast ── */
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+/* ── Code generator ── */
+function makeCode(officePrefix) {
+  const chars  = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const random = Array.from({ length: 6 }, () =>
+    chars[Math.floor(Math.random() * chars.length)]
+  ).join("");
+  const prefix = officePrefix.replace(/\s+/g, "").substring(0, 4).toUpperCase();
+  return `${prefix}-${random}`;
+}
+
+/* ========================= */
+/* DYNAMIC OFFICES           */
+/* ── Pulled from services/offices (same source as dashboard) ──
+/* ========================= */
+
+let dynamicOffices = []; // array of office name strings
+
+onValue(ref(db, "services/offices"), (snap) => {
+  const raw = snap.val() || {};
+
+  // Extract names and sort alphabetically
+  dynamicOffices = Object.values(raw)
+    .map(o => o.name)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
+
+  buildOfficeCards();
+});
+
+/* ── Build office generate cards ── */
+function buildOfficeCards() {
+  const grid = document.getElementById("officeGenGrid");
+
+  if (!dynamicOffices.length) {
+    grid.innerHTML = `<p class="no-offices-msg">No offices found. Add offices from the Dashboard first.</p>`;
+    return;
+  }
+
+  grid.innerHTML = dynamicOffices.map(office => {
+    const id = office.replace(/\s+/g, "_");
+    return `
+      <div class="office-gen-card">
+        <div class="office-gen-top">
+          <span class="office-gen-label">🏢 ${office}</span>
+          <button class="btn-generate" id="genBtn-${id}" onclick="generateCodes('${office}')">
+            ⚡ Generate
+          </button>
+        </div>
+        <div class="qty-row">
+          <label for="qty-${id}">Quantity:</label>
+          <input class="qty-input" type="number" id="qty-${id}" value="1" min="1" max="50" />
+          <span style="font-size:12px;color:#94a3b8;">(max 50)</span>
+        </div>
+        <div class="gen-progress" id="prog-${id}"></div>
+      </div>
+    `;
+  }).join("");
+}
+
+/* ========================= */
+/* GENERATE CODES            */
+/* ========================= */
+
+window.generateCodes = async (office) => {
+  const id   = office.replace(/\s+/g, "_");
+  const btn  = document.getElementById(`genBtn-${id}`);
+  const prog = document.getElementById(`prog-${id}`);
+  const qty  = Math.min(50, Math.max(1, parseInt(document.getElementById(`qty-${id}`).value) || 1));
+
+  btn.disabled    = true;
+  btn.textContent = "Saving…";
+  prog.style.display = "block";
+
+  const dbRef = ref(db, `services/transaction_code/offices_name/${office}`);
+
+  for (let i = 0; i < qty; i++) {
+    prog.textContent = `Saving ${i + 1} / ${qty}…`;
+    const newRef = push(dbRef);
+    await set(newRef, {
+      code:      makeCode(office),
+      status:    "unused",
+      createdAt: Date.now()
+    });
+  }
+
+  prog.style.display = "none";
+  btn.disabled    = false;
+  btn.textContent = "⚡ Generate";
+  showToast(`✅ ${qty} code${qty > 1 ? "s" : ""} generated for ${office}`);
+};
+
+/* ========================= */
+/* DELETE CODE               */
+/* ========================= */
+
+window.deleteCode = async (key) => {
+  if (!confirm("Delete this code?")) return;
+  const office = allCodes[key]?.office;
+  if (!office) return;
+
+  await remove(ref(db, `services/transaction_code/offices_name/${office}/${key}`));
+  showToast("🗑️ Code deleted.");
+};
+
+/* ========================= */
+/* LIVE TRANSACTION CODES    */
+/* ========================= */
+
+let allCodes       = {};
+let filteredEntries = [];
+
+onValue(ref(db, "services/transaction_code/offices_name"), snap => {
+  const raw = snap.val() || {};
+
+  allCodes = {};
+  Object.keys(raw).forEach(office => {
+    Object.keys(raw[office]).forEach(key => {
+      allCodes[key] = { office, ...raw[office][key] };
+    });
+  });
+
+  updateStats(allCodes);
+  populateOfficeFilter(allCodes);
+  renderTable();
+});
+
+/* ── Stats ── */
+function updateStats(data) {
+  const e = Object.values(data);
+  document.getElementById("scTotal").textContent   = e.length;
+  document.getElementById("scUnused").textContent  = e.filter(c => c.status === "unused").length;
+  document.getElementById("scUsed").textContent    = e.filter(c => c.status === "used").length;
+  document.getElementById("scOffices").textContent = new Set(e.map(c => c.office)).size;
+}
+
+/* ── Populate office filter dropdown ── */
+function populateOfficeFilter(data) {
+  const sel     = document.getElementById("filterOffice");
+  const prev    = sel.value;
+  const offices = [...new Set(Object.values(data).map(c => c.office))].sort();
+  sel.innerHTML = `<option value="">All Offices</option>` +
+    offices.map(o => `<option value="${o}"${o === prev ? " selected" : ""}>${o}</option>`).join("");
+}
+
+/* ── Render table ── */
+function renderTable() {
+  const search = document.getElementById("searchInput").value.toLowerCase();
+  const office = document.getElementById("filterOffice").value;
+  const status = document.getElementById("filterStatus").value;
+
+  filteredEntries = Object.entries(allCodes).filter(([, c]) =>
+    (c.code.toLowerCase().includes(search) || c.office.toLowerCase().includes(search))
+    && (!office || c.office === office)
+    && (!status || c.status === status)
+  ).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+
+  const tbody    = document.getElementById("codeTableBody");
+  const emptyMsg = document.getElementById("emptyMsg");
+
+  if (!filteredEntries.length) {
+    tbody.innerHTML        = "";
+    emptyMsg.style.display = "block";
+    return;
+  }
+
+  emptyMsg.style.display = "none";
+  tbody.innerHTML = filteredEntries.map(([key, c], i) => {
+    const date = c.createdAt
+      ? new Date(c.createdAt).toLocaleDateString("en-PH", { month:"short", day:"numeric", year:"numeric" })
+      : "—";
+    return `
+      <tr>
+        <td style="color:#94a3b8;font-size:12px;">${i + 1}</td>
+        <td><span class="code-pill">${c.code}</span></td>
+        <td>${c.office}</td>
+        <td>
+          <span class="status-badge ${c.status === "used" ? "status-used" : "status-unused"}">
+            ${c.status === "used" ? "Used" : "Unused"}
+          </span>
+        </td>
+        <td style="font-size:12px;color:#64748b;">${date}</td>
+        <td><button class="btn-action btn-delete" onclick="deleteCode('${key}')">🗑 Delete</button></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+/* ── Export CSV ── */
+window.exportCSV = () => {
+  const rows = [["#", "Code", "Office", "Status", "Created At"]];
+  filteredEntries.forEach(([, c], i) => {
+    const date = c.createdAt ? new Date(c.createdAt).toLocaleString("en-PH") : "";
+    rows.push([i + 1, c.code, c.office, c.status, date]);
+  });
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
+  downloadFile("transaction-codes.csv", "text/csv", csv);
+  showToast(`📥 Exported ${filteredEntries.length} codes as CSV`);
+};
+
+/* ── Export JSON ── */
+window.exportJSON = () => {
+  const data = filteredEntries.map(([key, c]) => ({
+    key,
+    code:      c.code,
+    office:    c.office,
+    status:    c.status,
+    createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : null
+  }));
+  downloadFile("transaction-codes.json", "application/json", JSON.stringify(data, null, 2));
+  showToast(`📥 Exported ${filteredEntries.length} codes as JSON`);
+};
+
+function downloadFile(filename, mime, content) {
+  const blob = new Blob([content], { type: mime });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ── Filter events ── */
+document.getElementById("searchInput").addEventListener("input",   renderTable);
+document.getElementById("filterOffice").addEventListener("change", renderTable);
+document.getElementById("filterStatus").addEventListener("change", renderTable);
+
+</script>
+</body>
+</html>

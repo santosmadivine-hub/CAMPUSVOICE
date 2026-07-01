@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Reports | Admin 1</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+/* ── BASE ── */
+body { margin:0; font-family:'DM Sans',sans-serif; background:#87cefa; color:#0f172a; }
+.layout { display:flex; min-height:100vh; }
+.main   { flex:1; padding:24px; }
+
+.page-title { font-size:2rem; font-weight:800; }
+.page-sub   { font-size:13px; color:#64748b; margin-bottom:18px; }
+
+/* ── FILTER CARD ── */
+.config-card {
+  background:#fff; border:1px solid #e2e8f0;
+  border-radius:14px; padding:16px; margin-bottom:18px;
+}
+.config-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+.input, select {
+  padding:10px 12px; border:1px solid #dbe4ee;
+  border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px;
+  background:#f8fafc; color:#0f172a; outline:none;
+}
+select { min-width:180px; }
+
+.btn { padding:10px 16px; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-family:'DM Sans',sans-serif; font-size:14px; }
+.btn-primary { background:#2563eb; color:#fff; }
+.btn-blue    { background:#1d4ed8; color:#fff; }
+.btn-green   { background:#16a34a; color:#fff; }
+.btn-gray    { background:#e2e8f0; color:#475569; }
+
+/* ── KPI GRID ── */
+.kpi-grid {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px; margin-bottom:18px;
+}
+.kpi-card {
+  background:#fff; border:1px solid #e2e8f0;
+  border-radius:14px; padding:16px;
+}
+.kpi-title { font-size:12px; color:#64748b; margin-bottom:4px; }
+.kpi-value { font-size:24px; font-weight:800; color:#0f172a; }
+
+/* ── SAVED REPORTS CARD ── */
+.card {
+  background:#fff; border:1px solid #e2e8f0;
+  border-radius:14px; padding:18px; margin-bottom:18px;
+}
+.card-header {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:10px; flex-wrap:wrap; gap:10px;
+}
+.card-title { font-size:16px; font-weight:700; color:#0f172a; }
+.count-pill {
+  font-size:12px; font-weight:700; color:#2563eb;
+  background:#dbeafe; padding:4px 12px; border-radius:999px;
+}
+
+/* ── REPORTS TABLE ── */
+.reports-table { width:100%; border-collapse:collapse; }
+.reports-table th {
+  text-align:left; padding:12px 14px; font-size:11px;
+  color:#64748b; border-bottom:1px solid #e2e8f0;
+  font-weight:700; text-transform:uppercase; letter-spacing:.4px; white-space:nowrap;
+}
+.reports-table td {
+  padding:14px; border-bottom:1px solid #f1f5f9;
+  font-size:13px; vertical-align:middle;
+}
+.reports-table tr:last-child td { border-bottom:none; }
+.reports-table tr:hover td { background:#f8fafc; transition:.1s; }
+.table-wrap { overflow-x:auto; }
+
+/* ── BADGE ── */
+.badge {
+  display:inline-block; padding:4px 11px;
+  border-radius:999px; font-size:11px; font-weight:700;
+}
+.badge-green  { background:#dcfce7; color:#15803d; }
+.badge-blue   { background:#dbeafe; color:#1d4ed8; }
+.badge-amber  { background:#fef9c3; color:#a16207; }
+.badge-red    { background:#fee2e2; color:#dc2626; }
+
+/* ── ACTION BTNS ── */
+.act-btn {
+  border:none; padding:6px 12px; border-radius:8px;
+  cursor:pointer; font-size:12px; font-weight:600;
+  font-family:'DM Sans',sans-serif;
+}
+.act-view   { background:#0f172a; color:#fff; }
+.act-delete { background:#fee2e2; color:#dc2626; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align:center; padding:44px 20px; color:#94a3b8;
+}
+.empty-state .icon { font-size:36px; margin-bottom:8px; }
+.empty-state p { font-size:14px; margin:0; }
+
+/* ══════════════════════════════════════
+   REPORT PREVIEW (Official CSM Doc)
+══════════════════════════════════════ */
+#reportPreview {
+  display:none; background:#fff; margin-top:0;
+  border:1px solid #e2e8f0; border-radius:14px;
+  overflow:hidden; margin-bottom:18px;
+}
+
+/* Preview top action bar */
+.preview-bar {
+  display:flex; align-items:center; gap:10px;
+  padding:12px 18px; background:#f8fafc;
+  border-bottom:1px solid #e2e8f0; flex-wrap:wrap;
+}
+.preview-bar .preview-label {
+  flex:1; font-size:13px; font-weight:700; color:#334155;
+}
+
+/* A4-style document */
+.csm-page {
+  padding:32px 40px 40px;
+  font-family:'Times New Roman',Times,serif;
+  font-size:11pt; color:#000;
+  max-width:780px; margin:0 auto;
+}
+
+/* LETTERHEAD */
+.lh-row { display:flex; align-items:center; gap:9px; margin-bottom:1px; }
+.lh-logo-box, .lh-seal-box {
+  width:100px; height:100px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.lh-logo-box img, .lh-seal-box img {
+  width:100%; height:100%; object-fit:contain;
+}
+.lh-text { flex:1; text-align:center; line-height:1.4; }
+.lh-text .rep  { font-size:8.5pt; }
+.lh-text .uni  { font-size:10.5pt; font-weight:bold; text-transform:uppercase; letter-spacing:.1px; }
+.lh-text .dept { font-size:10pt; font-weight:bold; text-transform:uppercase; }
+.lh-text .addr { font-size:7.5pt; color:#444; }
+.lh-divider { border:none; border-top:2.5px solid #1a3a6b; margin:4px 0 10px; }
+
+.csm-doc-title {
+  text-align:center; font-size:11.5pt; font-weight:bold;
+  text-transform:uppercase; letter-spacing:.8px; margin-bottom:12px;
+}
+
+.csm-meta { font-size:10.5pt; line-height:1.8; margin-bottom:10px; }
+.csm-meta b { font-weight:bold; }
+
+/* SQD TABLE */
+.csm-table { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:10pt; }
+.csm-table th {
+  background:#1a3a6b; color:#fff; padding:6px 8px;
+  border:1px solid #1a3a6b; text-align:center; font-weight:bold;
+}
+.csm-table td { border:1px solid #aaa; padding:5px 8px; }
+.csm-table tr:nth-child(even) td { background:#eef2f9; }
+
+/* NARRATIVE */
+.csm-narrative { font-size:10.5pt; line-height:1.7; text-align:justify; margin-bottom:16px; }
+.csm-narrative p { margin-bottom:10px; }
+
+/* SIGNATURES */
+.csm-sigs { display:flex; gap:40px; margin-top:24px; font-size:10.5pt; }
+.csm-sig-block { flex:1; }
+.csm-sig-label { color:#555; font-size:9.5pt; margin-bottom:30px; }
+.csm-sig-name  { font-weight:bold; text-transform:uppercase; border-top:1px solid #000; padding-top:4px; display:inline-block; }
+.csm-sig-title { font-size:9.5pt; font-style:italic; color:#333; margin-top:2px; }
+
+/* FOOTER (official accreditation banner from ISUFST letterhead) */
+.csm-footer {
+  margin-top:20px;
+  padding-top:8px;
+  display:block;
+  width:100%;
+}
+.csm-footer img {
+  display:block;
+  width:100%;
+  height:auto;
+  object-fit:contain;
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <div id="sidebar-mount"></div>
+
+  <main class="main">
+    <div id="topbar-mount"></div>
+  
+
+    <!-- ══ FILTER / GENERATE ══ -->
+    <div class="config-card">
+      <div class="config-row">
+        <input type="date" id="startDate" class="input">
+        <input type="date" id="endDate"   class="input">
+
+        <!-- Offices pulled from services/offices – same source as Evaluation Mgmt -->
+        <select id="officeFilter">
+          <option value="">Select Office…</option>
+        </select>
+
+        <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
+        <button class="btn btn-green"   onclick="saveReport()">💾 Save Report</button>
+        <button class="btn btn-blue"    onclick="exportPDF()">⬇ Export PDF</button>
+      </div>
+    </div>
+
+    <!-- ══ KPI CARDS ══ -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Total Feedback</div>
+        <div class="kpi-value" id="totalFeedback">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Avg Satisfaction</div>
+        <div class="kpi-value" id="avgSat">0%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Positive (&ge;4★)</div>
+        <div class="kpi-value" id="positive">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Negative (&lt;3★)</div>
+        <div class="kpi-value" id="negative">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Saved Reports</div>
+        <div class="kpi-value" id="kpiSavedCount">0</div>
+      </div>
+    </div>
+
+    <!-- ══ REPORT PREVIEW (shown after Generate) ══ -->
+    <div id="reportPreview">
+      <div class="preview-bar">
+        <span class="preview-label" id="previewLabel">📄 CSM Report Preview</span>
+        <button class="btn btn-green"  onclick="saveReport()">💾 Save to DB</button>
+        <button class="btn btn-blue"   onclick="exportPDF()">⬇ PDF</button>
+        <button class="btn btn-gray"   onclick="closePreview()">✕ Close</button>
+      </div>
+
+      <div class="csm-page" id="csmPage">
+
+        <!-- LETTERHEAD (official ISUFST letterhead assets) -->
+        <div class="lh-row">
+  <div class="lh-logo-box" style="width:150px; height:90px;">
+    <img src="2.png"
+         alt="ISUFST Logo"
+         crossorigin="anonymous"
+         style="width:100%; height:100%; object-fit:contain;">
+  </div>
+          <div class="lh-text">
+            <div class="rep">Republic of the Philippines</div>
+            <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
+            <div class="dept">Research &amp; Development Office</div>
+            <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
+            <div class="addr">Website: www.isufst.edu.ph</div>
+          </div>
+          <div class="lh-seal-box">
+            <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous">
+          </div>
+        </div>
+
+        <hr class="lh-divider">
+        <div class="csm-doc-title">Client Satisfaction Measurement (CSM) Report</div>
+        <div class="csm-meta"      id="csmMeta"></div>
+
+        <table class="csm-table">
+          <thead>
+            <tr>
+              <th style="width:50%;text-align:left;padding-left:10px;">Service Quality Dimensions</th>
+              <th style="width:20%;">Percentage (%)</th>
+              <th style="width:30%;">Rating</th>
+            </tr>
+          </thead>
+          <tbody id="csmTableBody"></tbody>
+        </table>
+
+        <div class="csm-narrative" id="csmNarrative"></div>
+
+        <div class="csm-sigs">
+          <div class="csm-sig-block">
+            <div class="csm-sig-label">Prepared by:</div>
+            <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
+            <div class="csm-sig-name">EMELYN A. LIGASAN, PhD</div>
+            <div class="csm-sig-title">Chair, Research and Development</div>
+          </div>
+          <div class="csm-sig-block">
+            <div class="csm-sig-label">Noted by:</div>
+            <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
+            <div class="csm-sig-name">MICHAEL B. DIZON, EdD, PhD</div>
+            <div class="csm-sig-title">Campus Administrator</div>
+          </div>
+        </div>
+
+        <!-- FOOTER (official accreditation banner: THE / UI GreenMetric / WURI / Ambisyon Natin / SDG / GCL / tagline) -->
+        <div class="csm-footer">
+          <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
+        </div>
+      </div><!-- /csm-page -->
+    </div><!-- /reportPreview -->
+
+    <!-- ══ SAVED REPORTS TABLE ══ -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Saved Reports</div>
+        <span class="count-pill" id="savedCountPill">0 reports</span>
+      </div>
+      <div class="table-wrap">
+        <table class="reports-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Office</th>
+              <th>Date Range</th>
+              <th>Respondents</th>
+              <th>Avg Satisfaction</th>
+              <th>Rating</th>
+              <th>Saved On</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="reportsTableBody">
+            <tr>
+              <td colspan="8">
+                <div class="empty-state">
+                  <div class="icon">📄</div>
+                  <p>No saved reports yet. Generate a report above, then click <strong>Save Report</strong>.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /layout -->
+
+<script src="shared.js"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+import {
+  getDatabase, ref, onValue, push, set, remove
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* ── Firebase config ── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain:        "kristal-adb78.firebaseapp.com",
+  databaseURL:       "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId:         "kristal-adb78",
+  storageBucket:     "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId:             "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId:     "G-LK8D1CBQ2J"
+};
+
+const app = initializeApp(firebaseConfig);
+getAnalytics(app);
+const db = getDatabase(app);
+
+/* ─────────────────────────────────────────────
+   DB PATHS  — all mirror services/ structure
+   services/offices      ← same as eval-mgmt
+   services/evaluations  ← same as eval-mgmt
+   services/reports      ← NEW node for saved reports
+───────────────────────────────────────────── */
+const officeRef     = ref(db, "services/offices");
+const evaluationRef = ref(db, "services/evaluations");
+const reportsRef    = ref(db, "services/reports");
+
+/* ── Shared UI ── */
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','reports');
+document.getElementById('topbar-mount').innerHTML  = buildTopbar('Reports','admin1');
+
+/* ── SQD dimension labels ── */
+const SQD_LABELS = [
+  { key:"sq0", label:"SQD0 – Overall Satisfaction"  },
+  { key:"sq1", label:"SQD1 – Responsiveness"        },
+  { key:"sq2", label:"SQD2 – Reliability"           },
+  { key:"sq3", label:"SQD3 – Access and Facilities" },
+  { key:"sq4", label:"SQD4 – Communication"         },
+  { key:"sq5", label:"SQD5 – Cost"                  },
+  { key:"sq6", label:"SQD6 – Integrity"             },
+  { key:"sq7", label:"SQD7 – Assurance"             },
+  { key:"sq8", label:"SQD8 – Outcome"               }
+];
+
+function getRating(pct) {
+  if (pct >= 90) return "Outstanding";
+  if (pct >= 80) return "Very Satisfactory";
+  if (pct >= 70) return "Satisfactory";
+  if (pct >= 60) return "Fair";
+  return "Poor";
+}
+function badgeClass(rating) {
+  return rating === "Outstanding"       ? "badge-green"
+       : rating === "Very Satisfactory" ? "badge-blue"
+       : rating === "Satisfactory"      ? "badge-blue"
+       : rating === "Fair"              ? "badge-amber"
+       : "badge-red";
+}
+function fmtDate(v) {
+  return new Date(v).toLocaleDateString("en-PH",{ month:"long", day:"numeric", year:"numeric" });
+}
+function fmtShort(v) {
+  return new Date(v).toLocaleDateString("en-PH",{ month:"short", day:"numeric", year:"numeric" });
+}
+
+/* ── State ── */
+let allEvals     = {};   // services/evaluations
+let currentReport = null; // last generated — held for saving / PDF
+
+/* ══════════════════════════════════════════════════════
+   1. OFFICES → populate dropdown
+      Path: services/offices  (same as eval-mgmt.html)
+══════════════════════════════════════════════════════ */
+onValue(officeRef, snap => {
+  const data   = snap.val() || {};
+  const select = document.getElementById("officeFilter");
+  const prev   = select.value;
+
+  select.innerHTML = `<option value="">Select Office…</option>`;
+
+  Object.values(data)
+    .map(o => o.name)
+    .filter(Boolean)
+    .sort((a,b) => a.localeCompare(b))
+    .forEach(name => {
+      const opt = document.createElement("option");
+      opt.value       = name;
+      opt.textContent = name;
+      if (name === prev) opt.selected = true;
+      select.appendChild(opt);
+    });
+});
+
+/* ══════════════════════════════════════════════════════
+   2. EVALUATIONS → KPI cards
+      Path: services/evaluations
+══════════════════════════════════════════════════════ */
+onValue(evaluationRef, snap => {
+  allEvals = snap.val() || {};
+  renderKPIs();
+});
+
+function avgScore(item) {
+  let s = 0, c = 0;
+  for (let x = 1; x <= 8; x++) {
+    /* support both sq{n} and sqd{n} field names */
+    const v = parseFloat(item["sq"+x] ?? item["sqd"+x]);
+    if (!isNaN(v)) { s += v; c++; }
+  }
+  return c ? s / c : 0;
+}
+
+function renderKPIs() {
+  let total=0, pos=0, neg=0, sum=0;
+  Object.values(allEvals).forEach(i => {
+    const a = avgScore(i);
+    sum += a; total++;
+    if (a >= 4) pos++;
+    if (a < 3)  neg++;
+  });
+  document.getElementById("totalFeedback").textContent = total;
+  document.getElementById("avgSat").textContent        = total ? ((sum/total)*20).toFixed(0)+"%" : "0%";
+  document.getElementById("positive").textContent      = pos;
+  document.getElementById("negative").textContent      = neg;
+}
+
+/* ══════════════════════════════════════════════════════
+   3. SAVED REPORTS → table
+      Path: services/reports  (NEW)
+      Structure stored per record:
+      {
+        office, startDate, endDate, respondents,
+        overallPct, generatedAt,
+        dims: [{ key, label, pct, rating }]
+      }
+══════════════════════════════════════════════════════ */
+onValue(reportsRef, snap => {
+  const data = snap.val() || {};
+  const keys  = Object.keys(data);
+
+  /* update KPI pill */
+  document.getElementById("kpiSavedCount").textContent = keys.length;
+  document.getElementById("savedCountPill").textContent = keys.length + " report" + (keys.length !== 1 ? "s" : "");
+
+  const tbody = document.getElementById("reportsTableBody");
+
+  if (!keys.length) {
+    tbody.innerHTML = `
+      <tr><td colspan="8">
+        <div class="empty-state">
+          <div class="icon">📄</div>
+          <p>No saved reports yet. Generate a report above, then click <strong>Save Report</strong>.</p>
+        </div>
+      </td></tr>`;
+    return;
+  }
+
+  /* sort newest first */
+  keys.sort((a,b) => new Date(data[b].generatedAt) - new Date(data[a].generatedAt));
+
+  tbody.innerHTML = keys.map((key, idx) => {
+    const r      = data[key];
+    const rating = getRating(r.overallPct || 0);
+    const saved  = r.generatedAt ? fmtShort(r.generatedAt) : "—";
+    return `
+      <tr>
+        <td style="color:#94a3b8;font-size:12px;">${idx+1}</td>
+        <td><strong>${r.office || "—"}</strong></td>
+        <td style="font-size:12px;color:#64748b;white-space:nowrap;">
+          ${r.startDate || ""} → ${r.endDate || ""}
+        </td>
+        <td style="text-align:center;">${r.respondents || 0}</td>
+        <td style="text-align:center;font-weight:800;">${(r.overallPct||0).toFixed(1)}%</td>
+        <td><span class="badge ${badgeClass(rating)}">${rating}</span></td>
+        <td style="font-size:12px;color:#64748b;">${saved}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="act-btn act-view"   onclick="viewSavedReport('${key}')">👁 View</button>
+            <button class="act-btn act-delete" onclick="deleteSavedReport('${key}')">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join("");
+});
+
+/* ══════════════════════════════════════════════════════
+   4. GENERATE REPORT
+══════════════════════════════════════════════════════ */
+window.generateReport = () => {
+  const office   = document.getElementById("officeFilter").value;
+  const startVal = document.getElementById("startDate").value;
+  const endVal   = document.getElementById("endDate").value;
+
+  if (!office || !startVal || !endVal) {
+    alert("Please select an office and a date range first.");
+    return;
+  }
+
+  const start = new Date(startVal);
+  const end   = new Date(endVal);
+  end.setHours(23,59,59,999);
+
+  /* normalize for tolerant matching (trim + case-insensitive) */
+  const officeNorm = office.trim().toLowerCase();
+
+  /* filter evaluations for chosen office + date range */
+  const rows = Object.values(allEvals).filter(i => {
+    const rowOffice = (i.office || "").trim().toLowerCase();
+    if (rowOffice !== officeNorm) return false;
+
+    const d = new Date(i.date);
+    if (isNaN(d.getTime())) return false; // skip records with missing/bad dates
+
+    return d >= start && d <= end;
+  });
+
+  if (!rows.length) {
+    console.warn("[generateReport] No matches.", {
+      selectedOffice: office,
+      totalEvalRecords: Object.keys(allEvals).length,
+      officesFoundInData: [...new Set(Object.values(allEvals).map(e => e.office))]
+    });
+    alert("No feedback records found for the selected office and date range.\n\nOpen the browser console (F12) — it now logs the exact office names stored in your evaluation records, so you can check they match the dropdown (spelling/case/whitespace) and that dates are in range.");
+    return;
+  }
+
+  /* per-dimension totals */
+  const totals = {}, counts = {};
+  SQD_LABELS.forEach(s => { totals[s.key]=0; counts[s.key]=0; });
+
+  rows.forEach(r => {
+    let sq0Found = false;
+    SQD_LABELS.forEach(s => {
+      /* accept sq{n} or sqd{n} */
+      const v = parseFloat(r[s.key] ?? r["sqd"+s.key.replace("sq","")]);
+      if (!isNaN(v)) {
+        totals[s.key]+=v; counts[s.key]++;
+        if (s.key === "sq0") sq0Found = true;
+      }
+    });
+    /* sq0 fallback per-row: derive overall from sq1-sq8 only when THIS row has no sq0 */
+    if (!sq0Found) {
+      const fallback = avgScore(r);
+      if (fallback) { totals["sq0"] += fallback; counts["sq0"]++; }
+    }
+  });
+
+  const dims = SQD_LABELS.map(s => {
+    const cnt = counts[s.key];
+    const raw = cnt ? totals[s.key]/cnt : null;
+    const pct = raw !== null ? (raw/5)*100 : null;
+    return { key:s.key, label:s.label, pct, rating: pct!==null ? getRating(pct) : "N/A" };
+  });
+
+  const valid      = dims.filter(d => d.pct !== null);
+  const overallPct = valid.length ? valid.reduce((s,d)=>s+d.pct,0)/valid.length : 0;
+
+  /* cache for save / PDF */
+  currentReport = {
+    office, startDate:startVal, endDate:endVal,
+    respondents:rows.length, overallPct,
+    dims: dims.map(d=>({ key:d.key, label:d.label, pct:d.pct, rating:d.rating })),
+    generatedAt: new Date().toISOString()
+  };
+
+  renderPreview(currentReport);
+};
+
+/* ── Render the A4 preview ── */
+function renderPreview(r) {
+  document.getElementById("csmMeta").innerHTML = `
+    <b>Office:</b> ${r.office}, ISUFST – San Enrique Campus<br>
+    <b>Covered Period:</b> ${fmtDate(r.startDate)} – ${fmtDate(r.endDate)}<br>
+    <b>No. of Respondents:</b> ${r.respondents}
+  `;
+
+  document.getElementById("csmTableBody").innerHTML = (r.dims||[]).map(d=>`
+    <tr>
+      <td style="padding-left:10px;">${d.label}</td>
+      <td style="text-align:center;">${d.pct!==null ? Number(d.pct).toFixed(1) : "—"}</td>
+      <td style="text-align:center;">${d.rating}</td>
+    </tr>`).join("");
+
+  const overallPct = r.overallPct || 0;
+  const perfWord   = overallPct>=90?"outstanding":overallPct>=80?"very satisfactory":overallPct>=70?"satisfactory":"fair";
+  const topDims    = (r.dims||[]).filter(d=>d.pct!==null&&d.pct>=90).map(d=>d.label);
+  const lowDims    = (r.dims||[]).filter(d=>d.pct!==null&&d.pct<75).map(d=>d.label);
+  const highDims   = (r.dims||[]).filter(d=>d.pct!==null&&d.pct>=80).slice(0,3).map(d=>d.label);
+
+  const p1 = `The <strong>results</strong> of the Client Satisfaction Measurement (CSM) Report for the
+    <strong>${r.office}</strong>, ISUFST – San Enrique Campus, covering ${fmtDate(r.startDate)} to
+    ${fmtDate(r.endDate)} with <strong>${r.respondents}</strong> respondent(s), show an overall
+    <strong>${perfWord} performance</strong> across the Service Quality Dimensions (SQDs) with an
+    average satisfaction rate of <strong>${overallPct.toFixed(2)}%</strong>.
+    ${topDims.length ? `This indicates that clients are highly satisfied with the
+    ${topDims.join(", ")} dimensions, reflecting the office's effectiveness in meeting client needs.` : ""}`;
+
+  const p2 = `<strong>Regarding specific service dimensions</strong>,
+    ${highDims.length ? highDims.join(", ")+" received perfect or near-perfect scores, demonstrating that staff provide timely, accurate, and dependable support." : "most dimensions performed at a satisfactory level or above."}
+    ${lowDims.length ? `Additionally, ${lowDims.join(", ")} scored slightly lower, indicating
+    opportunities for improvement in transparency of fees, ethical practices, and service outcome
+    effectiveness. Focusing on these areas could strengthen client trust and ensure more consistent
+    service quality.` : "All dimensions performed at a satisfactory level or above."}`;
+
+  const p3 = `<strong>Overall</strong>, the findings suggest that the <strong>${r.office}</strong>
+    delivers strong and reliable services. In summary, while the office already maintains high client
+    satisfaction, continued attention to all service quality dimensions will help enhance the overall
+    service experience. Addressing any identified gaps will support continuous improvement and help the
+    office achieve even higher levels of client satisfaction in future assessments.`;
+
+  document.getElementById("csmNarrative").innerHTML = `<p>${p1}</p><p>${p2}</p><p>${p3}</p>`;
+  document.getElementById("previewLabel").textContent = `📄 Preview — ${r.office}  (${r.startDate} → ${r.endDate})`;
+
+  const preview = document.getElementById("reportPreview");
+  preview.style.display = "block";
+  preview.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+window.closePreview = () => {
+  document.getElementById("reportPreview").style.display = "none";
+};
+
+/* ══════════════════════════════════════════════════════
+   5. SAVE REPORT → services/reports
+══════════════════════════════════════════════════════ */
+window.saveReport = async () => {
+  if (!currentReport) {
+    alert("Please generate a report first before saving.");
+    return;
+  }
+  try {
+    const newRef = push(reportsRef);
+    await set(newRef, currentReport);
+    alert("✅ Report saved successfully under services/reports!");
+  } catch (err) {
+    console.error(err);
+    alert("❌ Failed to save report: " + err.message);
+  }
+};
+
+/* ══════════════════════════════════════════════════════
+   6. VIEW SAVED REPORT
+══════════════════════════════════════════════════════ */
+window.viewSavedReport = key => {
+  onValue(ref(db, `services/reports/${key}`), snap => {
+    const r = snap.val();
+    if (!r) return;
+    currentReport = r;          // enable PDF export of viewed report
+    renderPreview(r);
+  }, { onlyOnce:true });
+};
+
+/* ══════════════════════════════════════════════════════
+   7. DELETE SAVED REPORT
+══════════════════════════════════════════════════════ */
+window.deleteSavedReport = async key => {
+  if (!confirm("Delete this saved report? This cannot be undone.")) return;
+  try {
+    await remove(ref(db, `services/reports/${key}`));
+  } catch (err) {
+    alert("Failed to delete: " + err.message);
+  }
+};
+
+/* ══════════════════════════════════════════════════════
+   8. EXPORT PDF
+══════════════════════════════════════════════════════ */
+window.exportPDF = async () => {
+  if (document.getElementById("reportPreview").style.display === "none") {
+    alert("Please generate or view a report first.");
+    return;
+  }
+  let canvas;
+  try {
+    canvas = await html2canvas(document.getElementById("csmPage"),{
+      scale:2, useCORS:true, backgroundColor:"#ffffff"
+    });
+    var img = canvas.toDataURL("image/png"); // throws here if canvas is tainted
+  } catch (err) {
+    console.error(err);
+    alert("⚠ PDF export blocked by the browser.\n\nThis page is being opened directly from disk (file://...), and Chrome blocks exporting images of canvases in that mode for security reasons.\n\nFix: serve this folder over local HTTP instead of double-clicking the file, e.g. run:\n  python -m http.server 5500\nthen open http://localhost:5500/admin1-reports.html");
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const pdf     = new jsPDF({ unit:"mm", format:"a4" });
+  const margin  = 10;
+  const usableW = pdf.internal.pageSize.getWidth()  - margin*2;
+  const usableH = pdf.internal.pageSize.getHeight() - margin*2;
+  const scale   = usableW / canvas.width;
+  const pdfH    = canvas.height * scale;
+
+  if (pdfH <= usableH) {
+    pdf.addImage(img,"PNG",margin,margin,usableW,pdfH);
+  } else {
+    const slicePx = Math.floor(usableH / scale);
+    let offset = 0;
+    while (offset < canvas.height) {
+      const sc = document.createElement("canvas");
+      sc.width  = canvas.width;
+      sc.height = Math.min(slicePx, canvas.height - offset);
+      sc.getContext("2d").drawImage(canvas,0,-offset);
+      pdf.addImage(sc.toDataURL("image/png"),"PNG",margin,margin,usableW,sc.height*scale);
+      offset += slicePx;
+      if (offset < canvas.height) pdf.addPage();
+    }
+  }
+  const name = (currentReport?.office || "report").replace(/\s+/g,"_");
+  pdf.save(`CSM_Report_${name}.pdf`);
+};
+</script>
+</body>
+</html>

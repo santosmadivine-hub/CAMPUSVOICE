@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CampusVoice – Evaluation Mgmt | Admin 1</title>
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+  rel="stylesheet"
+/>
+
+<link rel="stylesheet" href="shared.css">
+
+<style>
+
+body {
+  margin: 0;
+  background: #87cefa;
+  font-family: 'DM Sans', sans-serif;
+  color: #1e293b;
+}
+
+.layout { display: flex; min-height: 100vh; }
+.main   { flex: 1; padding: 28px; }
+
+.page-sub {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 28px;
+}
+
+.card-title { font-size: 18px; font-weight: 700; }
+
+.btn {
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 600;
+}
+
+.btn-primary   { background: #2563eb; color: #fff; }
+.btn-secondary { background: #e2e8f0; color: #0f172a; }
+
+.filter-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.filter-input,
+.filter-select {
+  height: 46px;
+  border: 1px solid #dbe4ee;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.filter-input  { flex: 1; min-width: 250px; }
+.filter-select { width: 220px; }
+
+.table-wrap { overflow-x: auto; }
+
+.modern-table { width: 100%; border-collapse: collapse; }
+
+.modern-table th {
+  text-align: left;
+  font-size: 11px;
+  color: #64748b;
+  padding: 14px 10px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.modern-table td {
+  padding: 16px 10px;
+  border-bottom: 1px solid #edf2f7;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.txn-code { color: #2563eb; font-weight: 700; }
+
+.empty-row {
+  text-align: center;
+  padding: 40px !important;
+  color: #94a3b8;
+}
+
+.btn-view {
+  border: none;
+  background: none;
+  color: #2563eb;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Stat summary bar ── */
+.eval-stats {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.eval-stat-pill {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eval-stat-pill span {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* ── MODAL ── */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 28px;
+  border-radius: 18px;
+  width: 500px;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.modal-content h3 {
+  margin: 0 0 20px;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.modal-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+}
+
+.modal-row:last-of-type { border-bottom: none; }
+
+.modal-label {
+  color: #64748b;
+  font-weight: 600;
+  width: 160px;
+  flex-shrink: 0;
+}
+
+.modal-value { color: #0f172a; font-weight: 500; }
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* ── Loading state ── */
+.loading-row td {
+  text-align: center;
+  padding: 40px !important;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .main { padding: 18px; }
+  .filter-row { flex-direction: column; }
+  .filter-input, .filter-select { width: 100%; }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="layout">
+
+  <div id="sidebar-mount"></div>
+
+  <main class="main">
+
+    <div id="topbar-mount"></div>
+
+    <!-- SUMMARY PILLS -->
+    <div class="eval-stats">
+      <div class="eval-stat-pill">📋 Total <span id="statTotal">0</span></div>
+      <div class="eval-stat-pill">🏢 Offices <span id="statOffices">0</span></div>
+    </div>
+
+    <div class="card">
+
+      <!-- HEADER -->
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+
+        <div class="card-title">Recent Evaluation Submissions</div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-secondary" id="refreshBtn">🔄 Refresh</button>
+          <button class="btn btn-secondary" id="exportBtn">📥 Export CSV</button>
+        </div>
+
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filter-row">
+
+        <input
+          id="searchInput"
+          class="filter-input"
+          placeholder="🔍 Search by code, office, or comments…"
+        />
+
+        <select id="officeFilter" class="filter-select">
+          <option value="">All Offices</option>
+        </select>
+
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-wrap">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>CODE</th>
+              <th>OFFICE</th>
+              <th>SQ1</th><th>SQ2</th><th>SQ3</th><th>SQ4</th>
+              <th>SQ5</th><th>SQ6</th><th>SQ7</th><th>SQ8</th>
+              <th>COMMENTS</th>
+              <th>DATE</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="evaluationTable">
+            <tr class="loading-row"><td colspan="14">Loading evaluations…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </main>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3>📋 Evaluation Details</h3>
+    <div id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+import { getDatabase, ref, onValue }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* ── Firebase config ── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain:        "kristal-adb78.firebaseapp.com",
+  databaseURL:       "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId:         "kristal-adb78",
+  storageBucket:     "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId:             "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId:     "G-LK8D1CBQ2J"
+};
+
+const app       = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db        = getDatabase(app);
+
+/* ── Mount shared UI ── */
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1', 'eval-mgmt');
+document.getElementById('topbar-mount').innerHTML  = buildTopbar('Evaluation Management', 'admin1');
+
+/* ── DOM refs ── */
+const table        = document.getElementById("evaluationTable");
+const searchInput  = document.getElementById("searchInput");
+const officeFilter = document.getElementById("officeFilter");
+
+/* ── State ── */
+let allData = {};
+
+/* =================================================== */
+/* OFFICES                                             */
+/* ✅ Correct path: services/offices  (same as dashboard) */
+/* =================================================== */
+
+onValue(ref(db, "services/offices"), (snap) => {
+  const data      = snap.val();
+  const prevValue = officeFilter.value;
+
+  officeFilter.innerHTML = `<option value="">All Offices</option>`;
+
+  if (!data) return;
+
+  Object.values(data)
+    .map(o => o.name)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b))
+    .forEach(name => {
+      const opt = document.createElement("option");
+      opt.value       = name;
+      opt.textContent = name;
+      if (name === prevValue) opt.selected = true;
+      officeFilter.appendChild(opt);
+    });
+});
+
+/* =================================================== */
+/* EVALUATIONS                                         */
+/* ✅ Correct path: services/evaluations               */
+/* =================================================== */
+
+onValue(ref(db, "services/evaluations"), (snap) => {
+  allData = snap.val() || {};
+  updateSummaryStats();
+  renderTable();
+});
+
+/* ========================= */
+/* SUMMARY STATS             */
+/* ========================= */
+
+function updateSummaryStats() {
+  const entries = Object.values(allData);
+  document.getElementById("statTotal").textContent    = entries.length;
+  document.getElementById("statOffices").textContent  = new Set(entries.map(e => e.office).filter(Boolean)).size;
+}
+
+/* ========================= */
+/* RENDER TABLE              */
+/* ========================= */
+
+function renderTable() {
+
+  const search = searchInput.value.toLowerCase();
+  const office = officeFilter.value;
+
+  /* Filter */
+  const filtered = Object.entries(allData).filter(([, item]) => {
+    const matchSearch = JSON.stringify(item).toLowerCase().includes(search);
+    const matchOffice = !office || item.office === office;
+    return matchSearch && matchOffice;
+  });
+
+  /* Sort: newest first */
+  filtered.sort((a, b) => {
+    const da = new Date(a[1].date || 0);
+    const db = new Date(b[1].date || 0);
+    return db - da;
+  });
+
+  if (!filtered.length) {
+    table.innerHTML = `<tr><td colspan="14" class="empty-row">No evaluations found.</td></tr>`;
+    return;
+  }
+
+  /* ✅ Supports both sqd0–sqd8 (seen in your Firebase) and sq1–sq8 field names */
+  table.innerHTML = filtered.map(([key, item], i) => {
+
+    const sq = [1,2,3,4,5,6,7,8].map(n => {
+      /* try sqd{n} first, then sq{n}, then sqd{n-1} (sqd0 = sq1 offset) */
+      return item[`sqd${n}`] ?? item[`sq${n}`] ?? item[`sqd${n - 1}`] ?? "-";
+    });
+
+    const dateDisplay = item.date
+      ? new Date(item.date).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })
+      : "-";
+
+    return `
+      <tr>
+        <td style="color:#94a3b8;font-size:12px;">${i + 1}</td>
+        <td class="txn-code">${item.transactionCode || item.code || "-"}</td>
+        <td>${item.office || "-"}</td>
+        <td>${sq[0]}</td><td>${sq[1]}</td><td>${sq[2]}</td><td>${sq[3]}</td>
+        <td>${sq[4]}</td><td>${sq[5]}</td><td>${sq[6]}</td><td>${sq[7]}</td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;">
+          ${item.suggestions || "-"}
+        </td>
+        <td>${dateDisplay}</td>
+        <td>
+          <button class="btn-view" onclick="openModal('${key}')">View</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+/* ========================= */
+/* MODAL                     */
+/* ========================= */
+
+window.openModal = (key) => {
+  const item = allData[key];
+  if (!item) return;
+
+  /* Build a nice key-value display */
+  const sq = [1,2,3,4,5,6,7,8].map(n =>
+    item[`sqd${n}`] ?? item[`sq${n}`] ?? item[`sqd${n - 1}`] ?? "-"
+  );
+
+  const rows = [
+    ["Transaction Code", item.transactionCode || item.code || "-"],
+    ["Office",           item.office || "-"],
+    ["Date",             item.date   || "-"],
+    ["Comments",         item.suggestions || "-"],
+    ["SQ1",  sq[0]], ["SQ2", sq[1]], ["SQ3", sq[2]], ["SQ4", sq[3]],
+    ["SQ5",  sq[4]], ["SQ6", sq[5]], ["SQ7", sq[6]], ["SQ8", sq[7]],
+  ];
+
+  document.getElementById("modalBody").innerHTML = rows.map(([label, value]) => `
+    <div class="modal-row">
+      <span class="modal-label">${label}</span>
+      <span class="modal-value">${value}</span>
+    </div>
+  `).join("");
+
+  document.getElementById("modal").style.display = "flex";
+};
+
+window.closeModal = () => {
+  document.getElementById("modal").style.display = "none";
+};
+
+/* Close modal on backdrop click */
+document.getElementById("modal").addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+/* ========================= */
+/* EXPORT CSV                */
+/* ========================= */
+
+document.getElementById("exportBtn").onclick = () => {
+
+  const headers = ["#","Code","Office","SQ1","SQ2","SQ3","SQ4","SQ5","SQ6","SQ7","SQ8","Comments","Date"];
+
+  const rows = Object.values(allData).map((item, i) => {
+    const sq = [1,2,3,4,5,6,7,8].map(n =>
+      item[`sqd${n}`] ?? item[`sq${n}`] ?? item[`sqd${n - 1}`] ?? ""
+    );
+    return [
+      i + 1,
+      item.transactionCode || item.code || "",
+      item.office   || "",
+      ...sq,
+      item.suggestions || "",
+      item.date     || ""
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
+  });
+
+  const csv  = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = "evaluations.csv"; a.click();
+  URL.revokeObjectURL(url);
+};
+
+/* ========================= */
+/* REFRESH + FILTER EVENTS   */
+/* ========================= */
+
+document.getElementById("refreshBtn").onclick = () => location.reload();
+
+searchInput.addEventListener("input",    renderTable);
+officeFilter.addEventListener("change",  renderTable);
+
+</script>
+
+</body>
+</html>
