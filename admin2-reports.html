@@ -881,8 +881,7 @@ function createOfficialDocument(report) {
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const generatedDate = new Date(report.generatedAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   
-  const narrative = generateNarrative(report.office, report.respondents, report.avgSatisfaction, report.dimensionAverages);
-
+  const narrative = generateNarrative(report.office, report.respondents, parseFloat(report.avgSatisfaction), report.dimensionAverages);
   const officialHTML = `
     <div class="official-report" id="csmPage">
       <!-- LETTERHEAD WITH LOGOS -->
