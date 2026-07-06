@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Dashboard | Admin 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  /* --- Admin 2: office badge --- */
+  .card-header-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .badge-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(37,99,235,0.12);
+    color:#3b82f6;
+    font-family:'Syne',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    padding:6px 14px;
+    border-radius:999px;
+    border:1px solid rgba(59,130,246,0.35);
+    white-space:nowrap;
+  }
+
+  /* Weekly line chart */
+  .line-chart-wrap{
+    margin-top:12px;
+  }
+  #line-chart-svg{
+    width:100%;
+    height:220px;
+    display:block;
+  }
+
+  /* --- Evaluation Status card --- */
+  .eval-status-card{
+    margin-top:24px;
+  }
+  .eval-status-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .eval-filters{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-top:14px;
+  }
+  .eval-filter-group{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:180px;
+  }
+  .eval-filter-label{
+    font-family:'DM Sans',sans-serif;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:#94a3b8;
+  }
+  .eval-filter-select{
+    appearance:none;
+    -webkit-appearance:none;
+    background:#fff;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    padding:10px 36px 10px 14px;
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    color:#1e293b;
+    cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+  }
+  .eval-filter-select:focus{
+    outline:none;
+    border-color:#2563eb;
+    box-shadow:0 0 0 3px rgba(37,99,235,0.12);
+  }
+
+  .status-rows{
+    margin-top:24px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .status-row{
+    display:grid;
+    grid-template-columns:130px 1fr 36px;
+    align-items:center;
+    gap:14px;
+  }
+  .status-label-wrap{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .status-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    flex-shrink:0;
+  }
+  .status-label{
+    font-family:'Syne',sans-serif;
+    font-weight:700;
+    font-size:14px;
+  }
+  .status-bar-track{
+    background:#e9edf3;
+    border-radius:999px;
+    height:10px;
+    width:100%;
+    overflow:hidden;
+  }
+  .status-bar-fill{
+    height:100%;
+    border-radius:999px;
+    width:0%;
+    transition:width 0.4s ease;
+  }
+  .status-count{
+    font-family:'Syne',sans-serif;
+    font-weight:800;
+    font-size:15px;
+    color:#0f172a;
+    text-align:right;
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+      <div class="stat-card purple">
+        <div class="stat-icon">📅</div>
+        <div class="stat-label">Daily</div>
+        <div class="stat-value" data-stat="daily">0</div>
+        <div class="stat-sub">Evaluations today</div>
+      </div>
+      <div class="stat-card cyan">
+        <div class="stat-icon">🗓️</div>
+        <div class="stat-label">Weekly</div>
+        <div class="stat-value" data-stat="weekly">0</div>
+        <div class="stat-sub">Evaluations this week</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">📆</div>
+        <div class="stat-label">Monthly</div>
+        <div class="stat-value" data-stat="monthly">0</div>
+        <div class="stat-sub">Evaluations this month</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">🏢</div>
+        <div class="stat-label">Total Office</div>
+        <div class="stat-value" data-stat="totalOffice">0</div>
+        <div class="stat-sub">Offices tracked</div>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts-grid">
+      <div class="card">
+        <div class="card-header-row">
+          <div class="card-title">Weekly Reports <span class="card-sub">— Evaluation trends</span></div>
+          <div class="badge-pill" id="office-count-badge">Total Offices: 0</div>
+        </div>
+        <div class="line-chart-wrap">
+          <svg id="line-chart-svg" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Submission Breakdown</div>
+        <div class="donut-wrap">
+          <svg id="donut-svg" viewBox="0 0 120 120" width="220" height="220">
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#1a2537" stroke-width="20"/>
+          </svg>
+          <div class="donut-legend" id="donut-legend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVALUATION STATUS -->
+    <div class="card eval-status-card">
+      <div class="eval-status-header">
+        <div class="card-title">Evaluation Status <span class="card-sub">— Submitted, pending &amp; resolved by month</span></div>
+      </div>
+
+      <div class="eval-filters">
+        <div class="eval-filter-group">
+          <label class="eval-filter-label" for="eval-month-select">Month</label>
+          <select id="eval-month-select" class="eval-filter-select"></select>
+        </div>
+        <div class="eval-filter-group">
+          <label class="eval-filter-label" for="eval-office-select">Office</label>
+          <select id="eval-office-select" class="eval-filter-select">
+            <option value="all">All Offices</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="status-rows">
+      
+
+        <div class="status-row">
+          <div class="status-label-wrap">
+            <div class="status-dot" style="background:#f59e0b"></div>
+            <div class="status-label" style="color:#f59e0b">Pending</div>
+          </div>
+          <div class="status-bar-track">
+            <div class="status-bar-fill" id="bar-pending" style="background:#f59e0b"></div>
+          </div>
+          <div class="status-count" id="count-pending">0</div>
+        </div>
+
+        <div class="status-row">
+          <div class="status-label-wrap">
+            <div class="status-dot" style="background:#10b981"></div>
+            <div class="status-label" style="color:#10b981">Resolved</div>
+          </div>
+          <div class="status-bar-track">
+            <div class="status-bar-fill" id="bar-resolved" style="background:#10b981"></div>
+          </div>
+          <div class="status-count" id="count-resolved">0</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  onValue
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId: "kristal-adb78",
+  storageBucket: "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId: "G-LK8D1CBQ2J"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Build UI
+document.getElementById("sidebar-mount").innerHTML =
+buildSidebar("admin2", "dashboard");
+
+document.getElementById("topbar-mount").innerHTML =
+buildTopbar("Dashboard", "admin2");
+
+// ======================
+// STATE
+// ======================
+let evaluations = [];
+let officeCount = 0;
+let officeNames = [];
+
+// ======================
+// LOAD OFFICE LIST -> cleanliness/office
+// (kept here only to drive the "Total Office" stat + badge count,
+//  and to populate the Office filter on the Evaluation Status card)
+// ======================
+const officeRef = ref(db, "cleanliness/office");
+
+onValue(officeRef, (snapshot) => {
+  const data = snapshot.val() || {};
+  officeCount = Object.keys(data).length;
+
+  officeNames = Object.entries(data).map(([id, o]) => {
+    if (o && typeof o === "object") return o.name || o.officeName || id;
+    return id;
+  });
+
+  document.querySelector('[data-stat="totalOffice"]').textContent = officeCount;
+
+  const badge = document.getElementById("office-count-badge");
+  if (badge) badge.textContent = `Total Offices: ${officeCount}`;
+
+  populateOfficeSelect();
+  renderEvalStatus();
+});
+
+// ======================
+// LOAD CLEANLINESS EVALUATIONS -> cleanliness/cleanlinessevaluation
+// ======================
+const evalRef = ref(db, "cleanliness/cleanlinessevaluation");
+
+onValue(evalRef, (snapshot) => {
+  const data = snapshot.val() || {};
+
+  evaluations = Object.entries(data).map(([id, ev]) => ({
+    id,
+    officeName: ev.officeName || "Unknown",
+    comments: ev.comments || "",
+    rating1: Number(ev.rating1) || 0,
+    rating2: Number(ev.rating2) || 0,
+    rating3: Number(ev.rating3) || 0,
+    rating4: Number(ev.rating4) || 0,
+    timestamp: Number(ev.timestamp) || 0,
+    status: (ev.status || "submitted").toString().toLowerCase()
+  }));
+
+  renderDashboard();
+  populateMonthSelect();
+  populateOfficeSelect();
+  renderEvalStatus();
+});
+
+// ======================
+// RENDER
+// ======================
+function avgOf(ev) {
+  return (ev.rating1 + ev.rating2 + ev.rating3 + ev.rating4) / 4;
+}
+
+function renderDashboard() {
+  renderStatCards();
+  renderLineChart();
+  renderDonut();
+}
+
+function renderStatCards() {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const startOfWeek = new Date(startOfDay);
+  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+
+  const startOfMonth = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), 1);
+
+  const daily = evaluations.filter(e => e.timestamp >= startOfDay.getTime()).length;
+  const weekly = evaluations.filter(e => e.timestamp >= startOfWeek.getTime()).length;
+  const monthly = evaluations.filter(e => e.timestamp >= startOfMonth.getTime()).length;
+
+  document.querySelector('[data-stat="daily"]').textContent = daily;
+  document.querySelector('[data-stat="weekly"]').textContent = weekly;
+  document.querySelector('[data-stat="monthly"]').textContent = monthly;
+  document.querySelector('[data-stat="totalOffice"]').textContent = officeCount;
+}
+
+// ======================
+// WEEKLY REPORTS — LINE CHART (last 7 days)
+// ======================
+function renderLineChart() {
+  const svg = document.getElementById("line-chart-svg");
+  svg.innerHTML = "";
+
+  const width = 600, height = 220;
+  const padding = { top: 24, right: 20, bottom: 34, left: 28 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  // Build last 7 days (oldest -> newest)
+  const days = [];
+  const counts = [];
+  for (let i = 6; i >= 0; i--) {
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    dayStart.setDate(dayStart.getDate() - i);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayStart.getDate() + 1);
+
+    const label = dayStart.toLocaleDateString(undefined, { weekday: "short" });
+    const count = evaluations.filter(
+      e => e.timestamp >= dayStart.getTime() && e.timestamp < dayEnd.getTime()
+    ).length;
+
+    days.push(label);
+    counts.push(count);
+  }
+
+  const maxCount = Math.max(1, ...counts);
+  const xStep = counts.length > 1 ? chartW / (counts.length - 1) : 0;
+
+  const points = counts.map((c, i) => ({
+    x: padding.left + i * xStep,
+    y: padding.top + chartH - (c / maxCount) * chartH,
+    c
+  }));
+
+  // Gridlines
+  const gridLines = 4;
+  for (let g = 0; g <= gridLines; g++) {
+    const y = padding.top + (chartH / gridLines) * g;
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", padding.left);
+    line.setAttribute("x2", width - padding.right);
+    line.setAttribute("y1", y);
+    line.setAttribute("y2", y);
+    line.setAttribute("stroke", "rgba(148,163,184,0.15)");
+    line.setAttribute("stroke-width", "1");
+    svg.appendChild(line);
+  }
+
+  if (points.length > 1) {
+    // Area fill under the line
+    const areaPath =
+      `M${points[0].x},${padding.top + chartH} ` +
+      points.map(p => `L${p.x},${p.y}`).join(" ") +
+      ` L${points[points.length - 1].x},${padding.top + chartH} Z`;
+    const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    area.setAttribute("d", areaPath);
+    area.setAttribute("fill", "rgba(37,99,235,0.12)");
+    area.setAttribute("stroke", "none");
+    svg.appendChild(area);
+
+    // Line
+    const linePath = points.map((p, i) => (i === 0 ? "M" : "L") + `${p.x},${p.y}`).join(" ");
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    line.setAttribute("d", linePath);
+    line.setAttribute("fill", "none");
+    line.setAttribute("stroke", "#2563eb");
+    line.setAttribute("stroke-width", "2.5");
+    line.setAttribute("stroke-linecap", "round");
+    line.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(line);
+  }
+
+  // Dots + labels
+  points.forEach((p, i) => {
+    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    dot.setAttribute("cx", p.x);
+    dot.setAttribute("cy", p.y);
+    dot.setAttribute("r", "4");
+    dot.setAttribute("fill", "#2563eb");
+    dot.setAttribute("stroke", "#ffffff");
+    dot.setAttribute("stroke-width", "1.5");
+    svg.appendChild(dot);
+
+    const val = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    val.setAttribute("x", p.x);
+    val.setAttribute("y", p.y - 10);
+    val.setAttribute("text-anchor", "middle");
+    val.setAttribute("font-size", "10");
+    val.setAttribute("font-family", "DM Sans, sans-serif");
+    val.setAttribute("fill", "#64748b");
+    val.textContent = p.c;
+    svg.appendChild(val);
+
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", p.x);
+    label.setAttribute("y", height - 10);
+    label.setAttribute("text-anchor", "middle");
+    label.setAttribute("font-size", "11");
+    label.setAttribute("font-family", "DM Sans, sans-serif");
+    label.setAttribute("fill", "#94a3b8");
+    label.textContent = days[i];
+    svg.appendChild(label);
+  });
+
+  if (evaluations.length === 0) {
+    const empty = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    empty.setAttribute("x", width / 2);
+    empty.setAttribute("y", height / 2);
+    empty.setAttribute("text-anchor", "middle");
+    empty.setAttribute("font-size", "13");
+    empty.setAttribute("font-family", "DM Sans, sans-serif");
+    empty.setAttribute("fill", "#94a3b8");
+    empty.textContent = "No evaluations yet";
+    svg.appendChild(empty);
+  }
+}
+
+function renderDonut() {
+  const svg = document.getElementById("donut-svg");
+  const legend = document.getElementById("donut-legend");
+  const r = 46;
+  const circumference = 2 * Math.PI * r;
+
+  const total = evaluations.length;
+
+  // Remove previously drawn segments (keep the base track circle)
+  svg.querySelectorAll(".donut-segment").forEach(el => el.remove());
+  svg.querySelectorAll("text").forEach(el => el.remove());
+
+  if (total === 0) {
+    legend.innerHTML = `<div class="legend-item">No evaluations yet</div>`;
+    return;
+  }
+
+  // Positive: avg >= 4 | Neutral: 3 <= avg < 4 | Negative: avg < 3
+  const buckets = { positive: 0, neutral: 0, negative: 0 };
+  evaluations.forEach(e => {
+    const avg = avgOf(e);
+    if (avg >= 4) buckets.positive++;
+    else if (avg >= 3) buckets.neutral++;
+    else buckets.negative++;
+  });
+
+  const segments = [
+    { key: "positive", label: "Positive", color: "#10b981", count: buckets.positive },
+    { key: "neutral", label: "Neutral", color: "#f59e0b", count: buckets.neutral },
+    { key: "negative", label: "Negative", color: "#ef4444", count: buckets.negative }
+  ];
+
+  let offsetPct = 0;
+  segments.forEach(seg => {
+    const pct = (seg.count / total) * 100;
+    if (pct <= 0) return;
+
+    const dash = (pct / 100) * circumference;
+    const gap = circumference - dash;
+    const dashOffset = -((offsetPct / 100) * circumference);
+
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("class", "donut-segment");
+    circle.setAttribute("cx", "60");
+    circle.setAttribute("cy", "60");
+    circle.setAttribute("r", String(r));
+    circle.setAttribute("fill", "none");
+    circle.setAttribute("stroke", seg.color);
+    circle.setAttribute("stroke-width", "20");
+    circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
+    circle.setAttribute("stroke-dashoffset", String(dashOffset));
+    circle.setAttribute("stroke-linecap", "round");
+    circle.setAttribute("transform", "rotate(-90 60 60)");
+    svg.appendChild(circle);
+
+    offsetPct += pct;
+  });
+
+  const centerText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  centerText.setAttribute("x", "60");
+  centerText.setAttribute("y", "65");
+  centerText.setAttribute("text-anchor", "middle");
+  centerText.setAttribute("fill", "#0000000");
+  centerText.setAttribute("font-size", "15");
+  centerText.setAttribute("font-family", "Syne,sans-serif");
+  centerText.setAttribute("font-weight", "800");
+  centerText.textContent = String(total);
+  svg.appendChild(centerText);
+
+  legend.innerHTML = segments.map(seg => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${seg.color}"></div>
+      ${seg.label} (${seg.count})
+    </div>
+  `).join("");
+}
+
+// ======================
+// EVALUATION STATUS — Submitted / Pending / Resolved by month + office
+// ======================
+function monthKey(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthLabel(key) {
+  const [y, m] = key.split("-").map(Number);
+  const d = new Date(y, m - 1, 1);
+  return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+}
+
+function populateMonthSelect() {
+  const select = document.getElementById("eval-month-select");
+  if (!select) return;
+
+  const currentKey = monthKey(Date.now());
+  const keysFromData = evaluations.map(e => monthKey(e.timestamp));
+  const keys = Array.from(new Set([currentKey, ...keysFromData])).sort().reverse();
+
+  const prevValue = select.value;
+
+  select.innerHTML = keys
+    .map(k => `<option value="${k}">${monthLabel(k)}</option>`)
+    .join("");
+
+  if (keys.includes(prevValue)) {
+    select.value = prevValue;
+  } else {
+    select.value = currentKey;
+  }
+}
+
+function populateOfficeSelect() {
+  const select = document.getElementById("eval-office-select");
+  if (!select) return;
+
+  const namesFromEvals = evaluations.map(e => e.officeName).filter(Boolean);
+  const names = Array.from(new Set([...officeNames, ...namesFromEvals])).sort();
+
+  const prevValue = select.value || "all";
+
+  select.innerHTML =
+    `<option value="all">All Offices</option>` +
+    names.map(n => `<option value="${n}">${n}</option>`).join("");
+
+  select.value = names.includes(prevValue) || prevValue === "all" ? prevValue : "all";
+}
+
+function setBar(kind, count, max) {
+  const bar = document.getElementById(`bar-${kind}`);
+  const countEl = document.getElementById(`count-${kind}`);
+  const pct = max > 0 ? Math.max((count / max) * 100, count > 0 ? 4 : 0) : 0;
+  if (bar) bar.style.width = `${pct}%`;
+  if (countEl) countEl.textContent = String(count);
+}
+
+function renderEvalStatus() {
+  const monthSelect = document.getElementById("eval-month-select");
+  const officeSelect = document.getElementById("eval-office-select");
+  if (!monthSelect || !officeSelect) return;
+
+  const selectedMonth = monthSelect.value || monthKey(Date.now());
+  const selectedOffice = officeSelect.value || "all";
+
+  const filtered = evaluations.filter(e => {
+    const monthMatch = monthKey(e.timestamp) === selectedMonth;
+    const officeMatch = selectedOffice === "all" || e.officeName === selectedOffice;
+    return monthMatch && officeMatch;
+  });
+
+  const counts = { pending: 0, resolved: 0 };
+  filtered.forEach(e => {
+    if (e.status === "pending") counts.pending++;
+    else if (e.status === "resolved") counts.resolved++;
+  });
+
+  const max = Math.max(1, counts.pending, counts.resolved);
+
+  setBar("pending", counts.pending, max);
+  setBar("resolved", counts.resolved, max);
+}
+
+document.addEventListener("change", (e) => {
+  if (e.target && (e.target.id === "eval-month-select" || e.target.id === "eval-office-select")) {
+    renderEvalStatus();
+  }
+});
+
+</script>
+</body>
+</html>

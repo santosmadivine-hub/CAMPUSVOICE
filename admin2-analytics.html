@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Analytics | Admin 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  /* --- Analytics (cleanliness): stat cards, trend chart, leaderboard, trend rows --- */
+  .stat-grid-alt{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:16px;
+    margin-bottom:20px;
+  }
+  .stat-card-alt{
+    background:#ffffff;
+    border-radius:14px;
+    padding:18px 20px;
+    border-left:4px solid #2563eb;
+  }
+  .stat-card-alt.accent-green{ border-left-color:#10b981; }
+  .stat-card-alt.accent-purple{ border-left-color:#8b5cf6; }
+  .stat-card-alt .sca-label{
+    font-family:'DM Sans',sans-serif;
+    font-size:13px;
+    color:#64748b;
+    margin-bottom:6px;
+  }
+  .stat-card-alt .sca-value{
+    font-family:'Syne',sans-serif;
+    font-size:2rem;
+    font-weight:800;
+    color:#0f1b32;
+  }
+  .stat-card-alt.accent-green .sca-value{ color:#10b981; }
+  .stat-card-alt .sca-sub{
+    font-family:'DM Sans',sans-serif;
+    font-size:12px;
+    color:#94a3b8;
+    margin-top:4px;
+  }
+
+  .analytics-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  @media (max-width: 900px){
+    .analytics-grid{ grid-template-columns:1fr; }
+  }
+
+  .trend-chart-wrap{ margin-top:10px; }
+  .trend-svg{ width:100%; height:140px; }
+  .trend-axis-row{
+    display:flex;
+    justify-content:space-between;
+    margin-top:6px;
+    font-size:0.7rem;
+    color:var(--muted, #94a3b8);
+    font-family:'DM Sans',sans-serif;
+  }
+  .trend-legend{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:10px;
+    font-size:12px;
+    color:#64748b;
+    font-family:'DM Sans',sans-serif;
+  }
+  .trend-legend .dot{
+    width:8px; height:8px; border-radius:50%; background:#2563eb; display:inline-block;
+  }
+
+  .leaderboard-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 0;
+    border-bottom:1px solid rgba(148,163,184,0.12);
+  }
+  .leaderboard-row:last-child{ border-bottom:none; }
+  .lb-left{ display:flex; align-items:center; gap:12px; }
+  .lb-rank{
+    width:28px; height:28px;
+    border-radius:50%;
+    background:#e2e8f0;
+    color:#475569;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif;
+    font-weight:800;
+    font-size:13px;
+  }
+  .lb-rank.rank-1{ background:#d1fae5; color:#059669; }
+  .lb-office-name{
+    font-family:'Syne',sans-serif;
+    font-weight:700;
+    color:#0f1b32;
+    font-size:14px;
+  }
+  .lb-office-meta{
+    font-family:'DM Sans',sans-serif;
+    font-size:12px;
+    color:#94a3b8;
+  }
+  .lb-right{ text-align:right; }
+  .lb-score{
+    font-family:'Syne',sans-serif;
+    font-weight:800;
+    color:#0f1b32;
+    font-size:15px;
+  }
+  .lb-pct{
+    font-family:'DM Sans',sans-serif;
+    font-size:12px;
+    color:#94a3b8;
+  }
+  .lb-empty{
+    text-align:center;
+    color:#94a3b8;
+    padding:20px 0;
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+  }
+
+  .ot-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 0;
+    border-bottom:1px solid rgba(148,163,184,0.12);
+  }
+  .ot-row:last-child{ border-bottom:none; }
+  .ot-name{
+    font-family:'Syne',sans-serif;
+    font-weight:700;
+    color:#0f1b32;
+    font-size:14px;
+  }
+  .ot-meta{
+    font-family:'DM Sans',sans-serif;
+    font-size:12px;
+    color:#94a3b8;
+  }
+  .ot-right{ display:flex; align-items:center; gap:10px; }
+  .ot-delta{
+    font-family:'DM Sans',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    color:#94a3b8;
+  }
+  .ot-delta.up{ color:#10b981; }
+  .ot-delta.down{ color:#ef4444; }
+  .ot-badge{
+    background:#e2e8f0;
+    color:#475569;
+    font-family:'DM Sans',sans-serif;
+    font-size:11px;
+    font-weight:700;
+    padding:4px 10px;
+    border-radius:999px;
+  }
+
+  /* Office Trend card now spans the full row on its own */
+  .office-trend-card{ margin-bottom:16px; }
+  .office-trend-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+    gap:4px 32px;
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+
+    <!-- STAT CARDS -->
+    <div class="stat-grid-alt">
+      <div class="stat-card-alt">
+        <div class="sca-label">Total Evaluations</div>
+        <div class="sca-value" id="stat-total">0</div>
+        <div class="sca-sub">All time</div>
+      </div>
+      <div class="stat-card-alt accent-green">
+        <div class="sca-label">Avg Satisfaction</div>
+        <div class="sca-value" id="stat-avg-satisfaction">0%</div>
+        <div class="sca-sub">Across all ratings</div>
+      </div>
+      <div class="stat-card-alt accent-purple">
+        <div class="sca-label">Active Offices</div>
+        <div class="sca-value" id="stat-active-offices">0</div>
+        <div class="sca-sub" id="stat-active-offices-sub">of 0 total offices</div>
+      </div>
+    </div>
+
+    <!-- ROW: SUBMISSION TREND + RATING DISTRIBUTION -->
+    <div class="analytics-grid">
+      <div class="card">
+        <div class="card-title">Submission Trend <span class="card-sub">— last 30 days</span></div>
+        <div class="trend-chart-wrap">
+          <svg viewBox="0 0 300 140" class="trend-svg" id="trend-svg" preserveAspectRatio="none"></svg>
+          <div class="trend-axis-row" id="trend-axis-row"></div>
+          <div class="trend-legend"><span class="dot"></span> Daily submissions</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Rating Distribution <span class="card-sub">— all offices</span></div>
+        <div class="bar-chart" id="rating-distribution-chart" style="margin-top:8px;"></div>
+      </div>
+    </div>
+
+    <!-- OFFICE TREND — full width -->
+    <div class="card office-trend-card">
+      <div class="card-title" id="office-trend-title">Office Trend</div>
+      <div id="office-trend-list" class="office-trend-grid" style="margin-top:6px;"></div>
+    </div>
+  </main>
+</div>
+<script src="shared.js"></script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  onValue
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId: "kristal-adb78",
+  storageBucket: "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId: "G-LK8D1CBQ2J"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Build UI
+document.getElementById("sidebar-mount").innerHTML =
+  buildSidebar("admin2", "analytics");
+
+document.getElementById("topbar-mount").innerHTML =
+  buildTopbar("Analytics", "admin2");
+
+// ======================
+// STATE
+// ======================
+let evaluations = [];   // [{id, officeName, rating1..4, timestamp}]
+let offices = {};       // { officeKey: officeName }
+
+function avgOf(e) {
+  return (e.rating1 + e.rating2 + e.rating3 + e.rating4) / 4;
+}
+
+// ======================
+// LOAD OFFICES -> cleanliness/office
+// ======================
+const officeRef = ref(db, "cleanliness/office");
+
+onValue(officeRef, (snapshot) => {
+  const data = snapshot.val() || {};
+  offices = {};
+  Object.entries(data).forEach(([key, val]) => {
+    offices[key] = (val && val.name) ? val.name : key;
+  });
+  renderAll();
+});
+
+// ======================
+// LOAD CLEANLINESS EVALUATIONS -> cleanliness/cleanlinessevaluation
+// ======================
+const evalRef = ref(db, "cleanliness/cleanlinessevaluation");
+
+onValue(evalRef, (snapshot) => {
+  const data = snapshot.val() || {};
+  evaluations = Object.entries(data).map(([id, ev]) => ({
+    id,
+    officeName: ev.officeName || "Unknown",
+    comments: ev.comments || "",
+    rating1: Number(ev.rating1) || 0,
+    rating2: Number(ev.rating2) || 0,
+    rating3: Number(ev.rating3) || 0,
+    rating4: Number(ev.rating4) || 0,
+    timestamp: Number(ev.timestamp) || 0
+  }));
+  renderAll();
+});
+
+// ======================
+// RENDER ORCHESTRATOR
+// ======================
+function renderAll() {
+  renderStatCards();
+  renderSubmissionTrend();
+  renderOfficeTrend();
+  renderRatingDistribution();
+  if (typeof animateBars === "function") animateBars();
+}
+
+// ======================
+// STAT CARDS
+// ======================
+function renderStatCards() {
+  document.getElementById("stat-total").textContent = evaluations.length;
+
+  const avgSatisfaction = evaluations.length
+    ? Math.round((evaluations.reduce((sum, e) => sum + avgOf(e), 0) / evaluations.length / 5) * 100)
+    : 0;
+  document.getElementById("stat-avg-satisfaction").textContent = `${avgSatisfaction}%`;
+
+  const activeOffices = new Set(evaluations.map(e => e.officeName)).size;
+  const totalOffices = Object.keys(offices).length;
+  document.getElementById("stat-active-offices").textContent = activeOffices;
+  document.getElementById("stat-active-offices-sub").textContent = `of ${totalOffices} total offices`;
+}
+
+// ======================
+// SUBMISSION TREND (last 30 days)
+// ======================
+function renderSubmissionTrend() {
+  const days = 30;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const buckets = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    buckets.push({ date: d, count: 0 });
+  }
+
+  evaluations.forEach(e => {
+    if (!e.timestamp) return;
+    const d = new Date(e.timestamp);
+    d.setHours(0, 0, 0, 0);
+    const bucket = buckets.find(b => b.date.getTime() === d.getTime());
+    if (bucket) bucket.count++;
+  });
+
+  const maxCount = Math.max(1, ...buckets.map(b => b.count));
+  const width = 300, height = 140, padding = 6;
+  const usableHeight = height - padding * 2;
+  const stepX = (width - padding * 2) / (buckets.length - 1);
+
+  const points = buckets.map((b, i) => {
+    const x = padding + i * stepX;
+    const y = padding + usableHeight - (b.count / maxCount) * usableHeight;
+    return { x, y };
+  });
+
+  const linePoints = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const areaPath = `M${points[0].x.toFixed(1)},${(height - padding).toFixed(1)} ` +
+    points.map(p => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") +
+    ` L${points[points.length - 1].x.toFixed(1)},${(height - padding).toFixed(1)} Z`;
+
+  const svg = document.getElementById("trend-svg");
+  svg.innerHTML = `
+    <path d="${areaPath}" fill="rgba(37,99,235,0.12)" stroke="none"></path>
+    <polyline points="${linePoints}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+  `;
+
+  // Axis labels: evenly spaced day-of-month ticks
+  const axisRow = document.getElementById("trend-axis-row");
+  const tickIndices = [0, 5, 10, 15, 20, 25, buckets.length - 1];
+  axisRow.innerHTML = tickIndices
+    .map(i => `<span>${buckets[i].date.getDate()}</span>`)
+    .join("");
+}
+
+// ======================
+// OFFICE TREND (this month vs last month)
+// ======================
+function renderOfficeTrend() {
+  const now = new Date();
+  const currMonth = now.getMonth();
+  const currYear = now.getFullYear();
+  const prevDate = new Date(currYear, currMonth - 1, 1);
+  const prevMonth = prevDate.getMonth();
+  const prevYear = prevDate.getFullYear();
+
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  document.getElementById("office-trend-title").innerHTML =
+    `Office Trend <span class="card-sub">— ${monthNames[prevMonth]} ${prevYear} vs ${monthNames[currMonth]} ${currYear}</span>`;
+
+  function countForMonth(officeName, month, year) {
+    return evaluations.filter(e => {
+      if (e.officeName !== officeName || !e.timestamp) return false;
+      const d = new Date(e.timestamp);
+      return d.getMonth() === month && d.getFullYear() === year;
+    }).length;
+  }
+
+  const officeNames = Object.values(offices);
+  const el = document.getElementById("office-trend-list");
+
+  if (officeNames.length === 0) {
+    el.innerHTML = `<div class="lb-empty">No offices yet.</div>`;
+    return;
+  }
+
+  el.innerHTML = officeNames.map(name => {
+    const curr = countForMonth(name, currMonth, currYear);
+    const prev = countForMonth(name, prevMonth, prevYear);
+    const delta = curr - prev;
+
+    let deltaHtml, badgeHtml = "";
+    if (curr === 0 && prev === 0) {
+      deltaHtml = `<span class="ot-delta">—</span>`;
+      badgeHtml = `<span class="ot-badge">new</span>`;
+    } else if (prev === 0 && curr > 0) {
+      deltaHtml = `<span class="ot-delta up">▲ +${curr}</span>`;
+      badgeHtml = `<span class="ot-badge">new</span>`;
+    } else if (delta > 0) {
+      deltaHtml = `<span class="ot-delta up">▲ +${delta}</span>`;
+    } else if (delta < 0) {
+      deltaHtml = `<span class="ot-delta down">▼ ${delta}</span>`;
+    } else {
+      deltaHtml = `<span class="ot-delta">—</span>`;
+    }
+
+    return `
+      <div class="ot-row">
+        <div>
+          <div class="ot-name">${name}</div>
+          <div class="ot-meta">${curr} eval${curr === 1 ? '' : 's'} this month</div>
+        </div>
+        <div class="ot-right">
+          ${deltaHtml}
+          ${badgeHtml}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// ======================
+// RATING DISTRIBUTION (all offices)
+// ======================
+function renderRatingDistribution() {
+  const el = document.getElementById("rating-distribution-chart");
+  const total = evaluations.length;
+
+  const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  evaluations.forEach(e => {
+    const rounded = Math.max(1, Math.min(5, Math.round(avgOf(e))));
+    counts[rounded]++;
+  });
+
+  el.innerHTML = [5, 4, 3, 2, 1].map(star => {
+    const pct = total ? Math.round((counts[star] / total) * 100) : 0;
+    return `
+      <div class="bar-row">
+        <div class="bar-label">${star} Star${star === 1 ? '' : 's'}</div>
+        <div class="bar-track"><div class="bar-fill" data-width="${pct}%" style="background:#2563eb"></div></div>
+        <div class="bar-value">${pct}%</div>
+      </div>
+    `;
+  }).join("");
+}
+
+</script>
+</body>
+</html>

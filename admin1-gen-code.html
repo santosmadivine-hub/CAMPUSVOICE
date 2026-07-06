@@ -62,10 +62,67 @@
 .status-unused { background:#dcfce7; color:#15803d; }
 .status-used   { background:#fee2e2; color:#dc2626; }
 
-/* STAT CARDS */
-.txn-stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:14px; margin-bottom:24px; }
-.txn-stat-card { background:#fff; border:1.5px solid #e2e8f0; border-radius:16px; padding:18px 20px; }
-.txn-stat-num  { font-size:30px; font-weight:800; }
+/* STAT CARDS — expanded with icon circles + percentage badges */
+.txn-stat-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:16px;
+  margin-bottom:24px;
+}
+
+.txn-stat-card {
+  background:#fff;
+  border:1.5px solid #e2e8f0;
+  border-radius:16px;
+  padding:20px 22px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  position:relative;
+  overflow:hidden;
+  transition:box-shadow 0.2s, transform 0.2s;
+}
+.txn-stat-card:hover {
+  box-shadow:0 8px 20px rgba(15,23,42,0.08);
+  transform:translateY(-2px);
+}
+
+.stat-icon-circle {
+  flex-shrink:0;
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+}
+.icon-total    { background:#e0e7ff; }
+.icon-unused   { background:#dcfce7; }
+.icon-used     { background:#fee2e2; }
+.icon-offices  { background:#dbeafe; }
+
+.stat-info { display:flex; flex-direction:column; gap:2px; min-width:0; }
+
+.stat-top-row { display:flex; align-items:baseline; gap:8px; }
+
+.txn-stat-num  { font-size:28px; font-weight:800; color:#0f172a; line-height:1; font-family:'Syne',sans-serif; }
+
+.stat-label { font-size:12.5px; color:#64748b; font-weight:600; white-space:nowrap; }
+
+.stat-percent-badge {
+  display:inline-flex;
+  align-items:center;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+}
+.percent-neutral { background:#f1f5f9; color:#475569; }
+.percent-good    { background:#dcfce7; color:#15803d; }
+.percent-bad     { background:#fee2e2; color:#dc2626; }
+.percent-info    { background:#e0e7ff; color:#4338ca; }
 
 /* TABLE TOOLBAR */
 .table-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:10px; }
@@ -110,20 +167,47 @@
     <!-- STAT CARDS -->
     <div class="txn-stat-grid">
       <div class="txn-stat-card">
-        <div class="txn-stat-num" id="scTotal">0</div>
-        <div>🎟️ Total Codes</div>
+        <div class="stat-icon-circle icon-total">🎟️</div>
+        <div class="stat-info">
+          <div class="stat-top-row">
+            <div class="txn-stat-num" id="scTotal">0</div>
+          </div>
+          <div class="stat-label">Total Codes</div>
+          <span class="stat-percent-badge percent-neutral" id="scTotalBadge">All offices</span>
+        </div>
       </div>
+
       <div class="txn-stat-card">
-        <div class="txn-stat-num" id="scUnused">0</div>
-        <div>✅ Unused</div>
+        <div class="stat-icon-circle icon-unused">✅</div>
+        <div class="stat-info">
+          <div class="stat-top-row">
+            <div class="txn-stat-num" id="scUnused">0</div>
+          </div>
+          <div class="stat-label">Unused</div>
+          <span class="stat-percent-badge percent-good" id="scUnusedBadge">0%</span>
+        </div>
       </div>
+
       <div class="txn-stat-card">
-        <div class="txn-stat-num" id="scUsed">0</div>
-        <div>🔒 Used</div>
+        <div class="stat-icon-circle icon-used">🔒</div>
+        <div class="stat-info">
+          <div class="stat-top-row">
+            <div class="txn-stat-num" id="scUsed">0</div>
+          </div>
+          <div class="stat-label">Used</div>
+          <span class="stat-percent-badge percent-bad" id="scUsedBadge">0%</span>
+        </div>
       </div>
+
       <div class="txn-stat-card">
-        <div class="txn-stat-num" id="scOffices">0</div>
-        <div>🏢 Offices</div>
+        <div class="stat-icon-circle icon-offices">🏢</div>
+        <div class="stat-info">
+          <div class="stat-top-row">
+            <div class="txn-stat-num" id="scOffices">0</div>
+          </div>
+          <div class="stat-label">Offices</div>
+          <span class="stat-percent-badge percent-info" id="scOfficesBadge">0 avg / office</span>
+        </div>
       </div>
     </div>
 
@@ -339,13 +423,27 @@ onValue(ref(db, "services/transaction_code/offices_name"), snap => {
   renderTable();
 });
 
-/* ── Stats ── */
+/* ── Stats (with percentage badges) ── */
 function updateStats(data) {
-  const e = Object.values(data);
-  document.getElementById("scTotal").textContent   = e.length;
-  document.getElementById("scUnused").textContent  = e.filter(c => c.status === "unused").length;
-  document.getElementById("scUsed").textContent    = e.filter(c => c.status === "used").length;
-  document.getElementById("scOffices").textContent = new Set(e.map(c => c.office)).size;
+  const e       = Object.values(data);
+  const total   = e.length;
+  const unused  = e.filter(c => c.status === "unused").length;
+  const used    = e.filter(c => c.status === "used").length;
+  const offices = new Set(e.map(c => c.office)).size;
+
+  document.getElementById("scTotal").textContent   = total;
+  document.getElementById("scUnused").textContent  = unused;
+  document.getElementById("scUsed").textContent    = used;
+  document.getElementById("scOffices").textContent = offices;
+
+  const unusedPct = total ? Math.round((unused / total) * 100) : 0;
+  const usedPct   = total ? Math.round((used   / total) * 100) : 0;
+  const avgPerOffice = offices ? Math.round((total / offices) * 10) / 10 : 0;
+
+  document.getElementById("scTotalBadge").textContent   = offices ? `Across ${offices} office${offices > 1 ? "s" : ""}` : "No offices yet";
+  document.getElementById("scUnusedBadge").textContent  = `${unusedPct}% of total`;
+  document.getElementById("scUsedBadge").textContent    = `${usedPct}% of total`;
+  document.getElementById("scOfficesBadge").textContent = `${avgPerOffice} avg / office`;
 }
 
 /* ── Populate office filter dropdown ── */

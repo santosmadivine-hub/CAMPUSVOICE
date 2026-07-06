@@ -4,27 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CampusVoice – Settings | Admin 1</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
-
 </head>
-
 <body>
 <div class="layout">
-
   <div id="sidebar-mount"></div>
-
   <main class="main fade-in">
-
     <div id="topbar-mount"></div>
-
     <div class="settings-grid">
-
       <!-- ACCOUNT -->
       <div class="settings-section">
         <div class="settings-title">👤 Account Information</div>
-
         <div class="settings-row">
           <div>
             <div class="settings-label">Full Name</div>
@@ -32,29 +23,22 @@
           </div>
           <input id="fullName" class="input-field">
         </div>
-
         <div class="settings-row">
           <div class="settings-label">Email</div>
           <input id="email" class="input-field">
         </div>
-
         <div style="margin-top:16px;">
           <button class="btn btn-primary btn-sm" onclick="saveAccount()">Save Changes</button>
         </div>
       </div>
-
     </div>
-
   </main>
 </div>
-
 <script src="shared.js"></script>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
@@ -65,27 +49,20 @@ const firebaseConfig = {
   appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
   measurementId: "G-LK8D1CBQ2J"
 };
-
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
-
 document.getElementById('sidebar-mount').innerHTML =
   buildSidebar('admin1','settings');
-
 document.getElementById('topbar-mount').innerHTML =
   buildTopbar('Settings','admin1');
-
 /* LOAD SETTINGS */
 const settingsRef = ref(db,"settings/admin1");
-
 onValue(settingsRef,(snap)=>{
   const data = snap.val() || {};
-
   document.getElementById("fullName").value = data.fullName || "";
   document.getElementById("email").value = data.email || "";
 });
-
 /* SAVE ACCOUNT */
 window.saveAccount = () => {
   set(ref(db,"settings/admin1/account"),{
@@ -94,8 +71,6 @@ window.saveAccount = () => {
   });
   alert("Account saved!");
 };
-
 </script>
-
 </body>
 </html>

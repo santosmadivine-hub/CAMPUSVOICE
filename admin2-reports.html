@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Reports | Admin 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @media print {
+    #sidebar-mount, #topbar-mount, .filter-row, .stats-row, .saved-reports-section { display: none !important; }
+    .report-section { break-inside: avoid; }
+  }
+
+  /* Filter Bar */
+  .filter-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+    background: #fff;
+    border-radius: 14px;
+    padding: 18px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .filter-select, .filter-date {
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  .filter-select:focus, .filter-date:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .filter-date {
+    cursor: text;
+  }
+
+  .filter-select {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .btn-generate {
+    padding: 10px 18px;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .btn-generate:hover {
+    background: #1d4ed8;
+  }
+
+  .btn-save {
+    padding: 10px 18px;
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .btn-save:hover {
+    background: #15803d;
+  }
+
+  .btn-save:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
+
+  .empty-state {
+    text-align: center;
+    color: #94a3b8;
+    padding: 40px 0;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* Stat Cards */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 20px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .stat-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f1b32;
+  }
+
+  @media (max-width: 1000px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Report Preview Wrapper */
+  #reportPreview {
+    display: none;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  /* Preview Bar */
+  .preview-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+  }
+
+  .preview-bar .preview-label {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+  }
+
+  .btn-close {
+    background: #e2e8f0;
+    color: #475569;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-close:hover {
+    background: #cbd5e1;
+  }
+
+  /* Report Section */
+  .report-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 32px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .report-header {
+    margin-bottom: 28px;
+  }
+
+  .report-office-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f1b32;
+    margin-bottom: 8px;
+  }
+
+  .report-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .meta-label {
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .meta-value {
+    color: #64748b;
+  }
+
+  /* Summary Table */
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .report-table thead {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .report-table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .report-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 13px;
+  }
+
+  .report-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .report-table tbody tr:hover {
+    background: #f8fafc;
+  }
+
+  .dimension-name {
+    font-weight: 600;
+    color: #0f1b32;
+  }
+
+  .percentage {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #0f1b32;
+  }
+
+  .rating-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .rating-outstanding {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .rating-very-satisfactory {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .rating-satisfactory {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .rating-poor {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .no-data-message {
+    text-align: center;
+    padding: 24px;
+    color: #94a3b8;
+    font-style: italic;
+  }
+
+  /* Saved Reports */
+  .saved-reports-section {
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .saved-reports-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .saved-reports-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    color: #0f1b32;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .saved-reports-count {
+    background: #dbeafe;
+    color: #1e40af;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+
+  .saved-reports-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .saved-reports-table th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .saved-reports-table td {
+    padding: 14px;
+    font-size: 13px;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .saved-reports-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .saved-reports-table tbody tr:hover {
+    background: #f8fafc;
+  }
+
+  .saved-office-name {
+    font-weight: 700;
+    color: #0f1b32;
+  }
+
+  .saved-avg {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+  }
+
+  .action-btns {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-view {
+    background: #0f1b32;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn-view:hover {
+    background: #1e293b;
+  }
+
+  .btn-delete {
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .btn-delete:hover {
+    background: #fecaca;
+  }
+
+  /* Report Header & Footer */
+  .report-header-box {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+    color: #fff;
+    padding: 24px 32px;
+    margin-bottom: 24px;
+    border-radius: 8px;
+  }
+
+  .report-header-box h1 {
+    margin: 0 0 8px 0;
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  .report-header-box p {
+    margin: 4px 0;
+    font-size: 13px;
+    opacity: 0.95;
+  }
+
+  .report-footer-box {
+    background: #f8fafc;
+    border-top: 2px solid #e2e8f0;
+    padding: 20px 32px;
+    margin-top: 24px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #64748b;
+    text-align: center;
+  }
+
+  .report-footer-box p {
+    margin: 4px 0;
+  }
+
+  /* Official Document Style (like Admin 1) */
+  .official-report {
+    background: #fff;
+    font-family: 'Times New Roman', Times, serif;
+    color: #000;
+    line-height: 1.6;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 40px;
+  }
+
+  /* Letterhead */
+  .lh-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .lh-logo-box, .lh-seal-box {
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lh-logo-box img, .lh-seal-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .lh-text {
+    flex: 1;
+    text-align: center;
+    line-height: 1.4;
+    font-size: 10pt;
+  }
+
+  .lh-text .rep {
+    font-size: 8.5pt;
+  }
+
+  .lh-text .uni {
+    font-size: 10.5pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1px;
+  }
+
+  .lh-text .dept {
+    font-size: 10pt;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .lh-text .addr {
+    font-size: 7.5pt;
+    color: #444;
+  }
+
+  .lh-divider {
+    border: none;
+    border-top: 2.5px solid #1a3a6b;
+    margin: 4px 0 10px;
+  }
+
+  .official-title {
+    text-align: center;
+    font-size: 11.5pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+  }
+
+  .official-meta {
+    font-size: 10.5pt;
+    line-height: 1.8;
+    margin-bottom: 10px;
+  }
+
+  .official-meta b {
+    font-weight: bold;
+  }
+
+  .official-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 10pt;
+  }
+
+  .official-table th {
+    background: #1a3a6b;
+    color: #fff;
+    padding: 6px 8px;
+    border: 1px solid #1a3a6b;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .official-table td {
+    border: 1px solid #aaa;
+    padding: 5px 8px;
+  }
+
+  .official-table tr:nth-child(even) td {
+    background: #eef2f9;
+  }
+
+  .official-narrative {
+    font-size: 10.5pt;
+    line-height: 1.7;
+    text-align: justify;
+    margin-bottom: 16px;
+  }
+
+  .official-narrative p {
+    margin-bottom: 10px;
+  }
+
+  .official-signatures {
+    display: flex;
+    gap: 40px;
+    margin-top: 24px;
+    font-size: 10.5pt;
+  }
+
+  .sig-block {
+    flex: 1;
+  }
+
+  .sig-label {
+    color: #555;
+    font-size: 9.5pt;
+    margin-bottom: 30px;
+  }
+
+  .sig-line {
+    border-top: 1px solid #000;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+
+  .sig-name {
+    font-weight: bold;
+    text-transform: uppercase;
+    padding-top: 4px;
+    display: inline-block;
+  }
+
+  .sig-title {
+    font-size: 9.5pt;
+    font-style: italic;
+    color: #333;
+    margin-top: 2px;
+  }
+
+  .official-footer {
+    margin-top: 20px;
+    padding-top: 8px;
+    display: block;
+    width: 100%;
+  }
+
+  .official-footer img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+
+    <div class="filter-row">
+      <input type="date" class="filter-date" id="start-date">
+      <input type="date" class="filter-date" id="end-date">
+
+      <select class="filter-select" id="location-filter">
+        <option value="">Select Office...</option>
+      </select>
+
+      <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
+      <button class="btn-save" id="btn-save-report" disabled>💾 Save Report</button>
+      <button class="btn btn-purple btn-sm" id="btn-export-pdf">📥 Export PDF</button>
+      <button class="btn btn-ghost btn-sm" id="btn-export-csv">📊 Export CSV</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Feedback</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Positive (≥4★)</div>
+        <div class="stat-value" id="stat-positive">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Negative (&lt;3★)</div>
+        <div class="stat-value" id="stat-negative">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Saved Reports</div>
+        <div class="stat-value" id="stat-saved">0</div>
+      </div>
+    </div>
+
+    <!-- REPORT PREVIEW (shown/hidden like Admin 1) -->
+    <div id="reportPreview">
+      <div class="preview-bar">
+        <span class="preview-label" id="previewLabel">📄 Report Preview</span>
+        <button class="btn btn-green" onclick="exportPDF()" style="padding:8px 14px;font-size:13px;">⬇ PDF</button>
+        <button class="btn-close" onclick="closeReport()">✕ Close</button>
+      </div>
+      <div id="report-container"></div>
+      <div id="officialDocument" style="display:none;"></div>
+    </div>
+
+    <div class="saved-reports-section">
+      <div class="saved-reports-header">
+        <h2>📋 Saved Reports</h2>
+        <span class="saved-reports-count" id="saved-reports-count">0 reports</span>
+      </div>
+      <div id="saved-reports-container"></div>
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId: "kristal-adb78",
+  storageBucket: "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId: "G-LK8D1CBQ2J"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin2", "reports");
+document.getElementById("topbar-mount").innerHTML = buildTopbar("Reports", "admin2");
+
+// ======================
+// STATE
+// ======================
+let evaluations = [];
+let offices = {};
+let selectedOffice = "";
+let startDate = "";
+let endDate = "";
+let savedReports = [];
+let currentReport = null; // snapshot of the last generated report, ready to save
+
+// Dimension definitions — matches the 4 questions on the actual
+// Cleanliness Evaluation Form (rating1 -> rating4, in order).
+const DIMENSIONS = [
+  { id: 1, field: "rating1", label: "The area is clean and properly maintained" },
+  { id: 2, field: "rating2", label: "Overall cleanliness of the area" },
+  { id: 3, field: "rating3", label: "Consistency of cleanliness throughout the area" },
+  { id: 4, field: "rating4", label: "Overall satisfaction with the cleanliness" }
+];
+
+const RATING_SCALE = [
+  { min: 90, label: "Outstanding", class: "rating-outstanding" },
+  { min: 75, label: "Very Satisfactory", class: "rating-very-satisfactory" },
+  { min: 60, label: "Satisfactory", class: "rating-satisfactory" },
+  { min: 0, label: "Needs Improvement", class: "rating-poor" }
+];
+
+// ======================
+// LOAD OFFICES
+// ======================
+onValue(ref(db, "cleanliness/office"), (snapshot) => {
+  const data = snapshot.val() || {};
+  offices = {};
+  Object.entries(data).forEach(([key, val]) => {
+    offices[key] = (val && val.name) ? val.name : key;
+  });
+  populateLocationFilter();
+});
+
+// ======================
+// LOAD EVALUATIONS
+// ======================
+// Schema (matches the actual DB record):
+// comments, date, officeName, rating1-4, status, timestamp, userId
+onValue(ref(db, "cleanliness/cleanlinessevaluation"), (snapshot) => {
+  const data = snapshot.val() || {};
+  evaluations = Object.entries(data).map(([id, ev]) => ({
+    id,
+    officeName: ev.officeName || "Unknown",
+    comments: ev.comments || "",
+    date: ev.date || "",
+    rating1: Number(ev.rating1) || 0,
+    rating2: Number(ev.rating2) || 0,
+    rating3: Number(ev.rating3) || 0,
+    rating4: Number(ev.rating4) || 0,
+    status: ev.status || "pending",
+    timestamp: Number(ev.timestamp) || 0,
+    userId: ev.userId || ""
+  }));
+  // Auto-render stats whenever evaluations load
+  renderStats([]);
+});
+
+// ======================
+// LOAD SAVED REPORTS
+// ======================
+onValue(ref(db, "cleanliness/savedReports"), (snapshot) => {
+  const data = snapshot.val() || {};
+  savedReports = Object.entries(data).map(([id, r]) => ({ id, ...r }));
+  savedReports.sort((a, b) => (b.savedOn || 0) - (a.savedOn || 0));
+  renderSavedReports();
+  document.getElementById("stat-saved").textContent = savedReports.length;
+});
+
+// ======================
+// HELPERS
+// ======================
+function getRatingLabel(percentage) {
+  for (const rating of RATING_SCALE) {
+    if (percentage >= rating.min) {
+      return { label: rating.label, class: rating.class };
+    }
+  }
+  return { label: "Needs Improvement", class: "rating-poor" };
+}
+
+function evalAvgScore(e) {
+  return (e.rating1 + e.rating2 + e.rating3 + e.rating4) / 4;
+}
+
+function populateLocationFilter() {
+  const select = document.getElementById("location-filter");
+  const current = select.value;
+  const names = Object.values(offices).sort((a, b) => a.localeCompare(b));
+  select.innerHTML = ['<option value="">Select Office...</option>']
+    .concat(names.map(n => `<option value="${n}">${n}</option>`)).join("");
+  select.value = current;
+}
+
+function formatDateShort(dateStr) {
+  if (!dateStr) return "-";
+  return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
+}
+
+// ======================
+// STATS — Calculate from ALL evaluations (like Admin 1)
+// ======================
+function renderStats(filteredEvals) {
+  // Render KPIs from ALL evaluations in the system
+  const total = evaluations.length;
+  document.getElementById("stat-total").textContent = total;
+
+  if (total === 0) {
+    document.getElementById("stat-positive").textContent = "0";
+    document.getElementById("stat-negative").textContent = "0";
+    return;
+  }
+
+  const positive = evaluations.filter(e => evalAvgScore(e) >= 4).length;
+  const negative = evaluations.filter(e => evalAvgScore(e) < 3).length;
+  document.getElementById("stat-positive").textContent = positive;
+  document.getElementById("stat-negative").textContent = negative;
+}
+
+// ======================
+// GENERATE NARRATIVE (like Admin 1)
+// ======================
+function generateNarrative(office, respondents, overallPct, dimensionAverages) {
+  const perfWord = overallPct >= 90 ? "outstanding" : overallPct >= 75 ? "very satisfactory" : overallPct >= 60 ? "satisfactory" : "needs improvement";
+  const topDims = dimensionAverages.filter(d => parseFloat(d.percentage) >= 90).map(d => d.dimension);
+  const lowDims = dimensionAverages.filter(d => parseFloat(d.percentage) < 75).map(d => d.dimension);
+  const highDims = dimensionAverages.filter(d => parseFloat(d.percentage) >= 80).slice(0, 3).map(d => d.dimension);
+
+  const p1 = `The <strong>results</strong> of the Cleanliness Evaluation Report for the <strong>${office}</strong>, Iloilo State University of Fisheries Science and Technology – San Enrique Campus, with <strong>${respondents}</strong> respondent(s), show an <strong>${perfWord} performance</strong> in cleanliness standards with an average satisfaction rate of <strong>${overallPct.toFixed(2)}%</strong>.
+    ${topDims.length ? `This indicates that the area excels in ${topDims.join(", ")}, reflecting strong maintenance and cleanliness practices.` : ""}`;
+
+  const p2 = `<strong>Regarding specific evaluation dimensions</strong>,
+    ${highDims.length ? `${highDims.join(", ")} demonstrated excellent performance, indicating consistent cleanliness and proper maintenance standards.` : "the facility maintains satisfactory cleanliness levels."}
+    ${lowDims.length ? `Additionally, ${lowDims.join(", ")} scored slightly lower, indicating opportunities for improvement in these areas to enhance overall cleanliness and user satisfaction.` : "All dimensions performed at satisfactory levels or above."}`;
+
+  const p3 = `<strong>Overall</strong>, the facility continues to maintain <strong>${perfWord} cleanliness standards</strong>. Continued attention to maintenance protocols and regular evaluations will help sustain and improve these results. Any identified areas for improvement should be prioritized to ensure the highest standards of cleanliness and facility management.`;
+
+  return [p1, p2, p3];
+}
+
+// ======================
+// CREATE OFFICIAL DOCUMENT (like Admin 1)
+// ======================
+function createOfficialDocument(report) {
+  const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const generatedDate = new Date(report.generatedAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  
+  const narrative = generateNarrative(report.office, report.respondents, report.avgSatisfaction, report.dimensionAverages);
+
+  const officialHTML = `
+    <div class="official-report" id="csmPage">
+      <!-- LETTERHEAD WITH LOGOS -->
+      <div class="lh-row">
+        <div class="lh-logo-box" style="width:100px; height:100px;">
+          <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+        <div class="lh-text">
+          <div class="rep">Republic of the Philippines</div>
+          <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
+          <div class="dept">Research &amp; Development Office</div>
+          <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
+          <div class="addr">Website: www.isufst.edu.ph</div>
+        </div>
+        <div class="lh-seal-box" style="width:100px; height:100px;">
+          <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+      </div>
+
+      <hr class="lh-divider">
+
+      <div class="official-title">Cleanliness Evaluation Report (CER)</div>
+
+      <div class="official-meta">
+        <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
+        <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
+        <b>No. of Respondents:</b> ${report.respondents}
+      </div>
+
+      <table class="official-table">
+        <thead>
+          <tr>
+            <th style="width:50%;text-align:left;padding-left:10px;">Evaluation Question</th>
+            <th style="width:25%;">Percentage (%)</th>
+            <th style="width:25%;">Rating</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${report.dimensionAverages.map(d => `
+            <tr>
+              <td style="padding-left:10px;">${d.dimension}</td>
+              <td style="text-align:center;">${d.percentage}</td>
+              <td style="text-align:center;">${d.rating.label}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div class="official-narrative">
+        ${narrative.map(p => `<p>${p}</p>`).join('')}
+      </div>
+
+      <div class="official-signatures">
+        <div class="sig-block">
+          <div class="sig-label">Prepared by:</div>
+          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
+          <span class="sig-name">Facilities Management Office</span>
+          <span class="sig-title">Campus Voice Administrator</span>
+        </div>
+        <div class="sig-block">
+          <div class="sig-label">Noted by:</div>
+          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
+          <span class="sig-name">Campus Administrator</span>
+          <span class="sig-title">Iloilo State University of Fisheries Science and Technology</span>
+        </div>
+      </div>
+
+      <!-- FOOTER WITH ACCREDITATIONS -->
+      <div class="official-footer">
+        <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
+      </div>
+    </div>
+  `;
+
+  return officialHTML;
+}
+
+// ======================
+// GENERATE REPORT
+// ======================
+function generateReport() {
+  if (!selectedOffice) {
+    alert("Please select an office");
+    return;
+  }
+
+  if (!startDate || !endDate) {
+    alert("Please select both start and end dates");
+    return;
+  }
+
+  const officeEvals = evaluations.filter(e => e.officeName === selectedOffice);
+
+  const startTs = new Date(startDate).getTime();
+  const endTs = new Date(endDate).getTime() + (24 * 60 * 60 * 1000); // Include end date
+
+  const filteredEvals = officeEvals.filter(e => e.timestamp >= startTs && e.timestamp <= endTs);
+
+  renderStats(filteredEvals);
+
+  if (filteredEvals.length === 0) {
+    document.getElementById("report-container").innerHTML = `
+      <div class="empty-state">No evaluations found for the selected office and date range.</div>
+    `;
+    currentReport = null;
+    document.getElementById("btn-save-report").disabled = true;
+    document.getElementById("reportPreview").style.display = "block";
+    return;
+  }
+
+  // Calculate averages for each dimension (rating1 -> rating4)
+  const dimensionAverages = [];
+
+  DIMENSIONS.forEach(dim => {
+    const values = filteredEvals.map(e => e[dim.field]).filter(v => v > 0);
+    if (values.length > 0) {
+      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+      const percentage = (avg / 5) * 100; // Convert 1-5 scale to 0-100%
+      const rating = getRatingLabel(percentage);
+      dimensionAverages.push({
+        dimension: dim.label,
+        percentage: percentage.toFixed(1),
+        rating
+      });
+    }
+  });
+
+  const overallPct = dimensionAverages.reduce((sum, d) => sum + parseFloat(d.percentage), 0) / dimensionAverages.length;
+  const overallRating = getRatingLabel(overallPct);
+
+  // Snapshot ready to be saved
+  currentReport = {
+    office: selectedOffice,
+    startDate,
+    endDate,
+    respondents: filteredEvals.length,
+    avgSatisfaction: overallPct.toFixed(1),
+    ratingLabel: overallRating.label,
+    ratingClass: overallRating.class,
+    dimensionAverages,
+    generatedAt: new Date().toISOString()
+  };
+
+  // Create official document (with letterhead, narrative, signatures, footer)
+  const officialDoc = createOfficialDocument(currentReport);
+  document.getElementById("report-container").innerHTML = officialDoc;
+
+  document.getElementById("previewLabel").textContent = `📄 Report Preview — ${selectedOffice}  (${startDate} → ${endDate})`;
+  document.getElementById("reportPreview").style.display = "block";
+  document.getElementById("reportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
+
+  document.getElementById("btn-save-report").disabled = false;
+}
+
+// ======================
+// CLOSE REPORT (new function like Admin 1)
+// ======================
+window.closeReport = () => {
+  document.getElementById("reportPreview").style.display = "none";
+};
+
+// ======================
+// EXPORT PDF (like Admin 1)
+// ======================
+window.exportPDF = async () => {
+  if (document.getElementById("reportPreview").style.display === "none" || !currentReport) {
+    alert("Please generate or view a report first.");
+    return;
+  }
+
+  const officialDoc = createOfficialDocument(currentReport);
+  document.getElementById("officialDocument").innerHTML = officialDoc;
+
+  let canvas;
+  try {
+    canvas = await html2canvas(document.getElementById("csmPage"), {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff"
+    });
+    var img = canvas.toDataURL("image/png");
+  } catch (err) {
+    console.error(err);
+    alert("⚠ PDF export blocked by the browser.\n\nPlease serve this page over HTTP instead of opening it directly from disk.");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: "mm", format: "a4" });
+  const margin = 10;
+  const usableW = pdf.internal.pageSize.getWidth() - margin * 2;
+  const usableH = pdf.internal.pageSize.getHeight() - margin * 2;
+  const scale = usableW / canvas.width;
+  const pdfH = canvas.height * scale;
+
+  if (pdfH <= usableH) {
+    pdf.addImage(img, "PNG", margin, margin, usableW, pdfH);
+  } else {
+    const slicePx = Math.floor(usableH / scale);
+    let offset = 0;
+    while (offset < canvas.height) {
+      const sc = document.createElement("canvas");
+      sc.width = canvas.width;
+      sc.height = Math.min(slicePx, canvas.height - offset);
+      sc.getContext("2d").drawImage(canvas, 0, -offset);
+      pdf.addImage(sc.toDataURL("image/png"), "PNG", margin, margin, usableW, sc.height * scale);
+      offset += slicePx;
+      if (offset < canvas.height) pdf.addPage();
+    }
+  }
+
+  const name = (currentReport?.office || "report").replace(/\s+/g, "_");
+  pdf.save(`CER_Report_${name}.pdf`);
+  
+  document.getElementById("officialDocument").innerHTML = "";
+};
+
+
+// ======================
+// SAVE REPORT
+// ======================
+function saveReport() {
+  if (!currentReport) return;
+
+  const payload = { ...currentReport, savedOn: Date.now() };
+  push(ref(db, "cleanliness/savedReports"), payload)
+    .then(() => {
+      document.getElementById("btn-save-report").disabled = true;
+    })
+    .catch(err => {
+      alert("Could not save report: " + err.message);
+    });
+}
+
+// ======================
+// SAVED REPORTS TABLE
+// ======================
+function renderSavedReports() {
+  const container = document.getElementById("saved-reports-container");
+  document.getElementById("saved-reports-count").textContent = `${savedReports.length} report${savedReports.length === 1 ? "" : "s"}`;
+
+  if (savedReports.length === 0) {
+    container.innerHTML = `<div class="empty-state">No saved reports yet. Generate a report and hit "Save Report".</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <table class="saved-reports-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Office</th>
+          <th>Date Range</th>
+          <th>Respondents</th>
+          <th>Avg Satisfaction</th>
+          <th>Rating</th>
+          <th>Saved On</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${savedReports.map((r, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td class="saved-office-name">${r.office}</td>
+            <td>${r.startDate} → ${r.endDate}</td>
+            <td>${r.respondents}</td>
+            <td class="saved-avg">${r.avgSatisfaction}%</td>
+            <td><span class="rating-badge ${r.ratingClass}">${r.ratingLabel}</span></td>
+            <td>${r.savedOn ? new Date(r.savedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "-"}</td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-view" data-id="${r.id}">👁 View</button>
+                <button class="btn-delete" data-id="${r.id}">🗑</button>
+              </div>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+
+  container.querySelectorAll(".btn-view").forEach(btn => {
+    btn.addEventListener("click", () => viewSavedReport(btn.dataset.id));
+  });
+  container.querySelectorAll(".btn-delete").forEach(btn => {
+    btn.addEventListener("click", () => deleteSavedReport(btn.dataset.id));
+  });
+}
+
+function viewSavedReport(id) {
+  const r = savedReports.find(sr => sr.id === id);
+  if (!r) return;
+
+  const reportStart = new Date(r.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const reportEnd = new Date(r.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const generatedDate = new Date(r.savedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  const officialDoc = createOfficialDocument(r);
+  document.getElementById("report-container").innerHTML = officialDoc;
+
+  document.getElementById("previewLabel").textContent = `📄 Report Preview — ${r.office}  (${r.startDate} → ${r.endDate})`;
+  document.getElementById("reportPreview").style.display = "block";
+  document.getElementById("reportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
+
+  // Reflect the saved report's filters back into the filter bar
+  document.getElementById("location-filter").value = r.office;
+  document.getElementById("start-date").value = r.startDate;
+  document.getElementById("end-date").value = r.endDate;
+  selectedOffice = r.office;
+  startDate = r.startDate;
+  endDate = r.endDate;
+  currentReport = r;  // Set to enable PDF export
+  document.getElementById("btn-save-report").disabled = true;
+}
+
+function deleteSavedReport(id) {
+  if (!confirm("Delete this saved report? This cannot be undone.")) return;
+  remove(ref(db, `cleanliness/savedReports/${id}`)).catch(err => {
+    alert("Could not delete report: " + err.message);
+  });
+}
+
+// ======================
+// EVENT LISTENERS
+// ======================
+document.getElementById("location-filter").addEventListener("change", (e) => {
+  selectedOffice = e.target.value;
+});
+
+document.getElementById("start-date").addEventListener("change", (e) => {
+  startDate = e.target.value;
+});
+
+document.getElementById("end-date").addEventListener("change", (e) => {
+  endDate = e.target.value;
+});
+
+document.getElementById("btn-generate-report").addEventListener("click", generateReport);
+document.getElementById("btn-save-report").addEventListener("click", saveReport);
+
+// ======================
+// EXPORT PDF (browser print)
+// ======================
+document.getElementById("btn-export-pdf").addEventListener("click", () => {
+  window.print();
+});
+
+// ======================
+// EXPORT CSV
+// ======================
+document.getElementById("btn-export-csv").addEventListener("click", () => {
+  if (!selectedOffice || !startDate || !endDate) {
+    alert("Please generate a report first");
+    return;
+  }
+
+  const officeEvals = evaluations.filter(e => e.officeName === selectedOffice);
+  const startTs = new Date(startDate).getTime();
+  const endTs = new Date(endDate).getTime() + (24 * 60 * 60 * 1000);
+  const filteredEvals = officeEvals.filter(e => e.timestamp >= startTs && e.timestamp <= endTs);
+
+  if (filteredEvals.length === 0) {
+    alert("No data to export.");
+    return;
+  }
+
+  const dimensionAverages = [];
+
+  DIMENSIONS.forEach(dim => {
+    const values = filteredEvals.map(e => e[dim.field]).filter(v => v > 0);
+    if (values.length > 0) {
+      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+      const percentage = (avg / 5) * 100;
+      const rating = getRatingLabel(percentage);
+      dimensionAverages.push({
+        dimension: dim.label,
+        percentage: percentage.toFixed(1),
+        rating: rating.label
+      });
+    }
+  });
+
+  const header = ["Evaluation Question", "Percentage (%)", "Rating"];
+  const csvRows = dimensionAverages.map(da => [
+    `"${da.dimension.replace(/"/g, '""')}"`,
+    da.percentage,
+    da.rating
+  ].join(","));
+
+  const csvContent = [header.join(","), ...csvRows].join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `campusvoice-report-${selectedOffice}-${startDate}-to-${endDate}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>

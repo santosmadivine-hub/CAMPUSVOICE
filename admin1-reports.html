@@ -216,7 +216,6 @@ select { min-width:180px; }
 
         <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
         <button class="btn btn-green"   onclick="saveReport()">💾 Save Report</button>
-        <button class="btn btn-blue"    onclick="exportPDF()">⬇ Export PDF</button>
       </div>
     </div>
 
@@ -225,10 +224,6 @@ select { min-width:180px; }
       <div class="kpi-card">
         <div class="kpi-title">Total Feedback</div>
         <div class="kpi-value" id="totalFeedback">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Avg Satisfaction</div>
-        <div class="kpi-value" id="avgSat">0%</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-title">Positive (&ge;4★)</div>
@@ -480,7 +475,6 @@ function renderKPIs() {
     if (a < 3)  neg++;
   });
   document.getElementById("totalFeedback").textContent = total;
-  document.getElementById("avgSat").textContent        = total ? ((sum/total)*20).toFixed(0)+"%" : "0%";
   document.getElementById("positive").textContent      = pos;
   document.getElementById("negative").textContent      = neg;
 }

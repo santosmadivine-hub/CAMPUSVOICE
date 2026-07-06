@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Office Management | Admin 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  /* --- Office Management --- */
+  .office-mgmt-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .office-mgmt-actions{
+    display:flex;
+    gap:10px;
+  }
+
+  .btn-dark, .btn-primary{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    border:none;
+    cursor:pointer;
+    font-family:'Syne',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    padding:11px 18px;
+    border-radius:12px;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .btn-dark{ background:#0f1b32; color:#e2e8f0; }
+  .btn-primary{ background:#2563eb; color:#ffffff; }
+  .btn-dark:hover, .btn-primary:hover{ transform:translateY(-1px); opacity:0.92; }
+
+  .summary-card{
+    background:#ffffff;
+    border:1px solid rgba(2,132,199,0.25);
+    border-radius:10px;
+    padding:10px 14px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    flex-shrink:0;
+  }
+  .summary-card.card-primary{
+    background:#e0f2fe;
+    border-color:rgba(2,132,199,0.3);
+  }
+  .summary-card.card-warning{
+    background:#fed7aa;
+    border-color:rgba(217,119,6,0.3);
+  }
+  .summary-card.card-success{
+    background:#dcfce7;
+    border-color:rgba(22,163,74,0.3);
+  }
+  .summary-icon{
+    font-size:18px;
+    flex-shrink:0;
+  }
+  .summary-content{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+  }
+  .summary-label{
+    font-family:'DM Sans',sans-serif;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:#64748b;
+    line-height:1;
+  }
+  .summary-value{
+    font-family:'Syne',sans-serif;
+    font-size:18px;
+    font-weight:700;
+    color:#0f1b32;
+    line-height:1.2;
+  }
+ 
+  .summary-cards-container{
+    display:flex;
+    gap:12px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+  }
+
+  /* ---------- Table ---------- */
+  .office-table-wrap{
+    margin-top:18px;
+  }
+
+  .office-search-input{
+    width:100%;
+    padding:11px 14px;
+    border:1px solid rgba(148,163,184,0.3);
+    border-radius:12px;
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+    margin-bottom:14px;
+    outline:none;
+    transition:border-color .2s;
+    box-sizing:border-box;
+    background:#ffffff;
+  }
+  .office-search-input:focus{ border-color:#2563eb; }
+
+  .office-table-scroll{
+    max-height:440px;
+    overflow-y:auto;
+    overflow-x:auto;
+    border:1px solid rgba(148,163,184,0.16);
+    border-radius:14px;
+  }
+  .office-table-scroll::-webkit-scrollbar{ width:6px; height:6px; }
+  .office-table-scroll::-webkit-scrollbar-thumb{ background:#bfdbfe; border-radius:999px; }
+  .office-table-scroll::-webkit-scrollbar-track{ background:transparent; }
+
+  .office-table{
+    width:100%;
+    min-width:620px;
+    border-collapse:separate;
+    border-spacing:0;
+  }
+
+  .office-table thead th{
+    text-align:left;
+    font-family:'DM Sans',sans-serif;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:#64748b;
+    padding:14px 16px;
+    border-bottom:1px solid rgba(148,163,184,0.2);
+    background:#f8fafc;
+    position:sticky;
+    top:0;
+    z-index:1;
+    white-space:nowrap;
+  }
+  .office-table thead th:first-child{ border-top-left-radius:14px; }
+  .office-table thead th:last-child{ border-top-right-radius:14px; }
+  .office-table thead th.col-ratio{ min-width:220px; }
+  .office-table thead th.col-evals{ text-align:center; width:150px; }
+  .office-table thead th.col-actions{ text-align:right; width:170px; }
+
+  .office-table tbody td{
+    padding:14px 16px;
+    border-bottom:1px solid rgba(148,163,184,0.12);
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+    color:#334155;
+    vertical-align:middle;
+  }
+  .office-table tbody tr{ transition:background-color .15s ease; }
+  .office-table tbody tr:hover{ background:#f8fafc; }
+  .office-table tbody tr:hover td{ border-bottom-color:rgba(148,163,184,0.2); }
+  .office-table tbody tr:last-child td{ border-bottom:none; }
+
+  .office-name-cell{
+    font-family:'Syne',sans-serif;
+    font-weight:700;
+    color:#0f1b32;
+    white-space:normal;
+  }
+  .rating-cell{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:200px;
+  }
+  .rating-track{
+    flex:1;
+    height:8px;
+    background:#dbeafe;
+    border-radius:999px;
+    overflow:hidden;
+    min-width:110px;
+  }
+  .rating-fill{
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,#2563eb,#60a5fa);
+    transition:width .6s ease;
+  }
+  .rating-number{
+    font-family:'Syne',sans-serif;
+    font-weight:700;
+    color:#1e40af;
+    width:30px;
+    flex-shrink:0;
+    text-align:right;
+  }
+  .evals-cell{
+    text-align:center;
+    font-weight:600;
+    color:#0f1b32;
+  }
+  .actions-cell{
+    text-align:right;
+    white-space:nowrap;
+  }
+  .office-empty-row td{
+    text-align:center;
+    color:#94a3b8;
+    padding:32px 0;
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+  }
+  .action-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    border:none;
+    cursor:pointer;
+    font-family:'DM Sans',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:7px 13px;
+    border-radius:8px;
+    transition:background-color .15s ease, transform .15s ease;
+  }
+  .actions-cell .action-btn + .action-btn{ margin-left:8px; }
+  .action-edit{ background:#fef3c7; color:#92400e; }
+  .action-delete{ background:#fee2e2; color:#b91c1c; }
+  .action-edit:hover{ background:#fde68a; }
+  .action-delete:hover{ background:#fecaca; }
+  .action-btn:active{ transform:scale(0.97); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="summary-cards-container">
+      <div class="summary-card card-primary">
+        <div class="summary-icon">🏢</div>
+        <div class="summary-content">
+          <div class="summary-label">Offices</div>
+          <div class="summary-value" id="summary-total-offices-count">1</div>
+        </div>
+      </div>
+      <div class="summary-card card-warning">
+        <div class="summary-icon">⏳</div>
+        <div class="summary-content">
+          <div class="summary-label">Avg Rating</div>
+          <div class="summary-value" id="summary-avg-rating">1</div>
+        </div>
+      </div>
+      <div class="summary-card card-success">
+        <div class="summary-icon">✅</div>
+        <div class="summary-content">
+          <div class="summary-label">Evaluations</div>
+          <div class="summary-value" id="summary-total-evals">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFICE MANAGEMENT -->
+    <div class="card">
+      <div class="office-mgmt-row">
+        <div class="card-title">Office Management <span class="card-sub">— Manage campus offices</span></div>
+        <div class="office-mgmt-actions">
+          <button class="btn-primary" id="btn-add-office">+ Add Office</button>
+        </div>
+      </div>
+      <div class="office-table-wrap" id="office-table-wrap">
+        <input type="text" id="office-search-input" class="office-search-input" placeholder="🔍 Search offices...">
+        <div class="office-table-scroll">
+          <table class="office-table">
+            <thead>
+              <tr>
+                <th>Office</th>
+                <th class="col-ratio">Avg Rating</th>
+                <th class="col-evals">Total Evaluations</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="office-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  push,
+  set,
+  remove
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId: "kristal-adb78",
+  storageBucket: "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId: "G-LK8D1CBQ2J"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Build UI
+document.getElementById("sidebar-mount").innerHTML =
+buildSidebar("admin2", "office-mgmt");
+
+document.getElementById("topbar-mount").innerHTML =
+buildTopbar("Office Management", "admin2");
+
+// ======================
+// STATE
+// ======================
+let evaluations = [];
+let offices = {};       // { officeKey: officeName }
+
+// Normalize a name for matching purposes: trims whitespace and lowercases,
+// so "Registrar", " registrar ", and "REGISTRAR" are all treated as the same
+// office when linking evaluations back to the office list.
+function normalizeName(name) {
+  return (name || "").toString().trim().toLowerCase();
+}
+
+function avgOf(ev) {
+  return (ev.rating1 + ev.rating2 + ev.rating3 + ev.rating4) / 4;
+}
+
+// Builds { normalizedName: { displayName, total, sum } } by matching each
+// evaluation's officeName to an office in the current office list, using a
+// normalized (trimmed + lowercased) comparison so minor case/whitespace
+// differences between how the office was named and how evaluations record
+// it don't silently drop the evaluation from the average.
+function buildOfficeStats() {
+  const statsByKey = {};
+
+  Object.values(offices).forEach(name => {
+    const key = normalizeName(name);
+    statsByKey[key] = { displayName: name, total: 0, sum: 0 };
+  });
+
+  evaluations.forEach(e => {
+    const key = normalizeName(e.officeName);
+    if (!statsByKey[key]) return; // evaluation doesn't match any known office
+    statsByKey[key].total += 1;
+    statsByKey[key].sum += avgOf(e);
+  });
+
+  return statsByKey;
+}
+
+// ======================
+// LOAD OFFICE LIST -> cleanliness/office
+// ======================
+const officeRef = ref(db, "cleanliness/office");
+
+onValue(officeRef, (snapshot) => {
+  const data = snapshot.val() || {};
+
+  offices = {};
+  Object.entries(data).forEach(([key, val]) => {
+    offices[key] = (val && val.name) ? val.name : key;
+  });
+
+  renderOfficeTable();
+});
+
+// ======================
+// LOAD CLEANLINESS EVALUATIONS -> cleanliness/cleanlinessevaluation
+// ======================
+const evalRef = ref(db, "cleanliness/cleanlinessevaluation");
+
+onValue(evalRef, (snapshot) => {
+  const data = snapshot.val() || {};
+
+  evaluations = Object.entries(data).map(([id, ev]) => ({
+    id,
+    officeName: ev.officeName || "Unknown",
+    comments: ev.comments || "",
+    rating1: Number(ev.rating1) || 0,
+    rating2: Number(ev.rating2) || 0,
+    rating3: Number(ev.rating3) || 0,
+    rating4: Number(ev.rating4) || 0,
+    timestamp: Number(ev.timestamp) || 0
+  }));
+
+  renderOfficeTable();
+});
+
+// ======================
+// OFFICE MANAGEMENT (inline table)
+// ======================
+const officeTableWrap = document.getElementById("office-table-wrap");
+const officeTableBody = document.getElementById("office-table-body");
+const officeSearchInput = document.getElementById("office-search-input");
+
+let officeSearchTerm = "";
+
+officeSearchInput.addEventListener("input", (e) => {
+  officeSearchTerm = e.target.value.toLowerCase();
+  renderOfficeTable();
+});
+
+function updateSummary() {
+  const keys = Object.keys(offices);
+  const totalOffices = keys.length;
+  
+  const statsByKey = buildOfficeStats();
+  
+  let totalEvals = 0;
+  let totalSum = 0;
+  
+  Object.values(statsByKey).forEach(stats => {
+    totalEvals += stats.total;
+    totalSum += stats.sum;
+  });
+  
+  const overallAvg = totalEvals > 0 ? totalSum / totalEvals : 0;
+
+  document.getElementById("summary-total-offices-count").textContent = totalOffices;
+  document.getElementById("summary-avg-rating").textContent = overallAvg.toFixed(1);
+  document.getElementById("summary-total-evals").textContent = totalEvals;
+}
+
+function renderOfficeTable() {
+  updateSummary();
+  
+  const keys = Object.keys(offices).sort((a, b) =>
+  offices[a].localeCompare(offices[b], undefined, {
+    sensitivity: "base"
+  })
+);
+
+  if (keys.length === 0) {
+    officeTableBody.innerHTML = `<tr class="office-empty-row"><td colspan="4">No offices added yet.</td></tr>`;
+    return;
+  }
+
+  const statsByKey = buildOfficeStats();
+
+  let filteredKeys = keys;
+  if (officeSearchTerm) {
+    filteredKeys = keys.filter(key => offices[key].toLowerCase().includes(officeSearchTerm));
+  }
+
+  if (filteredKeys.length === 0) {
+    officeTableBody.innerHTML = `<tr class="office-empty-row"><td colspan="4">No offices match your search.</td></tr>`;
+    return;
+  }
+
+  officeTableBody.innerHTML = filteredKeys.map(key => {
+    const name = offices[key];
+    const stats = statsByKey[normalizeName(name)] || { total: 0, sum: 0 };
+    const avg = stats.total > 0 ? stats.sum / stats.total : 0;
+    const pct = (avg / 5) * 100;
+
+    return `
+      <tr>
+        <td class="office-name-cell">${name}</td>
+        <td>
+          <div class="rating-cell">
+            <div class="rating-track"><div class="rating-fill" style="width:${pct}%"></div></div>
+            <span class="rating-number">${avg.toFixed(1)}</span>
+          </div>
+        </td>
+        <td class="evals-cell">${stats.total}</td>
+        <td class="actions-cell">
+          <button class="action-btn action-edit" data-office-key="${key}" data-action="edit">✏️ Edit</button>
+          <button class="action-btn action-delete" data-office-key="${key}" data-action="delete">🗑️ Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  officeTableBody.querySelectorAll("[data-action='edit']").forEach(btn => {
+    btn.addEventListener("click", () => editOffice(btn.getAttribute("data-office-key")));
+  });
+  officeTableBody.querySelectorAll("[data-action='delete']").forEach(btn => {
+    btn.addEventListener("click", () => deleteOffice(btn.getAttribute("data-office-key")));
+  });
+}
+
+async function editOffice(key) {
+  const currentName = offices[key] || "";
+  const newName = prompt("Edit office name:", currentName);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed || trimmed === currentName) return;
+
+  try {
+    await set(ref(db, `cleanliness/office/${key}`), { name: trimmed });
+  } catch (err) {
+    alert("Couldn't update office: " + err.message);
+  }
+}
+
+async function deleteOffice(key) {
+  const name = offices[key] || "this office";
+  if (!confirm(`Remove "${name}" from the office list?`)) return;
+
+  try {
+    await remove(ref(db, `cleanliness/office/${key}`));
+  } catch (err) {
+    alert("Couldn't remove office: " + err.message);
+  }
+}
+
+async function addOffice() {
+  const name = prompt("New office name (e.g. Registrar):");
+  if (name === null) return;
+  const trimmed = name.trim();
+  if (!trimmed) return;
+
+  try {
+    const newRef = push(ref(db, "cleanliness/office"));
+    await set(newRef, { name: trimmed });
+  } catch (err) {
+    alert("Couldn't add office: " + err.message);
+  }
+}
+
+document.getElementById("btn-add-office").addEventListener("click", addOffice);
+
+</script>
+</body>
+</html>

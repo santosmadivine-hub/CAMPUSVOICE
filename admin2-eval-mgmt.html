@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Evaluation Mgmt | Admin 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  /* --- Evaluation Mgmt: stat pills, submissions toolbar, table extras --- */
+  /* ADMIN 2 — Evaluation Stats (ADMIN 3 DESIGN) */
+
+.eval-stats{
+display:flex;
+gap:14px;
+flex-wrap:wrap;
+margin-bottom:20px;
+}
+
+.eval-stat-pill{
+background:#f1f5f9;
+border:1px solid #e2e8f0;
+border-radius:12px;
+padding:20px 30px;
+font-size:13px;
+font-weight:600;
+color:#334155;
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.eval-stat-pill span{
+font-size:20px;
+font-weight:800;
+color:#0f172a;
+}
+
+.eval-stat-pill.is-pending{ background:#fff7ed; border-color:#fed7aa; }
+.eval-stat-pill.is-pending span{ color:#c2410c; }
+.eval-stat-pill.is-resolved{ background:#f0fdf4; border-color:#bbf7d0; }
+.eval-stat-pill.is-resolved span{ color:#15803d; }
+
+  .submissions-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .toolbar-actions{ display:flex; gap:10px; }
+  .btn-soft{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:#eef2f7;
+    color:#1e293b;
+    border:none;
+    cursor:pointer;
+    font-family:'DM Sans',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:9px 14px;
+    border-radius:10px;
+  }
+  .btn-soft:hover{ background:#e2e8f0; }
+
+  /* Tabs: Admin 3 design */
+  .eval-tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:18px;
+    border-bottom:1px solid rgba(148,163,184,0.25);
+  }
+  .eval-tab{
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-family:'DM Sans',sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    color:#94a3b8;
+    padding:10px 6px 12px 6px;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+  .eval-tab .tab-count{
+    background:#f1f5f9;
+    color:#64748b;
+    border-radius:999px;
+    padding:1px 8px;
+    font-size:11.5px;
+    font-weight:700;
+  }
+  .eval-tab.active{
+    color:#0f1b32;
+    border-bottom-color:#2563eb;
+  }
+  .eval-tab.active .tab-count{
+    background:#dbeafe;
+    color:#2563eb;
+  }
+
+  .submissions-filter-row{
+    display:flex;
+    gap:12px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .search-input-wrap{
+    flex:1;
+    min-width:220px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:#f4f6fb;
+    border:1px solid rgba(148,163,184,0.25);
+    border-radius:10px;
+    padding:10px 14px;
+  }
+  .search-input-wrap input{
+    flex:1;
+    border:none;
+    outline:none;
+    background:transparent;
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+    color:#0f1b32;
+  }
+  .office-filter-select{
+    background:#f4f6fb;
+    border:1px solid rgba(148,163,184,0.25);
+    border-radius:10px;
+    padding:10px 14px;
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+    color:#0f1b32;
+    min-width:160px;
+  }
+
+  .submissions-table th{
+    text-align:left;
+    font-family:'DM Sans',sans-serif;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:#94a3b8;
+    padding:0 10px 10px 10px;
+    border-bottom:1px solid rgba(148,163,184,0.18);
+  }
+  .submissions-table td{
+    padding:14px 10px;
+    border-bottom:1px solid rgba(148,163,184,0.12);
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+    color:#334155;
+    vertical-align:middle;
+  }
+  .submissions-table tbody tr:last-child td{ border-bottom:none; }
+  .row-index{ color:#94a3b8; }
+  .code-cell{
+    font-family:'Syne',sans-serif;
+    font-weight:700;
+    color:#2563eb;
+  }
+  .view-link{
+    background:none;
+    border:none;
+    color:#2563eb;
+    font-family:'DM Sans',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .view-link:hover{ text-decoration:underline; }
+  .edit-link{
+    background:none;
+    border:none;
+    color:#c2410c;
+    font-family:'DM Sans',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    margin-left:14px;
+  }
+  .edit-link:hover{ text-decoration:underline; }
+  .empty-row td{
+    text-align:center;
+    color:#94a3b8;
+    padding:26px 0;
+  }
+
+  .status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:4px 10px;
+    border-radius:999px;
+    font-family:'DM Sans',sans-serif;
+    font-weight:700;
+    font-size:11.5px;
+  }
+  .status-badge.pending{ background:#fff7ed; color:#c2410c; }
+  .status-badge.resolved{ background:#f0fdf4; color:#15803d; }
+
+  /* View-detail modal */
+  .detail-modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(15,27,50,0.55);
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+    padding:20px;
+  }
+  .detail-modal-overlay.open{ display:flex; }
+  .detail-modal-box{
+    background:#ffffff;
+    border-radius:16px;
+    width:100%;
+    max-width:420px;
+    padding:22px;
+    box-shadow:0 20px 45px rgba(15,27,50,0.25);
+  }
+  .detail-modal-box h3{
+    font-family:'Syne',sans-serif;
+    color:#0f1b32;
+    margin:0 0 14px 0;
+    font-size:18px;
+  }
+  .detail-row{
+    display:flex;
+    justify-content:space-between;
+    padding:8px 0;
+    border-bottom:1px solid rgba(148,163,184,0.15);
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+    color:#334155;
+  }
+  .detail-row:last-of-type{ border-bottom:none; }
+  .detail-row span:first-child{ color:#94a3b8; }
+  .detail-close-btn{
+    margin-top:16px;
+    width:100%;
+    background:#0f1b32;
+    color:#fff;
+    border:none;
+    padding:10px;
+    border-radius:10px;
+    font-family:'DM Sans',sans-serif;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  /* Edit modal */
+  .edit-field{ margin-bottom:14px; }
+  .edit-field label{
+    display:block;
+    font-family:'DM Sans',sans-serif;
+    font-size:12px;
+    font-weight:700;
+    color:#94a3b8;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    margin-bottom:6px;
+  }
+  .edit-field select,
+  .edit-field textarea{
+    width:100%;
+    box-sizing:border-box;
+    border:1px solid rgba(148,163,184,0.35);
+    border-radius:10px;
+    padding:10px 12px;
+    font-family:'DM Sans',sans-serif;
+    font-size:14px;
+    color:#0f1b32;
+    background:#f9fafc;
+  }
+  .edit-field textarea{ resize:vertical; min-height:70px; }
+  .edit-modal-actions{
+    display:flex;
+    gap:10px;
+    margin-top:6px;
+  }
+  .edit-save-btn{
+    flex:1;
+    background:#2563eb;
+    color:#fff;
+    border:none;
+    padding:10px;
+    border-radius:10px;
+    font-family:'DM Sans',sans-serif;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .edit-save-btn:disabled{ opacity:0.6; cursor:default; }
+  .edit-cancel-btn{
+    flex:1;
+    background:#eef2f7;
+    color:#1e293b;
+    border:none;
+    padding:10px;
+    border-radius:10px;
+    font-family:'DM Sans',sans-serif;
+    font-weight:700;
+    cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+
+    
+    <div style="margin-top:28px;">
+
+    <div class="eval-stats">
+
+<div class="eval-stat-pill">
+📋 Total
+<span id="stat-total">0</span>
+</div>
+
+<div class="eval-stat-pill">
+🏢 Offices
+<span id="stat-offices">0</span>
+</div>
+
+<div class="eval-stat-pill is-pending">
+⏳ Pending
+<span id="stat-pending">0</span>
+</div>
+
+<div class="eval-stat-pill is-resolved">
+✅ Resolved
+<span id="stat-resolved">0</span>
+</div>
+
+</div>
+
+      <div class="card">
+        <div class="submissions-toolbar">
+          <div class="card-title" style="margin:0;">Evaluation Submissions</div>
+          <div class="toolbar-actions">
+            <button class="btn-soft" id="btn-refresh">🔄 Refresh</button>
+            <button class="btn-soft" id="btn-export">⬇️ Export CSV</button>
+          </div>
+        </div>
+
+        <div class="eval-tabs" id="eval-tabs">
+          <button class="eval-tab active" data-tab="recent">Recent Transactions <span class="tab-count" id="tab-count-recent">0</span></button>
+          <button class="eval-tab" data-tab="pending">Pending <span class="tab-count" id="tab-count-pending">0</span></button>
+          <button class="eval-tab" data-tab="resolved">Resolved <span class="tab-count" id="tab-count-resolved">0</span></button>
+        </div>
+
+        <div class="submissions-filter-row">
+          <div class="search-input-wrap">
+            <span>🔍</span>
+            <input type="text" id="search-input" placeholder="Search by office, or comments...">
+          </div>
+          <select class="office-filter-select" id="office-filter">
+            <option value="">All Offices</option>
+          </select>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="submissions-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Office</th>
+                <th>Q1</th>
+                <th>Q2</th>
+                <th>Q3</th>
+                <th>Q4</th>
+                <th>Comments</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th id="action-col-header">Action</th>
+              </tr>
+            </thead>
+            <tbody id="submissions-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- VIEW DETAIL MODAL -->
+<div class="detail-modal-overlay" id="detail-modal">
+  <div class="detail-modal-box">
+    <h3>Submission Details</h3>
+    <div id="detail-modal-body"></div>
+    <button class="detail-close-btn" id="detail-modal-close">Close</button>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="detail-modal-overlay" id="edit-modal">
+  <div class="detail-modal-box">
+    <h3>Edit Submission</h3>
+    <div id="edit-modal-meta" style="margin-bottom:14px;"></div>
+    <div class="edit-field">
+      <label for="edit-status-select">Status</label>
+      <select id="edit-status-select">
+        <option value="pending">Pending</option>
+        <option value="resolved">Resolved</option>
+      </select>
+    </div>
+    <div class="edit-modal-actions">
+      <button class="edit-cancel-btn" id="edit-modal-cancel">Cancel</button>
+      <button class="edit-save-btn" id="edit-modal-save">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  update
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId: "kristal-adb78",
+  storageBucket: "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId: "G-LK8D1CBQ2J"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Build Sidebar & Topbar
+document.getElementById("sidebar-mount").innerHTML =
+  buildSidebar("admin2", "eval-mgmt");
+
+document.getElementById("topbar-mount").innerHTML =
+  buildTopbar("Evaluation Management", "admin2");
+
+// ======================
+// STATE
+// ======================
+let evaluations = [];   // [{id, officeName, rating1..4, comments, timestamp, status}]
+let offices = {};       // { officeKey: officeName }
+let searchTerm = "";
+let officeFilter = "";
+let currentTab = "recent"; // "recent" | "pending" | "resolved"
+let editingId = null;
+
+// ======================
+// HELPERS
+// ======================
+function makeCode(officeName, id) {
+  const prefix = (officeName || "GEN")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 4) || "GEN";
+  const suffix = id.slice(-6).toUpperCase();
+  return `${prefix}-${suffix}`;
+}
+
+// ======================
+// LOAD OFFICES -> cleanliness/office
+// ======================
+const officeRef = ref(db, "cleanliness/office");
+
+onValue(officeRef, (snapshot) => {
+  const data = snapshot.val() || {};
+  offices = {};
+  Object.entries(data).forEach(([key, val]) => {
+    offices[key] = (val && val.name) ? val.name : key;
+  });
+
+  populateOfficeFilter();
+  renderSubmissions();
+});
+
+// ======================
+// LOAD CLEANLINESS EVALUATIONS -> cleanliness/cleanlinessevaluation
+// ======================
+const evalRef = ref(db, "cleanliness/cleanlinessevaluation");
+
+onValue(evalRef, (snapshot) => {
+  const data = snapshot.val() || {};
+
+  evaluations = Object.entries(data).map(([id, ev]) => ({
+    id,
+    officeName: ev.officeName || "Unknown",
+    comments: ev.comments || "",
+    rating1: Number(ev.rating1) || 0,
+    rating2: Number(ev.rating2) || 0,
+    rating3: Number(ev.rating3) || 0,
+    rating4: Number(ev.rating4) || 0,
+    timestamp: Number(ev.timestamp) || 0,
+    status: ev.status || "pending"
+  })).map(ev => ({ ...ev, code: makeCode(ev.officeName, ev.id) }));
+
+  renderSubmissions();
+});
+
+// ======================
+// TABS WIRING
+// ======================
+document.getElementById("eval-tabs").addEventListener("click", (ev) => {
+  const btn = ev.target.closest(".eval-tab");
+  if (!btn) return;
+  currentTab = btn.getAttribute("data-tab");
+  document.querySelectorAll(".eval-tab").forEach(t => t.classList.toggle("active", t === btn));
+  renderSubmissions();
+});
+
+// ======================
+// RENDER
+// ======================
+function populateOfficeFilter() {
+  const select = document.getElementById("office-filter");
+  const currentValue = select.value;
+
+  const options = ['<option value="">All Offices</option>']
+    .concat(Object.values(offices).map(name => `<option value="${name}">${name}</option>`));
+
+  select.innerHTML = options.join("");
+  select.value = currentValue;
+}
+
+function getFilteredSubmissions() {
+  const term = searchTerm.trim().toLowerCase();
+
+  return evaluations
+    .filter(e => currentTab === "recent" ? true : e.status === currentTab)
+    .filter(e => !officeFilter || e.officeName === officeFilter)
+    .filter(e => {
+      if (!term) return true;
+      return (
+        e.code.toLowerCase().includes(term) ||
+        e.officeName.toLowerCase().includes(term) ||
+        e.comments.toLowerCase().includes(term)
+      );
+    })
+    .sort((a, b) => b.timestamp - a.timestamp);
+}
+
+function renderSubmissions() {
+  const filtered = getFilteredSubmissions();
+
+  // Stat pills reflect the totals (unfiltered)
+  document.getElementById("stat-total").textContent = evaluations.length;
+  const distinctOffices = new Set(evaluations.map(e => e.officeName));
+  document.getElementById("stat-offices").textContent = distinctOffices.size;
+
+  const pendingCount = evaluations.filter(e => e.status === "pending").length;
+  const resolvedCount = evaluations.filter(e => e.status === "resolved").length;
+  document.getElementById("stat-pending").textContent = pendingCount;
+  document.getElementById("stat-resolved").textContent = resolvedCount;
+
+  document.getElementById("tab-count-recent").textContent = evaluations.length;
+  document.getElementById("tab-count-pending").textContent = pendingCount;
+  document.getElementById("tab-count-resolved").textContent = resolvedCount;
+
+  const tbody = document.getElementById("submissions-tbody");
+  const showActionColumn = currentTab !== "recent";
+  document.getElementById("action-col-header").style.display = showActionColumn ? "" : "none";
+  const colCount = showActionColumn ? 10 : 9;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="${colCount}">No submissions found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((e, i) => {
+    const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-";
+    const statusLabel = e.status === "resolved" ? "Resolved" : "Pending";
+    const statusIcon = e.status === "resolved" ? "✅" : "⏳";
+    const actionCell = showActionColumn ? `
+        <td>
+          <button class="view-link" data-eval-id="${e.id}">View</button>
+          <button class="edit-link" data-eval-id="${e.id}">Edit</button>
+        </td>` : "";
+    return `
+      <tr>
+        <td class="row-index">${i + 1}</td>
+        <td>${e.officeName}</td>
+        <td>${e.rating1}</td>
+        <td>${e.rating2}</td>
+        <td>${e.rating3}</td>
+        <td>${e.rating4}</td>
+        <td>${e.comments || "-"}</td>
+        <td><span class="status-badge ${e.status}">${statusIcon} ${statusLabel}</span></td>
+        <td>${date}</td>${actionCell}
+      </tr>
+    `;
+  }).join("");
+
+  tbody.querySelectorAll(".view-link").forEach(btn => {
+    btn.addEventListener("click", () => openDetailModal(btn.getAttribute("data-eval-id")));
+  });
+  tbody.querySelectorAll(".edit-link").forEach(btn => {
+    btn.addEventListener("click", () => openEditModal(btn.getAttribute("data-eval-id")));
+  });
+}
+
+// ======================
+// SEARCH / FILTER WIRING
+// ======================
+document.getElementById("search-input").addEventListener("input", (ev) => {
+  searchTerm = ev.target.value;
+  renderSubmissions();
+});
+
+document.getElementById("office-filter").addEventListener("change", (ev) => {
+  officeFilter = ev.target.value;
+  renderSubmissions();
+});
+
+// ======================
+// REFRESH
+// ======================
+document.getElementById("btn-refresh").addEventListener("click", () => {
+  const btn = document.getElementById("btn-refresh");
+  const original = btn.textContent;
+  btn.textContent = "🔄 Refreshing...";
+  btn.disabled = true;
+  renderSubmissions();
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.disabled = false;
+  }, 500);
+});
+
+// ======================
+// EXPORT CSV
+// ======================
+document.getElementById("btn-export").addEventListener("click", () => {
+  const filtered = getFilteredSubmissions();
+
+  if (filtered.length === 0) {
+    alert("No submissions to export.");
+    return;
+  }
+
+  const header = ["#", "Office", "Q1", "Q2", "Q3", "Q4", "Comments", "Status", "Date"];
+  const rows = filtered.map((e, i) => {
+    const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString() : "-";
+    const comments = `"${(e.comments || "").replace(/"/g, '""')}"`;
+    const status = e.status === "resolved" ? "Resolved" : "Pending";
+    return [i + 1, e.officeName, e.rating1, e.rating2, e.rating3, e.rating4, comments, status, date].join(",");
+  });
+
+  const csvContent = [header.join(","), ...rows].join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `cleanliness-submissions-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+});
+
+// ======================
+// VIEW DETAIL MODAL
+// ======================
+const detailModal = document.getElementById("detail-modal");
+const detailModalBody = document.getElementById("detail-modal-body");
+
+function openDetailModal(evalId) {
+  const e = evaluations.find(item => item.id === evalId);
+  if (!e) return;
+
+  const date = e.timestamp ? new Date(e.timestamp).toLocaleString() : "-";
+  const statusLabel = e.status === "resolved" ? "Resolved" : "Pending";
+
+  detailModalBody.innerHTML = `
+    <div class="detail-row"><span>Office</span><span>${e.officeName}</span></div>
+    <div class="detail-row"><span>Q1</span><span>${e.rating1}</span></div>
+    <div class="detail-row"><span>Q2</span><span>${e.rating2}</span></div>
+    <div class="detail-row"><span>Q3</span><span>${e.rating3}</span></div>
+    <div class="detail-row"><span>Q4</span><span>${e.rating4}</span></div>
+    <div class="detail-row"><span>Comments</span><span>${e.comments || "-"}</span></div>
+    <div class="detail-row"><span>Status</span><span>${statusLabel}</span></div>
+    <div class="detail-row"><span>Submitted</span><span>${date}</span></div>
+  `;
+
+  detailModal.classList.add("open");
+}
+
+document.getElementById("detail-modal-close").addEventListener("click", () => {
+  detailModal.classList.remove("open");
+});
+detailModal.addEventListener("click", (ev) => {
+  if (ev.target === detailModal) detailModal.classList.remove("open");
+});
+
+// ======================
+// EDIT MODAL
+// ======================
+const editModal = document.getElementById("edit-modal");
+const editModalMeta = document.getElementById("edit-modal-meta");
+const editStatusSelect = document.getElementById("edit-status-select");
+const editSaveBtn = document.getElementById("edit-modal-save");
+
+function openEditModal(evalId) {
+  const e = evaluations.find(item => item.id === evalId);
+  if (!e) return;
+
+  const date = e.timestamp ? new Date(e.timestamp).toLocaleString() : "-";
+
+  editingId = evalId;
+  editModalMeta.innerHTML = `
+    <div class="detail-row"><span>Office</span><span>${e.officeName}</span></div>
+    <div class="detail-row"><span>ID</span><span>${e.id}</span></div>
+    <div class="detail-row"><span>Date</span><span>${date}</span></div>
+  `;
+  editStatusSelect.value = e.status;
+
+  editModal.classList.add("open");
+}
+
+document.getElementById("edit-modal-cancel").addEventListener("click", () => {
+  editModal.classList.remove("open");
+  editingId = null;
+});
+editModal.addEventListener("click", (ev) => {
+  if (ev.target === editModal) {
+    editModal.classList.remove("open");
+    editingId = null;
+  }
+});
+
+editSaveBtn.addEventListener("click", async () => {
+  if (!editingId) return;
+
+  const newStatus = editStatusSelect.value;
+
+  editSaveBtn.disabled = true;
+  editSaveBtn.textContent = "Saving...";
+
+  try {
+    await update(ref(db, `cleanliness/cleanlinessevaluation/${editingId}`), {
+      status: newStatus
+    });
+    editModal.classList.remove("open");
+    editingId = null;
+  } catch (err) {
+    alert("Failed to save changes. Please try again.");
+    console.error(err);
+  } finally {
+    editSaveBtn.disabled = false;
+    editSaveBtn.textContent = "Save Changes";
+  }
+});
+
+</script>
+</body>
+</html>

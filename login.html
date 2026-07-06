@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusVoice – Login | ISUFST-SEC</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+    rel="stylesheet"
+  >
+  <style>
+
+    :root {
+      --bg:       #0b1120;
+      --surface:  #111827;
+      --surface2: #1a2537;
+      --border:   #1e2d45;
+      --accent1:  #2563eb;
+      --accent2:  #06b6d4;
+      --accent3:  #8b5cf6;
+      --text:     #ffffff;
+      --muted:    #cbd5e1;
+      --label:    #e2e8f0;
+      --red:      #ef4444;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+
+      /* Campus gate photo as background, with a lighter scrim for visibility */
+      background:
+        linear-gradient(
+          160deg,
+          rgba(8,13,26,0.35),
+          rgba(9,15,28,0.25) 40%,
+          rgba(7,11,22,0.38)
+        ),
+        url('8.png');
+
+      background-size: cover;
+      background-position: center 30%;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Soft ambient glow blobs behind the card */
+    body::before,
+    body::after {
+      content: '';
+      position: absolute;
+      width: 480px;
+      height: 480px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.28;
+      z-index: 0;
+      pointer-events: none;
+    }
+    body::before {
+      background: var(--accent1);
+      top: -160px;
+      left: -140px;
+    }
+    body::after {
+      background: var(--accent3);
+      bottom: -160px;
+      right: -140px;
+    }
+
+    .login-box {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 400px;
+      background: rgba(17, 24, 39, 0.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 22px;
+      padding: 40px 36px 32px;
+      box-shadow:
+        0 8px 32px rgba(0,0,0,0.3),
+        0 1px 0 rgba(255,255,255,0.06) inset;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    /* Top accent bar */
+    .login-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 22px 22px 0 0;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3));
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Logo */
+    .login-logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .login-logo .logo-mark {
+      width: 108px;
+      height: 108px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--surface2), var(--surface));
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+    }
+
+    .login-logo .logo-mark img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    /* Fallback glyph shown if 5.png fails to load */
+    .login-logo .logo-mark .logo-fallback {
+      display: none;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent2), var(--accent1));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .login-logo .brand {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.5rem, 6vw, 1.65rem);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+      white-space: nowrap;
+      padding: 0 4px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent1));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .login-logo .sub {
+      font-size: 0.78rem;
+      font-weight: 900;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--label);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 11px 14px;
+      background: rgba(26, 37, 55, 0.25);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 9px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.93rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .form-group input::placeholder {
+      color: rgba(255,255,255,0.6);
+    }
+
+    .form-group input:focus {
+      border-color: var(--accent1);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+    }
+
+    .form-group input:focus-visible {
+      outline: 2px solid var(--accent2);
+      outline-offset: 2px;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper input {
+      width: 100%;
+      padding-right: 45px;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      user-select: none;
+      font-size: 18px;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .toggle-password:hover {
+      opacity: 1;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: white;
+      background: linear-gradient(135deg, var(--accent1), #1d4ed8);
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-login:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(37, 99, 235, 0.45);
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .btn-login:focus-visible {
+      outline: 2px solid var(--accent2);
+      outline-offset: 3px;
+    }
+
+    .login-error {
+      display: none;
+      margin-top: 12px;
+      padding: 9px 14px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      color: #f87171;
+      font-size: 0.8rem;
+      text-align: center;
+      animation: shake 0.3s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%      { transform: translateX(-4px); }
+      75%      { transform: translateX(4px); }
+    }
+
+    .login-hint {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 0.76rem;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .login-hint span {
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    /* Small screens: let the card breathe without losing padding */
+    @media (max-width: 420px) {
+      .login-box {
+        padding: 34px 26px 26px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .login-box { animation: none; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="login-box">
+
+    <!-- Header / Logo -->
+    <div class="login-logo">
+      <div class="logo-mark">
+        <img
+          src="5.png"
+          alt="CampusVoice logo"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        >
+        <div class="logo-fallback">CV</div>
+      </div>
+      <div style="color:white; font-size:2.0rem; font-weight:900">CampusVoice</div>
+      <div class="sub">ISUFST – San Enrique Campus</div>
+    </div>
+
+    <!-- Credentials -->
+    <div class="form-group">
+      <label for="login-user">Username</label>
+      <input type="text" id="login-user" placeholder="Enter username" autocomplete="username">
+    </div>
+
+    <div class="form-group">
+      <label for="login-pass">Password</label>
+
+      <div class="password-wrapper">
+        <input
+          type="password"
+          id="login-pass"
+          placeholder="Enter password"
+          autocomplete="current-password"
+          onkeydown="if (event.key === 'Enter') doLogin()"
+        >
+
+        <span class="toggle-password" onclick="togglePassword()" role="button" tabindex="0" aria-label="Show password" onkeydown="if(event.key==='Enter'||event.key===' '){togglePassword();}"></span>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button class="btn-login" onclick="doLogin()">Sign In to Dashboard</button>
+
+    <!-- Error -->
+    <div class="login-error" id="login-error">❌ Invalid credentials. Please try again.</div>
+
+    <div class="login-hint">Authorized <span>ISUFST-SEC</span> personnel only</div>
+
+  </div>
+
+  <script>
+
+    const ROLES = {
+      admin1: { user: 'admin1', pass: 'admin123',    redirect: 'admin1-dashboard.html' },
+      admin2: { user: 'admin2', pass: 'admin456',    redirect: 'admin2-dashboard.html' },
+      admin3: { user: 'admin3', pass: 'admin789',    redirect: 'admin3-dashboard.html' }
+    };
+
+    function doLogin() {
+      const username = document.getElementById('login-user').value.trim();
+      const password = document.getElementById('login-pass').value;
+      const errorEl  = document.getElementById('login-error');
+
+      const match = Object.values(ROLES).find(
+        r => r.user === username && r.pass === password
+      );
+
+      if (match) {
+        window.location.href = match.redirect;
+      } else {
+        errorEl.style.display = 'block';
+      }
+    }
+
+    function togglePassword() {
+      const input = document.getElementById('login-pass');
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      const toggle = document.querySelector('.toggle-password');
+      toggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    }
+
+  </script>
+
+</body>
+</html>

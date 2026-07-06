@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Settings | Admin 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+
+    <div class="settings-grid">
+      <!-- Account -->
+      <div class="settings-section">
+        <div class="settings-title">👤 Account Information</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Full Name</div><div class="settings-desc">Display name in the system</div></div>
+          <input class="input-field" value="Administrator 2">
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Email Address</div></div>
+          <input class="input-field" value="admin2@isufst.edu.ph">
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Role</div></div>
+          <span class="badge badge-purple">Admin 2 – Cleanliness</span>
+        </div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-purple btn-sm" onclick="alert('Profile saved!')">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="shared.js"></script>
+<script>
+  document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin2', 'settings');
+  document.getElementById('topbar-mount').innerHTML = buildTopbar('Settings', 'admin2');
+</script>
+</body>
+</html>
