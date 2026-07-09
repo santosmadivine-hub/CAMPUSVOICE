@@ -965,10 +965,16 @@ tr:last-child td{
   .sidebar-logo .wordmark,
   .sidebar-logo .campus,
   .sidebar-role,
-  .nav-item span,
+  .nav-item span:not(.nav-icon),
   .user-name,
   .user-role-label{
     display:none;
+  }
+
+  .nav-item{
+    justify-content:center;
+    gap:0;
+    padding:12px 0;
   }
 
   .main{
