@@ -6,6 +6,7 @@ function buildSidebar(role, activePage) {
 
   const navAdmin1 = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard', href: 'admin1-dashboard.html' },
+    { id: 'office-mgmt', icon: '🏛', label: 'Office Management', href: 'admin1-office-mgmt.html' },
     { id: 'gen-code', icon: '📋', label: 'Generate Code', href: 'admin1-gen-code.html' },
     { id: 'eval-mgmt', icon: '📑', label: 'Evaluation Management', href: 'admin1-eval-mgmt.html' },
     { id: 'reports', icon: '📁', label: 'Reports', href: 'admin1-reports.html' },

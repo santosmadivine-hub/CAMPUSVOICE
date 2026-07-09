@@ -42,6 +42,8 @@
 
 html{
   scroll-behavior:smooth;
+  -webkit-text-size-adjust:100%; /* stops iOS Safari auto-zooming text on rotate */
+  text-size-adjust:100%;
 }
 
 body{
@@ -50,6 +52,7 @@ body{
   color:var(--text);
   min-height:100vh;
   overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
 }
 
 /* ===================================== */
@@ -58,6 +61,8 @@ body{
 
 .layout{
   display:flex;
+  min-height:100vh;
+  width:100%;
 }
 
 /* ===================================== */
@@ -78,12 +83,15 @@ body{
 
   background:#1e3a8a;
 
+  -webkit-backdrop-filter:blur(12px);
   backdrop-filter:blur(12px);
 
   border-right:1px solid rgba(255,255,255,0.1);
 
   box-shadow:
     4px 0 24px rgba(30,58,138,0.25);
+
+  overflow-y:auto; /* prevent nav getting clipped on short/landscape phone screens */
 }
 
 .sidebar-logo{
@@ -103,6 +111,7 @@ body{
   );
 
   -webkit-background-clip:text;
+  background-clip:text;
   -webkit-text-fill-color:transparent;
 
   letter-spacing:-0.03em;
@@ -155,7 +164,7 @@ body{
 .nav{
   flex:1;
   padding:12px 10px;
-  overflow-y:hidden;
+  overflow-y:visible;
 }
 
 .nav-item{
@@ -289,6 +298,7 @@ body{
 .main{
   margin-left:240px;
   flex:1;
+  min-width:0; /* prevents flex children (tables/charts) from forcing horizontal page overflow */
 
   min-height:100vh;
 
@@ -303,6 +313,8 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
 
   margin-bottom:28px;
 }
@@ -321,6 +333,7 @@ body{
   display:flex;
   align-items:center;
   gap:14px;
+  flex-wrap:wrap;
 }
 
 .badge{
@@ -334,15 +347,6 @@ body{
   font-family:'Syne',sans-serif;
 }
 
-.badge-blue{
-  background:rgba(2,132,199,0.12);
-  color:#0c4a6e;
-}
-
-.badge-blue{
-  background:rgba(2,132,199,0.12);
-  color:#0c4a6e;
-}
 .badge-blue{
   background:rgba(2,132,199,0.12);
   color:#0c4a6e;
@@ -374,6 +378,7 @@ body{
 
   padding:24px 22px;
 
+  -webkit-backdrop-filter:blur(10px);
   backdrop-filter:blur(10px);
 
   box-shadow:
@@ -475,6 +480,7 @@ body{
 
   border:1px solid rgba(59,130,246,0.2);
 
+  -webkit-backdrop-filter:blur(10px);
   backdrop-filter:blur(10px);
 
   box-shadow:
@@ -596,6 +602,7 @@ body{
 
 .table-wrap{
   overflow-x:auto;
+  -webkit-overflow-scrolling:touch; /* smooth momentum scrolling for tables on iOS */
 }
 
 table{
@@ -652,6 +659,7 @@ tr:last-child td{
   font-weight:700;
 
   transition:all .25s ease;
+  -webkit-tap-highlight-color:transparent; /* removes gray flash on tap in mobile Chrome/Safari */
 }
 
 .btn:hover{
@@ -722,6 +730,8 @@ tr:last-child td{
   color:#1e293b;
 
   outline:none;
+  -webkit-appearance:none; /* stops iOS Safari from applying its native gray select chrome */
+  appearance:none;
 }
 
 /* ===================================== */
@@ -895,6 +905,17 @@ tr:last-child td{
 
 .fade-in{
   animation:fadeIn .35s ease;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .fade-in,
+  .stat-card,
+  .report-card,
+  .media-thumb,
+  .btn{
+    animation:none !important;
+    transition:none !important;
+  }
 }
 
 /* ===================================== */

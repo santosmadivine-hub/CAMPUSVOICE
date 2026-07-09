@@ -10,6 +10,171 @@
 
 <style>
 
+/* ════════════════════════════════════════════════════════
+   DESIGN TOKENS — BLUE & ORANGE ONLY
+   ink        — headings / primary text
+   brand-blue — primary data accent (blue)
+   orange     — signature accent, letterhead / seal / dividers
+   paper      — page background
+   line       — hairline borders
+   muted      — secondary text
+════════════════════════════════════════════════════════ */
+
+:root {
+  --ink:        #0b1220;
+  --ink-soft:   #334155;
+  --brand:      #2563eb;
+  --brand-deep: #1d4ed8;
+  --brand-light: #3b82f6;
+  --orange:     #f97316;
+  --orange-deep: #ea580c;
+  --orange-soft: #fed7aa;
+  --paper:      #f2f4f9;
+  --card:       #ffffff;
+  --line:       #e6e9f0;
+  --muted:      #6b7385;
+  --blue-success:    #2563eb;
+  --orange-accent:   #f97316;
+}
+
+* { box-sizing: border-box; }
+
+
+/* ════════════════════════════════
+   MASTHEAD — signature element
+════════════════════════════════ */
+
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 26px 20px;
+  margin-bottom: 26px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  border-bottom: 3px solid var(--orange);
+  position: relative;
+}
+
+.masthead-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.seal {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
+  background: linear-gradient(155deg, var(--brand) 0%, var(--brand-deep) 100%);
+  border: 2px solid var(--orange);
+  letter-spacing: 0.5px;
+}
+
+.masthead-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 4px;
+}
+
+.masthead-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.masthead-sub {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.masthead-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 7px 13px;
+  border-radius: 999px;
+}
+
+.live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 0 3px #dbeafe;
+  animation: pulse-dot 2.2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+}
+
+/* ════════════════════════════════
+   SECTION EYEBROWS
+════════════════════════════════ */
+
+.section-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 14px;
+}
+
+.section-eyebrow span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.section-eyebrow::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--line) 0%, transparent 100%);
+}
+
+.section-eyebrow::before {
+  content: "";
+  width: 14px;
+  height: 2px;
+  background: var(--orange);
+  flex-shrink: 0;
+}
+
 /* ════════════════════════════════
    LOCAL LAYOUT
 ════════════════════════════════ */
@@ -18,168 +183,213 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 30px;
 }
 
 .an-kpi {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--card);
+  border: 1px solid var(--line);
   border-radius: 16px;
-  padding: 18px 20px;
+  padding: 20px 22px;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+
+.an-kpi:hover {
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
 }
 
 .an-kpi::before {
   content: "";
   position: absolute;
   top: 0; left: 0;
-  width: 4px; height: 100%;
+  width: 100%; height: 3px;
   background: var(--accent, #2563eb);
 }
 
+.an-kpi-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: var(--accent-soft, #eef2ff);
+}
+
 .an-kpi-label {
-  font-size: 12px;
-  color: #64748b;
-  font-weight: 600;
-  margin-bottom: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: -4px;
 }
 
 .an-kpi-value {
   font-family: 'Syne', sans-serif;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--ink);
   line-height: 1;
 }
 
 .an-kpi-sub {
-  font-size: 11.5px;
-  color: #94a3b8;
-  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .an-row2 {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
   gap: 18px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .an-row3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
+}
+
+.an-section {
+  margin-bottom: 30px;
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--card);
+  border: 1px solid var(--line);
   border-radius: 18px;
-  padding: 20px;
+  padding: 22px 24px;
+  transition: box-shadow .2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
 }
 
 .card-title {
+  font-family: 'Syne', sans-serif;
   font-size: 16px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--ink);
 }
 
 .card-sub {
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 /* ── Trend chart ── */
-.trend-svg-wrap { margin-top: 14px; }
+.trend-svg-wrap { margin-top: 16px; }
 .trend-svg polyline { transition: all .3s ease; }
-.trend-area { opacity: .12; }
+.trend-area { opacity: .10; }
 
 .trend-legend {
-  display: flex; gap: 18px; margin-top: 10px; flex-wrap: wrap;
+  display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap;
 }
 .trend-legend-item {
   display: flex; align-items: center; gap: 6px;
-  font-size: 12px; color: #64748b; font-weight: 600;
+  font-size: 12px; color: var(--muted); font-weight: 600;
 }
 .trend-legend-dot { width: 9px; height: 9px; border-radius: 50%; }
 
 /* ── SQD bars ── */
-.sqd-list { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
-.sqd-row { display: grid; grid-template-columns: 170px 1fr 56px; align-items: center; gap: 10px; }
-.sqd-label { font-size: 12.5px; font-weight: 600; color: #334155; }
-.sqd-track { height: 10px; background: #eef2f7; border-radius: 999px; overflow: hidden; }
+.sqd-list { display: flex; flex-direction: column; gap: 15px; margin-top: 14px; }
+.sqd-row { display: grid; grid-template-columns: 170px 1fr 56px; align-items: center; gap: 12px; }
+.sqd-label { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+.sqd-track { height: 9px; background: #eef1f7; border-radius: 999px; overflow: hidden; }
 .sqd-fill  { height: 100%; border-radius: 999px; transition: width .5s ease; }
-.sqd-val   { font-size: 12.5px; font-weight: 700; color: #0f172a; text-align: right; }
+.sqd-val   { font-size: 12.5px; font-weight: 700; color: var(--ink); text-align: right; font-family: 'Syne', sans-serif; }
 .sqd-weakest-tag {
   display: inline-flex; align-items: center; gap: 6px;
-  background: #fff1f2; color: #be123c;
+  background: #ffedd5; color: var(--orange-deep);
   font-size: 11.5px; font-weight: 700;
-  padding: 5px 11px; border-radius: 999px; margin-top: 12px;
+  padding: 6px 12px; border-radius: 999px; margin-top: 14px;
 }
 
 /* ── Office leaderboard ── */
 .lb-row {
-  display: grid; grid-template-columns: 26px 1fr 100px;
-  align-items: center; gap: 12px; padding: 10px 0;
-  border-bottom: 1px solid #f1f5f9;
+  display: grid; grid-template-columns: 28px 1fr 100px;
+  align-items: center; gap: 12px; padding: 11px 0;
+  border-bottom: 1px solid #f1f3f8;
 }
 .lb-row:last-child { border-bottom: none; }
 .lb-rank {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: #f1f5f9; color: #475569;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #eef1f7; color: var(--ink-soft);
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 800;
+  font-family: 'Syne', sans-serif;
 }
-.lb-rank.top { background: #dcfce7; color: #15803d; }
-.lb-name { font-size: 13.5px; font-weight: 700; color: #0f172a; }
-.lb-meta { font-size: 11.5px; color: #94a3b8; margin-top: 2px; }
-.lb-score { text-align: right; font-size: 15px; font-weight: 800; color: #0f172a; }
-.lb-score-sub { text-align: right; font-size: 11px; color: #94a3b8; }
+.lb-rank.top { background: #dbeafe; color: #1e40af; }
+.lb-name { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.lb-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.lb-score { text-align: right; font-size: 15px; font-weight: 800; color: var(--ink); font-family: 'Syne', sans-serif; }
+.lb-score-sub { text-align: right; font-size: 11px; color: var(--muted); }
 
-/* ── Code usage ── */
-.code-usage-row { padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
-.code-usage-row:last-child { border-bottom: none; }
-.code-usage-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-.code-usage-name { font-size: 13px; font-weight: 700; color: #0f172a; }
-.code-usage-pct { font-size: 12px; font-weight: 700; color: #2563eb; }
-.code-usage-track { height: 8px; background: #eef2f7; border-radius: 999px; overflow: hidden; display: flex; }
-.code-usage-used { background: #2563eb; height: 100%; }
-.code-usage-unused { background: #dbeafe; height: 100%; }
-.code-usage-legend { display: flex; gap: 14px; margin-top: 14px; }
-
-/* ── Star distribution (kept, restyled) ── */
-.star-row { display: grid; grid-template-columns: 70px 1fr 50px; align-items: center; gap: 12px; }
-.star-track { height: 10px; background: #eef2f7; border-radius: 999px; overflow: hidden; }
-.star-fill { height: 100%; border-radius: 999px; background: #2563eb; transition: width .5s ease; }
+/* ── Star distribution ── */
+.star-row { display: grid; grid-template-columns: 68px 1fr 50px; align-items: center; gap: 12px; }
+.star-row-label { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+.star-track { height: 9px; background: #eef1f7; border-radius: 999px; overflow: hidden; }
+.star-fill { height: 100%; border-radius: 999px; background: var(--orange); transition: width .5s ease; }
+.star-val { text-align: right; font-weight: 700; color: var(--ink); font-family: 'Syne', sans-serif; font-size: 13px; }
 
 /* ── empty state ── */
-.an-empty { text-align: center; color: #94a3b8; padding: 30px 10px; font-size: 13px; }
-.an-empty .icon { font-size: 26px; margin-bottom: 6px; }
+.an-empty { text-align: center; color: var(--muted); padding: 34px 10px; font-size: 13px; }
+.an-empty .icon {
+  width: 44px; height: 44px; margin: 0 auto 10px;
+  border-radius: 50%; background: #f1f3f8;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
 
-/* ── Office trend (MoM) ── */
-.trend-mom-row {
-  display: grid; grid-template-columns: 1fr 70px 90px;
-  align-items: center; gap: 10px; padding: 11px 0;
-  border-bottom: 1px solid #f1f5f9;
+/* ── Pie chart (Sex Distribution) ── */
+.pie-wrap {
+  display: flex; align-items: center; gap: 30px; margin-top: 16px;
 }
-.trend-mom-row:last-child { border-bottom: none; }
-.trend-mom-name { font-size: 13px; font-weight: 700; color: #0f172a; }
-.trend-mom-sub  { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-.trend-mom-score { text-align: right; font-size: 13.5px; font-weight: 700; color: #0f172a; }
-.trend-mom-delta {
-  display: inline-flex; align-items: center; justify-content: center; gap: 3px;
-  font-size: 11.5px; font-weight: 800; padding: 4px 9px; border-radius: 999px;
+.pie-svg { flex-shrink: 0; filter: drop-shadow(0 4px 10px rgba(15,23,42,0.06)); }
+.pie-legend { display: flex; flex-direction: column; gap: 14px; }
+.pie-legend-item { display: flex; align-items: center; gap: 10px; }
+.pie-legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.pie-legend-label { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.pie-legend-val { font-size: 11.5px; color: var(--muted); margin-top: 1px; font-family: 'Syne', sans-serif; }
+
+/* ── Bar graph (Code Status) ── */
+.bar-wrap { margin-top: 20px; }
+
+/* ── Footer ── */
+.an-footer {
+  text-align: center;
+  padding: 22px 10px 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+  letter-spacing: 0.2px;
 }
-.delta-up   { background: #dcfce7; color: #15803d; }
-.delta-down { background: #fee2e2; color: #dc2626; }
-.delta-flat { background: #f1f5f9; color: #64748b; }
+.an-footer b { color: var(--ink-soft); }
 
 @media (max-width: 1100px) {
   .an-grid { grid-template-columns: repeat(2, 1fr); }
   .an-row2, .an-row3 { grid-template-columns: 1fr; }
+  .pie-wrap { flex-direction: column; align-items: flex-start; }
+  .masthead { flex-direction: column; align-items: flex-start; gap: 14px; }
 }
 
 </style>
@@ -201,28 +411,40 @@
 
     <div class="an-grid">
 
-      <div class="an-kpi" style="--accent:#2563eb;">
-        <div class="an-kpi-label">Total Evaluations</div>
-        <div class="an-kpi-value" id="kpiTotal">0</div>
-        <div class="an-kpi-sub" id="kpiTotalSub">All time</div>
+      <div class="an-kpi" style="--accent:#2563eb; --accent-soft:#e3ebfd;">
+        <div class="an-kpi-icon">🗳️</div>
+        <div>
+          <div class="an-kpi-label">Total Evaluations</div>
+          <div class="an-kpi-value" id="kpiTotal">0</div>
+          <div class="an-kpi-sub" id="kpiTotalSub">All time</div>
+        </div>
       </div>
 
-      <div class="an-kpi" style="--accent:#16a34a;">
-        <div class="an-kpi-label">Avg Satisfaction</div>
-        <div class="an-kpi-value" id="kpiSat">0%</div>
-        <div class="an-kpi-sub" id="kpiSatSub">Across all SQDs</div>
+      <div class="an-kpi" style="--accent:#2563eb; --accent-soft:#e3ebfd;">
+        <div class="an-kpi-icon">📈</div>
+        <div>
+          <div class="an-kpi-label">Avg Satisfaction</div>
+          <div class="an-kpi-value" id="kpiSat">0%</div>
+          <div class="an-kpi-sub" id="kpiSatSub">Across all SQDs</div>
+        </div>
       </div>
 
-      <div class="an-kpi" style="--accent:#f59e0b;">
-        <div class="an-kpi-label">Code Redemption</div>
-        <div class="an-kpi-value" id="kpiCodeRate">0%</div>
-        <div class="an-kpi-sub" id="kpiCodeSub">0 of 0 used</div>
+      <div class="an-kpi" style="--accent:#f97316; --accent-soft:#ffedd5;">
+        <div class="an-kpi-icon">🎟️</div>
+        <div>
+          <div class="an-kpi-label">Code Redemption</div>
+          <div class="an-kpi-value" id="kpiCodeRate">0%</div>
+          <div class="an-kpi-sub" id="kpiCodeSub">0 of 0 used</div>
+        </div>
       </div>
 
-      <div class="an-kpi" style="--accent:#7c3aed;">
-        <div class="an-kpi-label">Active Offices</div>
-        <div class="an-kpi-value" id="kpiOffices">0</div>
-        <div class="an-kpi-sub" id="kpiOfficesSub">With evaluations</div>
+      <div class="an-kpi" style="--accent:#334155; --accent-soft:#e7e9ee;">
+        <div class="an-kpi-icon">🏢</div>
+        <div>
+          <div class="an-kpi-label">Active Offices</div>
+          <div class="an-kpi-value" id="kpiOffices">0</div>
+          <div class="an-kpi-sub" id="kpiOfficesSub">With evaluations</div>
+        </div>
       </div>
 
     </div>
@@ -231,95 +453,109 @@
     <!-- TREND + SQD BREAKDOWN           -->
     <!-- ═══════════════════════════════ -->
 
-    <div class="an-row2">
+    <div class="an-section">
+      <div class="section-eyebrow"><span>Performance Trends</span></div>
 
-      <!-- TREND -->
-      <div class="card">
-        <div class="card-title">
-          Submission Trend <span class="card-sub" id="trendRange">— last 30 days</span>
+      <div class="an-row2">
+
+        <!-- TREND -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Submission Trend</div>
+            <div class="card-sub" id="trendRange">— last 30 days</div>
+          </div>
+
+          <div class="trend-svg-wrap">
+            <svg viewBox="0 0 600 160" class="trend-svg" id="trendSvg" preserveAspectRatio="none" style="width:100%;height:160px;">
+              <polygon id="trendArea" class="trend-area" fill="#2563eb" points=""/>
+              <polyline id="trendLine" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points=""/>
+            </svg>
+            <div id="trendLabels" style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:#94a3b8;"></div>
+          </div>
+
+          <div class="trend-legend">
+            <div class="trend-legend-item"><div class="trend-legend-dot" style="background:#2563eb;"></div>Daily submissions</div>
+          </div>
         </div>
 
-        <div class="trend-svg-wrap">
-          <svg viewBox="0 0 600 160" class="trend-svg" id="trendSvg" preserveAspectRatio="none" style="width:100%;height:160px;">
-            <polygon id="trendArea" class="trend-area" fill="#2563eb" points=""/>
-            <polyline id="trendLine" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points=""/>
-          </svg>
-          <div id="trendLabels" style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:#94a3b8;"></div>
+        <!-- SQD BREAKDOWN -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Service Quality Breakdown</div>
+            <div class="card-sub">— by dimension</div>
+          </div>
+
+          <div class="sqd-list" id="sqdList"></div>
+          <div id="sqdWeakestTag"></div>
         </div>
 
-        <div class="trend-legend">
-          <div class="trend-legend-item"><div class="trend-legend-dot" style="background:#2563eb;"></div>Daily submissions</div>
-        </div>
       </div>
-
-      <!-- SQD BREAKDOWN -->
-      <div class="card">
-        <div class="card-title">
-          Service Quality Breakdown <span class="card-sub">— by dimension</span>
-        </div>
-
-        <div class="sqd-list" id="sqdList"></div>
-        <div id="sqdWeakestTag"></div>
-      </div>
-
     </div>
 
     <!-- ═══════════════════════════════ -->
-    <!-- OFFICE LEADERBOARD + CODE USAGE -->
+    <!-- OFFICE LEADERBOARD + STAR DIST  -->
     <!-- ═══════════════════════════════ -->
 
-    <div class="an-row2">
+    <div class="an-section">
+      <div class="section-eyebrow"><span>Office Standings</span></div>
 
-      <!-- LEADERBOARD -->
-      <div class="card">
-        <div class="card-title">
-          Office Leaderboard <span class="card-sub">— ranked by avg rating</span>
+      <div class="an-row2">
+
+        <!-- LEADERBOARD -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Office Leaderboard</div>
+            <div class="card-sub">— ranked by avg rating</div>
+          </div>
+          <div id="leaderboardList" style="margin-top:8px;"></div>
         </div>
-        <div id="leaderboardList" style="margin-top:6px;"></div>
+
+        <!-- STAR DISTRIBUTION -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Rating Distribution</div>
+            <div class="card-sub">— all offices</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:15px;margin-top:16px;">
+            <div class="star-row"><div class="star-row-label">5 Stars</div><div class="star-track"><div class="star-fill" id="r5"></div></div><div class="star-val" id="v5">0%</div></div>
+            <div class="star-row"><div class="star-row-label">4 Stars</div><div class="star-track"><div class="star-fill" id="r4"></div></div><div class="star-val" id="v4">0%</div></div>
+            <div class="star-row"><div class="star-row-label">3 Stars</div><div class="star-track"><div class="star-fill" id="r3"></div></div><div class="star-val" id="v3">0%</div></div>
+            <div class="star-row"><div class="star-row-label">2 Stars</div><div class="star-track"><div class="star-fill" id="r2"></div></div><div class="star-val" id="v2">0%</div></div>
+            <div class="star-row"><div class="star-row-label">1 Star</div><div class="star-track"><div class="star-fill" id="r1"></div></div><div class="star-val" id="v1">0%</div></div>
+          </div>
+        </div>
+
       </div>
-
-      <!-- CODE USAGE -->
-      <div class="card">
-        <div class="card-title">
-          Transaction Code Usage <span class="card-sub">— per office</span>
-        </div>
-        <div id="codeUsageList" style="margin-top:6px;"></div>
-        <div class="code-usage-legend">
-          <div class="trend-legend-item"><div class="trend-legend-dot" style="background:#2563eb;"></div>Used</div>
-          <div class="trend-legend-item"><div class="trend-legend-dot" style="background:#dbeafe;"></div>Unused</div>
-        </div>
-      </div>
-
     </div>
 
     <!-- ═══════════════════════════════ -->
-    <!-- OFFICE TREND (MoM) + STAR DIST  -->
+    <!-- SEX DISTRIBUTION + CODE STATUS  -->
     <!-- ═══════════════════════════════ -->
 
-    <div class="an-row2">
+    <div class="an-section">
+      <div class="section-eyebrow"><span>Respondent Profile</span></div>
 
-      <!-- OFFICE TREND MoM -->
-      <div class="card">
-        <div class="card-title">
-          Office Trend <span class="card-sub" id="momRangeLabel">— month over month</span>
+      <div class="an-row2">
+
+        <!-- SEX DISTRIBUTION PIE -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Sex Distribution</div>
+            <div class="card-sub">— all respondents</div>
+          </div>
+          <div id="sexPieWrap" class="pie-wrap"></div>
         </div>
-        <div id="momList" style="margin-top:6px;"></div>
+
+        <!-- CODE STATUS BAR -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Code Status</div>
+            <div class="card-sub">— used vs unused, by percentage</div>
+          </div>
+          <div id="codeStatusBarWrap" class="bar-wrap"></div>
+        </div>
+
       </div>
-
-      <!-- STAR DISTRIBUTION -->
-      <div class="card">
-        <div class="card-title">
-          Rating Distribution <span class="card-sub">— all offices</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:14px;margin-top:12px;">
-          <div class="star-row"><div>5 Stars</div><div class="star-track"><div class="star-fill" id="r5"></div></div><div id="v5" style="text-align:right;font-weight:700;">0%</div></div>
-          <div class="star-row"><div>4 Stars</div><div class="star-track"><div class="star-fill" id="r4"></div></div><div id="v4" style="text-align:right;font-weight:700;">0%</div></div>
-          <div class="star-row"><div>3 Stars</div><div class="star-track"><div class="star-fill" id="r3"></div></div><div id="v3" style="text-align:right;font-weight:700;">0%</div></div>
-          <div class="star-row"><div>2 Stars</div><div class="star-track"><div class="star-fill" id="r2"></div></div><div id="v2" style="text-align:right;font-weight:700;">0%</div></div>
-          <div class="star-row"><div>1 Star</div><div class="star-track"><div class="star-fill" id="r1"></div></div><div id="v1" style="text-align:right;font-weight:700;">0%</div></div>
-        </div>
-      </div>
-
     </div>
 
   </main>
@@ -407,6 +643,15 @@ function monthLabel(key) {
   return new Date(y, m - 1, 1).toLocaleString("en-US", { month: "short", year: "numeric" });
 }
 
+/* ── Normalize a respondent's sex field to "Male" / "Female" / null ── */
+function normalizeSex(item) {
+  const raw = (item.sex ?? item.gender ?? item.Sex ?? item.Gender ?? "").toString().trim().toLowerCase();
+  if (!raw) return null;
+  if (raw === "m" || raw.startsWith("male")) return "Male";
+  if (raw === "f" || raw.startsWith("female")) return "Female";
+  return null;
+}
+
 /* ════════════════════════════════
    LOAD: OFFICES
 ════════════════════════════════ */
@@ -430,7 +675,8 @@ onValue(evaluationRef, (snap) => {
 ════════════════════════════════ */
 onValue(codeRef, (snap) => {
   allCodes = snap.val() || {};
-  renderCodeUsage();
+  renderCodeKPI();
+  renderCodeStatusBar();
 });
 
 /* ════════════════════════════════
@@ -443,8 +689,8 @@ function render() {
   renderTrend(rows);
   renderSQD(rows);
   renderLeaderboard(rows);
-  renderOfficeMoM(rows);
   renderStars(rows);
+  renderSexPie(rows);
 }
 
 /* ── KPI STRIP ── */
@@ -543,7 +789,7 @@ function renderSQD(rows) {
 
   list.innerHTML = dims.map(d => {
     const pct = (d.avg / 5) * 100;
-    const color = d.avg >= 4 ? "#16a34a" : d.avg >= 3 ? "#f59e0b" : "#ef4444";
+    const color = d.avg >= 4 ? "#2563eb" : d.avg >= 3 ? "#f97316" : "#f97316";
     return `
       <div class="sqd-row">
         <div class="sqd-label">${d.label.replace(/^SQD\d+\s*–\s*/, "")}</div>
@@ -599,139 +845,104 @@ function renderLeaderboard(rows) {
   `).join("");
 }
 
-/* ── OFFICE TREND — MONTH OVER MONTH ── */
-function renderOfficeMoM(rows) {
-  const list = document.getElementById("momList");
-
-  const now = new Date();
-  const curKey  = monthKey(now.toISOString());
-  const prevD   = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const prevKey = monthKey(prevD.toISOString());
-
-  document.getElementById("momRangeLabel").textContent =
-    `— ${monthLabel(prevKey)} vs ${monthLabel(curKey)}`;
-
-  /* { office: { monthKey: {total, count} } } */
-  const byOfficeMonth = {};
-
-  rows.forEach(r => {
-    if (!r.office || !r.date) return;
-    const mk = monthKey(r.date);
-    if (mk !== curKey && mk !== prevKey) return; // only need these two buckets
-
-    byOfficeMonth[r.office] = byOfficeMonth[r.office] || {};
-    byOfficeMonth[r.office][mk] = byOfficeMonth[r.office][mk] || { total: 0, count: 0 };
-    byOfficeMonth[r.office][mk].total += avgScore(r);
-    byOfficeMonth[r.office][mk].count++;
-  });
-
-  const offices = Object.keys(byOfficeMonth);
-
-  if (!offices.length) {
-    list.innerHTML = `<div class="an-empty"><div class="icon">📈</div>Not enough recent data to compare months yet.</div>`;
-    return;
-  }
-
-  const entries = offices.map(office => {
-    const cur  = byOfficeMonth[office][curKey];
-    const prev = byOfficeMonth[office][prevKey];
-    const curAvg  = cur  ? cur.total / cur.count   : null;
-    const prevAvg = prev ? prev.total / prev.count : null;
-    const delta = (curAvg !== null && prevAvg !== null) ? curAvg - prevAvg : null;
-    return { office, curAvg, prevAvg, delta, curCount: cur ? cur.count : 0 };
-  }).sort((a, b) => {
-    /* offices with a computable delta first, ranked by biggest swing */
-    if (a.delta === null && b.delta === null) return 0;
-    if (a.delta === null) return 1;
-    if (b.delta === null) return -1;
-    return Math.abs(b.delta) - Math.abs(a.delta);
-  });
-
-  list.innerHTML = entries.map(e => {
-    let deltaHtml;
-    if (e.delta === null) {
-      deltaHtml = `<span class="trend-mom-delta delta-flat">— new</span>`;
-    } else if (Math.abs(e.delta) < 0.05) {
-      deltaHtml = `<span class="trend-mom-delta delta-flat">→ flat</span>`;
-    } else if (e.delta > 0) {
-      deltaHtml = `<span class="trend-mom-delta delta-up">↑ +${e.delta.toFixed(1)}</span>`;
-    } else {
-      deltaHtml = `<span class="trend-mom-delta delta-down">↓ ${e.delta.toFixed(1)}</span>`;
-    }
-
-    const scoreLabel = e.curAvg !== null ? e.curAvg.toFixed(1) + " ★" : "—";
-
-    return `
-      <div class="trend-mom-row">
-        <div>
-          <div class="trend-mom-name">${e.office}</div>
-          <div class="trend-mom-sub">${e.curCount} eval${e.curCount !== 1 ? "s" : ""} this month</div>
-        </div>
-        <div class="trend-mom-score">${scoreLabel}</div>
-        <div style="text-align:right;">${deltaHtml}</div>
-      </div>
-    `;
-  }).join("");
-}
-
-/* ── TRANSACTION CODE USAGE ── */
-function renderCodeUsage() {
-  const list = document.getElementById("codeUsageList");
+/* ── shared helper: totals codes across all offices ── */
+function totalCodeCounts() {
   const offices = Object.keys(allCodes);
-
-  /* update KPI */
-  let usedTotal = 0, allTotal = 0;
+  let used = 0, unused = 0;
   offices.forEach(o => {
     const codes = Object.values(allCodes[o] || {});
-    allTotal  += codes.length;
-    usedTotal += codes.filter(c => c.status === "used").length;
+    codes.forEach(c => {
+      if (c.status === "used") used++; else unused++;
+    });
   });
+  return { used, unused, total: used + unused };
+}
 
-  const rate = allTotal ? (usedTotal / allTotal) * 100 : 0;
+/* ── CODE KPI (redemption rate strip) ── */
+function renderCodeKPI() {
+  const { used, total } = totalCodeCounts();
+  const rate = total ? (used / total) * 100 : 0;
   document.getElementById("kpiCodeRate").textContent = rate.toFixed(0) + "%";
-  document.getElementById("kpiCodeSub").textContent   = `${usedTotal} of ${allTotal} used`;
+  document.getElementById("kpiCodeSub").textContent   = `${used} of ${total} used`;
+}
 
-  if (!offices.length) {
-    list.innerHTML = `<div class="an-empty"><div class="icon">🎟️</div>No transaction codes generated yet.</div>`;
+/* ── CODE STATUS — USED vs UNUSED (bar graph, x = status, y = % of total) ── */
+function renderCodeStatusBar() {
+  const wrap = document.getElementById("codeStatusBarWrap");
+  const { used, unused, total } = totalCodeCounts();
+
+  if (!total) {
+    wrap.innerHTML = `<div class="an-empty"><div class="icon">🎟️</div>No transaction codes generated yet.</div>`;
     return;
   }
 
-  const rows = offices.map(office => {
-    const codes  = Object.values(allCodes[office] || {});
-    const used   = codes.filter(c => c.status === "used").length;
-    const total  = codes.length;
-    const usedPct   = total ? (used / total) * 100 : 0;
-    const unusedPct = 100 - usedPct;
-    return { office, used, total, usedPct, unusedPct };
-  }).sort((a, b) => b.total - a.total);
+  const usedPct   = (used   / total) * 100;
+  const unusedPct = (unused / total) * 100;
 
-  list.innerHTML = rows.map(r => `
-    <div class="code-usage-row">
-      <div class="code-usage-top">
-        <div class="code-usage-name">${r.office}</div>
-        <div class="code-usage-pct">${r.used}/${r.total} used</div>
-      </div>
-      <div class="code-usage-track">
-        <div class="code-usage-used" style="width:${r.usedPct}%;"></div>
-        <div class="code-usage-unused" style="width:${r.unusedPct}%;"></div>
-      </div>
-    </div>
-  `).join("");
+  const W = 420, H = 220;
+  const PAD_LEFT = 40, PAD_BOTTOM = 30, PAD_TOP = 24;
+  const plotH = H - PAD_BOTTOM - PAD_TOP;
+  const plotW = W - PAD_LEFT - 20;
+
+  const BAR_W = 90, GAP = 70;
+  const x1 = PAD_LEFT + (plotW / 2) - GAP / 2 - BAR_W;
+  const x2 = PAD_LEFT + (plotW / 2) + GAP / 2;
+
+  const usedH   = (usedPct   / 100) * plotH;
+  const unusedH = (unusedPct / 100) * plotH;
+
+  const y1 = H - PAD_BOTTOM - usedH;
+  const y2 = H - PAD_BOTTOM - unusedH;
+
+  /* y-axis gridlines at 0/25/50/75/100% */
+  const gridPcts = [0, 25, 50, 75, 100];
+  const gridLines = gridPcts.map(p => {
+    const gy = H - PAD_BOTTOM - (p / 100) * plotH;
+    return `
+      <line x1="${PAD_LEFT}" y1="${gy}" x2="${W - 20}" y2="${gy}" stroke="#f1f5f9" stroke-width="1"/>
+      <text x="${PAD_LEFT - 8}" y="${gy + 4}" text-anchor="end" font-size="10" fill="#94a3b8">${p}%</text>
+    `;
+  }).join("");
+
+  wrap.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:440px;height:auto;display:block;margin:0 auto;">
+      ${gridLines}
+      <line x1="${PAD_LEFT}" y1="${H - PAD_BOTTOM}" x2="${W - 20}" y2="${H - PAD_BOTTOM}" stroke="#e2e8f0" stroke-width="1.5"/>
+
+      <rect x="${x1}" y="${y1}" width="${BAR_W}" height="${usedH}" rx="8" fill="#2563eb"/>
+      <text x="${x1 + BAR_W / 2}" y="${y1 - 10}" text-anchor="middle" font-size="14" font-weight="800" fill="#0f172a" font-family="Syne, sans-serif">${usedPct.toFixed(0)}%</text>
+      <text x="${x1 + BAR_W / 2}" y="${H - PAD_BOTTOM + 18}" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Used</text>
+
+      <rect x="${x2}" y="${y2}" width="${BAR_W}" height="${unusedH}" rx="8" fill="#f97316"/>
+      <text x="${x2 + BAR_W / 2}" y="${y2 - 10}" text-anchor="middle" font-size="14" font-weight="800" fill="#0f172a" font-family="Syne, sans-serif">${unusedPct.toFixed(0)}%</text>
+      <text x="${x2 + BAR_W / 2}" y="${H - PAD_BOTTOM + 18}" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Unused</text>
+    </svg>
+  `;
 }
 
-/* ── STAR DISTRIBUTION ── */
+/* ── STAR DISTRIBUTION — COUNT ACTUAL RATINGS ── */
 function renderStars(rows) {
-  const total = rows.length;
-  let s5=0,s4=0,s3=0,s2=0,s1=0;
+  let s5 = 0, s4 = 0, s3 = 0, s2 = 0, s1 = 0, counted = 0;
 
   rows.forEach(r => {
-    const a = avgScore(r);
-    if (a >= 4.5) s5++;
-    else if (a >= 3.5) s4++;
-    else if (a >= 2.5) s3++;
-    else if (a >= 1.5) s2++;
-    else s1++;
+    // Prefer an explicit rating field if present, otherwise derive the
+    // star rating from the average of the SQD1–SQD8 scores (same basis
+    // used by the KPI strip and office leaderboard elsewhere on this page).
+    const explicit = parseInt(r.user_rating ?? r.rating ?? r.stars ?? NaN);
+    const avg = avgScore(r);
+    const rating = !isNaN(explicit) ? explicit : (avg > 0 ? Math.round(avg) : 0);
+
+    if (rating < 1 || rating > 5) return; // skip rows with no usable score at all
+    counted++;
+
+    if (rating === 5) s5++;
+    else if (rating === 4) s4++;
+    else if (rating === 3) s3++;
+    else if (rating === 2) s2++;
+    else if (rating === 1) s1++;
   });
+
+  const total = counted;
 
   const setStar = (id, val, vid) => {
     const p = total ? (val / total) * 100 : 0;
@@ -744,6 +955,70 @@ function renderStars(rows) {
   setStar("r3", s3, "v3");
   setStar("r2", s2, "v2");
   setStar("r1", s1, "v1");
+}
+
+/* ── SEX DISTRIBUTION — PIE CHART ── */
+function renderSexPie(rows) {
+  const wrap = document.getElementById("sexPieWrap");
+
+  let male = 0, female = 0, unknown = 0;
+  rows.forEach(r => {
+    const s = normalizeSex(r);
+    if (s === "Male") male++;
+    else if (s === "Female") female++;
+    else unknown++;
+  });
+
+  const known = male + female;
+
+  if (!known) {
+    wrap.innerHTML = `<div class="an-empty"><div class="icon">🧑‍🤝‍🧑</div>No sex/gender data recorded yet.</div>`;
+    return;
+  }
+
+  const malePct   = (male   / known) * 100;
+  const femalePct = (female / known) * 100;
+
+  const CX = 90, CY = 90, R = 80;
+
+  function arcPath(startPct, endPct) {
+    const startAngle = (startPct / 100) * 2 * Math.PI - Math.PI / 2;
+    const endAngle   = (endPct   / 100) * 2 * Math.PI - Math.PI / 2;
+    const x1 = CX + R * Math.cos(startAngle);
+    const y1 = CY + R * Math.sin(startAngle);
+    const x2 = CX + R * Math.cos(endAngle);
+    const y2 = CY + R * Math.sin(endAngle);
+    const largeArc = (endPct - startPct) > 50 ? 1 : 0;
+    return `M${CX},${CY} L${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${largeArc} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`;
+  }
+
+  let svgSlices = "";
+  if (male > 0)   svgSlices += `<path d="${arcPath(0, malePct)}" fill="#2563eb"/>`;
+  if (female > 0) svgSlices += `<path d="${arcPath(malePct, malePct + femalePct)}" fill="#f97316"/>`;
+
+  wrap.innerHTML = `
+    <svg class="pie-svg" viewBox="0 0 180 180" width="180" height="180">
+      <circle cx="${CX}" cy="${CY}" r="${R}" fill="#f1f5f9"/>
+      ${svgSlices}
+    </svg>
+    <div class="pie-legend">
+      <div class="pie-legend-item">
+        <div class="pie-legend-dot" style="background:#2563eb;"></div>
+        <div>
+          <div class="pie-legend-label">Male</div>
+          <div class="pie-legend-val">${male} (${malePct.toFixed(0)}%)</div>
+        </div>
+      </div>
+      <div class="pie-legend-item">
+        <div class="pie-legend-dot" style="background:#f97316;"></div>
+        <div>
+          <div class="pie-legend-label">Female</div>
+          <div class="pie-legend-val">${female} (${femalePct.toFixed(0)}%)</div>
+        </div>
+      </div>
+      ${unknown ? `<div class="pie-legend-item"><div class="pie-legend-dot" style="background:#e2e8f0;"></div><div><div class="pie-legend-label" style="color:#94a3b8;">Unspecified</div><div class="pie-legend-val">${unknown}</div></div></div>` : ""}
+    </div>
+  `;
 }
 
 </script>

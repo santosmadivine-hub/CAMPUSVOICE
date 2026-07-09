@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Summary Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── Office Analytics Page Styles (kept inline, layered on top of shared.css) ── */
+.analytics-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: #0369a1;
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 18px;
+}
+.back-link:hover { text-decoration: underline; }
+
+.analytics-header .header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.header-titles { display: flex; flex-direction: column; gap: 6px; }
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #0284c7;
+}
+
+.header-titles h1 {
+  margin: 0;
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  color: #0c4a6e;
+}
+
+.header-meta {
+  font-size: 13px;
+  color: #64748b;
+}
+.header-meta .dot { margin: 0 8px; }
+
+.btn-print {
+  border: none;
+  background: #1e3a8a;
+  color: white;
+  padding: 11px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(30,58,138,.25);
+  transition: background .2s, transform .2s;
+}
+.btn-print:hover { background: #1e40af; transform: translateY(-1px); }
+
+.state-banner {
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  background: white;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+}
+.state-empty { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+
+/* Stat cards */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  padding: 18px;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+  position: relative;
+}
+
+.stat-icon { font-size: 20px; margin-bottom: 8px; }
+
+.stat-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 800;
+  font-family: 'Syne', sans-serif;
+  color: #0c4a6e;
+}
+
+.stat-sub { font-size: 12px; color: #0369a1; font-weight: 700; margin-top: 4px; }
+
+.stat-primary { border-color: #7dd3fc; }
+.stat-warning { border-color: #fde68a; }
+.stat-success { border-color: #86efac; }
+
+/* Charts */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+  .charts-grid { grid-template-columns: 1fr; }
+}
+
+.chart-card { padding: 18px; }
+
+.card-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1e293b;
+  margin-bottom: 14px;
+}
+.card-sub { font-weight: 500; font-size: 12px; color: #64748b; }
+
+.chart-wrap { position: relative; height: 280px; }
+.chart-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
+.chart-wrap-wide { height: 260px; }
+.chart-wrap-donut {
+  height: 220px;
+  position: relative;
+}
+.chart-wrap-donut canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: 800;
+  font-family: 'Syne', sans-serif;
+  color: #0c4a6e;
+  pointer-events: none;
+  text-align: center;
+  line-height: 1.1;
+}
+.donut-center .donut-sub {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  font-family: 'DM Sans', sans-serif;
+  margin-top: 2px;
+}
+
+.code-usage-legend {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+.code-usage-legend .legend-item { display: flex; align-items: center; gap: 6px; }
+.code-usage-legend .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.code-usage-empty { text-align: center; font-size: 13px; color: #64748b; padding: 10px 0 0; }
+
+.chart-error {
+  padding: 30px 12px;
+  text-align: center;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+/* Breakdown table */
+.breakdown-table-wrap { overflow-x: auto; }
+
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.breakdown-table th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 11px;
+  color: #475569;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-bottom: 2px solid #bae6fd;
+  background: #f0f9ff;
+  font-weight: 700;
+}
+
+.breakdown-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0f9ff;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.col-score, .col-pct { width: 160px; }
+
+.dim-score { font-weight: 700; color: #0c4a6e; }
+
+.dim-pct-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dim-pct-track {
+  flex: 1;
+  height: 8px;
+  background: #bae6fd;
+  border-radius: 999px;
+  overflow: hidden;
+  min-width: 90px;
+}
+
+.dim-pct-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg,#0284c7,#0ea5e9);
+  transition: width .6s ease;
+}
+
+.dim-pct-num { font-weight: 700; color: #0c4a6e; width: 40px; text-align: right; }
+
+/* Comments */
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comment-item {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #1e293b;
+  font-style: italic;
+}
+
+.comment-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #64748b;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.comment-empty { color: #64748b; font-size: 14px; padding: 10px 0; }
+
+@media print {
+  #sidebar-mount, #topbar-mount, .back-link, .btn-print { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- Sidebar -->
+    <div id="sidebar-mount"></div>
+
+    <!-- Main Content -->
+    <main class="main fade-in">
+
+        <!-- Topbar -->
+        <div id="topbar-mount"></div>
+
+        <div class="analytics-page">
+
+    <!-- Header -->
+    <header class="analytics-header">
+      <a href="admin1-office-mgmt.html" class="back-link">← Back</a>
+      <div class="header-row">
+        <div class="header-titles">
+          <h1 id="office-name">Loading office…</h1>
+          <div class="header-meta">
+            <span id="office-date-range">—</span>
+            <span class="dot">•</span>
+            <span id="office-respondents">—</span>
+          </div>
+    </header>
+
+    <!-- Loading / Empty states -->
+    <div class="state-banner" id="loading-banner">Loading evaluation data…</div>
+    <div class="state-banner state-empty" id="empty-banner" style="display:none;">
+      No evaluations have been submitted for this office yet.
+    </div>
+
+    <div id="report-content" style="display:none;">
+
+      <!-- Top stat cards -->
+      <section class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📋</div>
+          <div class="stat-label">Total Evaluations</div>
+          <div class="stat-value" id="stat-total-evals">0</div>
+        </div>
+        <div class="stat-card stat-primary">
+          <div class="stat-icon">😊</div>
+          <div class="stat-label">Avg Satisfaction</div>
+          <div class="stat-value" id="stat-satisfaction">0%</div>
+        </div>
+        <div class="stat-card stat-warning">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-label">Overall Rating</div>
+          <div class="stat-value" id="stat-overall-rating">0.0 / 5</div>
+          <div class="stat-sub" id="stat-overall-label">—</div>
+        </div>
+        <div class="stat-card stat-success">
+          <div class="stat-icon">🧑‍🤝‍🧑</div>
+          <div class="stat-label">Respondents</div>
+          <div class="stat-value" id="stat-respondents">0</div>
+        </div>
+      </section>
+
+      <!-- Charts -->
+      <section class="charts-grid">
+        <div class="card chart-card">
+          <div class="card-title">Evaluation Dimensions <span class="card-sub">— average score per criterion</span></div>
+          <div class="chart-wrap" id="chart-dimensions-wrap">
+            <canvas id="chart-dimensions"></canvas>
+          </div>
+        </div>
+        <div class="card chart-card chart-card-small">
+          <div class="card-title">Code Usage <span class="card-sub">— transaction codes for this office</span></div>
+          <div class="chart-wrap chart-wrap-donut" id="chart-codes-wrap">
+            <canvas id="chart-codes"></canvas>
+            <div class="donut-center" id="donut-center-label">0</div>
+          </div>
+          <div class="code-usage-legend" id="code-usage-legend"></div>
+        </div>
+      </section>
+
+      <section class="card chart-card">
+        <div class="card-title">Evaluations Over Time <span class="card-sub">— average rating per submission date</span></div>
+        <div class="chart-wrap chart-wrap-wide" id="chart-trend-wrap">
+          <canvas id="chart-trend"></canvas>
+        </div>
+      </section>
+
+      <!-- Dimension breakdown table -->
+      <section class="card">
+        <div class="card-title">Dimension Breakdown <span class="card-sub">— detailed scores</span></div>
+        <div class="breakdown-table-wrap">
+          <table class="breakdown-table">
+            <thead>
+              <tr>
+                <th>Evaluation Dimension</th>
+                <th class="col-score">Avg. Rating</th>
+                <th class="col-pct">Satisfaction %</th>
+              </tr>
+            </thead>
+            <tbody id="breakdown-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Recent comments -->
+      <section class="card">
+        <div class="card-title">Recent Feedback <span class="card-sub">— latest comments from respondents</span></div>
+        <div class="comments-list" id="comments-list"></div>
+      </section>
+
+    </div>
+
+  </div>
+</main>
+</div>
+
+  <!-- Chart.js — pinned to a version that actually exists on jsDelivr (4.4.4 was never
+       published to cdnjs, which 404'd and silently broke every chart on this page). -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="shared.js"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  get
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// Same project as the rest of the CampusVoice admin dashboards.
+const firebaseConfig = {
+  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId: "kristal-adb78",
+  storageBucket: "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId: "G-LK8D1CBQ2J"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Build shared Admin 1 layout (this page is reached from the Office Management "View" action)
+document.getElementById("sidebar-mount").innerHTML =
+    buildSidebar("admin1", "office-mgmt");
+
+document.getElementById("topbar-mount").innerHTML =
+    buildTopbar("Summary Analytics", "admin1");
+
+// Labels for sq1..sq8 / sqd1..sqd8 — standard Service Quality Dimensions
+// (as used in campus/government Client Satisfaction Measurement surveys).
+const DIMENSION_LABELS = [
+  "Responsiveness",
+  "Reliability",
+  "Access & Facilities",
+  "Communication",
+  "Costs",
+  "Integrity",
+  "Assurance",
+  "Outcome"
+];
+
+function normalizeName(name) {
+  return (name || "").toString().trim().toLowerCase();
+}
+
+function getQueryParam(key) {
+  return new URLSearchParams(window.location.search).get(key);
+}
+
+function ratingLabel(avg) {
+  if (avg >= 4.5) return "Excellent";
+  if (avg >= 3.5) return "Very Good";
+  if (avg >= 2.5) return "Good";
+  if (avg >= 1.5) return "Fair";
+  if (avg > 0) return "Poor";
+  return "No data";
+}
+
+function formatDate(ts) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+}
+
+// Small helper so one broken chart can't take the rest of the page down with it.
+function safeRenderChart(wrapId, canvasId, buildFn) {
+  if (typeof Chart === "undefined") {
+    const wrap = document.getElementById(wrapId);
+    if (wrap) wrap.innerHTML = `<div class="chart-error">Chart library failed to load. Check your internet connection and reload.</div>`;
+    console.error(`Chart.js is not loaded — skipped "${canvasId}"`);
+    return null;
+  }
+  try {
+    const canvas = document.getElementById(canvasId);
+    return buildFn(canvas);
+  } catch (err) {
+    console.error(`Failed to render chart "${canvasId}":`, err);
+    const wrap = document.getElementById(wrapId);
+    if (wrap) wrap.innerHTML = `<div class="chart-error">Couldn't render this chart.</div>`;
+    return null;
+  }
+}
+
+function renderCodeUsage(codes) {
+  const total = codes.length;
+  const used = codes.filter(c => c.status === "used").length;
+  const unused = codes.filter(c => c.status === "unused").length;
+  const other = total - used - unused; // any code missing/with an unexpected status value
+
+  const label = document.getElementById("donut-center-label");
+  const legend = document.getElementById("code-usage-legend");
+
+  if (total === 0) {
+    label.innerHTML = `0<span class="donut-sub">codes</span>`;
+    legend.innerHTML = `<div class="code-usage-empty">No codes generated for this office yet.</div>`;
+    return;
+  }
+
+  label.innerHTML = `${total}<span class="donut-sub">codes</span>`;
+
+  const segments = [
+    { name: "Unused", value: unused, color: "#16a34a" },
+    { name: "Used", value: used, color: "#ef4444" }
+  ];
+  if (other > 0) segments.push({ name: "Other", value: other, color: "#94a3b8" });
+
+  legend.innerHTML = segments.map(s => `
+    <div class="legend-item">
+      <span class="legend-dot" style="background:${s.color}"></span>
+      ${s.name} (${s.value})
+    </div>
+  `).join("");
+
+  safeRenderChart("chart-codes-wrap", "chart-codes", (canvas) => {
+    return new Chart(canvas, {
+      type: "doughnut",
+      data: {
+        labels: segments.map(s => s.name),
+        datasets: [{
+          data: segments.map(s => s.value),
+          backgroundColor: segments.map(s => s.color),
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "72%",
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true }
+        }
+      }
+    });
+  });
+}
+
+document.getElementById("btn-print").addEventListener("click", () => window.print());
+
+async function main() {
+  const officeKey = getQueryParam("office");
+  const officeNameParam = getQueryParam("name") || "";
+
+  const loadingBanner = document.getElementById("loading-banner");
+  const emptyBanner = document.getElementById("empty-banner");
+  const reportContent = document.getElementById("report-content");
+  const officeNameEl = document.getElementById("office-name");
+
+  officeNameEl.textContent = officeNameParam || "Office";
+
+  let officeName = officeNameParam;
+
+  try {
+    if (officeKey) {
+      const snap = await get(ref(db, `services/offices/${officeKey}`));
+      const val = snap.val();
+      if (val && val.name) officeName = val.name;
+    }
+  } catch (err) {
+    console.error("Couldn't load office record:", err);
+  }
+
+  officeName = officeName || "Unknown Office";
+  officeNameEl.textContent = officeName;
+  document.title = `CampusVoice – Summary Analytics | ${officeName}`;
+
+  // Transaction codes generated for this office (services/transaction_code/offices_name/<office>).
+  // Match the same normalized-name approach used for evaluations, since the Firebase key
+  // is the raw office name and can drift in casing/whitespace from the query param.
+  let officeCodes = [];
+
+  try {
+    const codesSnap = await get(ref(db, "services/transaction_code/offices_name"));
+    const codesData = codesSnap.val() || {};
+    const targetKey = normalizeName(officeName);
+
+    const matchedOfficeKey = Object.keys(codesData).find(
+      k => normalizeName(k) === targetKey
+    );
+
+    if (matchedOfficeKey) {
+      officeCodes = Object.values(codesData[matchedOfficeKey] || {});
+    }
+  } catch (err) {
+    console.error("Couldn't load transaction codes:", err);
+  }
+
+  renderCodeUsage(officeCodes);
+
+  let evaluations = [];
+
+  try {
+    const snap = await get(ref(db, "services/evaluations"));
+    const data = snap.val() || {};
+    const targetKey = normalizeName(officeName);
+
+    evaluations = Object.entries(data)
+      .map(([id, ev]) => {
+        const dims = [];
+        for (let x = 1; x <= 8; x++) {
+          const v = parseFloat(ev["sq" + x] ?? ev["sqd" + x]);
+          dims.push(isNaN(v) ? 0 : v);
+        }
+        return {
+          id,
+          office: ev.office || "Unknown",
+          comment: ev.comment || ev.comments || "",
+          dims,
+          timestamp: Number(ev.timestamp) || 0
+        };
+      })
+      .filter(ev => normalizeName(ev.office) === targetKey);
+  } catch (err) {
+    console.error("Couldn't load evaluations:", err);
+  }
+
+  loadingBanner.style.display = "none";
+
+  if (evaluations.length === 0) {
+    emptyBanner.style.display = "block";
+    return;
+  }
+
+  reportContent.style.display = "block";
+
+  const total = evaluations.length;
+
+  const dimAverages = DIMENSION_LABELS.map((_, i) => {
+    const sum = evaluations.reduce((acc, ev) => acc + (ev.dims[i] || 0), 0);
+    return sum / total;
+  });
+
+  const overallAvg = dimAverages.reduce((a, b) => a + b, 0) / dimAverages.length;
+  const satisfactionPct = (overallAvg / 5) * 100;
+  const respondents = total;
+
+  const timestamps = evaluations.map(ev => ev.timestamp).filter(Boolean);
+  const minTs = timestamps.length ? Math.min(...timestamps) : null;
+  const maxTs = timestamps.length ? Math.max(...timestamps) : null;
+
+  document.getElementById("office-date-range").textContent =
+    minTs && maxTs
+      ? `${formatDate(minTs)} – ${formatDate(maxTs)}`
+      : "Date range unavailable";
+
+  document.getElementById("office-respondents").textContent =
+    `${respondents} respondent${respondents === 1 ? "" : "s"}`;
+
+  document.getElementById("stat-total-evals").textContent = total;
+  document.getElementById("stat-satisfaction").textContent = `${satisfactionPct.toFixed(1)}%`;
+  document.getElementById("stat-overall-rating").textContent = `${overallAvg.toFixed(1)} / 5`;
+  document.getElementById("stat-overall-label").textContent = ratingLabel(overallAvg);
+  document.getElementById("stat-respondents").textContent = respondents;
+
+  const tbody = document.getElementById("breakdown-table-body");
+
+  tbody.innerHTML = DIMENSION_LABELS.map((label, i) => {
+    const avg = dimAverages[i];
+    const pct = (avg / 5) * 100;
+
+    return `
+      <tr>
+        <td class="dim-name">${label}</td>
+        <td class="dim-score">${avg.toFixed(1)} / 5</td>
+        <td>
+          <div class="dim-pct-cell">
+            <div class="dim-pct-track">
+              <div class="dim-pct-fill" style="width:${pct}%"></div>
+            </div>
+            <span class="dim-pct-num">${pct.toFixed(0)}%</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  const commentsList = document.getElementById("comments-list");
+
+  const withComments = evaluations
+    .filter(ev => ev.comment && ev.comment.trim())
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 6);
+
+  commentsList.innerHTML = withComments.length
+    ? withComments.map(ev => `
+        <div class="comment-item">
+          "${ev.comment.trim()}"
+          <div class="comment-meta">${formatDate(ev.timestamp)}</div>
+        </div>
+      `).join("")
+    : `<div class="comment-empty">No written comments were submitted.</div>`;
+
+  const palette = ["#2563eb", "#06b6d4", "#8b5cf6", "#0ea5e9", "#f59e0b", "#10b981", "#ef4444", "#6366f1"];
+
+  safeRenderChart("chart-dimensions-wrap", "chart-dimensions", (canvas) => {
+    return new Chart(canvas, {
+      type: "bar",
+      data: {
+        labels: DIMENSION_LABELS,
+        datasets: [{
+          data: dimAverages,
+          backgroundColor: palette,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 5
+          }
+        }
+      }
+    });
+  });
+
+  const byDay = {};
+
+  evaluations.forEach(ev => {
+    if (!ev.timestamp) return;
+
+    const day = new Date(ev.timestamp).toISOString().slice(0, 10);
+    const dayAvg = ev.dims.reduce((a, b) => a + b, 0) / ev.dims.length;
+
+    if (!byDay[day]) {
+      byDay[day] = { sum: 0, count: 0 };
+    }
+
+    byDay[day].sum += dayAvg;
+    byDay[day].count++;
+  });
+
+  const sortedDays = Object.keys(byDay).sort();
+
+  safeRenderChart("chart-trend-wrap", "chart-trend", (canvas) => {
+    return new Chart(canvas, {
+      type: "line",
+      data: {
+        labels: sortedDays.map(d =>
+          formatDate(new Date(d).getTime())
+        ),
+        datasets: [{
+          data: sortedDays.map(d =>
+            byDay[d].sum / byDay[d].count
+          ),
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37,99,235,0.12)",
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 5
+          }
+        }
+      }
+    });
+  });
+}
+
+main();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CampusVoice – Office Management | Admin 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
+<style>
+/* ── Office Management Page Styles ── */
+.office-section {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.search-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  margin-bottom: 18px;
+  outline: none;
+  transition: border-color .2s;
+  box-sizing: border-box;
+  color: #1e293b;
+}
+.search-input:focus { border-color: #0284c7; }
+.search-input::placeholder { color: #94a3b8; }
+
+/* Office table */
+.office-table-wrap {
+  max-height: 600px;
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+}
+.office-table-wrap::-webkit-scrollbar { width: 6px; }
+.office-table-wrap::-webkit-scrollbar-thumb { background: #7dd3fc; border-radius: 999px; }
+.office-table-wrap::-webkit-scrollbar-track { background: transparent; }
+
+.office-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.office-table th {
+  text-align: left;
+  padding: 14px 16px;
+  font-size: 11px;
+  color: #475569;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-bottom: 2px solid #bae6fd;
+  background: #f0f9ff;
+  position: sticky;
+  top: 0;
+  font-weight: 700;
+}
+
+.office-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f9ff;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.office-table tr:hover td {
+  background: #f0f9ff;
+}
+
+.rating-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.rating-track {
+  flex: 1;
+  height: 8px;
+  background: #bae6fd;
+  border-radius: 999px;
+  overflow: hidden;
+  min-width: 130px;
+}
+
+.rating-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg,#0284c7,#0ea5e9);
+  transition: width .6s ease;
+}
+
+.rating-number {
+  font-weight: 700;
+  color: #0c4a6e;
+  width: 34px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.eval-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 4px 10px;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 999px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  border: none;
+  padding: 7px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  transition: opacity .2s, transform .2s;
+}
+
+.action-btn:hover {
+  opacity: .85;
+  transform: translateY(-1px);
+}
+
+.view-btn {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.edit-btn {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.delete-btn {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.primary-btn {
+  border: none;
+  background: #0284c7;
+  color: white;
+  padding: 11px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  box-shadow: 0 4px 14px rgba(2,132,199,.3);
+  transition: background .2s, transform .2s;
+}
+
+.primary-btn:hover {
+  background: #0369a1;
+  transform: translateY(-1px);
+}
+
+.dark-btn {
+  border: none;
+  background: #1e3a8a;
+  color: white;
+  padding: 11px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(30,58,138,.25);
+  transition: background .2s, transform .2s;
+}
+
+.dark-btn:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+}
+
+.no-results {
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.stat-badge {
+  background: #e0f2fe;
+  color: #0c4a6e;
+  padding: 9px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid rgba(2,132,199,.15);
+  white-space: nowrap;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stat-card-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.stat-card-mini {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+  text-align: center;
+}
+
+.stat-card-mini-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.stat-card-mini-value {
+  font-size: 28px;
+  font-weight: 800;
+  font-family: 'Syne', sans-serif;
+  color: #0c4a6e;
+}
+
+@media (max-width: 768px) {
+  .header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions button {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .stat-card-row {
+    grid-template-columns: 1fr;
+  }
+
+  .rating-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+
+    <div class="office-section">
+      <!-- Stats Row -->
+      <div class="stat-card-row">
+        <div class="stat-card-mini">
+          <div class="stat-card-mini-label">Total Offices</div>
+          <div class="stat-card-mini-value" id="totalOffices">0</div>
+        </div>
+        <div class="stat-card-mini">
+          <div class="stat-card-mini-label">Avg Rating</div>
+          <div class="stat-card-mini-value" id="avgRating">0.0</div>
+        </div>
+        <div class="stat-card-mini">
+          <div class="stat-card-mini-label">Total Evaluations</div>
+          <div class="stat-card-mini-value" id="totalEvals">0</div>
+        </div>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card">
+        <div class="header-row">
+          <div class="header-title">
+            <h2 style="margin:0;font-size:20px;color:#1e293b;">Office Management</h2>
+            <p style="margin:0;font-size:13px;color:#64748b;">Manage and monitor campus offices</p>
+          </div>
+          <div class="header-actions">
+            <button id="addOfficeBtn" class="primary-btn">+ Add Office</button>
+          </div>
+        </div>
+
+        <input type="text" id="officeTableSearch" class="search-input" placeholder="🔍 Search offices by name...">
+
+        <div class="office-table-wrap">
+          <table class="office-table">
+            <thead>
+              <tr>
+                <th>Office Name</th>
+                <th>Avg Rating</th>
+                <th>Total Evaluations</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="officeTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script type="module">
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+import { getDatabase, ref, onValue, push, set, update, remove }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",authDomain:"kristal-adb78.firebaseapp.com",
+  databaseURL:"https://kristal-adb78-default-rtdb.firebaseio.com",projectId:"kristal-adb78",
+  storageBucket:"kristal-adb78.firebasestorage.app",messagingSenderId:"1016283938031",
+  appId:"1:1016283938031:web:54c4d13409d9784ad7af1a",measurementId:"G-LK8D1CBQ2J"
+};
+
+const app      = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const database  = getDatabase(app);
+
+// Initialize sidebar and topbar
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','office-mgmt');
+document.getElementById('topbar-mount').innerHTML  = buildTopbar('Office Management','admin1');
+
+// Database references
+const evaluationRef = ref(database,"services/evaluations");
+const officeRef     = ref(database,"services/offices");
+const officeTableBody = document.getElementById("officeTableBody");
+
+let offices   = {};
+let officeKeys = {};
+let allEvaluations = [];
+let tableSearchTerm = "";
+
+function avgScore(item) {
+  let s=0,c=0;
+  for(let x=1;x<=8;x++){
+    const v=parseFloat(item["sq"+x]??item["sqd"+x]);
+    if(!isNaN(v)){s+=v;c++;}
+  }
+  return c?s/c:0;
+}
+
+// Add Office Handler
+document.getElementById("addOfficeBtn").addEventListener("click", async () => {
+  const name = prompt("Enter Office Name:");
+  if(!name || !name.trim()) return;
+  
+  try {
+    const newRef = push(officeRef);
+    await set(newRef, { name: name.trim() });
+    alert("✓ Office added successfully!");
+  } catch (error) {
+    alert("Error adding office: " + error.message);
+  }
+});
+
+// Search Handler
+document.getElementById("officeTableSearch").addEventListener("input", (e) => {
+  tableSearchTerm = e.target.value.toLowerCase();
+  renderOfficeTable();
+});
+
+// Listen to offices
+onValue(officeRef, (snapshot) => {
+  const data = snapshot.val();
+  offices = {};
+  officeKeys = {};
+  
+  if(!data) {
+    document.getElementById("totalOffices").textContent = 0;
+    officeTableBody.innerHTML = "";
+    updateStats();
+    return;
+  }
+  
+  Object.keys(data).forEach(key => {
+    const name = data[key].name;
+    officeKeys[name] = key;
+    offices[name] = { total: 0, count: 0 };
+  });
+  
+  document.getElementById("totalOffices").textContent = Object.keys(offices).length;
+  renderOfficeTable();
+  updateStats();
+});
+
+// Listen to evaluations
+onValue(evaluationRef, (snapshot) => {
+  const data = snapshot.val();
+  allEvaluations = [];
+  
+  // Reset office scores
+  Object.keys(offices).forEach(o => {
+    offices[o].total = 0;
+    offices[o].count = 0;
+  });
+  
+  if(data) {
+    Object.keys(data).forEach(key => {
+      const item = data[key];
+      allEvaluations.push(item);
+      const avg = avgScore(item);
+      
+      if(offices[item.office]) {
+        offices[item.office].total += avg;
+        offices[item.office].count++;
+      }
+    });
+  }
+  
+  renderOfficeTable();
+  updateStats();
+});
+
+function updateStats() {
+  let totalEvals = allEvaluations.length;
+  let totalScore = 0;
+  let countWithRating = 0;
+  
+  Object.values(offices).forEach(office => {
+    if(office.count > 0) {
+      countWithRating++;
+      totalScore += office.total / office.count;
+    }
+  });
+  
+  const avgRating = countWithRating > 0 ? (totalScore / countWithRating) : 0;
+  
+  document.getElementById("totalEvals").textContent = totalEvals;
+  document.getElementById("avgRating").textContent = avgRating.toFixed(1);
+}
+
+function renderOfficeTable() {
+  officeTableBody.innerHTML = "";
+  
+  let entries = Object.keys(offices).map(office => {
+    const d = offices[office];
+    const avg = d.count > 0 ? d.total / d.count : 0;
+    return { office, avg, count: d.count };
+  });
+
+  // Apply search filter
+  if (tableSearchTerm) {
+    entries = entries.filter(e => e.office.toLowerCase().includes(tableSearchTerm));
+  }
+
+  if (entries.length === 0) {
+    officeTableBody.innerHTML = `<tr><td colspan="4" class="no-results">No offices found</td></tr>`;
+    return;
+  }
+
+  // Sort by office name
+  entries.sort((a, b) => a.office.localeCompare(b.office));
+
+  entries.forEach(({office, avg, count}) => {
+    const ratingPercent = (avg / 5) * 100;
+    officeTableBody.innerHTML += `
+      <tr>
+        <td><strong>${office}</strong></td>
+        <td>
+          <div class="rating-cell">
+            <div class="rating-track"><div class="rating-fill" style="width:${ratingPercent}%"></div></div>
+            <span class="rating-number">${avg.toFixed(1)}</span>
+          </div>
+        </td>
+        <td><span class="eval-count">${count}</span></td>
+        <td>
+          <div class="action-buttons">
+            <button class="action-btn view-btn" onclick="viewOffice('${office.replace(/'/g, "\\'")}')">👁 View</button>
+            <button class="action-btn edit-btn" onclick="editOffice('${office.replace(/'/g, "\\'")}')">✏ Edit</button>
+            <button class="action-btn delete-btn" onclick="deleteOffice('${office.replace(/'/g, "\\'")}')">🗑 Delete</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+window.viewOffice = function(office) {
+  const key = officeKeys[office];
+  const params = new URLSearchParams({ office: key || "", name: office });
+  window.location.href = `admin1-office-analytics.html?${params.toString()}`;
+};
+
+window.editOffice = async function(office) {
+  const newName = prompt("Edit Office Name:", office);
+  if(!newName || !newName.trim()) return;
+  
+  if(newName.trim() === office) {
+    alert("No changes made.");
+    return;
+  }
+  
+  try {
+    const key = officeKeys[office];
+    await update(ref(database, `services/offices/${key}`), { name: newName.trim() });
+    alert("✓ Office updated successfully!");
+  } catch (error) {
+    alert("Error updating office: " + error.message);
+  }
+};
+
+window.deleteOffice = async function(office) {
+  if(!confirm(`Delete "${office}"? This action cannot be undone.`)) return;
+  
+  try {
+    const key = officeKeys[office];
+    await remove(ref(database, `services/offices/${key}`));
+    alert("✓ Office deleted successfully!");
+  } catch (error) {
+    alert("Error deleting office: " + error.message);
+  }
+};
+</script>
+</body>
+</html>

@@ -487,8 +487,8 @@
   }
 
   .lh-logo-box, .lh-seal-box {
-    width: 100px;
-    height: 100px;
+    width: 150px;
+    height: 90px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -505,28 +505,28 @@
     flex: 1;
     text-align: center;
     line-height: 1.4;
-    font-size: 10pt;
+    font-size: 11pt;
   }
 
   .lh-text .rep {
-    font-size: 8.5pt;
+    font-size: 9.5pt;
   }
 
   .lh-text .uni {
-    font-size: 10.5pt;
+    font-size: 11.5pt;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.1px;
   }
 
   .lh-text .dept {
-    font-size: 10pt;
+    font-size: 11pt;
     font-weight: bold;
     text-transform: uppercase;
   }
 
   .lh-text .addr {
-    font-size: 7.5pt;
+    font-size: 8.5pt;
     color: #444;
   }
 
@@ -538,7 +538,7 @@
 
   .official-title {
     text-align: center;
-    font-size: 11.5pt;
+    font-size: 13.5pt;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.8px;
@@ -546,8 +546,8 @@
   }
 
   .official-meta {
-    font-size: 10.5pt;
-    line-height: 1.8;
+    font-size: 13pt;
+    line-height: 1.9;
     margin-bottom: 10px;
   }
 
@@ -559,13 +559,13 @@
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 14px;
-    font-size: 10pt;
+    font-size: 14pt;
   }
 
   .official-table th {
     background: #1a3a6b;
     color: #fff;
-    padding: 6px 8px;
+    padding: 10px 11px;
     border: 1px solid #1a3a6b;
     text-align: center;
     font-weight: bold;
@@ -573,7 +573,7 @@
 
   .official-table td {
     border: 1px solid #aaa;
-    padding: 5px 8px;
+    padding: 9px 11px;
   }
 
   .official-table tr:nth-child(even) td {
@@ -581,8 +581,8 @@
   }
 
   .official-narrative {
-    font-size: 10.5pt;
-    line-height: 1.7;
+    font-size: 13pt;
+    line-height: 1.8;
     text-align: justify;
     margin-bottom: 16px;
   }
@@ -595,7 +595,7 @@
     display: flex;
     gap: 40px;
     margin-top: 24px;
-    font-size: 10.5pt;
+    font-size: 12pt;
   }
 
   .sig-block {
@@ -604,7 +604,7 @@
 
   .sig-label {
     color: #555;
-    font-size: 9.5pt;
+    font-size: 11pt;
     margin-bottom: 30px;
   }
 
@@ -622,7 +622,7 @@
   }
 
   .sig-title {
-    font-size: 9.5pt;
+    font-size: 11pt;
     font-style: italic;
     color: #333;
     margin-top: 2px;
@@ -661,8 +661,6 @@
 
       <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
       <button class="btn-save" id="btn-save-report" disabled>💾 Save Report</button>
-      <button class="btn btn-purple btn-sm" id="btn-export-pdf">📥 Export PDF</button>
-      <button class="btn btn-ghost btn-sm" id="btn-export-csv">📊 Export CSV</button>
     </div>
 
     <div class="stats-row">
@@ -886,7 +884,7 @@ function createOfficialDocument(report) {
     <div class="official-report" id="csmPage">
       <!-- LETTERHEAD WITH LOGOS -->
       <div class="lh-row">
-        <div class="lh-logo-box" style="width:100px; height:100px;">
+        <div class="lh-logo-box" style="width:150px; height:90px;">
           <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
         </div>
         <div class="lh-text">
@@ -938,14 +936,14 @@ function createOfficialDocument(report) {
         <div class="sig-block">
           <div class="sig-label">Prepared by:</div>
           <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-          <span class="sig-name">Facilities Management Office</span>
-          <span class="sig-title">Campus Voice Administrator</span>
+          <span class="sig-name">Mr. Joneben Penol</span>
+          <div class="sig-title">General Services Office</div>
         </div>
         <div class="sig-block">
           <div class="sig-label">Noted by:</div>
           <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-          <span class="sig-name">Campus Administrator</span>
-          <span class="sig-title">Iloilo State University of Fisheries Science and Technology</span>
+          <span class="sig-name">MICHAEL B. DIZON, EDD, PHD</span>
+          <div class="sig-title">Campus Administrator</div>
         </div>
       </div>
 
@@ -1070,28 +1068,15 @@ window.exportPDF = async () => {
   }
 
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ unit: "mm", format: "a4" });
   const margin = 10;
-  const usableW = pdf.internal.pageSize.getWidth() - margin * 2;
-  const usableH = pdf.internal.pageSize.getHeight() - margin * 2;
+  const pageWidthMM = 210; // A4 width, kept for a familiar page width
+  const usableW = pageWidthMM - margin * 2;
   const scale = usableW / canvas.width;
   const pdfH = canvas.height * scale;
+  const pageHeightMM = pdfH + margin * 2; // page height hugs the content instead of a fixed A4 length
 
-  if (pdfH <= usableH) {
-    pdf.addImage(img, "PNG", margin, margin, usableW, pdfH);
-  } else {
-    const slicePx = Math.floor(usableH / scale);
-    let offset = 0;
-    while (offset < canvas.height) {
-      const sc = document.createElement("canvas");
-      sc.width = canvas.width;
-      sc.height = Math.min(slicePx, canvas.height - offset);
-      sc.getContext("2d").drawImage(canvas, 0, -offset);
-      pdf.addImage(sc.toDataURL("image/png"), "PNG", margin, margin, usableW, sc.height * scale);
-      offset += slicePx;
-      if (offset < canvas.height) pdf.addPage();
-    }
-  }
+  const pdf = new jsPDF({ unit: "mm", format: [pageWidthMM, pageHeightMM] });
+  pdf.addImage(img, "PNG", margin, margin, usableW, pdfH);
 
   const name = (currentReport?.office || "report").replace(/\s+/g, "_");
   pdf.save(`CER_Report_${name}.pdf`);
@@ -1222,67 +1207,6 @@ document.getElementById("end-date").addEventListener("change", (e) => {
 
 document.getElementById("btn-generate-report").addEventListener("click", generateReport);
 document.getElementById("btn-save-report").addEventListener("click", saveReport);
-
-// ======================
-// EXPORT PDF (browser print)
-// ======================
-document.getElementById("btn-export-pdf").addEventListener("click", () => {
-  window.print();
-});
-
-// ======================
-// EXPORT CSV
-// ======================
-document.getElementById("btn-export-csv").addEventListener("click", () => {
-  if (!selectedOffice || !startDate || !endDate) {
-    alert("Please generate a report first");
-    return;
-  }
-
-  const officeEvals = evaluations.filter(e => e.officeName === selectedOffice);
-  const startTs = new Date(startDate).getTime();
-  const endTs = new Date(endDate).getTime() + (24 * 60 * 60 * 1000);
-  const filteredEvals = officeEvals.filter(e => e.timestamp >= startTs && e.timestamp <= endTs);
-
-  if (filteredEvals.length === 0) {
-    alert("No data to export.");
-    return;
-  }
-
-  const dimensionAverages = [];
-
-  DIMENSIONS.forEach(dim => {
-    const values = filteredEvals.map(e => e[dim.field]).filter(v => v > 0);
-    if (values.length > 0) {
-      const avg = values.reduce((a, b) => a + b, 0) / values.length;
-      const percentage = (avg / 5) * 100;
-      const rating = getRatingLabel(percentage);
-      dimensionAverages.push({
-        dimension: dim.label,
-        percentage: percentage.toFixed(1),
-        rating: rating.label
-      });
-    }
-  });
-
-  const header = ["Evaluation Question", "Percentage (%)", "Rating"];
-  const csvRows = dimensionAverages.map(da => [
-    `"${da.dimension.replace(/"/g, '""')}"`,
-    da.percentage,
-    da.rating
-  ].join(","));
-
-  const csvContent = [header.join(","), ...csvRows].join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `campusvoice-report-${selectedOffice}-${startDate}-to-${endDate}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-});
 </script>
 </body>
 </html>

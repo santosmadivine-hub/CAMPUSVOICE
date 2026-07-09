@@ -150,7 +150,7 @@
   .office-table thead th:last-child{ border-top-right-radius:14px; }
   .office-table thead th.col-ratio{ min-width:220px; }
   .office-table thead th.col-evals{ text-align:center; width:150px; }
-  .office-table thead th.col-actions{ text-align:right; width:170px; }
+  .office-table thead th.col-actions{ text-align:right; width:230px; }
 
   .office-table tbody td{
     padding:14px 16px;
@@ -229,8 +229,10 @@
     transition:background-color .15s ease, transform .15s ease;
   }
   .actions-cell .action-btn + .action-btn{ margin-left:8px; }
+  .action-view{ background:#e0f2fe; color:#0369a1; }
   .action-edit{ background:#fef3c7; color:#92400e; }
   .action-delete{ background:#fee2e2; color:#b91c1c; }
+  .action-view:hover{ background:#bae6fd; }
   .action-edit:hover{ background:#fde68a; }
   .action-delete:hover{ background:#fecaca; }
   .action-btn:active{ transform:scale(0.97); }
@@ -489,6 +491,7 @@ function renderOfficeTable() {
         </td>
         <td class="evals-cell">${stats.total}</td>
         <td class="actions-cell">
+          <button class="action-btn action-view" data-office-key="${key}" data-action="view">👁️ View</button>
           <button class="action-btn action-edit" data-office-key="${key}" data-action="edit">✏️ Edit</button>
           <button class="action-btn action-delete" data-office-key="${key}" data-action="delete">🗑️ Delete</button>
         </td>
@@ -496,12 +499,21 @@ function renderOfficeTable() {
     `;
   }).join("");
 
+  officeTableBody.querySelectorAll("[data-action='view']").forEach(btn => {
+    btn.addEventListener("click", () => viewOfficeAnalytics(btn.getAttribute("data-office-key")));
+  });
   officeTableBody.querySelectorAll("[data-action='edit']").forEach(btn => {
     btn.addEventListener("click", () => editOffice(btn.getAttribute("data-office-key")));
   });
   officeTableBody.querySelectorAll("[data-action='delete']").forEach(btn => {
     btn.addEventListener("click", () => deleteOffice(btn.getAttribute("data-office-key")));
   });
+}
+
+function viewOfficeAnalytics(key) {
+  const name = offices[key] || "";
+  const url = `office-analytics.html?office=${encodeURIComponent(key)}&name=${encodeURIComponent(name)}`;
+  window.location.href = url;
 }
 
 async function editOffice(key) {
