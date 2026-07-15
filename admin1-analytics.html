@@ -12,12 +12,6 @@
 
 /* ════════════════════════════════════════════════════════
    DESIGN TOKENS — BLUE & ORANGE ONLY
-   ink        — headings / primary text
-   brand-blue — primary data accent (blue)
-   orange     — signature accent, letterhead / seal / dividers
-   paper      — page background
-   line       — hairline borders
-   muted      — secondary text
 ════════════════════════════════════════════════════════ */
 
 :root {
@@ -55,6 +49,8 @@
   border-radius: 18px;
   border-bottom: 3px solid var(--orange);
   position: relative;
+  flex-wrap: wrap;
+  gap: 14px;
 }
 
 .masthead-left {
@@ -91,7 +87,7 @@
 
 .masthead-title {
   font-family: 'Syne', sans-serif;
-  font-size: 22px;
+  font-size: clamp(1.1rem, 0.9rem + 1vw, 1.4rem);
   font-weight: 800;
   color: var(--ink);
   margin: 0;
@@ -234,7 +230,7 @@
 
 .an-kpi-value {
   font-family: 'Syne', sans-serif;
-  font-size: 32px;
+  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2rem);
   font-weight: 800;
   color: var(--ink);
   line-height: 1;
@@ -361,11 +357,24 @@
   font-size: 20px;
 }
 
-/* ── Pie chart (Sex Distribution) ── */
+/* ── Pie chart (Sex Distribution)
+   FIX: the SVG previously had fixed width="180" height="180" HTML
+   attributes, which don't shrink with the container — on a narrow
+   phone or a shrunk browser window it could force the card (and the
+   whole page) to scroll horizontally. It now scales with its wrapper
+   like the rest of the charts on this page, capped at its original
+   180px design size. ── */
 .pie-wrap {
   display: flex; align-items: center; gap: 30px; margin-top: 16px;
+  flex-wrap: wrap;
 }
-.pie-svg { flex-shrink: 0; filter: drop-shadow(0 4px 10px rgba(15,23,42,0.06)); }
+.pie-svg {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  filter: drop-shadow(0 4px 10px rgba(15,23,42,0.06));
+}
 .pie-legend { display: flex; flex-direction: column; gap: 14px; }
 .pie-legend-item { display: flex; align-items: center; gap: 10px; }
 .pie-legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
@@ -390,6 +399,16 @@
   .an-row2, .an-row3 { grid-template-columns: 1fr; }
   .pie-wrap { flex-direction: column; align-items: flex-start; }
   .masthead { flex-direction: column; align-items: flex-start; gap: 14px; }
+}
+
+/* Optimized padding + touch-friendly labels on small screens */
+@media (max-width: 560px) {
+  .card { padding: 16px 16px; }
+  .an-kpi { padding: 16px 16px; }
+  .sqd-row { grid-template-columns: 110px 1fr 42px; }
+  .sqd-label { font-size: 11.5px; }
+  .star-row { grid-template-columns: 54px 1fr 42px; }
+  .lb-row { grid-template-columns: 24px 1fr 84px; }
 }
 
 </style>
@@ -567,7 +586,12 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+  getFirestore,
+  collection,
+  collectionGroup,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ── Firebase config (same project as the rest of CampusVoice) ── */
 const firebaseConfig = {
@@ -583,21 +607,47 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 getAnalytics(app);
-const db = getDatabase(app);
+const db = getFirestore(app);
 
 /* ── Shared UI ── */
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1', 'analytics');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Analytics', 'admin1');
 
 /* ─────────────────────────────────────────────
-   DB PATHS — same structure used across the app
-   services/evaluations
-   services/offices
-   services/transaction_code/offices_name/{office}/{key}
+   FIRESTORE COLLECTIONS
+   ─────────────────────────────────────────────
+   This page previously read from the Realtime
+   Database (getDatabase/ref/onValue), but the
+   rest of CampusVoice (Android side) writes to
+   Firestore. ServiceEvalActivity.kt confirms the
+   evaluations path exactly:
+
+     db.collection("services")
+       .document("evaluations")
+       .collection("records")
+       .document(id).set(data)
+
+     -> services/evaluations/records/{id}
+
+   That path is used as-is below.
+
+   ASSUMPTION: offices and transaction codes are
+   assumed to follow the same "…/records" /
+   "…/codes" subcollection pattern for consistency.
+   If your actual Firestore schema names these
+   subcollections differently, update the
+   collection()/collectionGroup() calls below to
+   match your real structure.
 ───────────────────────────────────────────── */
-const evaluationRef = ref(db, "services/evaluations");
-const officeRef     = ref(db, "services/offices");
-const codeRef       = ref(db, "services/transaction_code/offices_name");
+const evaluationsCol = collection(db, "services", "evaluations", "records");
+const officesCol     = collection(db, "services", "offices", "records");
+
+/* Transaction codes are nested per-office:
+     services/transaction_code/offices_name/{officeName}/codes/{codeId}
+   collectionGroup("codes") pulls every code doc across every office
+   in a single listener; the office name is recovered from each doc's
+   parent document id (the {officeName} segment in the path above). */
+const codesGroup = collectionGroup(db, "codes");
 
 /* ── SQD labels (mirrors reports.html) ── */
 const SQD_LABELS = [
@@ -655,26 +705,42 @@ function normalizeSex(item) {
 /* ════════════════════════════════
    LOAD: OFFICES
 ════════════════════════════════ */
-onValue(officeRef, (snap) => {
-  const data = snap.val() || {};
+onSnapshot(officesCol, (snap) => {
   allOffices = {};
-  Object.values(data).forEach(o => { if (o.name) allOffices[o.name] = true; });
+  snap.forEach((docSnap) => {
+    const o = docSnap.data();
+    if (o.name) allOffices[o.name] = true;
+  });
   render();
 });
 
 /* ════════════════════════════════
    LOAD: EVALUATIONS
 ════════════════════════════════ */
-onValue(evaluationRef, (snap) => {
-  allEvals = snap.val() || {};
+onSnapshot(evaluationsCol, (snap) => {
+  allEvals = {};
+  snap.forEach((docSnap) => {
+    allEvals[docSnap.id] = docSnap.data();
+  });
   render();
 });
 
 /* ════════════════════════════════
    LOAD: TRANSACTION CODES
 ════════════════════════════════ */
-onValue(codeRef, (snap) => {
-  allCodes = snap.val() || {};
+onSnapshot(codesGroup, (snap) => {
+  allCodes = {};
+  snap.forEach((docSnap) => {
+    // parent.parent is the {officeName} document that owns this
+    // "codes" subcollection, per the path documented above.
+    const officeName =
+      (docSnap.ref.parent && docSnap.ref.parent.parent)
+        ? docSnap.ref.parent.parent.id
+        : "Unknown";
+
+    if (!allCodes[officeName]) allCodes[officeName] = {};
+    allCodes[officeName][docSnap.id] = docSnap.data();
+  });
   renderCodeKPI();
   renderCodeStatusBar();
 });
@@ -754,9 +820,12 @@ function renderTrend(rows) {
   document.getElementById("trendLine").setAttribute("points", points);
   document.getElementById("trendArea").setAttribute("points", areaPoints);
 
-  /* show every ~5th day label to avoid crowding */
+  /* show every ~5th day label to avoid crowding; on narrow screens
+     thin it out further so labels don't collide. */
+  const wrapWidth = document.getElementById("trendSvg").clientWidth || W;
+  const everyN = wrapWidth < 380 ? 8 : 5;
   const labelsHtml = dayLabels.map((d, i) =>
-    (i % 5 === 0 || i === dayLabels.length - 1) ? `<span>${d}</span>` : `<span></span>`
+    (i % everyN === 0 || i === dayLabels.length - 1) ? `<span>${d}</span>` : `<span></span>`
   ).join("");
   document.getElementById("trendLabels").innerHTML = labelsHtml;
 }
@@ -925,14 +994,11 @@ function renderStars(rows) {
   let s5 = 0, s4 = 0, s3 = 0, s2 = 0, s1 = 0, counted = 0;
 
   rows.forEach(r => {
-    // Prefer an explicit rating field if present, otherwise derive the
-    // star rating from the average of the SQD1–SQD8 scores (same basis
-    // used by the KPI strip and office leaderboard elsewhere on this page).
     const explicit = parseInt(r.user_rating ?? r.rating ?? r.stars ?? NaN);
     const avg = avgScore(r);
     const rating = !isNaN(explicit) ? explicit : (avg > 0 ? Math.round(avg) : 0);
 
-    if (rating < 1 || rating > 5) return; // skip rows with no usable score at all
+    if (rating < 1 || rating > 5) return;
     counted++;
 
     if (rating === 5) s5++;
@@ -996,8 +1062,11 @@ function renderSexPie(rows) {
   if (male > 0)   svgSlices += `<path d="${arcPath(0, malePct)}" fill="#2563eb"/>`;
   if (female > 0) svgSlices += `<path d="${arcPath(malePct, malePct + femalePct)}" fill="#f97316"/>`;
 
+  /* NOTE: no width/height attributes here anymore — sizing comes
+     entirely from the .pie-svg CSS class so it scales with its
+     container instead of staying fixed at 180px. */
   wrap.innerHTML = `
-    <svg class="pie-svg" viewBox="0 0 180 180" width="180" height="180">
+    <svg class="pie-svg" viewBox="0 0 180 180">
       <circle cx="${CX}" cy="${CY}" r="${R}" fill="#f1f5f9"/>
       ${svgSlices}
     </svg>
@@ -1020,6 +1089,16 @@ function renderSexPie(rows) {
     </div>
   `;
 }
+
+/* ── Auto-resize handling ──────────────────────────────────────────
+   Most charts on this page (trend line, sex pie, code-status bar) now
+   scale purely through CSS/viewBox and don't need JS recomputation.
+   The trend chart's day-label density does depend on available width
+   though (see renderTrend), so re-run it on resize/orientation change
+   using the data already in memory — no need to hit Firebase again. */
+CVOnResize([
+  () => renderTrend(Object.values(allEvals))
+]);
 
 </script>
 </body>

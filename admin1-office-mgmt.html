@@ -13,6 +13,14 @@
   margin: 0 auto;
 }
 
+/* Row that holds the search box + Add Office button side by side */
+.search-add-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
 .search-input {
   width: 100%;
   padding: 11px 14px;
@@ -20,11 +28,12 @@
   border-radius: 10px;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
-  margin-bottom: 18px;
   outline: none;
   transition: border-color .2s;
   box-sizing: border-box;
   color: #1e293b;
+  flex: 1;
+  min-width: 0;
 }
 .search-input:focus { border-color: #0284c7; }
 .search-input::placeholder { color: #94a3b8; }
@@ -164,6 +173,8 @@
   font-size: 14px;
   box-shadow: 0 4px 14px rgba(2,132,199,.3);
   transition: background .2s, transform .2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .primary-btn:hover {
@@ -260,6 +271,14 @@
   color: #0c4a6e;
 }
 
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+}
+
 @media (max-width: 768px) {
   .header-row {
     flex-direction: column;
@@ -283,6 +302,15 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+
+  .search-add-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-add-row .primary-btn {
+    width: 100%;
   }
 }
 </style>
@@ -313,17 +341,11 @@
 
       <!-- Main Card -->
       <div class="card">
-        <div class="header-row">
-          <div class="header-title">
-            <h2 style="margin:0;font-size:20px;color:#1e293b;">Office Management</h2>
-            <p style="margin:0;font-size:13px;color:#64748b;">Manage and monitor campus offices</p>
-          </div>
-          <div class="header-actions">
-            <button id="addOfficeBtn" class="primary-btn">+ Add Office</button>
-          </div>
+        <!-- Search box + Add Office button, side by side -->
+        <div class="search-add-row">
+          <input type="text" id="officeTableSearch" class="search-input" placeholder="🔍 Search offices by name...">
+          <button id="addOfficeBtn" class="primary-btn">+ Add Office</button>
         </div>
-
-        <input type="text" id="officeTableSearch" class="search-input" placeholder="🔍 Search offices by name...">
 
         <div class="office-table-wrap">
           <table class="office-table">
@@ -347,8 +369,15 @@
 <script type="module">
 import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAnalytics }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-import { getDatabase, ref, onValue, push, set, update, remove }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",authDomain:"kristal-adb78.firebaseapp.com",
@@ -359,15 +388,22 @@ const firebaseConfig = {
 
 const app      = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const database  = getDatabase(app);
+const db        = getFirestore(app);
 
 // Initialize sidebar and topbar
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','office-mgmt');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Office Management','admin1');
 
-// Database references
-const evaluationRef = ref(database,"services/evaluations");
-const officeRef     = ref(database,"services/offices");
+/* ── Firestore collection references ──────────────────────────────
+   Confirmed by this page's own RTDB code: services/offices held
+   push-key documents each with a { name } field. In Firestore that's
+   an auto-ID doc under services/offices with the same { name } field —
+   this is now CONFIRMED, not a guess.
+
+   Evaluations path matches ServiceEvalActivity.kt / the other pages:
+     services/evaluations/records/{id}                               */
+const officesCol     = collection(db, "services", "offices", "records");
+const evaluationsCol = collection(db, "services", "evaluations", "records");
 const officeTableBody = document.getElementById("officeTableBody");
 
 let offices   = {};
@@ -388,10 +424,9 @@ function avgScore(item) {
 document.getElementById("addOfficeBtn").addEventListener("click", async () => {
   const name = prompt("Enter Office Name:");
   if(!name || !name.trim()) return;
-  
+
   try {
-    const newRef = push(officeRef);
-    await set(newRef, { name: name.trim() });
+    await addDoc(officesCol, { name: name.trim() });
     alert("✓ Office added successfully!");
   } catch (error) {
     alert("Error adding office: " + error.message);
@@ -405,53 +440,50 @@ document.getElementById("officeTableSearch").addEventListener("input", (e) => {
 });
 
 // Listen to offices
-onValue(officeRef, (snapshot) => {
-  const data = snapshot.val();
+onSnapshot(officesCol, (snapshot) => {
   offices = {};
   officeKeys = {};
-  
-  if(!data) {
+
+  if (snapshot.empty) {
     document.getElementById("totalOffices").textContent = 0;
     officeTableBody.innerHTML = "";
     updateStats();
     return;
   }
-  
-  Object.keys(data).forEach(key => {
-    const name = data[key].name;
-    officeKeys[name] = key;
+
+  snapshot.forEach(docSnap => {
+    const name = docSnap.data().name;
+    if (!name) return;
+    officeKeys[name] = docSnap.id;
     offices[name] = { total: 0, count: 0 };
   });
-  
+
   document.getElementById("totalOffices").textContent = Object.keys(offices).length;
   renderOfficeTable();
   updateStats();
 });
 
 // Listen to evaluations
-onValue(evaluationRef, (snapshot) => {
-  const data = snapshot.val();
+onSnapshot(evaluationsCol, (snapshot) => {
   allEvaluations = [];
-  
+
   // Reset office scores
   Object.keys(offices).forEach(o => {
     offices[o].total = 0;
     offices[o].count = 0;
   });
-  
-  if(data) {
-    Object.keys(data).forEach(key => {
-      const item = data[key];
-      allEvaluations.push(item);
-      const avg = avgScore(item);
-      
-      if(offices[item.office]) {
-        offices[item.office].total += avg;
-        offices[item.office].count++;
-      }
-    });
-  }
-  
+
+  snapshot.forEach(docSnap => {
+    const item = docSnap.data();
+    allEvaluations.push(item);
+    const avg = avgScore(item);
+
+    if (offices[item.office]) {
+      offices[item.office].total += avg;
+      offices[item.office].count++;
+    }
+  });
+
   renderOfficeTable();
   updateStats();
 });
@@ -537,7 +569,7 @@ window.editOffice = async function(office) {
   
   try {
     const key = officeKeys[office];
-    await update(ref(database, `services/offices/${key}`), { name: newName.trim() });
+    await updateDoc(doc(db, "services", "offices", "records", key), { name: newName.trim() });
     alert("✓ Office updated successfully!");
   } catch (error) {
     alert("Error updating office: " + error.message);
@@ -549,7 +581,7 @@ window.deleteOffice = async function(office) {
   
   try {
     const key = officeKeys[office];
-    await remove(ref(database, `services/offices/${key}`));
+    await deleteDoc(doc(db, "services", "offices", "records", key));
     alert("✓ Office deleted successfully!");
   } catch (error) {
     alert("Error deleting office: " + error.message);

@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-/* ── Office Analytics Page Styles (kept inline, layered on top of shared.css) ── */
+/* ── Office Analytics Page Styles ── */
 .analytics-page {
   max-width: 1200px;
   margin: 0 auto;
@@ -15,7 +15,7 @@
 
 .back-link {
   display: inline-block;
-  margin-bottom: 14px;
+  margin-bottom: 20px;
   color: #0369a1;
   text-decoration: none;
   font-weight: 900;
@@ -23,16 +23,30 @@
 }
 .back-link:hover { text-decoration: underline; }
 
+/* ── HEADER CONTAINER ── */
+.analytics-header {
+  background: white;
+  padding: 28px;
+  border-radius: 14px;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
 .analytics-header .header-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 22px;
+  gap: 16px;
+  margin-bottom: 0;
 }
 
-.header-titles { display: flex; flex-direction: column; gap: 6px; }
+.header-titles { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
+}
 
 .eyebrow {
   font-size: 11px;
@@ -45,13 +59,15 @@
 .header-titles h1 {
   margin: 0;
   font-family: 'Syne', sans-serif;
-  font-size: 26px;
+  font-size: 32px;
   color: #0c4a6e;
+  font-weight: 800;
 }
 
 .header-meta {
-  font-size: 13px;
+  font-size: 14px;
   color: #64748b;
+  font-weight: 500;
 }
 .header-meta .dot { margin: 0 8px; }
 
@@ -59,96 +75,163 @@
   border: none;
   background: #1e3a8a;
   color: white;
-  padding: 11px 16px;
-  border-radius: 12px;
+  padding: 12px 20px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 700;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
-  box-shadow: 0 4px 12px rgba(30,58,138,.25);
-  transition: background .2s, transform .2s;
+  box-shadow: 0 4px 12px rgba(30,58,138,.2);
+  transition: all .3s ease;
+  white-space: nowrap;
 }
-.btn-print:hover { background: #1e40af; transform: translateY(-1px); }
+.btn-print:hover { 
+  background: #1e40af; 
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(30,58,138,.3);
+}
 
+/* ── BANNERS ── */
 .state-banner {
-  padding: 40px 20px;
+  padding: 48px 24px;
   text-align: center;
   color: #64748b;
   font-size: 14px;
   background: white;
   border: 1px solid #bae6fd;
   border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
-.state-empty { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+.state-empty { 
+  color: #92400e; 
+  background: #fffbeb; 
+  border-color: #fde68a; 
+}
 
-/* Stat cards */
+/* ── STAT CARDS CONTAINER ── */
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
   margin-bottom: 24px;
+  padding: 20px;
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .stat-card {
-  background: white;
-  padding: 18px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%);
+  padding: 22px;
   border-radius: 12px;
-  border: 1px solid #bae6fd;
+  border: 1px solid #e2e8f0;
   position: relative;
+  transition: all .3s ease;
 }
 
-.stat-icon { font-size: 20px; margin-bottom: 8px; }
+.stat-card:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 4px 12px rgba(2,132,199,0.12);
+  transform: translateY(-3px);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.stat-icon { 
+  font-size: 32px; 
+  margin-bottom: 12px; 
+}
 
 .stat-label {
-  font-size: 12px;
+  font-size: 11px;
   color: #64748b;
-  font-weight: 600;
-  margin-bottom: 6px;
+  font-weight: 700;
+  margin-bottom: 10px;
   text-transform: uppercase;
-  letter-spacing: .05em;
+  letter-spacing: .06em;
 }
 
 .stat-value {
-  font-size: 26px;
+  font-size: 36px;
   font-weight: 800;
   font-family: 'Syne', sans-serif;
   color: #0c4a6e;
+  line-height: 1;
 }
 
-.stat-sub { font-size: 12px; color: #0369a1; font-weight: 700; margin-top: 4px; }
+.stat-sub { 
+  font-size: 12px; 
+  color: #0369a1; 
+  font-weight: 700; 
+  margin-top: 8px; 
+}
 
-.stat-primary { border-color: #7dd3fc; }
-.stat-warning { border-color: #fde68a; }
-.stat-success { border-color: #86efac; }
+.stat-primary { 
+  border-color: #7dd3fc; 
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+.stat-warning { 
+  border-color: #fde68a; 
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+.stat-success { 
+  border-color: #86efac; 
+  background: linear-gradient(135deg, #f0fdf4 0%, #e7f5e9 100%);
+}
 
-/* Charts */
+/* ── CHARTS CONTAINER ── */
 .charts-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
 @media (max-width: 900px) {
   .charts-grid { grid-template-columns: 1fr; }
 }
 
-.chart-card { padding: 18px; }
+.chart-card { 
+  background: white;
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
 
 .card-title {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 16px;
   color: #1e293b;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
-.card-sub { font-weight: 500; font-size: 12px; color: #64748b; }
+.card-sub { 
+  font-weight: 500; 
+  font-size: 12px; 
+  color: #64748b;
+  margin-left: 8px;
+}
 
-.chart-wrap { position: relative; height: 280px; }
-.chart-wrap canvas { display: block; width: 100% !important; height: 100% !important; }
-.chart-wrap-wide { height: 260px; }
+.chart-wrap { 
+  position: relative; 
+  height: 280px; 
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 16px;
+}
+.chart-wrap canvas { 
+  display: block; 
+  width: 100% !important; 
+  height: 100% !important; 
+}
+.chart-wrap-wide { 
+  height: 260px;
+}
 .chart-wrap-donut {
   height: 220px;
   position: relative;
+  background: #f8fafc;
+  border-radius: 10px;
 }
 .chart-wrap-donut canvas {
   display: block;
@@ -161,7 +244,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 24px;
+  font-size: 32px;
   font-weight: 800;
   font-family: 'Syne', sans-serif;
   color: #0c4a6e;
@@ -171,38 +254,57 @@
 }
 .donut-center .donut-sub {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #64748b;
   font-family: 'DM Sans', sans-serif;
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .code-usage-legend {
   display: flex;
   justify-content: center;
-  gap: 18px;
-  margin-top: 12px;
-  font-size: 12px;
+  gap: 20px;
+  margin-top: 16px;
+  font-size: 13px;
   font-weight: 600;
   color: #475569;
+  flex-wrap: wrap;
 }
-.code-usage-legend .legend-item { display: flex; align-items: center; gap: 6px; }
-.code-usage-legend .legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-.code-usage-empty { text-align: center; font-size: 13px; color: #64748b; padding: 10px 0 0; }
+.code-usage-legend .legend-item { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+}
+.code-usage-legend .legend-dot { 
+  width: 10px; 
+  height: 10px; 
+  border-radius: 50%; 
+  display: inline-block; 
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.code-usage-empty { 
+  text-align: center; 
+  font-size: 13px; 
+  color: #64748b; 
+  padding: 12px 0 0; 
+}
 
 .chart-error {
-  padding: 30px 12px;
+  padding: 32px 16px;
   text-align: center;
   color: #92400e;
   background: #fffbeb;
   border: 1px solid #fde68a;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
-/* Breakdown table */
-.breakdown-table-wrap { overflow-x: auto; }
+/* ── BREAKDOWN TABLE CONTAINER ── */
+.breakdown-table-wrap { 
+  overflow-x: auto;
+  padding: 20px;
+}
 
 .breakdown-table {
   width: 100%;
@@ -211,31 +313,34 @@
 
 .breakdown-table th {
   text-align: left;
-  padding: 12px 14px;
+  padding: 14px;
   font-size: 11px;
   color: #475569;
   letter-spacing: .06em;
   text-transform: uppercase;
-  border-bottom: 2px solid #bae6fd;
-  background: #f0f9ff;
+  border-bottom: 2px solid #e2e8f0;
+  background: #f8fafc;
   font-weight: 700;
 }
 
 .breakdown-table td {
-  padding: 12px 14px;
-  border-bottom: 1px solid #f0f9ff;
+  padding: 16px 14px;
+  border-bottom: 1px solid #f1f5f9;
   font-size: 14px;
   color: #1e293b;
 }
 
-.col-score, .col-pct { width: 160px; }
+.col-score, .col-pct { width: 200px; }
 
-.dim-score { font-weight: 700; color: #0c4a6e; }
+.dim-score { 
+  font-weight: 700; 
+  color: #0c4a6e; 
+}
 
 .dim-pct-cell {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .dim-pct-track {
@@ -244,47 +349,91 @@
   background: #bae6fd;
   border-radius: 999px;
   overflow: hidden;
-  min-width: 90px;
+  min-width: 100px;
 }
 
 .dim-pct-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg,#0284c7,#0ea5e9);
+  background: linear-gradient(90deg, #0284c7, #0ea5e9);
   transition: width .6s ease;
+  box-shadow: 0 0 4px rgba(2,132,199,0.3);
 }
 
-.dim-pct-num { font-weight: 700; color: #0c4a6e; width: 40px; text-align: right; }
+.dim-pct-num { 
+  font-weight: 700; 
+  color: #0c4a6e; 
+  width: 50px; 
+  text-align: right; 
+}
 
-/* Comments */
+/* ── COMMENTS CONTAINER ── */
 .comments-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  padding: 20px;
 }
 
 .comment-item {
   background: #f0f9ff;
   border: 1px solid #bae6fd;
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 16px;
   font-size: 14px;
   color: #1e293b;
   font-style: italic;
+  line-height: 1.6;
+  transition: all .3s ease;
+}
+
+.comment-item:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 2px 8px rgba(2,132,199,0.1);
 }
 
 .comment-meta {
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: 12px;
   color: #64748b;
   font-style: normal;
   font-weight: 600;
 }
 
-.comment-empty { color: #64748b; font-size: 14px; padding: 10px 0; }
+.comment-empty { 
+  color: #64748b; 
+  font-size: 14px; 
+  padding: 20px; 
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px dashed #e2e8f0;
+}
+
+/* ── GENERIC CARD CONTAINER ── */
+.card {
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
 
 @media print {
   #sidebar-mount, #topbar-mount, .back-link, .btn-print { display: none !important; }
+}
+
+@media (max-width: 768px) {
+  .analytics-header .header-row {
+    flex-direction: column;
+  }
+  .stat-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+  .stat-value {
+    font-size: 28px;
+  }
 }
 </style>
 </head>
@@ -314,6 +463,9 @@
             <span class="dot">•</span>
             <span id="office-respondents">—</span>
           </div>
+        </div>
+        <button id="btn-print" class="btn-print">🖨 Print Report</button>
+      </div>
     </header>
 
     <!-- Loading / Empty states -->
@@ -351,14 +503,14 @@
 
       <!-- Charts -->
       <section class="charts-grid">
-        <div class="card chart-card">
-          <div class="card-title">Evaluation Dimensions <span class="card-sub">— average score per criterion</span></div>
+        <div class="chart-card">
+          <div class="card-title">Evaluation Dimensions<span class="card-sub">— average score per criterion</span></div>
           <div class="chart-wrap" id="chart-dimensions-wrap">
             <canvas id="chart-dimensions"></canvas>
           </div>
         </div>
-        <div class="card chart-card chart-card-small">
-          <div class="card-title">Code Usage <span class="card-sub">— transaction codes for this office</span></div>
+        <div class="chart-card">
+          <div class="card-title">Code Usage<span class="card-sub">— transaction codes for this office</span></div>
           <div class="chart-wrap chart-wrap-donut" id="chart-codes-wrap">
             <canvas id="chart-codes"></canvas>
             <div class="donut-center" id="donut-center-label">0</div>
@@ -367,16 +519,16 @@
         </div>
       </section>
 
-      <section class="card chart-card">
-        <div class="card-title">Evaluations Over Time <span class="card-sub">— average rating per submission date</span></div>
+      <div class="card">
+        <div class="card-title">Evaluations Over Time<span class="card-sub">— average rating per submission date</span></div>
         <div class="chart-wrap chart-wrap-wide" id="chart-trend-wrap">
           <canvas id="chart-trend"></canvas>
         </div>
-      </section>
+      </div>
 
       <!-- Dimension breakdown table -->
-      <section class="card">
-        <div class="card-title">Dimension Breakdown <span class="card-sub">— detailed scores</span></div>
+      <div class="card">
+        <div class="card-title">Dimension Breakdown<span class="card-sub">— detailed scores</span></div>
         <div class="breakdown-table-wrap">
           <table class="breakdown-table">
             <thead>
@@ -389,13 +541,13 @@
             <tbody id="breakdown-table-body"></tbody>
           </table>
         </div>
-      </section>
+      </div>
 
       <!-- Recent comments -->
-      <section class="card">
-        <div class="card-title">Recent Feedback <span class="card-sub">— latest comments from respondents</span></div>
+      <div class="card">
+        <div class="card-title">Recent Feedback<span class="card-sub">— latest comments from respondents</span></div>
         <div class="comments-list" id="comments-list"></div>
-      </section>
+      </div>
 
     </div>
 
@@ -403,18 +555,19 @@
 </main>
 </div>
 
-  <!-- Chart.js — pinned to a version that actually exists on jsDelivr (4.4.4 was never
-       published to cdnjs, which 404'd and silently broke every chart on this page). -->
+  <!-- Chart.js — pinned to a version that actually exists on jsDelivr -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="shared.js"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getDatabase,
-  ref,
-  get
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Same project as the rest of the CampusVoice admin dashboards.
 const firebaseConfig = {
@@ -429,17 +582,16 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const db = getFirestore(app);
 
-// Build shared Admin 1 layout (this page is reached from the Office Management "View" action)
+// Build shared Admin 1 layout
 document.getElementById("sidebar-mount").innerHTML =
     buildSidebar("admin1", "office-mgmt");
 
 document.getElementById("topbar-mount").innerHTML =
     buildTopbar("Summary Analytics", "admin1");
 
-// Labels for sq1..sq8 / sqd1..sqd8 — standard Service Quality Dimensions
-// (as used in campus/government Client Satisfaction Measurement surveys).
+// Labels for sq1..sq8 / sqd1..sqd8
 const DIMENSION_LABELS = [
   "Responsiveness",
   "Reliability",
@@ -477,7 +629,6 @@ function formatDate(ts) {
   });
 }
 
-// Small helper so one broken chart can't take the rest of the page down with it.
 function safeRenderChart(wrapId, canvasId, buildFn) {
   if (typeof Chart === "undefined") {
     const wrap = document.getElementById(wrapId);
@@ -500,7 +651,7 @@ function renderCodeUsage(codes) {
   const total = codes.length;
   const used = codes.filter(c => c.status === "used").length;
   const unused = codes.filter(c => c.status === "unused").length;
-  const other = total - used - unused; // any code missing/with an unexpected status value
+  const other = total - used - unused;
 
   const label = document.getElementById("donut-center-label");
   const legend = document.getElementById("code-usage-legend");
@@ -567,9 +718,11 @@ async function main() {
 
   try {
     if (officeKey) {
-      const snap = await get(ref(db, `services/offices/${officeKey}`));
-      const val = snap.val();
-      if (val && val.name) officeName = val.name;
+      const snap = await getDoc(doc(db, "services", "offices", "records", officeKey));
+      if (snap.exists()) {
+        const val = snap.data();
+        if (val && val.name) officeName = val.name;
+      }
     }
   } catch (err) {
     console.error("Couldn't load office record:", err);
@@ -579,22 +732,22 @@ async function main() {
   officeNameEl.textContent = officeName;
   document.title = `CampusVoice – Summary Analytics | ${officeName}`;
 
-  // Transaction codes generated for this office (services/transaction_code/offices_name/<office>).
-  // Match the same normalized-name approach used for evaluations, since the Firebase key
-  // is the raw office name and can drift in casing/whitespace from the query param.
   let officeCodes = [];
 
   try {
-    const codesSnap = await get(ref(db, "services/transaction_code/offices_name"));
-    const codesData = codesSnap.val() || {};
+    const officeNameSnap = await getDocs(collection(db, "services", "transaction_code", "office_name"));
     const targetKey = normalizeName(officeName);
 
-    const matchedOfficeKey = Object.keys(codesData).find(
-      k => normalizeName(k) === targetKey
-    );
+    let matchedOfficeDocId = null;
+    officeNameSnap.forEach(d => {
+      if (normalizeName(d.id) === targetKey) matchedOfficeDocId = d.id;
+    });
 
-    if (matchedOfficeKey) {
-      officeCodes = Object.values(codesData[matchedOfficeKey] || {});
+    if (matchedOfficeDocId) {
+      const codesSnap = await getDocs(
+        collection(db, "services", "transaction_code", "office_name", matchedOfficeDocId, "codes")
+      );
+      officeCodes = codesSnap.docs.map(d => d.data());
     }
   } catch (err) {
     console.error("Couldn't load transaction codes:", err);
@@ -605,21 +758,21 @@ async function main() {
   let evaluations = [];
 
   try {
-    const snap = await get(ref(db, "services/evaluations"));
-    const data = snap.val() || {};
+    const snap = await getDocs(collection(db, "services", "evaluations", "records"));
     const targetKey = normalizeName(officeName);
 
-    evaluations = Object.entries(data)
-      .map(([id, ev]) => {
+    evaluations = snap.docs
+      .map(docSnap => {
+        const ev = docSnap.data();
         const dims = [];
         for (let x = 1; x <= 8; x++) {
           const v = parseFloat(ev["sq" + x] ?? ev["sqd" + x]);
           dims.push(isNaN(v) ? 0 : v);
         }
         return {
-          id,
+          id: docSnap.id,
           office: ev.office || "Unknown",
-          comment: ev.comment || ev.comments || "",
+          comment: ev.suggestions || "",
           dims,
           timestamp: Number(ev.timestamp) || 0
         };

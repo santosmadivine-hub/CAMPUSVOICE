@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CampusVoice – Analytics | Admin 2</title>
+<title>CampusVoice – Analytics | Admin 3</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-  /* --- Analytics (cleanliness): stat cards, trend chart, leaderboard, trend rows --- */
+  /* --- Analytics (facilities): stat cards, trend chart, leaderboard, trend rows --- */
   .card {
     background: #fff;
     border-radius: 18px;
@@ -595,14 +595,6 @@
   .pie-legend-row[title] {
     cursor: help;
   }
-
-  /* Enhanced tooltip appearance for better visibility */
-  @supports (selector(:has(*))) {
-    /* Modern browsers with :has support will get animated tooltips */
-    *:hover {
-      outline: none;
-    }
-  }
 </style>
 </head>
 <body>
@@ -687,9 +679,9 @@
       </div>
     </div>
 
-    <!-- DIMENSION PERFORMANCE — all 15 evaluation questions -->
+    <!-- DIMENSION PERFORMANCE — all 10 evaluation questions -->
     <div class="card">
-      <div class="card-title">Dimension Performance <span class="card-sub">— all offices, all 15 questions</span></div>
+      <div class="card-title">Dimension Performance <span class="card-sub">— all offices, all 10 questions</span></div>
       <div id="dimension-performance-chart" class="dim-bar-list"></div>
     </div>
   </main>
@@ -702,15 +694,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getFirestore,
   collection,
-  onSnapshot,
-  query,
-  orderBy
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
   projectId: "kristal-adb78",
   storageBucket: "kristal-adb78.firebasestorage.app",
   messagingSenderId: "1016283938031",
@@ -724,10 +715,10 @@ const db = getFirestore(app);
 
 // Build UI
 document.getElementById("sidebar-mount").innerHTML =
-  buildSidebar("admin2", "analytics");
+  buildSidebar("admin3", "analytics");
 
 document.getElementById("topbar-mount").innerHTML =
-  buildTopbar("Analytics", "admin2");
+  buildTopbar("Analytics", "admin3");
 
 // Office Trend dropdown open/close (elements are static, so wire once)
 document.getElementById("ot-dropdown-btn").addEventListener("click", (e) => {
@@ -744,22 +735,22 @@ document.addEventListener("click", (e) => {
 
 // ======================
 // FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
-// (matches Evaluation Management / Reports pages exactly)
+// (unchanged from admin3-eval-mgmt.html and admin3-reports.html —
+// this page reads the exact same Firestore structure, nothing new
+// is written or restructured)
 // ======================
-const OFFICES_COLLECTION = "office-names";
-const EVALUATIONS_COLLECTION = "cleanliness_evaluations";
+const EVAL_COLLECTION = "facility_evaluations";
+const OFFICE_COLLECTION = "offices";
 
-// Confirmed from Firestore console: cleanliness_evaluations documents
-// store rating1 ... rating15 (plus comments, course, date,
-// evaluationId, officeName, sex, timestamp, userCategory, userId,
-// year). Everything that loops over rating questions drives off this
-// constant so there's only one place to change it.
-const TOTAL_RATING_QUESTIONS = 15;
+// The Facilities Evaluation Form has 10 rating questions (rating1 ->
+// rating10) — NOT 15 like the cleanliness form on Admin 2. Everything
+// that loops over rating questions drives off this constant.
+const TOTAL_RATING_QUESTIONS = 10;
 
 // ======================
 // STATE
 // ======================
-let evaluations = [];   // [{id, officeName, rating1..15, timestamp, ...}]
+let evaluations = [];   // [{id, officeName, rating1..10, timestamp, sex, userCategory, ...}]
 let offices = {};       // { officeDocId: officeName }
 
 function avgOf(e) {
@@ -770,25 +761,40 @@ function avgOf(e) {
   return sum / TOTAL_RATING_QUESTIONS;
 }
 
+// FacilitiesEvalActivity.kt stores "date" as a human-readable string
+// (e.g. "July 02, 2026 10:29 AM") rather than a numeric timestamp —
+// unlike the cleanliness form, which already has a numeric "timestamp"
+// field. This derives a millisecond timestamp so the reused Admin2
+// trend/office-trend logic (which expects e.timestamp) works unchanged.
+function parseEvalTimestamp(ev) {
+  if (ev.date === undefined || ev.date === null || ev.date === "") return 0;
+  if (typeof ev.date === "number") return ev.date;
+  if (typeof ev.date === "object" && typeof ev.date.toMillis === "function") {
+    return ev.date.toMillis();
+  }
+  const asNumber = Number(ev.date);
+  if (!Number.isNaN(asNumber) && String(ev.date).trim() !== "") return asNumber;
+  const parsed = new Date(ev.date).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
 // ======================
-// EVALUATION QUESTION LABELS (rating1 -> rating15)
+// EVALUATION QUESTION LABELS (rating1 -> rating10)
+// Matches QUESTION_LABELS in admin3-eval-mgmt.html and DIMENSIONS in
+// admin3-reports.html — the actual 10 questions on the Facilities
+// Evaluation Form.
 // ======================
 const KNOWN_DIMENSION_LABELS = {
-  1: "The area surrounding the office is free from litter.",
-  2: "The office entrance is clean and well-maintained.",
-  3: "The walkways leading to the office are clean.",
-  4: "Outdoor trash bins are available and regularly emptied.",
-  5: "The exterior walls and windows are clean.",
-  6: "The office floor is clean and free from dirt or dust.",
-  7: "Office furniture (chairs, tables, counters) is clean.",
-  8: "Windows and glass surfaces inside the office are clean.",
-  9: "The office is free from unpleasant odors.",
-  10: "The overall appearance of the office reflects proper cleanliness.",
-  11: "The comfort room floor is clean and dry.",
-  12: "The toilets and urinals are clean and sanitary.",
-  13: "The sinks and faucets are clean and functioning properly.",
-  14: "Trash bins inside the comfort room are clean and regularly emptied.",
-  15: "There are no unpleasant odors inside the comfort room."
+  1: "The needed equipment/resources are available.",
+  2: "The equipment/resources are working properly.",
+  3: "The facility has enough resources to meet users' needs.",
+  4: "The facility is clean and well-maintained.",
+  5: "The furniture (chairs, tables, etc.) is in good condition.",
+  6: "The facility is well-lit and properly ventilated.",
+  7: "The facility layout allows for comfortable movement.",
+  8: "The facility is free from safety hazards.",
+  9: "Air conditioning is excellent.",
+  10: "How satisfied are you with this facility?"
 };
 
 const DIMENSIONS = [];
@@ -815,23 +821,23 @@ function ratingFillClass(pct) {
 }
 
 // ======================
-// LOAD OFFICES (Firestore: office-names)
+// LOAD OFFICES (Firestore: offices)
 // ======================
-onSnapshot(collection(db, OFFICES_COLLECTION), (snapshot) => {
+onSnapshot(collection(db, OFFICE_COLLECTION), (snapshot) => {
   offices = {};
   snapshot.forEach((docSnap) => {
     const data = docSnap.data();
     offices[docSnap.id] = data.name || data.officeName || docSnap.id;
   });
   renderAll();
+}, (err) => {
+  console.error("Failed to load offices:", err);
 });
 
 // ======================
-// LOAD CLEANLINESS EVALUATIONS (Firestore: cleanliness_evaluations)
+// LOAD FACILITY EVALUATIONS (Firestore: facility_evaluations)
 // ======================
-const evalQuery = query(collection(db, EVALUATIONS_COLLECTION), orderBy("timestamp", "desc"));
-
-onSnapshot(evalQuery, (snapshot) => {
+onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
   evaluations = [];
   snapshot.forEach((docSnap) => {
     const ev = docSnap.data();
@@ -841,12 +847,11 @@ onSnapshot(evalQuery, (snapshot) => {
       comments: ev.comments || "",
       course: ev.course || "",
       date: ev.date || "",
-      evaluationId: ev.evaluationId || docSnap.id,
       sex: ev.sex || "",
       userCategory: ev.userCategory || "",
       userId: ev.userId || "",
       year: ev.year || "",
-      timestamp: Number(ev.timestamp) || 0
+      timestamp: parseEvalTimestamp(ev)
     };
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
       record["rating" + i] = Number(ev["rating" + i]) || 0;
@@ -854,6 +859,8 @@ onSnapshot(evalQuery, (snapshot) => {
     evaluations.push(record);
   });
   renderAll();
+}, (err) => {
+  console.error("Failed to load facility evaluations:", err);
 });
 
 // ======================
@@ -990,10 +997,9 @@ function otTopOffices(n) {
 // Fixed pixel geometry for the scrollable bar chart (not viewBox-scaled,
 // so a group always takes the same amount of horizontal space and the
 // wrapper can scroll instead of squeezing labels).
-// ===== INCREASED BAR WIDTH FOR BETTER VISIBILITY =====
-const OT_GROUP_WIDTH = 110;   // px per office group (increased from 96)
-const OT_BAR_WIDTH = 14;      // bar width in pixels (increased from 9)
-const OT_BAR_GAP = 2;         // gap between bars (decreased from 3 to fit bigger bars)
+const OT_GROUP_WIDTH = 110;   // px per office group
+const OT_BAR_WIDTH = 14;      // bar width in pixels
+const OT_BAR_GAP = 2;         // gap between bars
 const OT_CHART_HEIGHT = 190;
 
 function renderOfficeTrend() {
@@ -1141,7 +1147,7 @@ function renderRatingDistribution() {
 }
 
 // ======================
-// DIMENSION PERFORMANCE (all 15 evaluation questions, all offices)
+// DIMENSION PERFORMANCE (all 10 evaluation questions, all offices)
 // x-axis: evaluation question | y-axis: average percentage
 // ======================
 function renderDimensionPerformance() {

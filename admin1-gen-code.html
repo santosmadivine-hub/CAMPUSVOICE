@@ -45,6 +45,15 @@
 .btn-generate:hover    { background:#1e3a5f; }
 .btn-generate:disabled { background:#94a3b8; cursor:not-allowed; }
 
+/* WHITE CONTAINER — wraps the transaction code table */
+.table-card {
+  background:#ffffff;
+  border:1.5px solid #e2e8f0;
+  border-radius:16px;
+  padding:22px 24px 26px;
+  box-shadow:0 4px 14px rgba(15,23,42,0.05);
+}
+
 /* TABLE */
 .code-table { width:100%; border-collapse:collapse; font-size:14px; }
 .code-table th { text-align:left; padding:14px 16px; font-size:11px; text-transform:uppercase; color:#64748b; border-bottom:2px solid #e2e8f0; }
@@ -220,8 +229,8 @@
       </div>
     </div>
 
-    <!-- TABLE -->
-    <div class="card">
+    <!-- TABLE (wrapped in white container) -->
+    <div class="table-card">
       <div class="table-toolbar">
         <h3 style="margin:0;">Transaction Codes</h3>
         <div class="export-row">
@@ -266,8 +275,15 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-import { getDatabase, ref, onValue, remove, push, set }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+  getFirestore,
+  collection,
+  collectionGroup,
+  doc,
+  addDoc,
+  deleteDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ── Firebase config ── */
 const firebaseConfig = {
@@ -283,7 +299,7 @@ const firebaseConfig = {
 
 const app       = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const db        = getDatabase(app);
+const db        = getFirestore(app);
 
 /* ── Mount shared UI ── */
 document.getElementById("sidebar-mount").innerHTML = buildSidebar('admin1', 'gen-code');
@@ -309,20 +325,25 @@ function makeCode(officePrefix) {
 
 /* ========================= */
 /* DYNAMIC OFFICES           */
-/* ── Pulled from services/offices (same source as dashboard) ──
+/* ── Pulled from services/offices (same source as dashboard).
+   NOTE ON STRUCTURE: the RTDB version of this page read entries with a
+   "name" field. Your transaction_code codes, by contrast, use the office
+   name directly as the doc ID (confirmed from your console screenshot).
+   Since I don't know for certain which pattern services/offices follows
+   in Firestore, this reads a "name" field if present and falls back to
+   the doc ID otherwise — so it works either way. ──
 /* ========================= */
 
 let dynamicOffices = []; // array of office name strings
 
-onValue(ref(db, "services/offices"), (snap) => {
-  const raw = snap.val() || {};
-
-  // Extract names and sort alphabetically
-  dynamicOffices = Object.values(raw)
-    .map(o => o.name)
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b));
-
+onSnapshot(collection(db, "services", "offices", "records"), (snapshot) => {
+  dynamicOffices = [];
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const name = data.name || docSnap.id;
+    if (name) dynamicOffices.push(name);
+  });
+  dynamicOffices.sort((a, b) => a.localeCompare(b));
   buildOfficeCards();
 });
 
@@ -358,6 +379,10 @@ function buildOfficeCards() {
 
 /* ========================= */
 /* GENERATE CODES            */
+/* Confirmed path: services/transaction_code/office_name/{office}/codes/{codeId}
+   with fields { code, status }. "createdAt" is added here too so the
+   table/exports can still sort and display a created date, even though
+   it wasn't visible in your screenshot's example doc.               */
 /* ========================= */
 
 window.generateCodes = async (office) => {
@@ -370,12 +395,11 @@ window.generateCodes = async (office) => {
   btn.textContent = "Saving…";
   prog.style.display = "block";
 
-  const dbRef = ref(db, `services/transaction_code/offices_name/${office}`);
+  const codesCol = collection(db, "services", "transaction_code", "office_name", office, "codes");
 
   for (let i = 0; i < qty; i++) {
     prog.textContent = `Saving ${i + 1} / ${qty}…`;
-    const newRef = push(dbRef);
-    await set(newRef, {
+    await addDoc(codesCol, {
       code:      makeCode(office),
       status:    "unused",
       createdAt: Date.now()
@@ -397,25 +421,26 @@ window.deleteCode = async (key) => {
   const office = allCodes[key]?.office;
   if (!office) return;
 
-  await remove(ref(db, `services/transaction_code/offices_name/${office}/${key}`));
+  await deleteDoc(doc(db, "services", "transaction_code", "office_name", office, "codes", key));
   showToast("🗑️ Code deleted.");
 };
 
 /* ========================= */
 /* LIVE TRANSACTION CODES    */
+/* Uses a collectionGroup query across every office's "codes"
+   subcollection, matching the dashboard's approach. Office name is
+   read off the parent office_name doc's ID since it isn't a field
+   on the code doc itself.                                          */
 /* ========================= */
 
 let allCodes       = {};
 let filteredEntries = [];
 
-onValue(ref(db, "services/transaction_code/offices_name"), snap => {
-  const raw = snap.val() || {};
-
+onSnapshot(collectionGroup(db, "codes"), (snapshot) => {
   allCodes = {};
-  Object.keys(raw).forEach(office => {
-    Object.keys(raw[office]).forEach(key => {
-      allCodes[key] = { office, ...raw[office][key] };
-    });
+  snapshot.forEach(docSnap => {
+    const officeName = docSnap.ref.parent.parent?.id || "";
+    allCodes[docSnap.id] = { office: officeName, ...docSnap.data() };
   });
 
   updateStats(allCodes);

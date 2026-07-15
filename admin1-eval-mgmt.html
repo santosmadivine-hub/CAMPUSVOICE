@@ -307,8 +307,11 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-import { getDatabase, ref, onValue }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+  getFirestore,
+  collection,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* Firebase config */
 const firebaseConfig = {
@@ -324,7 +327,7 @@ const firebaseConfig = {
 
 const app       = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const db        = getDatabase(app);
+const db        = getFirestore(app);
 
 /* Mount shared UI */
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1', 'eval-mgmt');
@@ -338,18 +341,30 @@ const officeFilter = document.getElementById("officeFilter");
 /* State */
 let allData = {};
 
-/* OFFICES: services/offices (same as dashboard) */
-onValue(ref(db, "services/offices"), (snap) => {
-  const data      = snap.val();
+/* ── Firestore collection references ──────────────────────────────
+   Evaluations path matches ServiceEvalActivity.kt exactly:
+     services/evaluations/records/{id}
+
+   Offices path is confirmed by generate-code.html: services/offices.
+   Reads a "name" field if present, falls back to the doc ID otherwise. */
+const evaluationsCol = collection(db, "services", "evaluations", "records");
+const officesCol      = collection(db, "services", "offices", "records");
+
+/* OFFICES */
+onSnapshot(officesCol, (snapshot) => {
   const prevValue = officeFilter.value;
 
   officeFilter.innerHTML = `<option value="">All Offices</option>`;
 
-  if (!data) return;
+  if (snapshot.empty) return;
 
-  Object.values(data)
-    .map(o => o.name)
-    .filter(Boolean)
+  const names = [];
+  snapshot.forEach(docSnap => {
+    const name = docSnap.data().name || docSnap.id;
+    if (name) names.push(name);
+  });
+
+  names
     .sort((a, b) => a.localeCompare(b))
     .forEach(name => {
       const opt = document.createElement("option");
@@ -360,9 +375,12 @@ onValue(ref(db, "services/offices"), (snap) => {
     });
 });
 
-/* EVALUATIONS: services/evaluations */
-onValue(ref(db, "services/evaluations"), (snap) => {
-  allData = snap.val() || {};
+/* EVALUATIONS: services/evaluations/records (matches ServiceEvalActivity.kt) */
+onSnapshot(evaluationsCol, (snapshot) => {
+  allData = {};
+  snapshot.forEach(docSnap => {
+    allData[docSnap.id] = docSnap.data();
+  });
   updateSummaryStats();
   renderTable();
 });

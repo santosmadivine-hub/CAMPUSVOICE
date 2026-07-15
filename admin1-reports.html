@@ -13,7 +13,7 @@
 
 <style>
 /* ── BASE ── */
-body { margin:0; font-family:'DM Sans',sans-serif; background:#87cefa; color:#0f172a; }
+body { margin:0; font-family:'DM Sans',sans-serif; background:white; color:#0f172a; }
 .layout { display:flex; min-height:100vh; }
 .main   { flex:1; padding:24px; }
 
@@ -226,11 +226,11 @@ select { min-width:180px; }
         <div class="kpi-value" id="totalFeedback">0</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-title">Positive (&ge;4★)</div>
+        <div class="kpi-title">Positive (≥4★)</div>
         <div class="kpi-value" id="positive">0</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-title">Negative (&lt;3★)</div>
+        <div class="kpi-title">Negative (<3★)</div>
         <div class="kpi-value" id="negative">0</div>
       </div>
       <div class="kpi-card">
@@ -350,8 +350,13 @@ select { min-width:180px; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 import {
-  getDatabase, ref, onValue, push, set, remove
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  getFirestore,
+  collection,
+  onSnapshot,
+  addDoc,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ── Firebase config ── */
 const firebaseConfig = {
@@ -367,17 +372,17 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 getAnalytics(app);
-const db = getDatabase(app);
+const db = getFirestore(app);
 
 /* ─────────────────────────────────────────────
-   DB PATHS  — all mirror services/ structure
-   services/offices      ← same as eval-mgmt
-   services/evaluations  ← same as eval-mgmt
-   services/reports      ← NEW node for saved reports
+   Firestore collection paths (matching eval-mgmt.html)
+   services/offices/records
+   services/evaluations/records
+   services/reports/records
 ───────────────────────────────────────────── */
-const officeRef     = ref(db, "services/offices");
-const evaluationRef = ref(db, "services/evaluations");
-const reportsRef    = ref(db, "services/reports");
+const officesCol     = collection(db, "services", "offices", "records");
+const evaluationsCol = collection(db, "services", "evaluations", "records");
+const reportsCol     = collection(db, "services", "reports", "records");
 
 /* ── Shared UI ── */
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','reports');
@@ -423,19 +428,24 @@ let currentReport = null; // last generated — held for saving / PDF
 
 /* ══════════════════════════════════════════════════════
    1. OFFICES → populate dropdown
-      Path: services/offices  (same as eval-mgmt.html)
+      Path: services/offices/records (Firestore)
 ══════════════════════════════════════════════════════ */
-onValue(officeRef, snap => {
-  const data   = snap.val() || {};
+onSnapshot(officesCol, (snapshot) => {
   const select = document.getElementById("officeFilter");
   const prev   = select.value;
 
   select.innerHTML = `<option value="">Select Office…</option>`;
 
-  Object.values(data)
-    .map(o => o.name)
-    .filter(Boolean)
-    .sort((a,b) => a.localeCompare(b))
+  if (snapshot.empty) return;
+
+  const names = [];
+  snapshot.forEach(docSnap => {
+    const name = docSnap.data().name || docSnap.id;
+    if (name) names.push(name);
+  });
+
+  names
+    .sort((a, b) => a.localeCompare(b))
     .forEach(name => {
       const opt = document.createElement("option");
       opt.value       = name;
@@ -447,10 +457,13 @@ onValue(officeRef, snap => {
 
 /* ══════════════════════════════════════════════════════
    2. EVALUATIONS → KPI cards
-      Path: services/evaluations
+      Path: services/evaluations/records (Firestore)
 ══════════════════════════════════════════════════════ */
-onValue(evaluationRef, snap => {
-  allEvals = snap.val() || {};
+onSnapshot(evaluationsCol, (snapshot) => {
+  allEvals = {};
+  snapshot.forEach(docSnap => {
+    allEvals[docSnap.id] = docSnap.data();
+  });
   renderKPIs();
 });
 
@@ -479,17 +492,21 @@ function renderKPIs() {
 
 /* ══════════════════════════════════════════════════════
    3. SAVED REPORTS → table
-      Path: services/reports  (NEW)
-      Structure stored per record:
+      Path: services/reports/records (Firestore)
+      Structure stored per document:
       {
         office, startDate, endDate, respondents,
         overallPct, generatedAt,
         dims: [{ key, label, pct, rating }]
       }
 ══════════════════════════════════════════════════════ */
-onValue(reportsRef, snap => {
-  const data = snap.val() || {};
-  const keys  = Object.keys(data);
+onSnapshot(reportsCol, (snapshot) => {
+  const data = {};
+  snapshot.forEach(docSnap => {
+    data[docSnap.id] = docSnap.data();
+  });
+
+  const keys = Object.keys(data);
 
   /* update KPI pill */
   document.getElementById("kpiSavedCount").textContent = keys.length;
@@ -674,7 +691,7 @@ window.closePreview = () => {
 };
 
 /* ══════════════════════════════════════════════════════
-   5. SAVE REPORT → services/reports
+   5. SAVE REPORT → services/reports/records (Firestore)
 ══════════════════════════════════════════════════════ */
 window.saveReport = async () => {
   if (!currentReport) {
@@ -682,9 +699,8 @@ window.saveReport = async () => {
     return;
   }
   try {
-    const newRef = push(reportsRef);
-    await set(newRef, currentReport);
-    alert("✅ Report saved successfully under services/reports!");
+    await addDoc(reportsCol, currentReport);
+    alert("✅ Report saved successfully!");
   } catch (err) {
     console.error(err);
     alert("❌ Failed to save report: " + err.message);
@@ -694,22 +710,22 @@ window.saveReport = async () => {
 /* ══════════════════════════════════════════════════════
    6. VIEW SAVED REPORT
 ══════════════════════════════════════════════════════ */
-window.viewSavedReport = key => {
-  onValue(ref(db, `services/reports/${key}`), snap => {
-    const r = snap.val();
+window.viewSavedReport = (key) => {
+  onSnapshot(doc(db, "services", "reports", "records", key), (docSnap) => {
+    const r = docSnap.data();
     if (!r) return;
     currentReport = r;          // enable PDF export of viewed report
     renderPreview(r);
-  }, { onlyOnce:true });
+  }, { once: true });
 };
 
 /* ══════════════════════════════════════════════════════
    7. DELETE SAVED REPORT
 ══════════════════════════════════════════════════════ */
-window.deleteSavedReport = async key => {
+window.deleteSavedReport = async (key) => {
   if (!confirm("Delete this saved report? This cannot be undone.")) return;
   try {
-    await remove(ref(db, `services/reports/${key}`));
+    await deleteDoc(doc(db, "services", "reports", "records", key));
   } catch (err) {
     alert("Failed to delete: " + err.message);
   }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CampusVoice – Reports | Admin 2</title>
+<title>CampusVoice – Reports | Admin 3</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -710,8 +710,6 @@ import {
   getFirestore,
   collection,
   onSnapshot,
-  query,
-  orderBy,
   addDoc,
   deleteDoc,
   doc
@@ -721,6 +719,7 @@ import {
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
   projectId: "kristal-adb78",
   storageBucket: "kristal-adb78.firebasestorage.app",
   messagingSenderId: "1016283938031",
@@ -731,22 +730,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin2", "reports");
-document.getElementById("topbar-mount").innerHTML = buildTopbar("Reports", "admin2");
+// Collection names (Firestore). Evaluations + offices match
+// admin3-eval-mgmt.html exactly, so this page stays in sync with it:
+// - "facility_evaluations" is what FacilitiesEvalActivity.kt writes to
+// - "offices" confirmed via Firestore console (each doc has a "name"
+//   field, e.g. "Cashier")
+// - "facility_saved_reports" is new — there's no existing Firestore
+//   collection for saved reports yet, so this mirrors the old RTDB
+//   path "facilities/savedReports" as a Firestore collection. Rename
+//   this constant if you'd rather use something else.
+const EVAL_COLLECTION = "facility_evaluations";
+const OFFICE_COLLECTION = "offices";
+const SAVED_REPORTS_COLLECTION = "facility_saved_reports";
 
-// ======================
-// FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
-// (matches Evaluation Management page exactly)
-// ======================
-const OFFICES_COLLECTION = "office-names";
-const EVALUATIONS_COLLECTION = "cleanliness_evaluations";
-const SAVED_REPORTS_COLLECTION = "savedReports";
-
-// Confirmed from Firestore console (see Evaluation Management page):
-// cleanliness_evaluations documents store rating1 ... rating15, not
-// just rating1-4. Everything that loops over rating questions drives
-// off this constant so there's only one place to change it.
-const TOTAL_RATING_QUESTIONS = 15;
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin3", "reports");
+document.getElementById("topbar-mount").innerHTML = buildTopbar("Reports", "admin3");
 
 // ======================
 // STATE
@@ -759,32 +757,20 @@ let endDate = "";
 let savedReports = [];
 let currentReport = null; // snapshot of the last generated report, ready to save
 
-const KNOWN_DIMENSION_LABELS = {
-  1: "The area surrounding the office is free from litter.",
-  2: "The office entrance is clean and well-maintianed.",
-  3: "The walkways leading to the office are clean.",
-  4: "Outdoor trash bins are available and regularly emptied.",
-  5: "The exterior walls and windows are clean.",
-  6: "The office floor is clean and free from dirt or dust.",
-  7: "Office furniture (chairs, tables, counters) is clean.",
-  8: "Windows and glass surfaces inside the office are clean.",
-  9: "The office is free from unpleasant odors.",
-  10: "The overall appearance of the office reflects proper cleanliness.",
-  11: "The comfort room floor is clean and dry.",
-  12: "The toilets and urinals are clean and sanitary.",
-  13: "The sinks and faucets are clean and functioning properly.",
-  14: "Trash bins inside the comfort room are clean and regularly emptied.",
-  15: "There are no unpleasant odors inside the comfort room."
-};
-
-const DIMENSIONS = [];
-for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-  DIMENSIONS.push({
-    id: i,
-    field: "rating" + i,
-    label: KNOWN_DIMENSION_LABELS[i] || `Evaluation Question ${i}`
-  });
-}
+// Dimension definitions — matches the 10 questions on the actual
+// Facilities Evaluation Form (rating1 -> rating10, in order).
+const DIMENSIONS = [
+  { id: 1, field: "rating1", label: "The needed equipment/resources are available" },
+  { id: 2, field: "rating2", label: "The equipment/resources are working properly" },
+  { id: 3, field: "rating3", label: "The facility has enough resources to meet users' needs" },
+  { id: 4, field: "rating4", label: "The facility is clean and well-maintained" },
+  { id: 5, field: "rating5", label: "The furniture (chairs, tables, etc.) is in good condition" },
+  { id: 6, field: "rating6", label: "The facility is well-lit and properly ventilated" },
+  { id: 7, field: "rating7", label: "The facility layout allows for comfortable movement" },
+  { id: 8, field: "rating8", label: "The facility is free from safety hazards" },
+  { id: 9, field: "rating9", label: "Air conditioning is excellent" },
+  { id: 10, field: "rating10", label: "Overall satisfaction with this facility" }
+];
 
 const RATING_SCALE = [
   { min: 90, label: "Outstanding", class: "rating-outstanding" },
@@ -794,57 +780,93 @@ const RATING_SCALE = [
 ];
 
 // ======================
-// LOAD OFFICES (Firestore: office-names)
+// HELPERS (date/timestamp parsing — matches admin3-eval-mgmt.html)
 // ======================
-onSnapshot(collection(db, OFFICES_COLLECTION), (snapshot) => {
+// FacilitiesEvalActivity.kt stores "date" as a human-readable string
+// (e.g. "July 02, 2026 10:29 AM") rather than always having a numeric
+// "timestamp". This derives a real millisecond timestamp from whichever
+// field is actually present, so date-range filtering works correctly.
+function parseEvalTimestamp(ev) {
+  if (ev.timestamp !== undefined && ev.timestamp !== null && ev.timestamp !== "") {
+    const t = Number(ev.timestamp);
+    if (!Number.isNaN(t) && t > 0) return t;
+  }
+  if (ev.date) {
+    // Firestore Timestamp objects expose toMillis()
+    if (typeof ev.date === "object" && typeof ev.date.toMillis === "function") {
+      return ev.date.toMillis();
+    }
+    const parsed = new Date(ev.date).getTime();
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+  return 0;
+}
+
+// ======================
+// LOAD OFFICES -> office-names collection
+// ======================
+onSnapshot(collection(db, OFFICE_COLLECTION), (snapshot) => {
   offices = {};
   snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    offices[docSnap.id] = data.name || data.officeName || docSnap.id;
+    const val = docSnap.data();
+    offices[docSnap.id] = (val && val.name) ? val.name : docSnap.id;
   });
   populateLocationFilter();
+}, (err) => {
+  console.error("Failed to load offices:", err);
 });
 
 // ======================
-// LOAD EVALUATIONS (Firestore: cleanliness_evaluations)
+// LOAD EVALUATIONS -> facility_evaluations collection
 // ======================
-// Schema (matches the actual Firestore documents, same as the
-// Evaluation Management page): comments, officeName,
-// rating1...rating15, status, timestamp (numeric).
-const evalQuery = query(collection(db, EVALUATIONS_COLLECTION), orderBy("timestamp", "desc"));
-
-onSnapshot(evalQuery, (snapshot) => {
-  evaluations = [];
-  snapshot.forEach((docSnap) => {
+// Schema matches what FacilitiesEvalActivity.kt writes: officeName,
+// comments, date (string), rating1-10, plus an optional status field
+// added later by the eval-mgmt admin page.
+onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
+  evaluations = snapshot.docs.map((docSnap) => {
     const ev = docSnap.data();
-    const record = {
-      id: docSnap.id,
+    const id = docSnap.id;
+    return {
+      id,
       officeName: ev.officeName || "Unknown",
       comments: ev.comments || "",
+      date: ev.date || "",
+      category: ev.category || "",
+      course: ev.course || "",
+      year: ev.year || "",
+      sex: ev.sex || "",
+      userCategory: ev.userCategory || "",
+      rating1: Number(ev.rating1) || 0,
+      rating2: Number(ev.rating2) || 0,
+      rating3: Number(ev.rating3) || 0,
+      rating4: Number(ev.rating4) || 0,
+      rating5: Number(ev.rating5) || 0,
+      rating6: Number(ev.rating6) || 0,
+      rating7: Number(ev.rating7) || 0,
+      rating8: Number(ev.rating8) || 0,
+      rating9: Number(ev.rating9) || 0,
+      rating10: Number(ev.rating10) || 0,
       status: (ev.status || "").toString().toLowerCase() === "resolved" ? "resolved" : "pending",
-      timestamp: Number(ev.timestamp) || 0
+      timestamp: parseEvalTimestamp(ev),
+      userId: ev.userId || ""
     };
-    for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-      record["rating" + i] = Number(ev["rating" + i]) || 0;
-    }
-    evaluations.push(record);
   });
   // Auto-render stats whenever evaluations load
   renderStats([]);
+}, (err) => {
+  console.error("Failed to load facility evaluations:", err);
 });
 
 // ======================
-// LOAD SAVED REPORTS (Firestore: savedReports)
+// LOAD SAVED REPORTS -> facility_saved_reports collection
 // ======================
-const savedReportsQuery = query(collection(db, SAVED_REPORTS_COLLECTION), orderBy("savedOn", "desc"));
-
-onSnapshot(savedReportsQuery, (snapshot) => {
-  savedReports = [];
-  snapshot.forEach((docSnap) => {
-    savedReports.push({ id: docSnap.id, ...docSnap.data() });
-  });
+onSnapshot(collection(db, SAVED_REPORTS_COLLECTION), (snapshot) => {
+  savedReports = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+  savedReports.sort((a, b) => (b.savedOn || 0) - (a.savedOn || 0));
   renderSavedReports();
   document.getElementById("stat-saved").textContent = savedReports.length;
+}, (err) => {
+  console.error("Failed to load saved reports:", err);
 });
 
 // ======================
@@ -860,11 +882,11 @@ function getRatingLabel(percentage) {
 }
 
 function evalAvgScore(e) {
-  let sum = 0;
-  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-    sum += e["rating" + i] || 0;
-  }
-  return sum / TOTAL_RATING_QUESTIONS;
+  const ratings = [
+    e.rating1, e.rating2, e.rating3, e.rating4, e.rating5,
+    e.rating6, e.rating7, e.rating8, e.rating9, e.rating10
+  ];
+  return ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
 }
 
 function populateLocationFilter() {
@@ -910,14 +932,14 @@ function generateNarrative(office, respondents, overallPct, dimensionAverages) {
   const lowDims = dimensionAverages.filter(d => parseFloat(d.percentage) < 75).map(d => d.dimension);
   const highDims = dimensionAverages.filter(d => parseFloat(d.percentage) >= 80).slice(0, 3).map(d => d.dimension);
 
-  const p1 = `The <strong>results</strong> of the Cleanliness Evaluation Report for the <strong>${office}</strong>, Iloilo State University of Fisheries Science and Technology – San Enrique Campus, with <strong>${respondents}</strong> respondent(s), show an <strong>${perfWord} performance</strong> in cleanliness standards with an average satisfaction rate of <strong>${overallPct.toFixed(2)}%</strong>.
-    ${topDims.length ? `This indicates that the area excels in ${topDims.join(", ")}, reflecting strong maintenance and cleanliness practices.` : ""}`;
+  const p1 = `The <strong>results</strong> of the Facilities Evaluation Report for the <strong>${office}</strong>, Iloilo State University of Fisheries Science and Technology – San Enrique Campus, with <strong>${respondents}</strong> respondent(s), show an <strong>${perfWord} performance</strong> in facility quality and service with an average satisfaction rate of <strong>${overallPct.toFixed(2)}%</strong>.
+    ${topDims.length ? `This indicates that the facility excels in ${topDims.join(", ")}, reflecting strong upkeep and service delivery.` : ""}`;
 
   const p2 = `<strong>Regarding specific evaluation dimensions</strong>,
-    ${highDims.length ? `${highDims.join(", ")} demonstrated excellent performance, indicating consistent cleanliness and proper maintenance standards.` : "the facility maintains satisfactory cleanliness levels."}
-    ${lowDims.length ? `Additionally, ${lowDims.join(", ")} scored slightly lower, indicating opportunities for improvement in these areas to enhance overall cleanliness and user satisfaction.` : "All dimensions performed at satisfactory levels or above."}`;
+    ${highDims.length ? `${highDims.join(", ")} demonstrated excellent performance, indicating consistent quality and proper maintenance standards.` : "the facility maintains satisfactory standards across the evaluated dimensions."}
+    ${lowDims.length ? `Additionally, ${lowDims.join(", ")} scored slightly lower, indicating opportunities for improvement in these areas to enhance overall facility quality and user satisfaction.` : "All dimensions performed at satisfactory levels or above."}`;
 
-  const p3 = `<strong>Overall</strong>, the facility continues to maintain <strong>${perfWord} cleanliness standards</strong>. Continued attention to maintenance protocols and regular evaluations will help sustain and improve these results. Any identified areas for improvement should be prioritized to ensure the highest standards of cleanliness and facility management.`;
+  const p3 = `<strong>Overall</strong>, the facility continues to maintain <strong>${perfWord} standards</strong>. Continued attention to maintenance protocols and regular evaluations will help sustain and improve these results. Any identified areas for improvement should be prioritized to ensure the highest standards of facility management and user satisfaction.`;
 
   return [p1, p2, p3];
 }
@@ -952,7 +974,7 @@ function createOfficialDocument(report) {
 
       <hr class="lh-divider">
 
-      <div class="official-title">Cleanliness Evaluation Report (CER)</div>
+      <div class="official-title">Facilities Evaluation Report (FER)</div>
 
       <div class="official-meta">
         <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
@@ -1041,7 +1063,7 @@ function generateReport() {
     return;
   }
 
-  // Calculate averages for each dimension (rating1 -> rating15)
+  // Calculate averages for each dimension (rating1 -> rating10)
   const dimensionAverages = [];
 
   DIMENSIONS.forEach(dim => {
@@ -1130,7 +1152,7 @@ window.exportPDF = async () => {
   pdf.addImage(img, "PNG", margin, margin, usableW, pdfH);
 
   const name = (currentReport?.office || "report").replace(/\s+/g, "_");
-  pdf.save(`CER_Report_${name}.pdf`);
+  pdf.save(`FER_Report_${name}.pdf`);
   
   document.getElementById("officialDocument").innerHTML = "";
 };

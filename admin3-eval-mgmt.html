@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CampusVoice – Evaluation Mgmt | Admin 2</title>
+<title>CampusVoice – Evaluation Mgmt | Admin 3</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-  /* --- Evaluation Management: Match Admin 1 Design --- */
+  /* --- Evaluation Management: Match Admin 1/2 Design --- */
 
   .card {
     background: #fff;
@@ -223,8 +223,16 @@
     font-size: 12px;
   }
 
-  .rating-q-cell {
+  .code-cell {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: #2563eb;
+  }
+
+  .rating-cell {
     text-align: center;
+    font-weight: 700;
+    color: #0f172a;
   }
 
   .empty-row td {
@@ -484,7 +492,7 @@
         <div class="submissions-filter-row">
           <div class="search-input-wrap">
             <span>🔍</span>
-            <input type="text" id="search-input" placeholder="Search by office or comments…">
+            <input type="text" id="search-input" placeholder="Search by office, code, or comments…">
           </div>
           <select class="office-filter-select" id="office-filter">
             <option value="">All Offices</option>
@@ -495,11 +503,23 @@
         <div class="table-wrap">
           <table class="submissions-table">
             <thead>
-              <tr id="submissions-thead-row">
-                <!-- #, Office, Q1..Q15, Comments, Status, Date, Action
-                     are built dynamically in JS so the number of rating
-                     columns (TOTAL_RATING_QUESTIONS) only needs to be
-                     changed in one place. -->
+              <tr>
+                <th>#</th>
+                <th>Office</th>
+                <th>Q1</th>
+                <th>Q2</th>
+                <th>Q3</th>
+                <th>Q4</th>
+                <th>Q5</th>
+                <th>Q6</th>
+                <th>Q7</th>
+                <th>Q8</th>
+                <th>Q9</th>
+                <th>Q10</th>
+                <th>Comments</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th id="action-col-header">Action</th>
               </tr>
             </thead>
             <tbody id="submissions-tbody"></tbody>
@@ -549,8 +569,6 @@ import {
   getFirestore,
   collection,
   onSnapshot,
-  query,
-  orderBy,
   doc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -559,6 +577,7 @@ import {
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
   projectId: "kristal-adb78",
   storageBucket: "kristal-adb78.firebasestorage.app",
   messagingSenderId: "1016283938031",
@@ -570,32 +589,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Build Sidebar & Topbar
-document.getElementById("sidebar-mount").innerHTML =
-  buildSidebar("admin2", "eval-mgmt");
+// Collection names (Firestore).
+// Evaluations + history match what FacilitiesEvalActivity.kt writes to
+// via firestore.collection("facility_evaluations") /
+// firestore.collection("evaluation_history").
+const EVAL_COLLECTION = "facility_evaluations";
+const HISTORY_COLLECTION = "evaluation_history";
+// Confirmed via Firestore console: the offices collection is named
+// "offices", with each document holding a "name" field (e.g. "Cashier").
+const OFFICE_COLLECTION = "offices";
 
-document.getElementById("topbar-mount").innerHTML =
-  buildTopbar("Evaluation Management", "admin2");
-
-// ======================
-// FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
-// ======================
-// Confirmed from the actual Firestore console: the offices collection
-// is named "office-names" (NOT "offices").
-const OFFICES_COLLECTION = "office-names";
-
-// Confirmed from the actual Firestore console: cleanliness_evaluations
-// documents store 15 rating fields (rating1 ... rating15), not just
-// rating1-4. Every place that needs to loop over the rating questions
-// (table headers, row cells, detail modal, CSV export) drives off this
-// constant so there's only one place to change if it's ever adjusted.
-const TOTAL_RATING_QUESTIONS = 15;
-
-// Evaluations with an average rating at or above this threshold (out of
-// 5, matching Admin 3's eval-mgmt page) are treated as positive feedback
-// and auto-classified as "No Action Required" instead of "Pending", so
-// admins only need to look at genuinely low-rated submissions in the
-// Pending tab. Adjust this single constant to tune the cutoff.
+// Evaluations with an average rating at or above this threshold (out of 5)
+// are treated as positive feedback and auto-classified as "No Action
+// Required" instead of "Pending", so admins only need to look at
+// genuinely low-rated submissions in the Pending tab. Adjust this single
+// constant to tune the cutoff.
 const LOW_RATING_THRESHOLD = 3;
 
 // Display labels/icons for each status value, used across the table,
@@ -606,14 +614,21 @@ const STATUS_META = {
   resolved: { label: "Resolved", icon: "✅" }
 };
 
+// Build Sidebar & Topbar
+document.getElementById("sidebar-mount").innerHTML =
+  buildSidebar("admin3", "eval-mgmt");
+
+document.getElementById("topbar-mount").innerHTML =
+  buildTopbar("Evaluation Management", "admin3");
+
 // ======================
 // STATE
 // ======================
-let evaluations = [];
-let offices = {};
+let evaluations = [];   // [{id, code, officeName, rating1..10, comments, date, status}]
+let offices = {};       // { officeKey: officeName }
 let searchTerm = "";
 let officeFilter = "";
-let currentTab = "recent";
+let currentTab = "recent"; // "recent" | "pending" | "no_action" | "resolved"
 let editingId = null;
 
 // ======================
@@ -628,112 +643,140 @@ function makeCode(officeName, id) {
   return `${prefix}-${suffix}`;
 }
 
-// Averages rating1 ... ratingN (out of 5) for one record.
-function evalAvg(record) {
-  let sum = 0;
-  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-    sum += record["rating" + i];
+// FacilitiesEvalActivity.kt stores "date" as a human-readable string
+// (e.g. "July 02, 2026 10:29 AM") rather than a numeric timestamp.
+// This converts it into a real millisecond timestamp so sorting,
+// display, and CSV export all work correctly. Falls back to a
+// numeric value if the field is ever stored that way instead.
+function parseEvalDate(ev) {
+  if (ev.date === undefined || ev.date === null || ev.date === "") return 0;
+
+  if (typeof ev.date === "number") return ev.date;
+
+  // Firestore Timestamp objects expose toMillis()
+  if (typeof ev.date === "object" && typeof ev.date.toMillis === "function") {
+    return ev.date.toMillis();
   }
-  return sum / TOTAL_RATING_QUESTIONS;
+
+  const asNumber = Number(ev.date);
+  if (!Number.isNaN(asNumber) && String(ev.date).trim() !== "") return asNumber;
+
+  const parsed = new Date(ev.date).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-// Normalizes whatever is stored under a record's status into "pending",
-// "no_action", or "resolved" (mirrors Admin 3's eval-mgmt page).
+// Normalizes whatever is stored under ev.status into "pending",
+// "no_action", or "resolved".
 //
-// Records with no status field at all — which today is every record the
-// app writes, since it never sets a status field on submit — are
-// auto-classified from their average rating instead of defaulting to
-// "pending":
-//   - avgRating < LOW_RATING_THRESHOLD  -> "pending"    (needs attention)
-//   - avgRating >= LOW_RATING_THRESHOLD -> "no_action"   (positive feedback)
+// Records that predate this feature (no status field) — which today is
+// every record the Kotlin app writes, since it never sets a status field
+// on submit — are auto-classified from their average rating instead of
+// defaulting to "pending":
+//   - avgRating < LOW_RATING_THRESHOLD  -> "pending"   (needs attention)
+//   - avgRating >= LOW_RATING_THRESHOLD -> "no_action"  (positive feedback)
 // Once an admin explicitly sets a status via the Edit modal, that saved
 // value is always respected and skips the auto-classification.
-function parseEvalStatus(data, avgRating) {
-  const stored = (data.status || "").toString().toLowerCase();
+function parseEvalStatus(ev, avgRating) {
+  const stored = (ev.status || "").toString().toLowerCase();
   if (stored === "resolved" || stored === "pending" || stored === "no_action") {
     return stored;
   }
   return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
 }
 
-// ======================
-// BUILD TABLE HEADER (# / Office / Q1..Q15 / Comments / Status / Date / Action)
-// ======================
-function renderTableHeader() {
-  const headRow = document.getElementById("submissions-thead-row");
+// Full text of the 10 questions on the Facilities Evaluation Form,
+// keyed by their rating field. Used in the View modal breakdown.
+const QUESTION_LABELS = {
+  rating1: "1. The needed equipment/resources are available.",
+  rating2: "2. The equipment/resources are working properly.",
+  rating3: "3. The facility has enough resources to meet users' needs.",
+  rating4: "4. The facility is clean and well-maintained.",
+  rating5: "5. The furniture (chairs, tables, etc.) is in good condition.",
+  rating6: "6. The facility is well-lit and properly ventilated.",
+  rating7: "7. The facility layout allows for comfortable movement.",
+  rating8: "8. The facility is free from safety hazards.",
+  rating9: "9. Air conditioning is excellent.",
+  rating10: "10. How satisfied are you with this facility?"
+};
 
-  let questionHeaders = "";
-  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-    questionHeaders += `<th>Q${i}</th>`;
-  }
-
-  headRow.innerHTML = `
-    <th>#</th>
-    <th>Office</th>
-    ${questionHeaders}
-    <th>Comments</th>
-    <th>Status</th>
-    <th>Date</th>
-    <th id="action-col-header">Action</th>
-  `;
+function evalAvg(ev) {
+  const ratings = [
+    ev.rating1, ev.rating2, ev.rating3, ev.rating4, ev.rating5,
+    ev.rating6, ev.rating7, ev.rating8, ev.rating9, ev.rating10
+  ];
+  return ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
 }
-renderTableHeader();
 
 // ======================
-// LOAD OFFICES
+// LOAD OFFICES -> office-names collection
 // ======================
-const officesCollectionRef = collection(db, OFFICES_COLLECTION);
+const officeCollRef = collection(db, OFFICE_COLLECTION);
 
-onSnapshot(officesCollectionRef, (snapshot) => {
+onSnapshot(officeCollRef, (snapshot) => {
   offices = {};
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    offices[doc.id] = data.name || data.officeName || doc.id;
+  snapshot.forEach((docSnap) => {
+    const val = docSnap.data();
+    offices[docSnap.id] = (val && val.name) ? val.name : docSnap.id;
   });
 
   populateOfficeFilter();
   renderSubmissions();
+}, (err) => {
+  console.error("Failed to load offices:", err);
 });
 
 // ======================
-// LOAD EVALUATIONS
+// LOAD FACILITY EVALUATIONS -> facility_evaluations collection
 // ======================
-const evalCollectionRef = collection(db, "cleanliness_evaluations");
-const evalQuery = query(evalCollectionRef, orderBy("timestamp", "desc"));
+const evalCollRef = collection(db, EVAL_COLLECTION);
 
-onSnapshot(evalQuery, (snapshot) => {
-  evaluations = [];
-  snapshot.forEach((doc) => {
-    const data = doc.data();
+onSnapshot(evalCollRef, (snapshot) => {
+  evaluations = snapshot.docs.map((docSnap) => {
+    const ev = docSnap.data();
+    const id = docSnap.id;
 
-    const record = {
-      id: doc.id,
-      officeName: data.officeName || "Unknown",
-      comments: data.comments || "",
-      timestamp: Number(data.timestamp) || 0
+    return {
+      id,
+      officeName: ev.officeName || "Unknown",
+      comments: ev.comments || "",
+      category: ev.category || "",
+      course: ev.course || "",
+      year: ev.year || "",
+      sex: ev.sex || "",
+      userCategory: ev.userCategory || "",
+      userId: ev.userId || "",
+      evidenceUrl: ev.evidenceUrl || "",
+      transactionCode: ev.transactionCode || "",
+      rawStatus: ev.status || "",
+      rating1: Number(ev.rating1) || 0,
+      rating2: Number(ev.rating2) || 0,
+      rating3: Number(ev.rating3) || 0,
+      rating4: Number(ev.rating4) || 0,
+      rating5: Number(ev.rating5) || 0,
+      rating6: Number(ev.rating6) || 0,
+      rating7: Number(ev.rating7) || 0,
+      rating8: Number(ev.rating8) || 0,
+      rating9: Number(ev.rating9) || 0,
+      rating10: Number(ev.rating10) || 0,
+      date: parseEvalDate(ev)
     };
-
-    // Pull rating1 ... rating15 (matches the actual documents in
-    // Firestore, which go up to rating15, not rating4).
-    for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-      record["rating" + i] = Number(data["rating" + i]) || 0;
-    }
-
-    record.avgRating = evalAvg(record);
-    record.status = parseEvalStatus(data, record.avgRating);
-
-    evaluations.push(record);
-  });
-
-  evaluations.forEach(ev => {
-    ev.code = makeCode(ev.officeName, ev.id);
+  }).map(ev => {
+    const avgRating = evalAvg(ev);
+    return {
+      ...ev,
+      code: makeCode(ev.officeName, ev.id),
+      avgRating,
+      status: parseEvalStatus({ status: ev.rawStatus }, avgRating)
+    };
   });
 
   renderSubmissions();
+}, (err) => {
+  console.error("Failed to load facility evaluations:", err);
 });
 
 // ======================
-// TABS
+// TABS WIRING
 // ======================
 document.getElementById("eval-tabs").addEventListener("click", (ev) => {
   const btn = ev.target.closest(".eval-tab");
@@ -766,26 +809,18 @@ function getFilteredSubmissions() {
     .filter(e => {
       if (!term) return true;
       return (
+        e.code.toLowerCase().includes(term) ||
         e.officeName.toLowerCase().includes(term) ||
         e.comments.toLowerCase().includes(term)
       );
     })
-    .sort((a, b) => b.timestamp - a.timestamp);
-}
-
-// Builds the Q1..Q15 <td> cells for one evaluation row.
-function ratingCellsHtml(e) {
-  let html = "";
-  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-    html += `<td class="rating-q-cell">${e["rating" + i]}</td>`;
-  }
-  return html;
+    .sort((a, b) => b.date - a.date);
 }
 
 function renderSubmissions() {
   const filtered = getFilteredSubmissions();
 
-  // Update stats
+  // Stat pills reflect the totals (unfiltered)
   document.getElementById("stat-total").textContent = evaluations.length;
   const distinctOffices = new Set(evaluations.map(e => e.officeName));
   document.getElementById("stat-offices").textContent = distinctOffices.size;
@@ -804,24 +839,22 @@ function renderSubmissions() {
 
   const tbody = document.getElementById("submissions-tbody");
   const showActionColumn = currentTab !== "recent";
-  const actionHeader = document.getElementById("action-col-header");
-  if (actionHeader) actionHeader.style.display = showActionColumn ? "" : "none";
-
-  // #, Office, Q1..Q15, Comments, Status, Date [, Action]
-  const colCount = 2 + TOTAL_RATING_QUESTIONS + 3 + (showActionColumn ? 1 : 0);
+  document.getElementById("action-col-header").style.display = showActionColumn ? "" : "none";
+  const colCount = showActionColumn ? 16 : 15;
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="${colCount}">No submissions found.</td></tr>`;
     return;
   }
 
-  // Edit is only available from the Pending and Resolved tabs — records
-  // under No Action Required only get a View button, matching Admin 3.
-  const showEditButton = showActionColumn && currentTab !== "no_action";
-
   tbody.innerHTML = filtered.map((e, i) => {
-    const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-";
+    const date = e.date ? new Date(e.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-";
     const meta = STATUS_META[e.status] || STATUS_META.pending;
+    const ratingCells = [
+      e.rating1, e.rating2, e.rating3, e.rating4, e.rating5,
+      e.rating6, e.rating7, e.rating8, e.rating9, e.rating10
+    ].map(r => `<td class="rating-cell">${r}</td>`).join("");
+    const showEditButton = showActionColumn && currentTab !== "no_action";
     const actionCell = showActionColumn ? `
         <td>
           <button class="btn-view" data-eval-id="${e.id}">View</button>
@@ -831,7 +864,7 @@ function renderSubmissions() {
       <tr>
         <td class="row-index">${i + 1}</td>
         <td>${e.officeName}</td>
-        ${ratingCellsHtml(e)}
+        ${ratingCells}
         <td>${e.comments || "-"}</td>
         <td><span class="status-badge ${e.status}">${meta.icon} ${meta.label}</span></td>
         <td>${date}</td>${actionCell}
@@ -848,7 +881,7 @@ function renderSubmissions() {
 }
 
 // ======================
-// SEARCH / FILTER
+// SEARCH / FILTER WIRING
 // ======================
 document.getElementById("search-input").addEventListener("input", (ev) => {
   searchTerm = ev.target.value;
@@ -886,24 +919,21 @@ document.getElementById("btn-export").addEventListener("click", () => {
     return;
   }
 
-  const questionHeaders = [];
-  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-    questionHeaders.push("Q" + i);
-  }
-
-  const header = ["#", "Office", ...questionHeaders, "Avg", "Comments", "Status", "Date"];
-
+  const header = [
+    "#", "Office", "Category", "Course", "Year", "Sex", "Respondent Type",
+    "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Avg",
+    "Comments", "Status", "Date"
+  ];
   const rows = filtered.map((e, i) => {
-    const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString() : "-";
+    const date = e.date ? new Date(e.date).toLocaleDateString() : "-";
     const comments = `"${(e.comments || "").replace(/"/g, '""')}"`;
     const status = (STATUS_META[e.status] || STATUS_META.pending).label;
-
-    const ratingValues = [];
-    for (let q = 1; q <= TOTAL_RATING_QUESTIONS; q++) {
-      ratingValues.push(e["rating" + q]);
-    }
-
-    return [i + 1, e.officeName, ...ratingValues, e.avgRating.toFixed(1), comments, status, date].join(",");
+    return [
+      i + 1, e.officeName, e.category, e.course, e.year, e.sex, e.userCategory,
+      e.rating1, e.rating2, e.rating3, e.rating4, e.rating5,
+      e.rating6, e.rating7, e.rating8, e.rating9, e.rating10,
+      e.avgRating.toFixed(1), comments, status, date
+    ].join(",");
   });
 
   const csvContent = [header.join(","), ...rows].join("\n");
@@ -912,7 +942,7 @@ document.getElementById("btn-export").addEventListener("click", () => {
 
   const link = document.createElement("a");
   link.href = url;
-  link.download = `cleanliness-submissions-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `facilities-submissions-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -929,16 +959,26 @@ function openDetailModal(evalId) {
   const e = evaluations.find(item => item.id === evalId);
   if (!e) return;
 
-  const date = e.timestamp ? new Date(e.timestamp).toLocaleString() : "-";
+  const date = e.date ? new Date(e.date).toLocaleString() : "-";
   const statusLabel = (STATUS_META[e.status] || STATUS_META.pending).label;
 
-  let questionRows = "";
-  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-    questionRows += `<div class="modal-row"><span>Q${i}</span><span>${e["rating" + i]}</span></div>`;
-  }
+  const questionRows = Object.entries(QUESTION_LABELS)
+    .map(([key, label]) => `<div class="modal-row"><span>${label}</span><span>${e[key]}</span></div>`)
+    .join("");
+
+  const optionalRows = [
+    e.category ? `<div class="modal-row"><span>Category</span><span>${e.category}</span></div>` : "",
+    e.userCategory ? `<div class="modal-row"><span>Respondent Type</span><span>${e.userCategory}</span></div>` : "",
+    e.course ? `<div class="modal-row"><span>Course</span><span>${e.course}</span></div>` : "",
+    e.year ? `<div class="modal-row"><span>Year Level</span><span>${e.year}</span></div>` : "",
+    e.sex ? `<div class="modal-row"><span>Sex</span><span>${e.sex}</span></div>` : "",
+    e.transactionCode ? `<div class="modal-row"><span>Transaction Code</span><span>${e.transactionCode}</span></div>` : "",
+    e.evidenceUrl ? `<div class="modal-row"><span>Evidence</span><span><a href="${e.evidenceUrl}" target="_blank" rel="noopener">View file</a></span></div>` : ""
+  ].join("");
 
   detailModalBody.innerHTML = `
     <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
+    ${optionalRows}
     <div class="modal-row"><span>Avg Rating</span><span>${e.avgRating.toFixed(1)} / 5</span></div>
     ${questionRows}
     <div class="modal-row"><span>Comments</span><span>${e.comments || "-"}</span></div>
@@ -968,11 +1008,7 @@ function openEditModal(evalId) {
   const e = evaluations.find(item => item.id === evalId);
   if (!e) return;
 
-  // Edit is not reachable from the No Action Required tab; guard here
-  // too in case this is ever called from elsewhere.
-  if (e.status === "no_action") return;
-
-  const date = e.timestamp ? new Date(e.timestamp).toLocaleString() : "-";
+  const date = e.date ? new Date(e.date).toLocaleString() : "-";
 
   editingId = evalId;
   editModalMeta.innerHTML = `
@@ -1006,9 +1042,23 @@ editSaveBtn.addEventListener("click", async () => {
   editSaveBtn.textContent = "Saving...";
 
   try {
-    await updateDoc(doc(db, "cleanliness_evaluations", editingId), {
+    // Update the primary record. Also mirror the status onto the
+    // evaluation_history copy the Kotlin app writes alongside it on
+    // submit, so both collections stay in sync. If a matching history
+    // doc doesn't exist (older records, or if you don't rely on that
+    // collection), this second update is swallowed silently.
+    await updateDoc(doc(db, EVAL_COLLECTION, editingId), {
       status: newStatus
     });
+
+    try {
+      await updateDoc(doc(db, HISTORY_COLLECTION, editingId), {
+        status: newStatus
+      });
+    } catch (historyErr) {
+      console.warn("No matching evaluation_history doc to update:", historyErr);
+    }
+
     editModal.classList.remove("open");
     editingId = null;
   } catch (err) {

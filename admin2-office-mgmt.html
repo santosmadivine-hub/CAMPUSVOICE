@@ -7,286 +7,318 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-  /* --- Office Management --- */
-  .office-mgmt-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:16px;
-  }
-  .office-mgmt-actions{
-    display:flex;
-    gap:10px;
+/* ── Office Management Page Styles ── */
+.office-section {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Row that holds the search box + Add Office button side by side */
+.search-add-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s;
+  box-sizing: border-box;
+  color: #1e293b;
+  flex: 1;
+  min-width: 0;
+}
+.search-input:focus { border-color: #0284c7; }
+.search-input::placeholder { color: #94a3b8; }
+
+/* Office table */
+.office-table-wrap {
+  max-height: 600px;
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+}
+.office-table-wrap::-webkit-scrollbar { width: 6px; }
+.office-table-wrap::-webkit-scrollbar-thumb { background: #7dd3fc; border-radius: 999px; }
+.office-table-wrap::-webkit-scrollbar-track { background: transparent; }
+
+.office-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.office-table th {
+  text-align: left;
+  padding: 14px 16px;
+  font-size: 11px;
+  color: #475569;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-bottom: 2px solid #bae6fd;
+  background: #f0f9ff;
+  position: sticky;
+  top: 0;
+  font-weight: 700;
+}
+
+.office-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f9ff;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.office-table tr:hover td {
+  background: #f0f9ff;
+}
+
+.rating-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.rating-track {
+  flex: 1;
+  height: 8px;
+  background: #bae6fd;
+  border-radius: 999px;
+  overflow: hidden;
+  min-width: 130px;
+}
+
+.rating-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg,#0284c7,#0ea5e9);
+  transition: width .6s ease;
+}
+
+.rating-number {
+  font-weight: 700;
+  color: #0c4a6e;
+  width: 34px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.eval-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 4px 10px;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 999px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  border: none;
+  padding: 7px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  transition: opacity .2s, transform .2s;
+}
+
+.action-btn:hover {
+  opacity: .85;
+  transform: translateY(-1px);
+}
+
+.view-btn {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.edit-btn {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.delete-btn {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.action-view { background: #dbeafe; color: #1e40af; }
+.action-edit { background: #fef3c7; color: #92400e; }
+.action-delete { background: #fee2e2; color: #991b1b; }
+
+.primary-btn {
+  border: none;
+  background: #0284c7;
+  color: white;
+  padding: 11px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  box-shadow: 0 4px 14px rgba(2,132,199,.3);
+  transition: background .2s, transform .2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.primary-btn:hover {
+  background: #0369a1;
+  transform: translateY(-1px);
+}
+
+.no-results {
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.stat-card-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.stat-card-mini {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+  text-align: center;
+}
+
+.stat-card-mini-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.stat-card-mini-value {
+  font-size: 28px;
+  font-weight: 800;
+  font-family: 'Syne', sans-serif;
+  color: #0c4a6e;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+}
+
+.office-name-cell {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.evals-cell {
+  text-align: center;
+}
+
+.actions-cell {
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .search-add-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .btn-dark, .btn-primary{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    border:none;
-    cursor:pointer;
-    font-family:'Syne',sans-serif;
-    font-weight:700;
-    font-size:14px;
-    padding:11px 18px;
-    border-radius:12px;
-    transition:transform .15s ease, opacity .15s ease;
-  }
-  .btn-dark{ background:#0f1b32; color:#e2e8f0; }
-  .btn-primary{ background:#2563eb; color:#ffffff; }
-  .btn-dark:hover, .btn-primary:hover{ transform:translateY(-1px); opacity:0.92; }
-
-  .summary-card{
-    background:#ffffff;
-    border:1px solid rgba(2,132,199,0.25);
-    border-radius:10px;
-    padding:10px 14px;
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    flex-shrink:0;
-  }
-  .summary-card.card-primary{
-    background:#e0f2fe;
-    border-color:rgba(2,132,199,0.3);
-  }
-  .summary-card.card-warning{
-    background:#fed7aa;
-    border-color:rgba(217,119,6,0.3);
-  }
-  .summary-card.card-success{
-    background:#dcfce7;
-    border-color:rgba(22,163,74,0.3);
-  }
-  .summary-icon{
-    font-size:18px;
-    flex-shrink:0;
-  }
-  .summary-content{
-    display:flex;
-    flex-direction:column;
-    gap:0;
-  }
-  .summary-label{
-    font-family:'DM Sans',sans-serif;
-    font-size:11px;
-    font-weight:600;
-    letter-spacing:0.04em;
-    text-transform:uppercase;
-    color:#64748b;
-    line-height:1;
-  }
-  .summary-value{
-    font-family:'Syne',sans-serif;
-    font-size:18px;
-    font-weight:700;
-    color:#0f1b32;
-    line-height:1.2;
-  }
- 
-  .summary-cards-container{
-    display:flex;
-    gap:12px;
-    margin-bottom:20px;
-    flex-wrap:wrap;
+  .search-add-row .primary-btn {
+    width: 100%;
   }
 
-  /* ---------- Table ---------- */
-  .office-table-wrap{
-    margin-top:18px;
+  .stat-card-row {
+    grid-template-columns: 1fr;
   }
 
-  .office-search-input{
-    width:100%;
-    padding:11px 14px;
-    border:1px solid rgba(148,163,184,0.3);
-    border-radius:12px;
-    font-family:'DM Sans',sans-serif;
-    font-size:14px;
-    margin-bottom:14px;
-    outline:none;
-    transition:border-color .2s;
-    box-sizing:border-box;
-    background:#ffffff;
-  }
-  .office-search-input:focus{ border-color:#2563eb; }
-
-  .office-table-scroll{
-    max-height:440px;
-    overflow-y:auto;
-    overflow-x:auto;
-    border:1px solid rgba(148,163,184,0.16);
-    border-radius:14px;
-  }
-  .office-table-scroll::-webkit-scrollbar{ width:6px; height:6px; }
-  .office-table-scroll::-webkit-scrollbar-thumb{ background:#bfdbfe; border-radius:999px; }
-  .office-table-scroll::-webkit-scrollbar-track{ background:transparent; }
-
-  .office-table{
-    width:100%;
-    min-width:620px;
-    border-collapse:separate;
-    border-spacing:0;
+  .rating-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
-  .office-table thead th{
-    text-align:left;
-    font-family:'DM Sans',sans-serif;
-    font-size:11px;
-    font-weight:600;
-    letter-spacing:0.06em;
-    text-transform:uppercase;
-    color:#64748b;
-    padding:14px 16px;
-    border-bottom:1px solid rgba(148,163,184,0.2);
-    background:#f8fafc;
-    position:sticky;
-    top:0;
-    z-index:1;
-    white-space:nowrap;
+  .action-buttons {
+    flex-direction: column;
   }
-  .office-table thead th:first-child{ border-top-left-radius:14px; }
-  .office-table thead th:last-child{ border-top-right-radius:14px; }
-  .office-table thead th.col-ratio{ min-width:220px; }
-  .office-table thead th.col-evals{ text-align:center; width:150px; }
-  .office-table thead th.col-actions{ text-align:right; width:230px; }
 
-  .office-table tbody td{
-    padding:14px 16px;
-    border-bottom:1px solid rgba(148,163,184,0.12);
-    font-family:'DM Sans',sans-serif;
-    font-size:14px;
-    color:#334155;
-    vertical-align:middle;
+  .action-btn {
+    width: 100%;
+    text-align: center;
   }
-  .office-table tbody tr{ transition:background-color .15s ease; }
-  .office-table tbody tr:hover{ background:#f8fafc; }
-  .office-table tbody tr:hover td{ border-bottom-color:rgba(148,163,184,0.2); }
-  .office-table tbody tr:last-child td{ border-bottom:none; }
 
-  .office-name-cell{
-    font-family:'Syne',sans-serif;
-    font-weight:700;
-    color:#0f1b32;
-    white-space:normal;
+  .office-table-wrap {
+    max-height: 400px;
   }
-  .rating-cell{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    min-width:200px;
-  }
-  .rating-track{
-    flex:1;
-    height:8px;
-    background:#dbeafe;
-    border-radius:999px;
-    overflow:hidden;
-    min-width:110px;
-  }
-  .rating-fill{
-    height:100%;
-    border-radius:999px;
-    background:linear-gradient(90deg,#2563eb,#60a5fa);
-    transition:width .6s ease;
-  }
-  .rating-number{
-    font-family:'Syne',sans-serif;
-    font-weight:700;
-    color:#1e40af;
-    width:30px;
-    flex-shrink:0;
-    text-align:right;
-  }
-  .evals-cell{
-    text-align:center;
-    font-weight:600;
-    color:#0f1b32;
-  }
-  .actions-cell{
-    text-align:right;
-    white-space:nowrap;
-  }
-  .office-empty-row td{
-    text-align:center;
-    color:#94a3b8;
-    padding:32px 0;
-    font-family:'DM Sans',sans-serif;
-    font-size:14px;
-  }
-  .action-btn{
-    display:inline-flex;
-    align-items:center;
-    gap:5px;
-    border:none;
-    cursor:pointer;
-    font-family:'DM Sans',sans-serif;
-    font-weight:600;
-    font-size:13px;
-    padding:7px 13px;
-    border-radius:8px;
-    transition:background-color .15s ease, transform .15s ease;
-  }
-  .actions-cell .action-btn + .action-btn{ margin-left:8px; }
-  .action-view{ background:#e0f2fe; color:#0369a1; }
-  .action-edit{ background:#fef3c7; color:#92400e; }
-  .action-delete{ background:#fee2e2; color:#b91c1c; }
-  .action-view:hover{ background:#bae6fd; }
-  .action-edit:hover{ background:#fde68a; }
-  .action-delete:hover{ background:#fecaca; }
-  .action-btn:active{ transform:scale(0.97); }
+}
 </style>
 </head>
 <body>
 <div class="layout">
   <div id="sidebar-mount"></div>
+
   <main class="main fade-in">
     <div id="topbar-mount"></div>
 
-    <!-- SUMMARY CARDS -->
-    <div class="summary-cards-container">
-      <div class="summary-card card-primary">
-        <div class="summary-icon">🏢</div>
-        <div class="summary-content">
-          <div class="summary-label">Offices</div>
-          <div class="summary-value" id="summary-total-offices-count">1</div>
+    <div class="office-section">
+      <!-- Stats Row -->
+      <div class="stat-card-row">
+        <div class="stat-card-mini">
+          <div class="stat-card-mini-label">Total Offices</div>
+          <div class="stat-card-mini-value" id="totalOffices">0</div>
+        </div>
+        <div class="stat-card-mini">
+          <div class="stat-card-mini-label">Avg Rating</div>
+          <div class="stat-card-mini-value" id="avgRating">0.0</div>
+        </div>
+        <div class="stat-card-mini">
+          <div class="stat-card-mini-label">Total Evaluations</div>
+          <div class="stat-card-mini-value" id="totalEvals">0</div>
         </div>
       </div>
-      <div class="summary-card card-warning">
-        <div class="summary-icon">⏳</div>
-        <div class="summary-content">
-          <div class="summary-label">Avg Rating</div>
-          <div class="summary-value" id="summary-avg-rating">1</div>
-        </div>
-      </div>
-      <div class="summary-card card-success">
-        <div class="summary-icon">✅</div>
-        <div class="summary-content">
-          <div class="summary-label">Evaluations</div>
-          <div class="summary-value" id="summary-total-evals">0</div>
-        </div>
-      </div>
-    </div>
 
-    <!-- OFFICE MANAGEMENT -->
-    <div class="card">
-      <div class="office-mgmt-row">
-        <div class="card-title">Office Management <span class="card-sub">— Manage campus offices</span></div>
-        <div class="office-mgmt-actions">
-          <button class="btn-primary" id="btn-add-office">+ Add Office</button>
+      <!-- Main Card -->
+      <div class="card">
+        <!-- Search box + Add Office button, side by side -->
+        <div class="search-add-row">
+          <input type="text" id="office-search-input" class="search-input" placeholder="🔍 Search offices by name...">
+          <button id="btn-add-office" class="primary-btn">+ Add Office</button>
         </div>
-      </div>
-      <div class="office-table-wrap" id="office-table-wrap">
-        <input type="text" id="office-search-input" class="office-search-input" placeholder="🔍 Search offices...">
-        <div class="office-table-scroll">
+
+        <div class="office-table-wrap">
           <table class="office-table">
             <thead>
               <tr>
-                <th>Office</th>
-                <th class="col-ratio">Avg Rating</th>
-                <th class="col-evals">Total Evaluations</th>
-                <th class="col-actions">Actions</th>
+                <th>Office Name</th>
+                <th>Avg Rating</th>
+                <th>Total Evaluations</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="office-table-body"></tbody>
@@ -294,29 +326,28 @@
         </div>
       </div>
     </div>
-
   </main>
 </div>
 
 <script src="shared.js"></script>
-
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getDatabase,
-  ref,
-  onValue,
-  push,
-  set,
-  remove
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  getFirestore,
+  collection,
+  onSnapshot,
+  query,
+  orderBy,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
-  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
   projectId: "kristal-adb78",
   storageBucket: "kristal-adb78.firebasestorage.app",
   messagingSenderId: "1016283938031",
@@ -326,97 +357,98 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const db = getFirestore(app);
 
 // Build UI
-document.getElementById("sidebar-mount").innerHTML =
-buildSidebar("admin2", "office-mgmt");
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin2", "office-mgmt");
+document.getElementById("topbar-mount").innerHTML = buildTopbar("Office Management", "admin2");
 
-document.getElementById("topbar-mount").innerHTML =
-buildTopbar("Office Management", "admin2");
+const OFFICES_COLLECTION = "office-names";
+const TOTAL_RATING_QUESTIONS = 15;
 
-// ======================
-// STATE
-// ======================
 let evaluations = [];
-let offices = {};       // { officeKey: officeName }
+let offices = {};
 
-// Normalize a name for matching purposes: trims whitespace and lowercases,
-// so "Registrar", " registrar ", and "REGISTRAR" are all treated as the same
-// office when linking evaluations back to the office list.
 function normalizeName(name) {
   return (name || "").toString().trim().toLowerCase();
 }
 
 function avgOf(ev) {
-  return (ev.rating1 + ev.rating2 + ev.rating3 + ev.rating4) / 4;
+  let sum = 0;
+  let count = 0;
+
+  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
+    const val = ev["rating" + i];
+    if (typeof val === "number" && !isNaN(val)) {
+      sum += val;
+      count++;
+    }
+  }
+
+  return count > 0 ? sum / count : 0;
 }
 
-// Builds { normalizedName: { displayName, total, sum } } by matching each
-// evaluation's officeName to an office in the current office list, using a
-// normalized (trimmed + lowercased) comparison so minor case/whitespace
-// differences between how the office was named and how evaluations record
-// it don't silently drop the evaluation from the average.
 function buildOfficeStats() {
   const statsByKey = {};
 
-  Object.values(offices).forEach(name => {
-    const key = normalizeName(name);
-    statsByKey[key] = { displayName: name, total: 0, sum: 0 };
+  Object.entries(offices).forEach(([key, office]) => {
+    statsByKey[key] = { displayName: office.name, total: 0, sum: 0 };
   });
 
   evaluations.forEach(e => {
-    const key = normalizeName(e.officeName);
-    if (!statsByKey[key]) return; // evaluation doesn't match any known office
-    statsByKey[key].total += 1;
-    statsByKey[key].sum += avgOf(e);
+    const matchingOfficeKey = Object.entries(offices).find(([_, office]) => 
+      normalizeName(office.name) === normalizeName(e.officeName)
+    )?.[0];
+    
+    if (matchingOfficeKey) {
+      statsByKey[matchingOfficeKey].total += 1;
+      statsByKey[matchingOfficeKey].sum += avgOf(e);
+    }
   });
 
   return statsByKey;
 }
 
-// ======================
-// LOAD OFFICE LIST -> cleanliness/office
-// ======================
-const officeRef = ref(db, "cleanliness/office");
+const officesCollectionRef = collection(db, OFFICES_COLLECTION);
+const officesQuery = query(officesCollectionRef, orderBy("name", "asc"));
 
-onValue(officeRef, (snapshot) => {
-  const data = snapshot.val() || {};
-
+onSnapshot(officesQuery, (snapshot) => {
   offices = {};
-  Object.entries(data).forEach(([key, val]) => {
-    offices[key] = (val && val.name) ? val.name : key;
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    offices[doc.id] = {
+      id: doc.id,
+      name: data.name || data.officeName || doc.id
+    };
   });
 
   renderOfficeTable();
 });
 
-// ======================
-// LOAD CLEANLINESS EVALUATIONS -> cleanliness/cleanlinessevaluation
-// ======================
-const evalRef = ref(db, "cleanliness/cleanlinessevaluation");
+const evalCollectionRef = collection(db, "cleanliness_evaluations");
 
-onValue(evalRef, (snapshot) => {
-  const data = snapshot.val() || {};
+onSnapshot(evalCollectionRef, (snapshot) => {
+  evaluations = [];
+  snapshot.forEach((doc) => {
+    const data = doc.data();
 
-  evaluations = Object.entries(data).map(([id, ev]) => ({
-    id,
-    officeName: ev.officeName || "Unknown",
-    comments: ev.comments || "",
-    rating1: Number(ev.rating1) || 0,
-    rating2: Number(ev.rating2) || 0,
-    rating3: Number(ev.rating3) || 0,
-    rating4: Number(ev.rating4) || 0,
-    timestamp: Number(ev.timestamp) || 0
-  }));
+    const record = {
+      id: doc.id,
+      officeName: data.officeName || "Unknown",
+      comments: data.comments || "",
+      timestamp: Number(data.timestamp) || 0
+    };
+
+    for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
+      record["rating" + i] = Number(data["rating" + i]) || 0;
+    }
+
+    evaluations.push(record);
+  });
 
   renderOfficeTable();
 });
 
-// ======================
-// OFFICE MANAGEMENT (inline table)
-// ======================
-const officeTableWrap = document.getElementById("office-table-wrap");
 const officeTableBody = document.getElementById("office-table-body");
 const officeSearchInput = document.getElementById("office-search-input");
 
@@ -443,22 +475,22 @@ function updateSummary() {
   
   const overallAvg = totalEvals > 0 ? totalSum / totalEvals : 0;
 
-  document.getElementById("summary-total-offices-count").textContent = totalOffices;
-  document.getElementById("summary-avg-rating").textContent = overallAvg.toFixed(1);
-  document.getElementById("summary-total-evals").textContent = totalEvals;
+  document.getElementById("totalOffices").textContent = totalOffices;
+  document.getElementById("avgRating").textContent = overallAvg.toFixed(1);
+  document.getElementById("totalEvals").textContent = totalEvals;
 }
 
 function renderOfficeTable() {
   updateSummary();
   
   const keys = Object.keys(offices).sort((a, b) =>
-  offices[a].localeCompare(offices[b], undefined, {
-    sensitivity: "base"
-  })
-);
+    offices[a].name.localeCompare(offices[b].name, undefined, {
+      sensitivity: "base"
+    })
+  );
 
   if (keys.length === 0) {
-    officeTableBody.innerHTML = `<tr class="office-empty-row"><td colspan="4">No offices added yet.</td></tr>`;
+    officeTableBody.innerHTML = `<tr><td colspan="4" class="no-results">No offices added yet.</td></tr>`;
     return;
   }
 
@@ -466,34 +498,37 @@ function renderOfficeTable() {
 
   let filteredKeys = keys;
   if (officeSearchTerm) {
-    filteredKeys = keys.filter(key => offices[key].toLowerCase().includes(officeSearchTerm));
+    filteredKeys = keys.filter(key => offices[key].name.toLowerCase().includes(officeSearchTerm));
   }
 
   if (filteredKeys.length === 0) {
-    officeTableBody.innerHTML = `<tr class="office-empty-row"><td colspan="4">No offices match your search.</td></tr>`;
+    officeTableBody.innerHTML = `<tr><td colspan="4" class="no-results">No offices match your search.</td></tr>`;
     return;
   }
 
   officeTableBody.innerHTML = filteredKeys.map(key => {
-    const name = offices[key];
-    const stats = statsByKey[normalizeName(name)] || { total: 0, sum: 0 };
+    const office = offices[key];
+    const name = office.name;
+    const stats = statsByKey[key] || { total: 0, sum: 0 };
     const avg = stats.total > 0 ? stats.sum / stats.total : 0;
-    const pct = (avg / 5) * 100;
+    const ratingPercent = (avg / 5) * 100;
 
     return `
       <tr>
-        <td class="office-name-cell">${name}</td>
+        <td class="office-name-cell"><strong>${name}</strong></td>
         <td>
           <div class="rating-cell">
-            <div class="rating-track"><div class="rating-fill" style="width:${pct}%"></div></div>
+            <div class="rating-track"><div class="rating-fill" style="width:${ratingPercent}%"></div></div>
             <span class="rating-number">${avg.toFixed(1)}</span>
           </div>
         </td>
-        <td class="evals-cell">${stats.total}</td>
+        <td class="evals-cell"><span class="eval-count">${stats.total}</span></td>
         <td class="actions-cell">
-          <button class="action-btn action-view" data-office-key="${key}" data-action="view">👁️ View</button>
-          <button class="action-btn action-edit" data-office-key="${key}" data-action="edit">✏️ Edit</button>
-          <button class="action-btn action-delete" data-office-key="${key}" data-action="delete">🗑️ Delete</button>
+          <div class="action-buttons">
+            <button class="action-btn action-view" data-office-key="${key}" data-action="view">👁 View</button>
+            <button class="action-btn action-edit" data-office-key="${key}" data-action="edit">✏ Edit</button>
+            <button class="action-btn action-delete" data-office-key="${key}" data-action="delete">🗑 Delete</button>
+          </div>
         </td>
       </tr>
     `;
@@ -510,50 +545,55 @@ function renderOfficeTable() {
   });
 }
 
-function viewOfficeAnalytics(key) {
-  const name = offices[key] || "";
-  const url = `office-analytics.html?office=${encodeURIComponent(key)}&name=${encodeURIComponent(name)}`;
+window.viewOfficeAnalytics = function(key) {
+  const office = offices[key];
+  const name = office.name || "";
+  const url = `admin2-office-analytics.html?office=${encodeURIComponent(key)}&name=${encodeURIComponent(name)}`;
   window.location.href = url;
-}
+};
 
-async function editOffice(key) {
-  const currentName = offices[key] || "";
+window.editOffice = async function(key) {
+  const office = offices[key];
+  const currentName = office.name || "";
   const newName = prompt("Edit office name:", currentName);
   if (newName === null) return;
   const trimmed = newName.trim();
   if (!trimmed || trimmed === currentName) return;
 
   try {
-    await set(ref(db, `cleanliness/office/${key}`), { name: trimmed });
+    await updateDoc(doc(db, OFFICES_COLLECTION, key), { name: trimmed });
+    alert("✓ Office updated successfully!");
   } catch (err) {
     alert("Couldn't update office: " + err.message);
   }
-}
+};
 
-async function deleteOffice(key) {
-  const name = offices[key] || "this office";
+window.deleteOffice = async function(key) {
+  const office = offices[key];
+  const name = office.name || "this office";
   if (!confirm(`Remove "${name}" from the office list?`)) return;
 
   try {
-    await remove(ref(db, `cleanliness/office/${key}`));
+    await deleteDoc(doc(db, OFFICES_COLLECTION, key));
+    alert("✓ Office deleted successfully!");
   } catch (err) {
     alert("Couldn't remove office: " + err.message);
   }
-}
+};
 
-async function addOffice() {
+window.addOffice = async function() {
   const name = prompt("New office name (e.g. Registrar):");
   if (name === null) return;
   const trimmed = name.trim();
   if (!trimmed) return;
 
   try {
-    const newRef = push(ref(db, "cleanliness/office"));
-    await set(newRef, { name: trimmed });
+    await addDoc(collection(db, OFFICES_COLLECTION), { name: trimmed });
+    alert("✓ Office added successfully!");
   } catch (err) {
     alert("Couldn't add office: " + err.message);
   }
-}
+};
 
 document.getElementById("btn-add-office").addEventListener("click", addOffice);
 

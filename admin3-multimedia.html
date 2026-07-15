@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Multimedia Feedback | Admin 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+      <div style="font-size:0.85rem;color:var(--muted)">User-submitted photos and videos as evaluation evidence</div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost btn-sm">Filter by Office</button>
+        <button class="btn btn-ghost btn-sm">Filter by Date</button>
+      </div>
+    </div>
+
+    <div class="media-grid">
+      <div class="media-thumb"><div class="icon">🖼️</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Comfort Room 1</div><div class="media-tag">Image</div></div>
+      <div class="media-thumb"><div class="icon">🎥</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Gymnasium Roof</div><div class="media-tag">Video</div></div>
+      <div class="media-thumb"><div class="icon">🖼️</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Canteen Area</div><div class="media-tag">Image</div></div>
+      <div class="media-thumb"><div class="icon">🖼️</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Library Entrance</div><div class="media-tag">Image</div></div>
+      <div class="media-thumb"><div class="icon">🎥</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Hallway Flood</div><div class="media-tag">Video</div></div>
+      <div class="media-thumb"><div class="icon">🖼️</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Lab Equipment</div><div class="media-tag">Image</div></div>
+      <div class="media-thumb"><div class="icon">🖼️</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Parking Lot</div><div class="media-tag">Image</div></div>
+      <div class="media-thumb"><div class="icon">🎥</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Classroom Damage</div><div class="media-tag">Video</div></div>
+    </div>
+
+    <div style="margin-top:20px;font-size:0.78rem;color:var(--muted);">
+      File limits: Images (.png, .jpg, .jpeg) max 10 MB &nbsp;·&nbsp; Videos max 60 MB &nbsp;·&nbsp; Comments: 1–300 words
+    </div>
+  </main>
+</div>
+<script src="shared.js"></script>
+<script>
+  document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin3', 'multimedia');
+  document.getElementById('topbar-mount').innerHTML = buildTopbar('Multimedia Feedback', 'admin3');
+</script>
+</body>
+</html>
