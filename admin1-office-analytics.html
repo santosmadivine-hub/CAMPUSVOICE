@@ -566,6 +566,7 @@ import {
   doc,
   getDoc,
   collection,
+  collectionGroup,
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -735,20 +736,27 @@ async function main() {
   let officeCodes = [];
 
   try {
-    const officeNameSnap = await getDocs(collection(db, "services", "transaction_code", "office_name"));
+    // FIX: previously this listed documents directly under
+    // "transaction_code/office_name" and matched one by ID. That fails
+    // for any office whose parent doc was never explicitly written
+    // (only its "codes" subcollection was) — Firestore treats such a
+    // doc as existing only implicitly, and it will NOT show up in a
+    // query against its parent collection, even though its
+    // subcollection is fully readable. That's exactly what was
+    // happening for Cashier.
+    //
+    // Querying the "codes" collectionGroup directly sidesteps this
+    // entirely — it reads the subcollection docs themselves, regardless
+    // of whether their parent office_name/{office} document has any
+    // data of its own. This is unfiltered (no where()), so it does not
+    // require a Firestore index, same as the plain collectionGroup
+    // listing already used successfully on the Generate Code page.
     const targetKey = normalizeName(officeName);
+    const allCodesSnap = await getDocs(collectionGroup(db, "codes"));
 
-    let matchedOfficeDocId = null;
-    officeNameSnap.forEach(d => {
-      if (normalizeName(d.id) === targetKey) matchedOfficeDocId = d.id;
-    });
-
-    if (matchedOfficeDocId) {
-      const codesSnap = await getDocs(
-        collection(db, "services", "transaction_code", "office_name", matchedOfficeDocId, "codes")
-      );
-      officeCodes = codesSnap.docs.map(d => d.data());
-    }
+    officeCodes = allCodesSnap.docs
+      .filter(d => normalizeName(d.ref.parent.parent?.id) === targetKey)
+      .map(d => d.data());
   } catch (err) {
     console.error("Couldn't load transaction codes:", err);
   }
