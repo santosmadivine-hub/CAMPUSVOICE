@@ -6,40 +6,282 @@
 <title>CampusVoice – Settings | Admin 2</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
+<style>
+  .settings-grid { display: grid; gap: 24px; max-width: 800px; }
+  .settings-section { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 24px; }
+  .settings-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 20px; }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-size: 14px; font-weight: 600; color: #0f172a; }
+  .settings-desc { font-size: 12px; color: #64748b; margin-top: 4px; }
+  .input-field { padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif; color: #0f172a; outline: none; min-width: 240px; }
+  .input-field:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+  .btn { padding: 10px 16px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #2563eb; color: white; }
+  .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn-sm { padding: 8px 14px; font-size: 13px; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 9999; }
+  .toast.show { opacity: 1; }
+  .loading { display: none; font-size: 12px; color: #64748b; }
+  .loading.show { display: inline; }
+  .settings-hint { font-size: 12px; color: #94a3b8; margin-top: 8px; }
+</style>
 </head>
 <body>
 <div class="layout">
   <div id="sidebar-mount"></div>
   <main class="main fade-in">
     <div id="topbar-mount"></div>
-
     <div class="settings-grid">
-      <!-- Account -->
+      <!-- ACCOUNT -->
       <div class="settings-section">
         <div class="settings-title">👤 Account Information</div>
         <div class="settings-row">
-          <div><div class="settings-label">Full Name</div><div class="settings-desc">Display name in the system</div></div>
-          <input class="input-field" value="Administrator 2">
+          <div>
+            <div class="settings-label">Full Name</div>
+            <div class="settings-desc">Display name in the system</div>
+          </div>
+          <input id="fullName" class="input-field" placeholder="Enter full name">
         </div>
         <div class="settings-row">
-          <div><div class="settings-label">Email Address</div></div>
-          <input class="input-field" value="admin2@isufst.edu.ph">
-        </div>
-        <div class="settings-row">
-          <div><div class="settings-label">Role</div></div>
-          <span class="badge badge-purple">Admin 2 – Cleanliness</span>
+          <div>
+            <div class="settings-label">Email</div>
+            <div class="settings-desc">Contact email address</div>
+          </div>
+          <input id="email" class="input-field" placeholder="Enter email">
         </div>
         <div style="margin-top:16px;">
-          <button class="btn btn-purple btn-sm" onclick="alert('Profile saved!')">Save Changes</button>
+          <button class="btn btn-primary btn-sm" onclick="saveAccount()">
+            <span id="saveText">Save Changes</span>
+            <span id="saveLoading" class="loading">Saving...</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- LOGIN & SECURITY -->
+      <div class="settings-section">
+        <div class="settings-title">🔒 Login &amp; Security</div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Username</div>
+            <div class="settings-desc">Used to sign in to CampusVoice</div>
+          </div>
+          <input id="username" class="input-field" placeholder="Enter username">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Current Password</div>
+            <div class="settings-desc">Required to confirm any change below</div>
+          </div>
+          <input id="currentPassword" type="password" class="input-field" placeholder="Current password" autocomplete="current-password">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">New Password</div>
+            <div class="settings-desc">Leave blank to keep current password</div>
+          </div>
+          <input id="newPassword" type="password" class="input-field" placeholder="New password" autocomplete="new-password">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Confirm New Password</div>
+          </div>
+          <input id="confirmPassword" type="password" class="input-field" placeholder="Confirm new password" autocomplete="new-password">
+        </div>
+        <div>
+          <button class="btn btn-primary btn-sm" id="securityBtn" onclick="saveSecurity()">
+            <span id="securityText">Update Login &amp; Security</span>
+            <span id="securityLoading" class="loading">Saving...</span>
+          </button>
+          <div class="settings-hint">Changing your username or password takes effect immediately on the login page.</div>
         </div>
       </div>
     </div>
   </main>
 </div>
+
+<div class="toast" id="toast"></div>
+
 <script src="shared.js"></script>
-<script>
-  document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin2', 'settings');
-  document.getElementById('topbar-mount').innerHTML = buildTopbar('Settings', 'admin2');
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  onSnapshot,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ── Firebase config (SAME AS OTHER PAGES) ── */
+const firebaseConfig = {
+  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId: "kristal-adb78",
+  storageBucket: "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId: "G-LK8D1CBQ2J"
+};
+
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getFirestore(app);
+
+/* ── Mount shared UI ── */
+document.getElementById('sidebar-mount').innerHTML =
+  buildSidebar('admin2','settings');
+document.getElementById('topbar-mount').innerHTML =
+  buildTopbar('Settings','admin2');
+
+/* ── Toast notification ── */
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+/* ── Defaults, used only if Firestore has no doc yet ── */
+const adminId = 'admin2';  // Current admin user
+const DEFAULT_USERNAME = 'admin2';
+const DEFAULT_PASSWORD = 'admin456';
+const settingsRef = doc(db, 'admin_settings', adminId);
+
+/* ── LOAD SETTINGS FROM FIRESTORE ── */
+onSnapshot(settingsRef, (docSnap) => {
+  const data = docSnap.exists() ? docSnap.data() : {};
+  document.getElementById('fullName').value = data.fullName || '';
+  document.getElementById('email').value = data.email || '';
+  document.getElementById('username').value = data.username || DEFAULT_USERNAME;
+}, (error) => {
+  console.error('Error loading settings:', error);
+  showToast('❌ Error loading settings');
+});
+
+/* ── SAVE ACCOUNT (name/email) TO FIRESTORE ── */
+window.saveAccount = async () => {
+  const fullName = document.getElementById('fullName').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const saveText = document.getElementById('saveText');
+  const saveLoading = document.getElementById('saveLoading');
+
+  if (!fullName || !email) {
+    showToast('❌ Please fill in all fields');
+    return;
+  }
+
+  saveText.style.display = 'none';
+  saveLoading.classList.add('show');
+
+  try {
+    await updateDoc(settingsRef, {
+      fullName: fullName,
+      email: email,
+      lastUpdated: new Date().toISOString()
+    }).catch(async (error) => {
+      if (error.code === 'not-found') {
+        await setDoc(settingsRef, {
+          adminId: adminId,
+          fullName: fullName,
+          email: email,
+          createdAt: new Date().toISOString(),
+          lastUpdated: new Date().toISOString()
+        });
+      } else {
+        throw error;
+      }
+    });
+
+    showToast('✅ Settings saved successfully!');
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    showToast('❌ Error saving settings: ' + error.message);
+  } finally {
+    saveLoading.classList.remove('show');
+    saveText.style.display = 'inline';
+  }
+};
+
+/* ── SAVE USERNAME / PASSWORD TO FIRESTORE ── */
+window.saveSecurity = async () => {
+  const username = document.getElementById('username').value.trim();
+  const currentPassword = document.getElementById('currentPassword').value;
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const btn = document.getElementById('securityBtn');
+  const securityText = document.getElementById('securityText');
+  const securityLoading = document.getElementById('securityLoading');
+
+  if (!username) {
+    showToast('❌ Username cannot be empty');
+    return;
+  }
+  if (!currentPassword) {
+    showToast('❌ Enter your current password to confirm changes');
+    return;
+  }
+  if (newPassword && newPassword !== confirmPassword) {
+    showToast('❌ New passwords do not match');
+    return;
+  }
+
+  btn.disabled = true;
+  securityText.style.display = 'none';
+  securityLoading.classList.add('show');
+
+  try {
+    const snap = await getDoc(settingsRef);
+    const data = snap.exists() ? snap.data() : {};
+    const storedPassword = data.password || DEFAULT_PASSWORD;
+
+    if (currentPassword !== storedPassword) {
+      showToast('❌ Current password is incorrect');
+      return;
+    }
+
+    const updatePayload = {
+      username: username,
+      lastUpdated: new Date().toISOString()
+    };
+    if (newPassword) {
+      updatePayload.password = newPassword;
+    }
+
+    await updateDoc(settingsRef, updatePayload).catch(async (error) => {
+      if (error.code === 'not-found') {
+        await setDoc(settingsRef, {
+          adminId: adminId,
+          username: username,
+          password: newPassword || storedPassword,
+          createdAt: new Date().toISOString(),
+          lastUpdated: new Date().toISOString()
+        });
+      } else {
+        throw error;
+      }
+    });
+
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+
+    showToast('✅ Login details updated!');
+  } catch (error) {
+    console.error('Error saving security settings:', error);
+    showToast('❌ Error saving: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    securityLoading.classList.remove('show');
+    securityText.style.display = 'inline';
+  }
+};
 </script>
+
 </body>
 </html>
