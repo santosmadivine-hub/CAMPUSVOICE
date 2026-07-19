@@ -255,6 +255,57 @@
   margin-bottom: 12px;
 }
 
+/* Respondent Profile row: unlike an-row2 (1.3fr/1fr, used for the
+   trend/leaderboard-style pairings), Sex Distribution and Code Status
+   should sit in two equal-width columns, and the cards themselves
+   should match height regardless of content. */
+.rp-row {
+  grid-template-columns: 1fr 1fr;
+}
+
+.rp-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 340px;
+}
+
+.rp-card .pie-wrap,
+.rp-card .bar-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .rp-card { min-height: 0; }
+}
+
+/* Performance Trends row: same equal-column, equal-height treatment
+   as the Respondent Profile row above, sized for the trend chart +
+   rating bars. */
+.pt-row {
+  grid-template-columns: 1fr 1fr;
+}
+
+.pt-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+}
+
+.pt-card .trend-svg-wrap,
+.pt-card .star-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .pt-card { min-height: 0; }
+}
+
 .an-section {
   margin-bottom: 30px;
 }
@@ -321,32 +372,12 @@
   padding: 6px 12px; border-radius: 999px; margin-top: 14px;
 }
 
-/* ── Office leaderboard ── */
-.lb-row {
-  display: grid; grid-template-columns: 28px 1fr 100px;
-  align-items: center; gap: 12px; padding: 11px 0;
-  border-bottom: 1px solid #f1f3f8;
-}
-.lb-row:last-child { border-bottom: none; }
-.lb-rank {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: #eef1f7; color: var(--ink-soft);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 800;
-  font-family: 'Syne', sans-serif;
-}
-.lb-rank.top { background: #dbeafe; color: #1e40af; }
-.lb-name { font-size: 13.5px; font-weight: 700; color: var(--ink); }
-.lb-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-.lb-score { text-align: right; font-size: 15px; font-weight: 800; color: var(--ink); font-family: 'Syne', sans-serif; }
-.lb-score-sub { text-align: right; font-size: 11px; color: var(--muted); }
-
 /* ── Star distribution ── */
-.star-row { display: grid; grid-template-columns: 68px 1fr 50px; align-items: center; gap: 12px; }
-.star-row-label { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
-.star-track { height: 9px; background: #eef1f7; border-radius: 999px; overflow: hidden; }
+.star-row { display: grid; grid-template-columns: 74px 1fr 54px; align-items: center; gap: 12px; }
+.star-row-label { font-size: 13.5px; font-weight: 600; color: var(--ink-soft); }
+.star-track { height: 11px; background: #eef1f7; border-radius: 999px; overflow: hidden; }
 .star-fill { height: 100%; border-radius: 999px; background: var(--orange); transition: width .5s ease; }
-.star-val { text-align: right; font-weight: 700; color: var(--ink); font-family: 'Syne', sans-serif; font-size: 13px; }
+.star-val { text-align: right; font-weight: 700; color: var(--ink); font-family: 'Syne', sans-serif; font-size: 14px; }
 
 /* ── empty state ── */
 .an-empty { text-align: center; color: var(--muted); padding: 34px 10px; font-size: 13px; }
@@ -365,24 +396,215 @@
    like the rest of the charts on this page, capped at its original
    180px design size. ── */
 .pie-wrap {
-  display: flex; align-items: center; gap: 30px; margin-top: 16px;
+  display: flex; align-items: center; gap: 34px; margin-top: 16px;
   flex-wrap: wrap;
 }
 .pie-svg {
   flex-shrink: 0;
   width: 100%;
-  max-width: 180px;
+  max-width: 220px;
   height: auto;
   filter: drop-shadow(0 4px 10px rgba(15,23,42,0.06));
 }
-.pie-legend { display: flex; flex-direction: column; gap: 14px; }
+.pie-legend { display: flex; flex-direction: column; gap: 16px; }
 .pie-legend-item { display: flex; align-items: center; gap: 10px; }
-.pie-legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
-.pie-legend-label { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
-.pie-legend-val { font-size: 11.5px; color: var(--muted); margin-top: 1px; font-family: 'Syne', sans-serif; }
+.pie-legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+.pie-legend-label { font-size: 14px; font-weight: 700; color: var(--ink-soft); }
+.pie-legend-val { font-size: 12.5px; color: var(--muted); margin-top: 1px; font-family: 'Syne', sans-serif; }
 
 /* ── Bar graph (Code Status) ── */
-.bar-wrap { margin-top: 20px; }
+.bar-wrap { margin-top: 20px; width: 100%; }
+
+/* ── Office Trend Over Time ──────────────────────────────────────
+   Mirrors admin2's analytics.html "Office Trend Over Time" chart
+   (grouped monthly-average bars per office), restyled to the
+   blue/orange + Syne/DM Sans design system used on this page.
+   Data source is unchanged: it reads from the same `rows`
+   (services/evaluations/records) and `allOffices` that already
+   drive the rest of this dashboard — no new Firestore paths. ── */
+.ot-card { position: relative; }
+
+.ot-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin: -34px 0 10px;
+  position: relative;
+}
+
+.ot-dropdown-btn {
+  background: #eef1f7;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ot-dropdown-btn:hover { background: #e2e8f0; }
+
+.ot-dropdown-panel {
+  display: none;
+  position: absolute;
+  top: 38px;
+  right: 0;
+  z-index: 20;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  width: 260px;
+  padding: 8px;
+}
+
+.ot-dropdown-panel.open { display: block; }
+
+.ot-dropdown-hint {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 4px 8px 8px;
+}
+
+.ot-dropdown-list {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ot-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.ot-checkbox-row:hover { background: #f8fafc; }
+.ot-checkbox-row input { accent-color: var(--brand); cursor: pointer; }
+
+.ot-line-chart-wrap { margin-top: 8px; }
+
+.ot-chart-row { display: flex; align-items: stretch; }
+
+.ot-yaxis {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 190px;
+  position: relative;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.ot-yaxis span { position: absolute; right: 6px; transform: translateY(-50%); }
+
+.ot-scroll-wrap {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.ot-scroll-wrap::-webkit-scrollbar { height: 6px; }
+.ot-scroll-wrap::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+.ot-scroll-wrap::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.ot-scroll-wrap::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.ot-line-svg { display: block; height: 190px; }
+
+.ot-group-labels { display: flex; height: 62px; margin-top: 2px; }
+
+.ot-group-label {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10.5px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.ot-group-label span {
+  display: inline-block;
+  transform: rotate(-40deg);
+  transform-origin: top right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+.ot-line-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.ot-line-legend-item { display: flex; align-items: center; gap: 6px; }
+.ot-line-legend-swatch { width: 10px; height: 10px; border-radius: 3px; }
+
+.ot-empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 30px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .ot-controls { margin-top: 10px; justify-content: flex-start; }
+}
+
+/* ── Hover tooltip (dark card, shown on hover over chart elements) ── */
+.cv-hover { cursor: pointer; }
+.cv-hover:hover { filter: brightness(1.06); }
+
+.cv-tooltip {
+  position: fixed;
+  z-index: 999;
+  background: #0b1220;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  line-height: 1.45;
+  pointer-events: none;
+  box-shadow: 0 10px 26px rgba(11, 18, 32, 0.32);
+  max-width: 190px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .12s ease, transform .12s ease;
+}
+.cv-tooltip.visible { opacity: 1; transform: translateY(0); }
+.cv-tooltip-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #fff;
+}
+.cv-tooltip-line { color: #cbd5e1; }
+.cv-tooltip-line strong { color: #fff; font-weight: 700; }
 
 /* ── Footer ── */
 .an-footer {
@@ -408,7 +630,6 @@
   .sqd-row { grid-template-columns: 110px 1fr 42px; }
   .sqd-label { font-size: 11.5px; }
   .star-row { grid-template-columns: 54px 1fr 42px; }
-  .lb-row { grid-template-columns: 24px 1fr 84px; }
 }
 
 </style>
@@ -469,23 +690,23 @@
     </div>
 
     <!-- ═══════════════════════════════ -->
-    <!-- TREND + SQD BREAKDOWN           -->
+    <!-- TREND + RATING DISTRIBUTION     -->
     <!-- ═══════════════════════════════ -->
 
     <div class="an-section">
       <div class="section-eyebrow"><span>Performance Trends</span></div>
 
-      <div class="an-row2">
+      <div class="an-row2 pt-row">
 
         <!-- TREND -->
-        <div class="card">
+        <div class="card pt-card">
           <div class="card-head">
             <div class="card-title">Submission Trend</div>
             <div class="card-sub" id="trendRange">— last 30 days</div>
           </div>
 
           <div class="trend-svg-wrap">
-            <svg viewBox="0 0 600 160" class="trend-svg" id="trendSvg" preserveAspectRatio="none" style="width:100%;height:160px;">
+            <svg viewBox="0 0 600 160" class="trend-svg" id="trendSvg" preserveAspectRatio="none" style="width:100%;height:190px;">
               <polygon id="trendArea" class="trend-area" fill="#2563eb" points=""/>
               <polyline id="trendLine" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points=""/>
             </svg>
@@ -497,45 +718,13 @@
           </div>
         </div>
 
-        <!-- SQD BREAKDOWN -->
-        <div class="card">
-          <div class="card-head">
-            <div class="card-title">Service Quality Breakdown</div>
-            <div class="card-sub">— by dimension</div>
-          </div>
-
-          <div class="sqd-list" id="sqdList"></div>
-          <div id="sqdWeakestTag"></div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════ -->
-    <!-- OFFICE LEADERBOARD + STAR DIST  -->
-    <!-- ═══════════════════════════════ -->
-
-    <div class="an-section">
-      <div class="section-eyebrow"><span>Office Standings</span></div>
-
-      <div class="an-row2">
-
-        <!-- LEADERBOARD -->
-        <div class="card">
-          <div class="card-head">
-            <div class="card-title">Office Leaderboard</div>
-            <div class="card-sub">— ranked by avg rating</div>
-          </div>
-          <div id="leaderboardList" style="margin-top:8px;"></div>
-        </div>
-
-        <!-- STAR DISTRIBUTION -->
-        <div class="card">
+        <!-- RATING DISTRIBUTION -->
+        <div class="card pt-card">
           <div class="card-head">
             <div class="card-title">Rating Distribution</div>
             <div class="card-sub">— all offices</div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:15px;margin-top:16px;">
+          <div class="star-list" style="display:flex;flex-direction:column;gap:18px;margin-top:16px;">
             <div class="star-row"><div class="star-row-label">5 Stars</div><div class="star-track"><div class="star-fill" id="r5"></div></div><div class="star-val" id="v5">0%</div></div>
             <div class="star-row"><div class="star-row-label">4 Stars</div><div class="star-track"><div class="star-fill" id="r4"></div></div><div class="star-val" id="v4">0%</div></div>
             <div class="star-row"><div class="star-row-label">3 Stars</div><div class="star-track"><div class="star-fill" id="r3"></div></div><div class="star-val" id="v3">0%</div></div>
@@ -554,10 +743,10 @@
     <div class="an-section">
       <div class="section-eyebrow"><span>Respondent Profile</span></div>
 
-      <div class="an-row2">
+      <div class="an-row2 rp-row">
 
         <!-- SEX DISTRIBUTION PIE -->
-        <div class="card">
+        <div class="card rp-card">
           <div class="card-head">
             <div class="card-title">Sex Distribution</div>
             <div class="card-sub">— all respondents</div>
@@ -566,7 +755,7 @@
         </div>
 
         <!-- CODE STATUS BAR -->
-        <div class="card">
+        <div class="card rp-card">
           <div class="card-head">
             <div class="card-title">Code Status</div>
             <div class="card-sub">— used vs unused, by percentage</div>
@@ -574,6 +763,58 @@
           <div id="codeStatusBarWrap" class="bar-wrap"></div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- OFFICE TREND OVER TIME          -->
+    <!-- ═══════════════════════════════ -->
+
+    <div class="an-section">
+      <div class="section-eyebrow"><span>Office Trend Over Time</span></div>
+
+      <div class="card ot-card">
+        <div class="card-head">
+          <div class="card-title">Office Trend Over Time</div>
+          <div class="card-sub">— monthly average score</div>
+        </div>
+
+        <div class="ot-controls">
+          <button class="ot-dropdown-btn" id="otDropdownBtn" type="button">🏢 <span id="otDropdownBtnLabel">Top 5 offices</span> ▾</button>
+          <div class="ot-dropdown-panel" id="otDropdownPanel">
+            <div class="ot-dropdown-hint">Select offices to compare</div>
+            <div class="ot-dropdown-list" id="otDropdownList"></div>
+          </div>
+        </div>
+
+        <div class="ot-line-chart-wrap">
+          <div class="ot-chart-row">
+            <div class="ot-yaxis" id="otYaxis"></div>
+            <div class="ot-scroll-wrap" id="otScrollWrap">
+              <svg class="ot-line-svg" id="otLineSvg"></svg>
+              <div class="ot-group-labels" id="otGroupLabels"></div>
+            </div>
+          </div>
+          <div class="ot-line-legend" id="otLineLegend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════ -->
+    <!-- SERVICE QUALITY BREAKDOWN       -->
+    <!-- ═══════════════════════════════ -->
+
+    <div class="an-section">
+      <div class="section-eyebrow"><span>Service Quality Breakdown</span></div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Service Quality Breakdown</div>
+          <div class="card-sub">— by dimension</div>
+        </div>
+
+        <div class="sqd-list" id="sqdList"></div>
+        <div id="sqdWeakestTag"></div>
       </div>
     </div>
 
@@ -612,6 +853,83 @@ const db = getFirestore(app);
 /* ── Shared UI ── */
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1', 'analytics');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Analytics', 'admin1');
+
+/* ── Office Trend dropdown open/close (elements are static, so wire once) ── */
+document.getElementById("otDropdownBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  document.getElementById("otDropdownPanel").classList.toggle("open");
+});
+document.addEventListener("click", (e) => {
+  const panel = document.getElementById("otDropdownPanel");
+  const btn = document.getElementById("otDropdownBtn");
+  if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+    panel.classList.remove("open");
+  }
+});
+
+/* ── Hover tooltip (dark card, matches the "Used Codes — 3 of 6
+   codes — 50.0% coverage" style reference) ──────────────────────
+   Works via event delegation on `document`, so it keeps working
+   after any chart re-renders and replaces its own DOM (innerHTML
+   swaps, which would otherwise kill directly-attached listeners).
+   Any element that should show a tooltip just needs:
+     class="cv-hover"
+     data-tt-title="Used Codes"
+     data-tt-lines='["3 of 6 codes","50.0% coverage"]'
+──────────────────────────────────────────────────────────────── */
+const cvTooltip = document.createElement("div");
+cvTooltip.className = "cv-tooltip";
+cvTooltip.id = "cvTooltip";
+document.body.appendChild(cvTooltip);
+
+// Office names (and any other dynamic Firestore strings) can contain
+// quotes/HTML-special characters, which would otherwise break the
+// data-tt-title="..." / data-tt-lines='...' attributes below.
+function cvAttrSafe(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function cvPositionTooltip(evt) {
+  const pad = 14;
+  let x = evt.clientX + pad;
+  let y = evt.clientY + pad;
+  const rect = cvTooltip.getBoundingClientRect();
+  if (x + rect.width > window.innerWidth - 10) x = evt.clientX - rect.width - pad;
+  if (y + rect.height > window.innerHeight - 10) y = evt.clientY - rect.height - pad;
+  cvTooltip.style.left = x + "px";
+  cvTooltip.style.top = y + "px";
+}
+
+document.addEventListener("mouseover", (e) => {
+  const el = e.target.closest(".cv-hover");
+  if (!el) return;
+  let lines = [];
+  try { lines = JSON.parse(el.dataset.ttLines || "[]"); } catch (err) { lines = []; }
+  cvTooltip.innerHTML =
+    `<div class="cv-tooltip-title">${el.dataset.ttTitle || ""}</div>` +
+    lines.map(l => `<div class="cv-tooltip-line">${l}</div>`).join("");
+  cvTooltip.classList.add("visible");
+  cvPositionTooltip(e);
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (!cvTooltip.classList.contains("visible")) return;
+  if (!e.target.closest(".cv-hover")) return;
+  cvPositionTooltip(e);
+});
+
+document.addEventListener("mouseout", (e) => {
+  const el = e.target.closest(".cv-hover");
+  if (!el) return;
+  // Don't hide if we're just moving between children of the same hover target
+  if (el.contains(e.relatedTarget)) return;
+  cvTooltip.classList.remove("visible");
+});
 
 /* ─────────────────────────────────────────────
    FIRESTORE COLLECTIONS
@@ -753,10 +1071,10 @@ function render() {
 
   renderKPIs(rows);
   renderTrend(rows);
-  renderSQD(rows);
-  renderLeaderboard(rows);
   renderStars(rows);
   renderSexPie(rows);
+  renderOfficeTrend(rows);
+  renderSQD(rows);
 }
 
 /* ── KPI STRIP ── */
@@ -859,10 +1177,14 @@ function renderSQD(rows) {
   list.innerHTML = dims.map(d => {
     const pct = (d.avg / 5) * 100;
     const color = d.avg >= 4 ? "#2563eb" : d.avg >= 3 ? "#f97316" : "#f97316";
+    const lines = JSON.stringify([
+      `Avg ${d.avg.toFixed(2)} / 5.0 (${pct.toFixed(1)}%)`,
+      `${d.cnt} response${d.cnt !== 1 ? "s" : ""}`
+    ]);
     return `
       <div class="sqd-row">
         <div class="sqd-label">${d.label.replace(/^SQD\d+\s*–\s*/, "")}</div>
-        <div class="sqd-track"><div class="sqd-fill" style="width:${pct}%;background:${color};"></div></div>
+        <div class="sqd-track cv-hover" data-tt-title="${d.label}" data-tt-lines='${lines}'><div class="sqd-fill" style="width:${pct}%;background:${color};"></div></div>
         <div class="sqd-val">${d.avg.toFixed(1)}</div>
       </div>
     `;
@@ -876,42 +1198,6 @@ function renderSQD(rows) {
   } else {
     document.getElementById("sqdWeakestTag").innerHTML = "";
   }
-}
-
-/* ── OFFICE LEADERBOARD ── */
-function renderLeaderboard(rows) {
-  const stats = {}; // { office: {total, count} }
-
-  rows.forEach(r => {
-    if (!r.office) return;
-    if (!stats[r.office]) stats[r.office] = { total: 0, count: 0 };
-    stats[r.office].total += avgScore(r);
-    stats[r.office].count++;
-  });
-
-  const list = document.getElementById("leaderboardList");
-  const entries = Object.entries(stats)
-    .map(([office, d]) => ({ office, avg: d.count ? d.total / d.count : 0, count: d.count }))
-    .sort((a, b) => b.avg - a.avg);
-
-  if (!entries.length) {
-    list.innerHTML = `<div class="an-empty"><div class="icon">🏢</div>No office evaluations yet.</div>`;
-    return;
-  }
-
-  list.innerHTML = entries.map((e, i) => `
-    <div class="lb-row">
-      <div class="lb-rank ${i === 0 ? "top" : ""}">${i + 1}</div>
-      <div>
-        <div class="lb-name">${e.office}</div>
-        <div class="lb-meta">${e.count} evaluation${e.count !== 1 ? "s" : ""}</div>
-      </div>
-      <div>
-        <div class="lb-score">${e.avg.toFixed(1)} ★</div>
-        <div class="lb-score-sub">${((e.avg / 5) * 100).toFixed(0)}%</div>
-      </div>
-    </div>
-  `).join("");
 }
 
 /* ── shared helper: totals codes across all offices ── */
@@ -974,15 +1260,15 @@ function renderCodeStatusBar() {
   }).join("");
 
   wrap.innerHTML = `
-    <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:440px;height:auto;display:block;margin:0 auto;">
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:500px;height:auto;display:block;margin:0 auto;">
       ${gridLines}
       <line x1="${PAD_LEFT}" y1="${H - PAD_BOTTOM}" x2="${W - 20}" y2="${H - PAD_BOTTOM}" stroke="#e2e8f0" stroke-width="1.5"/>
 
-      <rect x="${x1}" y="${y1}" width="${BAR_W}" height="${usedH}" rx="8" fill="#2563eb"/>
+      <rect class="cv-hover" data-tt-title="Used Codes" data-tt-lines='["${used} of ${total} codes","${usedPct.toFixed(1)}% coverage"]' x="${x1}" y="${y1}" width="${BAR_W}" height="${usedH}" rx="8" fill="#2563eb"/>
       <text x="${x1 + BAR_W / 2}" y="${y1 - 10}" text-anchor="middle" font-size="14" font-weight="800" fill="#0f172a" font-family="Syne, sans-serif">${usedPct.toFixed(0)}%</text>
       <text x="${x1 + BAR_W / 2}" y="${H - PAD_BOTTOM + 18}" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Used</text>
 
-      <rect x="${x2}" y="${y2}" width="${BAR_W}" height="${unusedH}" rx="8" fill="#f97316"/>
+      <rect class="cv-hover" data-tt-title="Unused Codes" data-tt-lines='["${unused} of ${total} codes","${unusedPct.toFixed(1)}% coverage"]' x="${x2}" y="${y2}" width="${BAR_W}" height="${unusedH}" rx="8" fill="#f97316"/>
       <text x="${x2 + BAR_W / 2}" y="${y2 - 10}" text-anchor="middle" font-size="14" font-weight="800" fill="#0f172a" font-family="Syne, sans-serif">${unusedPct.toFixed(0)}%</text>
       <text x="${x2 + BAR_W / 2}" y="${H - PAD_BOTTOM + 18}" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Unused</text>
     </svg>
@@ -1010,17 +1296,206 @@ function renderStars(rows) {
 
   const total = counted;
 
-  const setStar = (id, val, vid) => {
+  const setStar = (id, val, vid, label) => {
     const p = total ? (val / total) * 100 : 0;
-    document.getElementById(id).style.width = p + "%";
+    const fillEl = document.getElementById(id);
+    fillEl.style.width = p + "%";
     document.getElementById(vid).textContent = p.toFixed(0) + "%";
+
+    // Hover target is the whole track (not just the fill), so the
+    // tooltip is easy to trigger even when the bar is thin/empty.
+    const trackEl = fillEl.parentElement;
+    trackEl.classList.add("cv-hover");
+    trackEl.dataset.ttTitle = label;
+    trackEl.dataset.ttLines = JSON.stringify([
+      `${val} of ${total} evaluations`,
+      `${p.toFixed(1)}% of total`
+    ]);
   };
 
-  setStar("r5", s5, "v5");
-  setStar("r4", s4, "v4");
-  setStar("r3", s3, "v3");
-  setStar("r2", s2, "v2");
-  setStar("r1", s1, "v1");
+  setStar("r5", s5, "v5", "5 Stars");
+  setStar("r4", s4, "v4", "4 Stars");
+  setStar("r3", s3, "v3", "3 Stars");
+  setStar("r2", s2, "v2", "2 Stars");
+  setStar("r1", s1, "v1", "1 Star");
+}
+
+/* ══════════════════════════════════════════════════════════
+   OFFICE TREND OVER TIME (monthly average score per office)
+   ──────────────────────────────────────────────────────────
+   Question answered: is an office improving or declining?
+   Layout: offices are grouped along the x-axis; within each office
+   group there is one bar per month (color-coded) so the trend across
+   months is still visible per office. The chart scrolls horizontally
+   when there isn't room for every selected office.
+
+   Data source: reads directly from `rows` (= Object.values(allEvals),
+   i.e. services/evaluations/records — the same collection every
+   other chart on this page already uses) and `allOffices`
+   (services/offices/records). No new Firestore paths, no admin2
+   collections involved.
+══════════════════════════════════════════════════════════ */
+const OT_MONTHS_WINDOW = 6;
+const OT_MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+// Blue/orange palette to match this page's design tokens (--brand / --orange family)
+const OT_MONTH_COLORS = ["#2563eb", "#f97316", "#38bdf8", "#fb923c", "#1d4ed8", "#fdba74"];
+let otSelectedOffices = null; // null = auto (top 5 by volume); Set<string> once the user picks manually
+
+function otBuildMonths() {
+  const now = new Date();
+  const months = [];
+  for (let i = OT_MONTHS_WINDOW - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ month: d.getMonth(), year: d.getFullYear(), label: OT_MONTH_NAMES[d.getMonth()] });
+  }
+  return months;
+}
+
+function otMonthlyAvgPct(rows, officeName, month, year) {
+  const evals = rows.filter(r => {
+    if (r.office !== officeName || !r.date) return false;
+    const d = new Date(r.date);
+    if (isNaN(d)) return false;
+    return d.getMonth() === month && d.getFullYear() === year;
+  });
+  if (evals.length === 0) return null;
+  const avg = evals.reduce((sum, r) => sum + avgScore(r), 0) / evals.length;
+  return (avg / 5) * 100;
+}
+
+function otTopOffices(rows, n) {
+  const officeNames = Object.keys(allOffices);
+  const counts = officeNames.map(name => ({
+    name,
+    count: rows.filter(r => r.office === name).length
+  }));
+  return counts.sort((a, b) => b.count - a.count).slice(0, n).map(c => c.name);
+}
+
+// Fixed pixel geometry for the scrollable bar chart (not viewBox-scaled,
+// so a group always takes the same amount of horizontal space and the
+// wrapper can scroll instead of squeezing labels).
+const OT_GROUP_WIDTH = 110;   // px per office group
+const OT_BAR_WIDTH = 14;      // bar width in pixels
+const OT_BAR_GAP = 2;         // gap between bars
+const OT_CHART_HEIGHT = 190;
+
+function renderOfficeTrend(rows) {
+  const officeNames = Object.keys(allOffices);
+  const svg = document.getElementById("otLineSvg");
+  const groupLabelsEl = document.getElementById("otGroupLabels");
+  const yAxisEl = document.getElementById("otYaxis");
+  const legendEl = document.getElementById("otLineLegend");
+  const dropdownList = document.getElementById("otDropdownList");
+  const dropdownBtnLabel = document.getElementById("otDropdownBtnLabel");
+
+  if (officeNames.length === 0) {
+    svg.innerHTML = "";
+    svg.removeAttribute("width");
+    groupLabelsEl.innerHTML = "";
+    yAxisEl.innerHTML = "";
+    legendEl.innerHTML = `<div class="ot-empty">No offices yet.</div>`;
+    dropdownList.innerHTML = "";
+    return;
+  }
+
+  const top5 = otTopOffices(rows, 5);
+  const usingDefault = otSelectedOffices === null;
+  const activeNames = usingDefault ? top5 : officeNames.filter(n => otSelectedOffices.has(n));
+
+  dropdownBtnLabel.textContent = usingDefault
+    ? "Top 5 offices"
+    : `${activeNames.length} office${activeNames.length === 1 ? "" : "s"} selected`;
+
+  // Build the scrollable checkbox list (alphabetical for easy scanning)
+  const sortedForList = [...officeNames].sort((a, b) => a.localeCompare(b));
+  dropdownList.innerHTML = sortedForList.map(name => {
+    const checked = activeNames.includes(name) ? "checked" : "";
+    return `
+      <label class="ot-checkbox-row">
+        <input type="checkbox" data-office="${name}" ${checked}>
+        <span>${name}</span>
+      </label>
+    `;
+  }).join("");
+
+  dropdownList.querySelectorAll("input[type=checkbox]").forEach(cb => {
+    cb.addEventListener("change", () => {
+      if (otSelectedOffices === null) {
+        otSelectedOffices = new Set(top5); // switch from auto top-5 into an explicit selection
+      }
+      const name = cb.dataset.office;
+      if (cb.checked) {
+        otSelectedOffices.add(name);
+      } else {
+        otSelectedOffices.delete(name);
+      }
+      renderOfficeTrend(Object.values(allEvals));
+    });
+  });
+
+  const months = otBuildMonths();
+  const monthColors = OT_MONTH_COLORS.slice(0, months.length);
+
+  // Y-axis (fixed, non-scrolling) ticks
+  yAxisEl.innerHTML = [100, 75, 50, 25, 0].map(pct => {
+    const top = OT_CHART_HEIGHT - (pct / 100) * OT_CHART_HEIGHT;
+    return `<span style="top:${top}px;">${pct}%</span>`;
+  }).join("");
+
+  if (activeNames.length === 0) {
+    svg.innerHTML = "";
+    svg.removeAttribute("width");
+    groupLabelsEl.innerHTML = "";
+    legendEl.innerHTML = `<div class="ot-empty">Select at least one office to see its trend.</div>`;
+    return;
+  }
+
+  // Fixed-pixel width so the wrapper can scroll horizontally instead of
+  // squeezing office groups/labels when there are many offices selected.
+  const totalWidth = activeNames.length * OT_GROUP_WIDTH;
+  svg.setAttribute("width", totalWidth);
+  svg.setAttribute("height", OT_CHART_HEIGHT);
+  svg.setAttribute("viewBox", `0 0 ${totalWidth} ${OT_CHART_HEIGHT}`);
+
+  function yFor(pct) {
+    return OT_CHART_HEIGHT - (pct / 100) * OT_CHART_HEIGHT;
+  }
+
+  const gridLines = [0, 25, 50, 75, 100].map(pct => {
+    const y = yFor(pct);
+    return `<line x1="0" y1="${y.toFixed(1)}" x2="${totalWidth}" y2="${y.toFixed(1)}" stroke="#eef2f7" stroke-width="1"></line>`;
+  }).join("");
+
+  const barsGroupWidth = months.length * OT_BAR_WIDTH + (months.length - 1) * OT_BAR_GAP;
+
+  const barsSvg = activeNames.map((officeName, i) => {
+    const groupX0 = i * OT_GROUP_WIDTH + (OT_GROUP_WIDTH - barsGroupWidth) / 2;
+    return months.map((m, j) => {
+      const pct = otMonthlyAvgPct(rows, officeName, m.month, m.year);
+      if (pct === null) return "";
+      const barX = groupX0 + j * (OT_BAR_WIDTH + OT_BAR_GAP);
+      const barH = (pct / 100) * OT_CHART_HEIGHT;
+      const barY = OT_CHART_HEIGHT - barH;
+      return `<rect class="cv-hover" data-tt-title="${cvAttrSafe(officeName)}" data-tt-lines='${cvAttrSafe(JSON.stringify([`${m.label}: ${pct.toFixed(1)}%`]))}' x="${barX.toFixed(1)}" y="${barY.toFixed(1)}" width="${OT_BAR_WIDTH}" height="${barH.toFixed(1)}" rx="2" fill="${monthColors[j]}"></rect>`;
+    }).join("");
+  }).join("");
+
+  svg.innerHTML = gridLines + barsSvg;
+
+  // Diagonal office name labels, one per group, matching the group
+  // width in the SVG above so they line up while scrolling.
+  groupLabelsEl.innerHTML = activeNames.map(name => `
+    <div class="ot-group-label" style="width:${OT_GROUP_WIDTH}px;" title="${name}"><span>${name}</span></div>
+  `).join("");
+
+  // Legend represents months (bar color), since offices are on the x-axis.
+  legendEl.innerHTML = months.map((m, j) => `
+    <div class="ot-line-legend-item">
+      <span class="ot-line-legend-swatch" style="background:${monthColors[j]};"></span>
+      <span>${m.label}</span>
+    </div>
+  `).join("");
 }
 
 /* ── SEX DISTRIBUTION — PIE CHART ── */
@@ -1059,8 +1534,8 @@ function renderSexPie(rows) {
   }
 
   let svgSlices = "";
-  if (male > 0)   svgSlices += `<path d="${arcPath(0, malePct)}" fill="#2563eb"/>`;
-  if (female > 0) svgSlices += `<path d="${arcPath(malePct, malePct + femalePct)}" fill="#f97316"/>`;
+  if (male > 0)   svgSlices += `<path class="cv-hover" data-tt-title="Male" data-tt-lines='["${male} of ${known} respondents","${malePct.toFixed(1)}% share"]' d="${arcPath(0, malePct)}" fill="#2563eb"/>`;
+  if (female > 0) svgSlices += `<path class="cv-hover" data-tt-title="Female" data-tt-lines='["${female} of ${known} respondents","${femalePct.toFixed(1)}% share"]' d="${arcPath(malePct, malePct + femalePct)}" fill="#f97316"/>`;
 
   /* NOTE: no width/height attributes here anymore — sizing comes
      entirely from the .pie-svg CSS class so it scales with its

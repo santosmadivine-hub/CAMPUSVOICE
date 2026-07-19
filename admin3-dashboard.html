@@ -345,15 +345,92 @@
     text-align: right;
   }
 
+  /* ─── Quick Access Section ─── */
+  .quick-access-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 12px;
+  }
+
+  .quick-access-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    text-decoration: none;
+    color: #0f172a;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .quick-access-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.04) 100%);
+    transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0;
+  }
+
+  .quick-access-btn:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .quick-access-btn:hover::before {
+    left: 0;
+  }
+
+  .quick-access-btn:active {
+    transform: translateY(0);
+  }
+
+  .qa-icon {
+    font-size: 28px;
+    line-height: 1;
+    position: relative;
+    z-index: 1;
+  }
+
+  .qa-label {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: #0f172a;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    line-height: 1.3;
+  }
+
   /* ─── Responsive ─── */
   @media (max-width: 1200px) {
     .stat-value {
       font-size: 30px;
     }
+    .quick-access-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 
   @media (max-width: 1024px) {
     .stat-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .quick-access-grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
@@ -392,6 +469,24 @@
     .eval-filter-group {
       min-width: 100%;
     }
+
+    .quick-access-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .quick-access-btn {
+      padding: 16px 12px;
+      gap: 10px;
+    }
+
+    .qa-icon {
+      font-size: 24px;
+    }
+
+    .qa-label {
+      font-size: 12px;
+    }
   }
 
   @media (max-width: 600px) {
@@ -425,6 +520,11 @@
     .status-row .status-label-wrap { grid-area: label; }
     .status-row .status-bar-track { grid-area: bar; }
     .status-row .status-count { grid-area: count; text-align: left; }
+
+    .quick-access-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
   }
 
   @media (max-width: 480px) {
@@ -443,6 +543,29 @@
     .donut-wrap svg {
       width: 220px;
     }
+
+    .quick-access-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .quick-access-btn {
+      padding: 14px 12px;
+    }
+
+    .qa-icon {
+      font-size: 22px;
+    }
+
+    .qa-label {
+      font-size: 11px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .quick-access-grid {
+      gap: 8px;
+    }
   }
 </style>
 </head>
@@ -452,7 +575,7 @@
   <main class="main fade-in">
     <div id="topbar-mount"></div>
 
-    <div style="margin-top: 28px; padding: 0 20px 40px;">
+    <div style="margin-top: 28px; padding: 0 20px 12px;">
       <!-- STAT CARDS -->
       <div class="stat-grid">
         <div class="stat-card purple">
@@ -563,6 +686,37 @@
             <div class="status-count" id="count-resolved">0</div>
           </div>
           <div class="pie-tooltip" id="status-tooltip"></div>
+        </div>
+      </div>
+
+      <!-- QUICK ACCESS -->
+      <div class="card">
+        <div class="card-title">Quick Access</div>
+        <div class="quick-access-grid">
+          <a href="admin3-analytics.html" class="quick-access-btn">
+            <div class="qa-icon">📈</div>
+            <div class="qa-label">Analytics</div>
+          </a>
+          <a href="admin3-office-mgmt.html" class="quick-access-btn">
+            <div class="qa-icon">🏛</div>
+            <div class="qa-label">Office Management</div>
+          </a>
+          <a href="admin3-eval-mgmt.html" class="quick-access-btn">
+            <div class="qa-icon">📑</div>
+            <div class="qa-label">Evaluation Management</div>
+          </a>
+          <a href="admin3-multimedia.html" class="quick-access-btn">
+            <div class="qa-icon">🎞️</div>
+            <div class="qa-label">Multimedia Feedback</div>
+          </a>
+          <a href="admin3-reports.html" class="quick-access-btn">
+            <div class="qa-icon">📁</div>
+            <div class="qa-label">Reports</div>
+          </a>
+          <a href="admin3-settings.html" class="quick-access-btn">
+            <div class="qa-icon">⚙️</div>
+            <div class="qa-label">Settings</div>
+          </a>
         </div>
       </div>
     </div>

@@ -322,6 +322,15 @@
     margin-left: 6px;
   }
 
+  .action-view {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .action-view:hover {
+    background: #bfdbfe;
+  }
+
   .action-edit {
     background: #fef3c7;
     color: #92400e;
@@ -665,12 +674,17 @@ function renderOfficeTable() {
         </td>
         <td class="evals-cell">${stats.total}</td>
         <td class="actions-cell">
+          <button class="action-btn action-view" data-office-key="${key}" data-office-name="${name}">👁️ View</button>
           <button class="action-btn action-edit" data-office-key="${key}">✏️ Edit</button>
           <button class="action-btn action-delete" data-office-key="${key}">🗑️ Delete</button>
         </td>
       </tr>
     `;
   }).join("");
+
+  officeTableBody.querySelectorAll(".action-view").forEach(btn => {
+    btn.addEventListener("click", () => viewOfficeAnalytics(btn.getAttribute("data-office-key"), btn.getAttribute("data-office-name")));
+  });
 
   officeTableBody.querySelectorAll(".action-edit").forEach(btn => {
     btn.addEventListener("click", () => editOffice(btn.getAttribute("data-office-key")));
@@ -679,6 +693,11 @@ function renderOfficeTable() {
   officeTableBody.querySelectorAll(".action-delete").forEach(btn => {
     btn.addEventListener("click", () => deleteOffice(btn.getAttribute("data-office-key")));
   });
+}
+
+function viewOfficeAnalytics(docId, officeName) {
+  const url = `admin3-office-analytics.html?office=${encodeURIComponent(docId)}&name=${encodeURIComponent(officeName)}`;
+  window.location.href = url;
 }
 
 async function editOffice(docId) {
