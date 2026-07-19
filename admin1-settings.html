@@ -6,6 +6,25 @@
 <title>CampusVoice – Settings | Admin 1</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
+<style>
+  .settings-grid { display: grid; gap: 24px; max-width: 800px; }
+  .settings-section { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 24px; }
+  .settings-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 20px; }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-size: 14px; font-weight: 600; color: #0f172a; }
+  .settings-desc { font-size: 12px; color: #64748b; margin-top: 4px; }
+  .input-field { padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif; color: #0f172a; outline: none; min-width: 240px; }
+  .input-field:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+  .btn { padding: 10px 16px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #2563eb; color: white; }
+  .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+  .btn-sm { padding: 8px 14px; font-size: 13px; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 9999; }
+  .toast.show { opacity: 1; }
+  .loading { display: none; font-size: 12px; color: #64748b; }
+  .loading.show { display: inline; }
+</style>
 </head>
 <body>
 <div class="layout">
@@ -21,24 +40,42 @@
             <div class="settings-label">Full Name</div>
             <div class="settings-desc">Display name in the system</div>
           </div>
-          <input id="fullName" class="input-field">
+          <input id="fullName" class="input-field" placeholder="Enter full name">
         </div>
         <div class="settings-row">
-          <div class="settings-label">Email</div>
-          <input id="email" class="input-field">
+          <div>
+            <div class="settings-label">Email</div>
+            <div class="settings-desc">Contact email address</div>
+          </div>
+          <input id="email" class="input-field" placeholder="Enter email">
         </div>
         <div style="margin-top:16px;">
-          <button class="btn btn-primary btn-sm" onclick="saveAccount()">Save Changes</button>
+          <button class="btn btn-primary btn-sm" onclick="saveAccount()">
+            <span id="saveText">Save Changes</span>
+            <span id="saveLoading" class="loading">Saving...</span>
+          </button>
         </div>
       </div>
     </div>
   </main>
 </div>
+
+<div class="toast" id="toast"></div>
+
 <script src="shared.js"></script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  onSnapshot,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ── Firebase config (SAME AS OTHER PAGES) ── */
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
@@ -49,28 +86,89 @@ const firebaseConfig = {
   appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
   measurementId: "G-LK8D1CBQ2J"
 };
+
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const db = getDatabase(app);
+const db = getFirestore(app);
+
+/* ── Mount shared UI ── */
 document.getElementById('sidebar-mount').innerHTML =
   buildSidebar('admin1','settings');
 document.getElementById('topbar-mount').innerHTML =
   buildTopbar('Settings','admin1');
-/* LOAD SETTINGS */
-const settingsRef = ref(db,"settings/admin1");
-onValue(settingsRef,(snap)=>{
-  const data = snap.val() || {};
-  document.getElementById("fullName").value = data.fullName || "";
-  document.getElementById("email").value = data.email || "";
+
+/* ── Toast notification ── */
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+/* ── LOAD SETTINGS FROM FIRESTORE ── */
+const adminId = 'admin1';  // Current admin user
+const settingsRef = doc(db, 'admin_settings', adminId);
+
+onSnapshot(settingsRef, (docSnap) => {
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    document.getElementById('fullName').value = data.fullName || '';
+    document.getElementById('email').value = data.email || '';
+  }
+}, (error) => {
+  console.error('Error loading settings:', error);
+  showToast('❌ Error loading settings');
 });
-/* SAVE ACCOUNT */
-window.saveAccount = () => {
-  set(ref(db,"settings/admin1/account"),{
-    fullName: document.getElementById("fullName").value,
-    email: document.getElementById("email").value
-  });
-  alert("Account saved!");
+
+/* ── SAVE ACCOUNT TO FIRESTORE ── */
+window.saveAccount = async () => {
+  const fullName = document.getElementById('fullName').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const saveText = document.getElementById('saveText');
+  const saveLoading = document.getElementById('saveLoading');
+
+  if (!fullName || !email) {
+    showToast('❌ Please fill in all fields');
+    return;
+  }
+
+  // Show loading state
+  saveText.style.display = 'none';
+  saveLoading.classList.add('show');
+
+  try {
+    const settingsRef = doc(db, 'admin_settings', adminId);
+    
+    await updateDoc(settingsRef, {
+      fullName: fullName,
+      email: email,
+      lastUpdated: new Date().toISOString()
+    }).catch(async (error) => {
+      // If document doesn't exist, create it
+      if (error.code === 'not-found') {
+        await setDoc(settingsRef, {
+          adminId: adminId,
+          fullName: fullName,
+          email: email,
+          createdAt: new Date().toISOString(),
+          lastUpdated: new Date().toISOString()
+        });
+      } else {
+        throw error;
+      }
+    });
+
+    showToast('✅ Settings saved successfully!');
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    showToast('❌ Error saving settings: ' + error.message);
+  } finally {
+    // Hide loading state
+    saveLoading.classList.remove('show');
+    saveText.style.display = 'inline';
+  }
 };
 </script>
+
 </body>
 </html>
