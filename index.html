@@ -267,6 +267,12 @@
       transform: translateY(0);
     }
 
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .btn-login:focus-visible {
       outline: 2px solid var(--accent2);
       outline-offset: 3px;
@@ -357,7 +363,7 @@
     </div>
 
     <!-- Submit -->
-    <button class="btn-login" onclick="doLogin()">Sign In to Dashboard</button>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Sign In to Dashboard</button>
 
     <!-- Error -->
     <div class="login-error" id="login-error">❌ Invalid credentials. Please try again.</div>
@@ -366,38 +372,79 @@
 
   </div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const ROLES = {
-      admin1: { user: 'admin1', pass: 'admin123',    redirect: 'admin1-dashboard.html' },
-      admin2: { user: 'admin2', pass: 'admin456',    redirect: 'admin2-dashboard.html' },
-      admin3: { user: 'admin3', pass: 'admin789',    redirect: 'admin3-dashboard.html' }
+    const firebaseConfig = {
+      apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+      authDomain: "kristal-adb78.firebaseapp.com",
+      databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
+      projectId: "kristal-adb78",
+      storageBucket: "kristal-adb78.firebasestorage.app",
+      messagingSenderId: "1016283938031",
+      appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+      measurementId: "G-LK8D1CBQ2J"
     };
 
-    function doLogin() {
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    /* Fallback / seed credentials — used the first time, before any admin
+       has changed their username or password via Settings. Once a
+       Firestore doc exists for an admin, its username/password win. */
+    const ROLES = {
+      admin1: { user: 'admin1', pass: 'admin123', redirect: 'admin1-dashboard.html' },
+      admin2: { user: 'admin2', pass: 'admin456', redirect: 'admin2-dashboard.html' },
+      admin3: { user: 'admin3', pass: 'admin789', redirect: 'admin3-dashboard.html' }
+    };
+
+    window.doLogin = async () => {
       const username = document.getElementById('login-user').value.trim();
       const password = document.getElementById('login-pass').value;
       const errorEl  = document.getElementById('login-error');
+      const btn      = document.getElementById('loginBtn');
 
-      const match = Object.values(ROLES).find(
-        r => r.user === username && r.pass === password
-      );
+      errorEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Checking…';
 
-      if (match) {
-        window.location.href = match.redirect;
-      } else {
+      try {
+        for (const [adminId, fallback] of Object.entries(ROLES)) {
+          let effectiveUser = fallback.user;
+          let effectivePass = fallback.pass;
+
+          try {
+            const snap = await getDoc(doc(db, 'admin_settings', adminId));
+            if (snap.exists()) {
+              const data = snap.data();
+              if (data.username) effectiveUser = data.username;
+              if (data.password) effectivePass = data.password;
+            }
+          } catch (e) {
+            console.error(`Could not check Firestore credentials for ${adminId}, using fallback`, e);
+          }
+
+          if (effectiveUser === username && effectivePass === password) {
+            window.location.href = fallback.redirect;
+            return;
+          }
+        }
+
         errorEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In to Dashboard';
       }
-    }
+    };
 
-    function togglePassword() {
+    window.togglePassword = () => {
       const input = document.getElementById('login-pass');
       const isHidden = input.type === 'password';
       input.type = isHidden ? 'text' : 'password';
       const toggle = document.querySelector('.toggle-password');
       toggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
-    }
-
+    };
   </script>
 
 </body>
