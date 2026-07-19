@@ -1,566 +1,393 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CampusVoice – Transaction Verification</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>CampusVoice – Generate Code | Admin 1</title>
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
 
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="shared.css" />
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
 
-<style>
+        .header-text h2 { font-size: 16px; font-weight: 600; }
+        .header-text p { font-size: 12px; opacity: 0.9; }
 
-/* FILTER BAR */
-.filter-bar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:22px; }
-.filter-bar select,
-.filter-bar input { padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:12px; font-size:14px; font-family:'DM Sans',sans-serif; color:#0f172a; background:#f8fafc; outline:none; }
-.filter-bar input[type="search"] { flex:1; min-width:200px; }
+        .container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
 
-/* GENERATE SECTION */
-.generate-section { background:#fff; border:1.5px solid #e2e8f0; border-radius:16px; padding:20px 24px; margin-bottom:24px; }
-.generate-section h3 { margin:0 0 4px; font-size:16px; color:#0f172a; }
-.generate-section p.sub { margin:0 0 16px; font-size:13px; color:#64748b; }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px 32px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
 
-.office-gen-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+        .shield-icon {
+            text-align: center;
+            font-size: 56px;
+            margin-bottom: 24px;
+        }
 
-.office-gen-card { background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:14px 16px; }
-.office-gen-top  { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-.office-gen-label { font-size:13px; font-weight:700; color:#0f172a; }
+        .card h1 {
+            font-size: 18px;
+            color: #0f172a;
+            text-align: center;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
 
-.qty-row { display:flex; align-items:center; gap:8px; }
-.qty-row label { font-size:12px; color:#64748b; white-space:nowrap; }
-.qty-input {
-  width:60px; padding:5px 8px;
-  border:1.5px solid #e2e8f0; border-radius:8px;
-  font-size:13px; font-family:'DM Sans',sans-serif;
-  color:#0f172a; background:#fff; outline:none; text-align:center;
-}
+        .card p {
+            font-size: 14px;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
 
-.btn-generate {
-  padding:7px 14px; background:#0f172a; color:#fff;
-  border:none; border-radius:10px; font-size:12px; font-weight:700;
-  font-family:'DM Sans',sans-serif; cursor:pointer; transition:background 0.2s; white-space:nowrap;
-}
-.btn-generate:hover    { background:#1e3a5f; }
-.btn-generate:disabled { background:#94a3b8; cursor:not-allowed; }
+        .form-group {
+            margin-bottom: 20px;
+        }
 
-/* WHITE CONTAINER — wraps the transaction code table */
-.table-card {
-  background:#ffffff;
-  border:1.5px solid #e2e8f0;
-  border-radius:16px;
-  padding:22px 24px 26px;
-  box-shadow:0 4px 14px rgba(15,23,42,0.05);
-}
+        label {
+            display: block;
+            font-size: 13px;
+            color: #0f172a;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
 
-/* TABLE */
-.code-table { width:100%; border-collapse:collapse; font-size:14px; }
-.code-table th { text-align:left; padding:14px 16px; font-size:11px; text-transform:uppercase; color:#64748b; border-bottom:2px solid #e2e8f0; }
-.code-table td { padding:13px 16px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
-.code-table tr:hover td { background:#f8fafc; }
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            color: #0f172a;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
 
-.code-pill {
-  font-family:'Courier New',monospace; font-size:13px; font-weight:700;
-  background:#f1f5f9; padding:4px 10px; border-radius:8px;
-  letter-spacing:0.05em; color:#0f172a;
-}
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
 
-/* STATUS */
-.status-badge  { display:inline-flex; padding:5px 12px; border-radius:999px; font-size:12px; font-weight:700; }
-.status-unused { background:#dcfce7; color:#15803d; }
-.status-used   { background:#fee2e2; color:#dc2626; }
+        .btn-continue {
+            width: 100%;
+            padding: 14px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
 
-/* STAT CARDS — expanded with icon circles + percentage badges */
-.txn-stat-grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:16px;
-  margin-bottom:24px;
-}
+        .btn-continue:hover {
+            background: #1e40af;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
 
-.txn-stat-card {
-  background:#fff;
-  border:1.5px solid #e2e8f0;
-  border-radius:16px;
-  padding:20px 22px;
-  display:flex;
-  align-items:center;
-  gap:16px;
-  position:relative;
-  overflow:hidden;
-  transition:box-shadow 0.2s, transform 0.2s;
-}
-.txn-stat-card:hover {
-  box-shadow:0 8px 20px rgba(15,23,42,0.08);
-  transform:translateY(-2px);
-}
+        .btn-continue:active {
+            transform: translateY(0);
+        }
 
-.stat-icon-circle {
-  flex-shrink:0;
-  width:50px;
-  height:50px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-}
-.icon-total    { background:#e0e7ff; }
-.icon-unused   { background:#dcfce7; }
-.icon-used     { background:#fee2e2; }
-.icon-offices  { background:#dbeafe; }
+        .btn-continue:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-.stat-info { display:flex; flex-direction:column; gap:2px; min-width:0; }
+        .info-text {
+            font-size: 12px;
+            color: #64748b;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
 
-.stat-top-row { display:flex; align-items:baseline; gap:8px; }
+        .info-text::before {
+            content: "ℹ";
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            font-size: 10px;
+            color: #64748b;
+        }
 
-.txn-stat-num  { font-size:28px; font-weight:800; color:#0f172a; line-height:1; font-family:'Syne',sans-serif; }
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
 
-.stat-label { font-size:12.5px; color:#64748b; font-weight:600; white-space:nowrap; }
+        .error-message.show {
+            display: block;
+        }
 
-.stat-percent-badge {
-  display:inline-flex;
-  align-items:center;
-  padding:2px 8px;
-  border-radius:999px;
-  font-size:11px;
-  font-weight:700;
-  white-space:nowrap;
-}
-.percent-neutral { background:#f1f5f9; color:#475569; }
-.percent-good    { background:#dcfce7; color:#15803d; }
-.percent-bad     { background:#fee2e2; color:#dc2626; }
-.percent-info    { background:#e0e7ff; color:#4338ca; }
+        .error-message::before {
+            content: "✕ ";
+            font-weight: 700;
+        }
 
-/* TABLE TOOLBAR */
-.table-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:10px; }
-.export-row    { display:flex; gap:8px; }
+        .loading {
+            display: none;
+            text-align: center;
+            color: #3b82f6;
+            font-size: 13px;
+            margin-top: 12px;
+        }
 
-/* BUTTONS */
-.btn-action      { padding:6px 12px; border:none; border-radius:8px; font-size:12px; font-family:'DM Sans',sans-serif; cursor:pointer; font-weight:600; transition:background 0.2s; }
-.btn-delete      { background:#fee2e2; color:#dc2626; }
-.btn-delete:hover { background:#fecaca; }
-.btn-export-csv  { background:#eff6ff; color:#2563eb; }
-.btn-export-csv:hover  { background:#dbeafe; }
-.btn-export-json { background:#f0fdf4; color:#16a34a; }
-.btn-export-json:hover { background:#dcfce7; }
+        .loading.show {
+            display: block;
+        }
 
-/* EMPTY STATE for office grid */
-.no-offices-msg { color:#94a3b8; font-size:14px; padding:12px 0; }
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 6px;
+        }
 
-/* TOAST */
-#toast {
-  position:fixed; bottom:28px; right:28px;
-  background:#0f172a; color:#fff;
-  padding:12px 20px; border-radius:12px;
-  font-size:14px; font-family:'DM Sans',sans-serif;
-  opacity:0; transition:opacity 0.3s;
-  z-index:9999; pointer-events:none;
-}
-#toast.show { opacity:1; }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
-/* PROGRESS */
-.gen-progress { font-size:11px; color:#64748b; margin-top:6px; display:none; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-</style>
+        @media (max-width: 480px) {
+            .card { padding: 32px 24px; }
+            .card h1 { font-size: 16px; }
+            .card p { font-size: 13px; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="layout">
-  <div id="sidebar-mount"></div>
-
-  <main class="main fade-in">
-    <div id="topbar-mount"></div>
-
-    <!-- STAT CARDS -->
-    <div class="txn-stat-grid">
-      <div class="txn-stat-card">
-        <div class="stat-icon-circle icon-total">🎟️</div>
-        <div class="stat-info">
-          <div class="stat-top-row">
-            <div class="txn-stat-num" id="scTotal">0</div>
-          </div>
-          <div class="stat-label">Total Codes</div>
-          <span class="stat-percent-badge percent-neutral" id="scTotalBadge">All offices</span>
+    <div class="header">
+        <div class="header-logo">🎓</div>
+        <div class="header-text">
+            <h2>CampusVoice</h2>
+            <p>ISUFST-SEC School Evaluation</p>
         </div>
-      </div>
-
-      <div class="txn-stat-card">
-        <div class="stat-icon-circle icon-unused">✅</div>
-        <div class="stat-info">
-          <div class="stat-top-row">
-            <div class="txn-stat-num" id="scUnused">0</div>
-          </div>
-          <div class="stat-label">Unused</div>
-          <span class="stat-percent-badge percent-good" id="scUnusedBadge">0%</span>
-        </div>
-      </div>
-
-      <div class="txn-stat-card">
-        <div class="stat-icon-circle icon-used">🔒</div>
-        <div class="stat-info">
-          <div class="stat-top-row">
-            <div class="txn-stat-num" id="scUsed">0</div>
-          </div>
-          <div class="stat-label">Used</div>
-          <span class="stat-percent-badge percent-bad" id="scUsedBadge">0%</span>
-        </div>
-      </div>
-
-      <div class="txn-stat-card">
-        <div class="stat-icon-circle icon-offices">🏢</div>
-        <div class="stat-info">
-          <div class="stat-top-row">
-            <div class="txn-stat-num" id="scOffices">0</div>
-          </div>
-          <div class="stat-label">Offices</div>
-          <span class="stat-percent-badge percent-info" id="scOfficesBadge">0 avg / office</span>
-        </div>
-      </div>
     </div>
 
-    <!-- GENERATE SECTION -->
-    <div class="generate-section">
-      <h3>⚡ Generate Codes per Office</h3>
-      <p class="sub">Set how many codes to generate per office, then click Generate.</p>
-      <div class="office-gen-grid" id="officeGenGrid">
-        <p class="no-offices-msg">Loading offices…</p>
-      </div>
+    <div class="container">
+        <div class="card">
+            <div class="shield-icon">🛡️</div>
+            <h1>Transaction Verification</h1>
+            <p>Please enter your transaction reference code for verification. You cannot proceed if the transaction code is invalid. This code serves as authentication to access the service evaluation form securely.</p>
+
+            <div class="form-group">
+                <label for="codeInput">Enter transaction code</label>
+                <input 
+                    type="text" 
+                    id="codeInput" 
+                    placeholder="CASH-3GMH8B"
+                    autocomplete="off"
+                />
+                <div class="error-message" id="errorMsg"></div>
+                <div class="loading" id="loading">
+                    <span class="spinner"></span>Verifying code...
+                </div>
+            </div>
+
+            <button class="btn-continue" id="continueBtn">Continue</button>
+            <div class="info-text">Your code is case-sensitive. Please enter it exactly as provided.</div>
+        </div>
     </div>
 
-    <!-- TABLE (wrapped in white container) -->
-    <div class="table-card">
-      <div class="table-toolbar">
-        <h3 style="margin:0;">Transaction Codes</h3>
-        <div class="export-row">
-          <button class="btn-action btn-export-csv"  onclick="exportCSV()">⬇ Export CSV</button>
-          <button class="btn-action btn-export-json" onclick="exportJSON()">⬇ Export JSON</button>
-        </div>
-      </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import {
+            getFirestore,
+            collectionGroup,
+            query,
+            where,
+            getDocs
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-      <div class="filter-bar">
-        <input type="search" id="searchInput" placeholder="Search code or office…" />
-        <select id="filterOffice"><option value="">All Offices</option></select>
-        <select id="filterStatus">
-          <option value="">All Status</option>
-          <option value="unused">Unused</option>
-          <option value="used">Used</option>
-        </select>
-      </div>
+        /* Firebase Config */
+        const firebaseConfig = {
+            apiKey:            "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+            authDomain:        "kristal-adb78.firebaseapp.com",
+            databaseURL:       "https://kristal-adb78-default-rtdb.firebaseio.com",
+            projectId:         "kristal-adb78",
+            storageBucket:     "kristal-adb78.firebasestorage.app",
+            messagingSenderId: "1016283938031",
+            appId:             "1:1016283938031:web:54c4d13409d9784ad7af1a",
+            measurementId:     "G-LK8D1CBQ2J"
+        };
 
-      <table class="code-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>CODE</th>
-            <th>OFFICE</th>
-            <th>STATUS</th>
-            <th>CREATED</th>
-            <th>ACTIONS</th>
-          </tr>
-        </thead>
-        <tbody id="codeTableBody"></tbody>
-      </table>
-      <p id="emptyMsg" style="display:none;text-align:center;color:#94a3b8;padding:24px;">No codes found.</p>
-    </div>
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-  </main>
-</div>
+        const codeInput = document.getElementById("codeInput");
+        const continueBtn = document.getElementById("continueBtn");
+        const errorMsg = document.getElementById("errorMsg");
+        const loading = document.getElementById("loading");
 
-<div id="toast"></div>
-<script src="shared.js"></script>
+        /* FIX: Search across ALL offices' codes subcollections */
+        continueBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            
+            const code = codeInput.value.trim().toUpperCase();
 
-<script type="module">
+            // Validation
+            if (!code) {
+                showError("Please enter a transaction code.");
+                return;
+            }
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-import {
-  getFirestore,
-  collection,
-  collectionGroup,
-  doc,
-  addDoc,
-  deleteDoc,
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+            if (code.length < 6) {
+                showError("Transaction code is too short.");
+                return;
+            }
 
-/* ── Firebase config ── */
-const firebaseConfig = {
-  apiKey:            "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
-  authDomain:        "kristal-adb78.firebaseapp.com",
-  databaseURL:       "https://kristal-adb78-default-rtdb.firebaseio.com",
-  projectId:         "kristal-adb78",
-  storageBucket:     "kristal-adb78.firebasestorage.app",
-  messagingSenderId: "1016283938031",
-  appId:             "1:1016283938031:web:54c4d13409d9784ad7af1a",
-  measurementId:     "G-LK8D1CBQ2J"
-};
+            hideError();
+            loading.classList.add("show");
+            continueBtn.disabled = true;
 
-const app       = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db        = getFirestore(app);
+            try {
+                /* CRITICAL FIX: Use collectionGroup to search all "codes" across all offices */
+                const codesRef = collectionGroup(db, "codes");
+                const q = query(codesRef, where("code", "==", code));
+                const snapshot = await getDocs(q);
 
-/* ── Mount shared UI ── */
-document.getElementById("sidebar-mount").innerHTML = buildSidebar('admin1', 'gen-code');
-document.getElementById("topbar-mount").innerHTML  = buildTopbar("Generate Code", "admin1");
+                if (snapshot.empty) {
+                    showError("Invalid transaction code. Please check and try again.");
+                    loading.classList.remove("show");
+                    continueBtn.disabled = false;
+                    return;
+                }
 
-/* ── Toast ── */
-function showToast(msg) {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 3000);
-}
+                /* Found the code */
+                const codeDoc = snapshot.docs[0];
+                const codeData = codeDoc.data();
+                const officeName = codeDoc.ref.parent.parent?.id || "Unknown";
 
-/* ── Code generator ── */
-function makeCode(officePrefix) {
-  const chars  = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const random = Array.from({ length: 6 }, () =>
-    chars[Math.floor(Math.random() * chars.length)]
-  ).join("");
-  const prefix = officePrefix.replace(/\s+/g, "").substring(0, 4).toUpperCase();
-  return `${prefix}-${random}`;
-}
+                console.log("✅ Code found:", {
+                    code: codeData.code,
+                    status: codeData.status,
+                    office: officeName,
+                    createdAt: codeData.createdAt
+                });
 
-/* ========================= */
-/* DYNAMIC OFFICES           */
-/* ── Pulled from services/offices (same source as dashboard).
-   NOTE ON STRUCTURE: the RTDB version of this page read entries with a
-   "name" field. Your transaction_code codes, by contrast, use the office
-   name directly as the doc ID (confirmed from your console screenshot).
-   Since I don't know for certain which pattern services/offices follows
-   in Firestore, this reads a "name" field if present and falls back to
-   the doc ID otherwise — so it works either way. ──
-/* ========================= */
+                /* Check status - code must be UNUSED */
+                if (codeData.status === "used") {
+                    showError("This code has already been used.");
+                    loading.classList.remove("show");
+                    continueBtn.disabled = false;
+                    return;
+                }
 
-let dynamicOffices = []; // array of office name strings
+                if (codeData.status !== "unused") {
+                    showError("This code is invalid or expired.");
+                    loading.classList.remove("show");
+                    continueBtn.disabled = false;
+                    return;
+                }
 
-onSnapshot(collection(db, "services", "offices", "records"), (snapshot) => {
-  dynamicOffices = [];
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const name = data.name || docSnap.id;
-    if (name) dynamicOffices.push(name);
-  });
-  dynamicOffices.sort((a, b) => a.localeCompare(b));
-  buildOfficeCards();
-});
+                /* SUCCESS: Code is valid and unused */
+                loading.classList.remove("show");
+                
+                // Store code info and proceed
+                sessionStorage.setItem("verifiedCode", code);
+                sessionStorage.setItem("verifiedCodeOffice", officeName);
+                sessionStorage.setItem("verifiedCodeId", codeDoc.id);
 
-/* ── Build office generate cards ── */
-function buildOfficeCards() {
-  const grid = document.getElementById("officeGenGrid");
+                // Redirect to evaluation form (adjust URL as needed)
+                setTimeout(() => {
+                    window.location.href = "/evaluation-form.html";
+                }, 500);
 
-  if (!dynamicOffices.length) {
-    grid.innerHTML = `<p class="no-offices-msg">No offices found. Add offices from the Dashboard first.</p>`;
-    return;
-  }
+            } catch (error) {
+                console.error("Verification error:", error);
+                showError("An error occurred. Please try again.");
+                loading.classList.remove("show");
+                continueBtn.disabled = false;
+            }
+        });
 
-  grid.innerHTML = dynamicOffices.map(office => {
-    const id = office.replace(/\s+/g, "_");
-    return `
-      <div class="office-gen-card">
-        <div class="office-gen-top">
-          <span class="office-gen-label">🏢 ${office}</span>
-          <button class="btn-generate" id="genBtn-${id}" onclick="generateCodes('${office}')">
-            ⚡ Generate
-          </button>
-        </div>
-        <div class="qty-row">
-          <label for="qty-${id}">Quantity:</label>
-          <input class="qty-input" type="number" id="qty-${id}" value="1" min="1" max="50" />
-          <span style="font-size:12px;color:#94a3b8;">(max 50)</span>
-        </div>
-        <div class="gen-progress" id="prog-${id}"></div>
-      </div>
-    `;
-  }).join("");
-}
+        /* Enter key to submit */
+        codeInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") continueBtn.click();
+        });
 
-/* ========================= */
-/* GENERATE CODES            */
-/* Confirmed path: services/transaction_code/office_name/{office}/codes/{codeId}
-   with fields { code, status }. "createdAt" is added here too so the
-   table/exports can still sort and display a created date, even though
-   it wasn't visible in your screenshot's example doc.               */
-/* ========================= */
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.classList.add("show");
+        }
 
-window.generateCodes = async (office) => {
-  const id   = office.replace(/\s+/g, "_");
-  const btn  = document.getElementById(`genBtn-${id}`);
-  const prog = document.getElementById(`prog-${id}`);
-  const qty  = Math.min(50, Math.max(1, parseInt(document.getElementById(`qty-${id}`).value) || 1));
+        function hideError() {
+            errorMsg.classList.remove("show");
+        }
 
-  btn.disabled    = true;
-  btn.textContent = "Saving…";
-  prog.style.display = "block";
+        /* Auto-focus input */
+        codeInput.focus();
+    </script>
 
-  const codesCol = collection(db, "services", "transaction_code", "office_name", office, "codes");
-
-  for (let i = 0; i < qty; i++) {
-    prog.textContent = `Saving ${i + 1} / ${qty}…`;
-    await addDoc(codesCol, {
-      code:      makeCode(office),
-      status:    "unused",
-      createdAt: Date.now()
-    });
-  }
-
-  prog.style.display = "none";
-  btn.disabled    = false;
-  btn.textContent = "⚡ Generate";
-  showToast(`✅ ${qty} code${qty > 1 ? "s" : ""} generated for ${office}`);
-};
-
-/* ========================= */
-/* DELETE CODE               */
-/* ========================= */
-
-window.deleteCode = async (key) => {
-  if (!confirm("Delete this code?")) return;
-  const office = allCodes[key]?.office;
-  if (!office) return;
-
-  await deleteDoc(doc(db, "services", "transaction_code", "office_name", office, "codes", key));
-  showToast("🗑️ Code deleted.");
-};
-
-/* ========================= */
-/* LIVE TRANSACTION CODES    */
-/* Uses a collectionGroup query across every office's "codes"
-   subcollection, matching the dashboard's approach. Office name is
-   read off the parent office_name doc's ID since it isn't a field
-   on the code doc itself.                                          */
-/* ========================= */
-
-let allCodes       = {};
-let filteredEntries = [];
-
-onSnapshot(collectionGroup(db, "codes"), (snapshot) => {
-  allCodes = {};
-  snapshot.forEach(docSnap => {
-    const officeName = docSnap.ref.parent.parent?.id || "";
-    allCodes[docSnap.id] = { office: officeName, ...docSnap.data() };
-  });
-
-  updateStats(allCodes);
-  populateOfficeFilter(allCodes);
-  renderTable();
-});
-
-/* ── Stats (with percentage badges) ── */
-function updateStats(data) {
-  const e       = Object.values(data);
-  const total   = e.length;
-  const unused  = e.filter(c => c.status === "unused").length;
-  const used    = e.filter(c => c.status === "used").length;
-  const offices = new Set(e.map(c => c.office)).size;
-
-  document.getElementById("scTotal").textContent   = total;
-  document.getElementById("scUnused").textContent  = unused;
-  document.getElementById("scUsed").textContent    = used;
-  document.getElementById("scOffices").textContent = offices;
-
-  const unusedPct = total ? Math.round((unused / total) * 100) : 0;
-  const usedPct   = total ? Math.round((used   / total) * 100) : 0;
-  const avgPerOffice = offices ? Math.round((total / offices) * 10) / 10 : 0;
-
-  document.getElementById("scTotalBadge").textContent   = offices ? `Across ${offices} office${offices > 1 ? "s" : ""}` : "No offices yet";
-  document.getElementById("scUnusedBadge").textContent  = `${unusedPct}% of total`;
-  document.getElementById("scUsedBadge").textContent    = `${usedPct}% of total`;
-  document.getElementById("scOfficesBadge").textContent = `${avgPerOffice} avg / office`;
-}
-
-/* ── Populate office filter dropdown ── */
-function populateOfficeFilter(data) {
-  const sel     = document.getElementById("filterOffice");
-  const prev    = sel.value;
-  const offices = [...new Set(Object.values(data).map(c => c.office))].sort();
-  sel.innerHTML = `<option value="">All Offices</option>` +
-    offices.map(o => `<option value="${o}"${o === prev ? " selected" : ""}>${o}</option>`).join("");
-}
-
-/* ── Render table ── */
-function renderTable() {
-  const search = document.getElementById("searchInput").value.toLowerCase();
-  const office = document.getElementById("filterOffice").value;
-  const status = document.getElementById("filterStatus").value;
-
-  filteredEntries = Object.entries(allCodes).filter(([, c]) =>
-    (c.code.toLowerCase().includes(search) || c.office.toLowerCase().includes(search))
-    && (!office || c.office === office)
-    && (!status || c.status === status)
-  ).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
-
-  const tbody    = document.getElementById("codeTableBody");
-  const emptyMsg = document.getElementById("emptyMsg");
-
-  if (!filteredEntries.length) {
-    tbody.innerHTML        = "";
-    emptyMsg.style.display = "block";
-    return;
-  }
-
-  emptyMsg.style.display = "none";
-  tbody.innerHTML = filteredEntries.map(([key, c], i) => {
-    const date = c.createdAt
-      ? new Date(c.createdAt).toLocaleDateString("en-PH", { month:"short", day:"numeric", year:"numeric" })
-      : "—";
-    return `
-      <tr>
-        <td style="color:#94a3b8;font-size:12px;">${i + 1}</td>
-        <td><span class="code-pill">${c.code}</span></td>
-        <td>${c.office}</td>
-        <td>
-          <span class="status-badge ${c.status === "used" ? "status-used" : "status-unused"}">
-            ${c.status === "used" ? "Used" : "Unused"}
-          </span>
-        </td>
-        <td style="font-size:12px;color:#64748b;">${date}</td>
-        <td><button class="btn-action btn-delete" onclick="deleteCode('${key}')">🗑 Delete</button></td>
-      </tr>
-    `;
-  }).join("");
-}
-
-/* ── Export CSV ── */
-window.exportCSV = () => {
-  const rows = [["#", "Code", "Office", "Status", "Created At"]];
-  filteredEntries.forEach(([, c], i) => {
-    const date = c.createdAt ? new Date(c.createdAt).toLocaleString("en-PH") : "";
-    rows.push([i + 1, c.code, c.office, c.status, date]);
-  });
-  const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
-  downloadFile("transaction-codes.csv", "text/csv", csv);
-  showToast(`📥 Exported ${filteredEntries.length} codes as CSV`);
-};
-
-/* ── Export JSON ── */
-window.exportJSON = () => {
-  const data = filteredEntries.map(([key, c]) => ({
-    key,
-    code:      c.code,
-    office:    c.office,
-    status:    c.status,
-    createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : null
-  }));
-  downloadFile("transaction-codes.json", "application/json", JSON.stringify(data, null, 2));
-  showToast(`📥 Exported ${filteredEntries.length} codes as JSON`);
-};
-
-function downloadFile(filename, mime, content) {
-  const blob = new Blob([content], { type: mime });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
-}
-
-/* ── Filter events ── */
-document.getElementById("searchInput").addEventListener("input",   renderTable);
-document.getElementById("filterOffice").addEventListener("change", renderTable);
-document.getElementById("filterStatus").addEventListener("change", renderTable);
-
-</script>
 </body>
 </html>
