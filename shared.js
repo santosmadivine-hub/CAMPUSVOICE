@@ -101,7 +101,7 @@ function buildSidebar(role, activePage) {
       </nav>
 
       <div class="sidebar-footer">
-        <a class="user-chip" href="login.html">
+        <a class="user-chip" href="index.html">
           <div class="user-avatar">${avatarText}</div>
 
           <div>
