@@ -19,11 +19,13 @@
   .btn { padding: 10px 16px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
   .btn-primary { background: #2563eb; color: white; }
   .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
   .btn-sm { padding: 8px 14px; font-size: 13px; }
   .toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 9999; }
   .toast.show { opacity: 1; }
   .loading { display: none; font-size: 12px; color: #64748b; }
   .loading.show { display: inline; }
+  .settings-hint { font-size: 12px; color: #94a3b8; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -56,6 +58,45 @@
           </button>
         </div>
       </div>
+
+      <!-- LOGIN & SECURITY -->
+      <div class="settings-section">
+        <div class="settings-title">🔒 Login &amp; Security</div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Username</div>
+            <div class="settings-desc">Used to sign in to CampusVoice</div>
+          </div>
+          <input id="username" class="input-field" placeholder="Enter username">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Current Password</div>
+            <div class="settings-desc">Required to confirm any change below</div>
+          </div>
+          <input id="currentPassword" type="password" class="input-field" placeholder="Current password" autocomplete="current-password">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">New Password</div>
+            <div class="settings-desc">Leave blank to keep current password</div>
+          </div>
+          <input id="newPassword" type="password" class="input-field" placeholder="New password" autocomplete="new-password">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">Confirm New Password</div>
+          </div>
+          <input id="confirmPassword" type="password" class="input-field" placeholder="Confirm new password" autocomplete="new-password">
+        </div>
+        <div>
+          <button class="btn btn-primary btn-sm" id="securityBtn" onclick="saveSecurity()">
+            <span id="securityText">Update Login &amp; Security</span>
+            <span id="securityLoading" class="loading">Saving...</span>
+          </button>
+          <div class="settings-hint">Changing your username or password takes effect immediately on the login page.</div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -70,6 +111,7 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebas
 import {
   getFirestore,
   doc,
+  getDoc,
   setDoc,
   onSnapshot,
   updateDoc
@@ -105,22 +147,24 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-/* ── LOAD SETTINGS FROM FIRESTORE ── */
+/* ── Defaults, used only if Firestore has no doc yet ── */
 const adminId = 'admin1';  // Current admin user
+const DEFAULT_USERNAME = 'admin1';
+const DEFAULT_PASSWORD = 'admin123';
 const settingsRef = doc(db, 'admin_settings', adminId);
 
+/* ── LOAD SETTINGS FROM FIRESTORE ── */
 onSnapshot(settingsRef, (docSnap) => {
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    document.getElementById('fullName').value = data.fullName || '';
-    document.getElementById('email').value = data.email || '';
-  }
+  const data = docSnap.exists() ? docSnap.data() : {};
+  document.getElementById('fullName').value = data.fullName || '';
+  document.getElementById('email').value = data.email || '';
+  document.getElementById('username').value = data.username || DEFAULT_USERNAME;
 }, (error) => {
   console.error('Error loading settings:', error);
   showToast('❌ Error loading settings');
 });
 
-/* ── SAVE ACCOUNT TO FIRESTORE ── */
+/* ── SAVE ACCOUNT (name/email) TO FIRESTORE ── */
 window.saveAccount = async () => {
   const fullName = document.getElementById('fullName').value.trim();
   const email = document.getElementById('email').value.trim();
@@ -132,19 +176,15 @@ window.saveAccount = async () => {
     return;
   }
 
-  // Show loading state
   saveText.style.display = 'none';
   saveLoading.classList.add('show');
 
   try {
-    const settingsRef = doc(db, 'admin_settings', adminId);
-    
     await updateDoc(settingsRef, {
       fullName: fullName,
       email: email,
       lastUpdated: new Date().toISOString()
     }).catch(async (error) => {
-      // If document doesn't exist, create it
       if (error.code === 'not-found') {
         await setDoc(settingsRef, {
           adminId: adminId,
@@ -163,9 +203,82 @@ window.saveAccount = async () => {
     console.error('Error saving settings:', error);
     showToast('❌ Error saving settings: ' + error.message);
   } finally {
-    // Hide loading state
     saveLoading.classList.remove('show');
     saveText.style.display = 'inline';
+  }
+};
+
+/* ── SAVE USERNAME / PASSWORD TO FIRESTORE ── */
+window.saveSecurity = async () => {
+  const username = document.getElementById('username').value.trim();
+  const currentPassword = document.getElementById('currentPassword').value;
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const btn = document.getElementById('securityBtn');
+  const securityText = document.getElementById('securityText');
+  const securityLoading = document.getElementById('securityLoading');
+
+  if (!username) {
+    showToast('❌ Username cannot be empty');
+    return;
+  }
+  if (!currentPassword) {
+    showToast('❌ Enter your current password to confirm changes');
+    return;
+  }
+  if (newPassword && newPassword !== confirmPassword) {
+    showToast('❌ New passwords do not match');
+    return;
+  }
+
+  btn.disabled = true;
+  securityText.style.display = 'none';
+  securityLoading.classList.add('show');
+
+  try {
+    const snap = await getDoc(settingsRef);
+    const data = snap.exists() ? snap.data() : {};
+    const storedPassword = data.password || DEFAULT_PASSWORD;
+
+    if (currentPassword !== storedPassword) {
+      showToast('❌ Current password is incorrect');
+      return;
+    }
+
+    const updatePayload = {
+      username: username,
+      lastUpdated: new Date().toISOString()
+    };
+    if (newPassword) {
+      updatePayload.password = newPassword;
+    }
+
+    await updateDoc(settingsRef, updatePayload).catch(async (error) => {
+      if (error.code === 'not-found') {
+        await setDoc(settingsRef, {
+          adminId: adminId,
+          username: username,
+          password: newPassword || storedPassword,
+          createdAt: new Date().toISOString(),
+          lastUpdated: new Date().toISOString()
+        });
+      } else {
+        throw error;
+      }
+    });
+
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+
+    showToast('✅ Login details updated!');
+  } catch (error) {
+    console.error('Error saving security settings:', error);
+    showToast('❌ Error saving: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    securityLoading.classList.remove('show');
+    securityText.style.display = 'inline';
   }
 };
 </script>
