@@ -34,6 +34,7 @@
 .stat-primary { border-color: #93c5fd; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); }
 .stat-warning { border-color: #fde68a; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); }
 .stat-success { border-color: #86efac; background: linear-gradient(135deg, #f0fdf4 0%, #e7f5e9 100%); }
+.stat-media { border-color: #d8b4fe; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); }
 .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
 @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
 .chart-card { background: white; padding: 20px; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
@@ -64,6 +65,33 @@
 .comment-item:hover { border-color: #93c5fd; box-shadow: 0 2px 8px rgba(37,99,235,0.1); }
 .comment-meta { margin-top: 8px; font-size: 12px; color: #64748b; font-style: normal; font-weight: 600; }
 .comment-empty { color: #64748b; font-size: 14px; padding: 20px; text-align: center; background: #f8fafc; border-radius: 10px; border: 1px dashed #e2e8f0; }
+
+/* --- Evidence Gallery --- */
+.evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; padding: 20px; }
+.evidence-thumb { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; cursor: pointer; transition: box-shadow .2s ease, transform .2s ease; }
+.evidence-thumb:hover { box-shadow: 0 6px 16px rgba(37,99,235,0.14); transform: translateY(-2px); }
+.evidence-thumb-visual { position: relative; width: 100%; height: 110px; background: #1e40af; }
+.evidence-thumb-visual img, .evidence-thumb-visual video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.evidence-tag { position: absolute; top: 6px; right: 6px; background: rgba(30,64,175,0.8); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 5px; text-transform: uppercase; letter-spacing: .03em; }
+.evidence-thumb-date { padding: 8px 10px; font-size: 11px; color: #64748b; font-weight: 600; }
+.evidence-empty { grid-column: 1 / -1; text-align: center; color: #64748b; font-size: 14px; padding: 30px; background: #f8fafc; border-radius: 10px; border: 1px dashed #e2e8f0; }
+
+/* Evidence viewer modal */
+.evidence-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(30,64,175,0.6); align-items: center; justify-content: center; z-index: 999; padding: 20px; }
+.evidence-modal-overlay.open { display: flex; }
+.evidence-modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 540px; padding: 22px; box-shadow: 0 20px 60px rgba(30,64,175,0.25); max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.evidence-modal-visual { width: 100%; max-height: 380px; border-radius: 10px; overflow: hidden; background: #1e40af; margin-bottom: 14px; }
+.evidence-modal-visual img, .evidence-modal-visual video { width: 100%; max-height: 380px; object-fit: contain; display: block; margin: 0 auto; }
+.evidence-modal-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-family: 'DM Sans', sans-serif; font-size: 14px; color: #1e293b; gap: 12px; }
+.evidence-modal-row:last-of-type { border-bottom: none; }
+.evidence-modal-row span:first-child { color: #64748b; font-weight: 600; min-width: 100px; }
+.evidence-modal-row span:last-child { word-break: break-word; text-align: right; }
+.evidence-modal-footer { display: flex; gap: 10px; margin-top: 18px; }
+.evidence-btn-primary { flex: 1; background: #2563eb; color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+.evidence-btn-primary:hover { background: #1d4ed8; }
+.evidence-btn-secondary { flex: 1; background: #e2e8f0; color: #0f172a; border: none; padding: 10px 16px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer; }
+.evidence-btn-secondary:hover { background: #cbd5e1; }
+
 @media print { #sidebar-mount, #topbar-mount, .back-link, .btn-print { display: none !important; } }
 @media (max-width: 768px) { .analytics-header .header-row { flex-direction: column; } .stat-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); } .stat-value { font-size: 28px; } }
 </style>
@@ -128,6 +156,12 @@
                   <div class="stat-label">Respondents</div>
                   <div class="stat-value" id="stat-respondents">0</div>
                 </div>
+                <div class="stat-card stat-media">
+                  <div class="stat-icon">🖼️</div>
+                  <div class="stat-label">Evidence Files</div>
+                  <div class="stat-value" id="stat-evidence-count">0</div>
+                  <div class="stat-sub" id="stat-evidence-breakdown">—</div>
+                </div>
               </section>
 
               <section class="charts-grid">
@@ -147,9 +181,9 @@
               </section>
 
               <div class="card">
-                <div class="card-title">Evaluations Over Time<span class="card-sub">— average rating per submission date</span></div>
-                <div class="chart-wrap chart-wrap-wide" style="margin:0 20px 20px;">
-                  <canvas id="chart-trend"></canvas>
+                <div class="card-title">Evidence Gallery<span class="card-sub">— photos and videos submitted with evaluations for this office</span></div>
+                <div class="evidence-grid" id="evidence-grid">
+                  <div class="evidence-empty">Loading evidence…</div>
                 </div>
               </div>
 
@@ -178,6 +212,18 @@
 
         </div>
     </main>
+</div>
+
+<!-- EVIDENCE VIEWER MODAL -->
+<div class="evidence-modal-overlay" id="evidence-modal">
+  <div class="evidence-modal-content">
+    <div class="evidence-modal-visual" id="evidence-modal-visual"></div>
+    <div id="evidence-modal-body"></div>
+    <div class="evidence-modal-footer">
+      <button class="evidence-btn-secondary" id="evidence-modal-close">Close</button>
+      <a class="evidence-btn-primary" id="evidence-modal-open-new" href="#" target="_blank" rel="noopener">Open Full Size</a>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';document.head.appendChild(s);"></script>
@@ -230,9 +276,12 @@ const DIMENSION_SHORT_LABELS = DIMENSION_LABELS.map((_, i) => `Q${i + 1}`);
 
 let chartInstances = {
   dimensions: null,
-  satisfaction: null,
-  trend: null
+  satisfaction: null
 };
+
+// Flattened evidence list for the currently loaded office, one entry
+// per image/video, used by the Evidence Gallery card and its modal.
+let evidenceItems = [];
 
 function normalizeName(name) {
   return (name || "").toString().trim().toLowerCase().replace(/\s+/g, " ");
@@ -260,19 +309,62 @@ function formatDate(ts) {
   });
 }
 
-function avgOf(ev) {
-  let sum = 0;
-  let count = 0;
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
 
-  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-    const val = ev["rating" + i];
-    if (typeof val === "number" && !isNaN(val)) {
-      sum += val;
-      count++;
-    }
+// FacilitiesEvalActivity.kt stores "date" as a human-readable string
+// (e.g. "July 02, 2026 10:29 AM"), not a numeric timestamp — this page
+// was previously reading a nonexistent "timestamp" field, which always
+// evaluated to 0. This mirrors the parseEvalDate() used on the Facilities
+// eval-mgmt page so date range, comment sorting, and evidence dates all
+// work correctly.
+function parseEvalDate(data) {
+  if (data.date === undefined || data.date === null || data.date === "") return 0;
+
+  if (typeof data.date === "number") return data.date;
+
+  if (typeof data.date === "object" && typeof data.date.toMillis === "function") {
+    return data.date.toMillis();
   }
 
-  return count > 0 ? sum / count : 0;
+  const asNumber = Number(data.date);
+  if (!Number.isNaN(asNumber) && String(data.date).trim() !== "") return asNumber;
+
+  const parsed = new Date(data.date).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+// Normalizes evidence into a consistent array of { url, type }. Supports
+// the current multi-file schema written by FacilitiesEvalActivity.kt
+// (evidenceUrls[]/evidenceTypes[]), an earlier single-file schema
+// (evidenceUrl/evidenceType), and a fileUrl-only fallback.
+function parseEvidence(data) {
+  const items = [];
+
+  if (Array.isArray(data.evidenceUrls) && data.evidenceUrls.length) {
+    const urls = data.evidenceUrls;
+    const types = Array.isArray(data.evidenceTypes) ? data.evidenceTypes : [];
+    urls.forEach((url, i) => {
+      if (url) items.push({ url, type: types[i] === "video" ? "video" : "image" });
+    });
+    return items;
+  }
+
+  if (data.evidenceUrl) {
+    items.push({ url: data.evidenceUrl, type: data.evidenceType === "video" ? "video" : "image" });
+    return items;
+  }
+
+  if (data.fileUrl) {
+    const isVideo = /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(data.fileUrl);
+    items.push({ url: data.fileUrl, type: isVideo ? "video" : "image" });
+    return items;
+  }
+
+  return items;
 }
 
 function destroyChart(chartName) {
@@ -291,6 +383,84 @@ function showError(message, err) {
   document.getElementById("error-banner-text").textContent = message;
   document.getElementById("error-banner-detail").textContent = err ? (err.code ? `${err.code}: ${err.message}` : String(err.message || err)) : "";
 }
+
+// ======================
+// EVIDENCE GALLERY RENDERING
+// ======================
+function renderEvidenceGallery() {
+  const grid = document.getElementById("evidence-grid");
+  const imgCount = evidenceItems.filter(m => m.type === "image").length;
+  const vidCount = evidenceItems.filter(m => m.type === "video").length;
+
+  document.getElementById("stat-evidence-count").textContent = evidenceItems.length;
+  document.getElementById("stat-evidence-breakdown").textContent =
+    evidenceItems.length ? `${imgCount} image${imgCount === 1 ? "" : "s"} · ${vidCount} video${vidCount === 1 ? "" : "s"}` : "No evidence yet";
+
+  if (evidenceItems.length === 0) {
+    grid.innerHTML = `<div class="evidence-empty">No images or videos were submitted with evaluations for this office.</div>`;
+    return;
+  }
+
+  const sorted = [...evidenceItems].sort((a, b) => b.timestamp - a.timestamp);
+
+  grid.innerHTML = sorted.map((m, i) => {
+    const date = m.timestamp ? formatDate(m.timestamp) : "—";
+    const visual = m.type === "video"
+      ? `<video src="${m.url}" muted></video>`
+      : `<img src="${m.url}" alt="Evidence" loading="lazy">`;
+
+    return `
+      <div class="evidence-thumb" data-evidence-index="${i}">
+        <div class="evidence-thumb-visual">
+          ${visual}
+          <span class="evidence-tag">${m.type === "video" ? "Video" : "Image"}</span>
+        </div>
+        <div class="evidence-thumb-date">${date}</div>
+      </div>
+    `;
+  }).join("");
+
+  grid.querySelectorAll(".evidence-thumb").forEach(el => {
+    el.addEventListener("click", () => {
+      const idx = Number(el.getAttribute("data-evidence-index"));
+      openEvidenceModal(sorted[idx]);
+    });
+  });
+}
+
+const evidenceModal = document.getElementById("evidence-modal");
+const evidenceModalVisual = document.getElementById("evidence-modal-visual");
+const evidenceModalBody = document.getElementById("evidence-modal-body");
+const evidenceModalOpenNew = document.getElementById("evidence-modal-open-new");
+
+function openEvidenceModal(m) {
+  if (!m) return;
+
+  const date = m.timestamp ? new Date(m.timestamp).toLocaleString() : "—";
+
+  evidenceModalVisual.innerHTML = m.type === "video"
+    ? `<video src="${m.url}" controls autoplay></video>`
+    : `<img src="${m.url}" alt="Evidence">`;
+
+  evidenceModalBody.innerHTML = `
+    <div class="evidence-modal-row"><span>Type</span><span>${m.type === "video" ? "Video" : "Image"}</span></div>
+    <div class="evidence-modal-row"><span>Submitted</span><span>${date}</span></div>
+    <div class="evidence-modal-row"><span>Comments</span><span>${m.comments ? escapeHtml(m.comments) : "-"}</span></div>
+  `;
+
+  evidenceModalOpenNew.href = m.url;
+  evidenceModal.classList.add("open");
+}
+
+function closeEvidenceModal() {
+  evidenceModal.classList.remove("open");
+  evidenceModalVisual.innerHTML = ""; // stop video playback
+}
+
+document.getElementById("evidence-modal-close").addEventListener("click", closeEvidenceModal);
+evidenceModal.addEventListener("click", (ev) => {
+  if (ev.target === evidenceModal) closeEvidenceModal();
+});
 
 async function main() {
   const officeKey = getQueryParam("office");
@@ -347,7 +517,7 @@ async function main() {
         id: docSnap.id,
         officeName: data.officeName || "Unknown",
         comments: data.comments || "",
-        timestamp: Number(data.timestamp) || 0
+        timestamp: parseEvalDate(data)
       };
 
       // ADMIN 3 SPECIFIC: rating1 through rating10
@@ -357,6 +527,16 @@ async function main() {
 
       if (normalizeName(ev.officeName) === targetKey) {
         evaluations.push(ev);
+
+        // Flatten this evaluation's evidence into the gallery list.
+        parseEvidence(data).forEach(item => {
+          evidenceItems.push({
+            url: item.url,
+            type: item.type,
+            timestamp: ev.timestamp,
+            comments: ev.comments
+          });
+        });
       }
     });
   } catch (err) {
@@ -404,7 +584,8 @@ async function main() {
     satisfactionPct,
     overallAvg,
     dimAverages,
-    evaluations: evaluations.length
+    evaluations: evaluations.length,
+    evidenceCount: evidenceItems.length
   });
 
   document.getElementById("stat-total-evals").textContent = total;
@@ -412,6 +593,8 @@ async function main() {
   document.getElementById("stat-overall-rating").textContent = `${overallAvg.toFixed(1)} / 5`;
   document.getElementById("stat-overall-label").textContent = ratingLabel(overallAvg);
   document.getElementById("stat-respondents").textContent = respondents;
+
+  renderEvidenceGallery();
 
   const tbody = document.getElementById("breakdown-table-body");
 
@@ -455,7 +638,7 @@ async function main() {
 
   if (typeof Chart === "undefined") {
     console.error("Chart.js did not load — window.Chart is undefined.");
-    ["chart-dimensions", "chart-satisfaction", "chart-trend"].forEach(id => {
+    ["chart-dimensions", "chart-satisfaction"].forEach(id => {
       const canvas = document.getElementById(id);
       if (canvas && canvas.parentElement) {
         canvas.parentElement.innerHTML = '<div class="chart-error">Chart library failed to load, so this chart can\'t render. Check your network/ad-blocker or reload the page.</div>';
@@ -568,82 +751,6 @@ async function main() {
   } catch (err) {
     console.error("✗ Error creating satisfaction chart:", err);
     const wrap = document.getElementById("chart-satisfaction")?.parentElement;
-    if (wrap) wrap.innerHTML = `<div class="chart-error">Couldn't render this chart: ${err.message}</div>`;
-  }
-
-  // TREND CHART (Line)
-  const byDay = {};
-
-  evaluations.forEach(ev => {
-    if (!ev.timestamp) return;
-
-    const day = new Date(ev.timestamp).toISOString().slice(0, 10);
-
-    if (!byDay[day]) {
-      byDay[day] = {
-        sum: 0,
-        count: 0
-      };
-    }
-
-    byDay[day].sum += avgOf(ev);
-    byDay[day].count++;
-  });
-
-  const sortedDays = Object.keys(byDay).sort();
-
-  try {
-    const trendCanvas = document.getElementById("chart-trend");
-    if (trendCanvas) {
-      destroyChart("trend");
-
-      const ctx = trendCanvas.getContext("2d");
-      if (ctx) {
-        chartInstances.trend = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels: sortedDays.map(d =>
-              formatDate(new Date(d).getTime())
-            ),
-            datasets: [{
-              label: "Average Rating",
-              data: sortedDays.map(d =>
-                byDay[d].sum / byDay[d].count
-              ),
-              borderColor: "#2563eb",
-              backgroundColor: "rgba(37, 99, 235, 0.12)",
-              fill: true,
-              tension: 0.3,
-              borderWidth: 2,
-              pointRadius: 4,
-              pointBackgroundColor: "#2563eb",
-              pointBorderColor: "#ffffff",
-              pointBorderWidth: 2
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                max: 5,
-                ticks: {
-                  stepSize: 1
-                }
-              }
-            }
-          }
-        });
-        console.log("✓ Trend chart initialized");
-      }
-    }
-  } catch (err) {
-    console.error("✗ Error creating trend chart:", err);
-    const wrap = document.getElementById("chart-trend")?.parentElement;
     if (wrap) wrap.innerHTML = `<div class="chart-error">Couldn't render this chart: ${err.message}</div>`;
   }
 }
