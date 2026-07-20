@@ -199,13 +199,13 @@
   align-items:center;
   justify-content:center;
   gap:32px;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
   padding:12px 0;
   flex:1;
 }
 .donut-wrap svg{
-  flex-shrink:1;
-  width: 320px;
+  flex-shrink:0;
+  width: 200px;
   max-width:100%;
   height:auto;
 }
@@ -365,7 +365,10 @@
     gap: 28px;
   }
   .donut-wrap {
-    gap: 28px;
+    gap: 20px;
+  }
+  .donut-wrap svg {
+    width: 170px;
   }
   .quick-access-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -398,11 +401,11 @@
     height:320px;
   }
   .donut-wrap {
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 20px;
   }
   .donut-wrap svg {
-    width: 260px;
+    width: 180px;
   }
   .dashboard-container {
     padding: 20px 16px 28px;
@@ -475,8 +478,11 @@
   .bar-chart-wrap svg {
     height: 280px;
   }
+  .donut-wrap {
+    flex-direction: column;
+  }
   .donut-wrap svg {
-    width: 220px;
+    width: 200px;
   }
   .quick-access-grid {
     grid-template-columns: 1fr;
@@ -553,7 +559,7 @@
           </div>
           <div class="donut-wrap">
             <div class="pie-wrap" id="codeUtilWrap">
-              <svg id="code-pie-svg" viewBox="0 0 120 120" width="320" height="320"></svg>
+              <svg id="code-pie-svg" viewBox="0 0 120 120" width="200" height="200"></svg>
               <div class="pie-tooltip" id="code-pie-tooltip"></div>
             </div>
             <div class="donut-legend" id="code-pie-legend"></div>
@@ -642,24 +648,9 @@ const db        = getFirestore(app);
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','dashboard');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Dashboard','admin1');
 
-/* ── Firestore collection references ──────────────────────────────
-   Evaluations path matches ServiceEvalActivity.kt exactly:
-     services/evaluations/records/{id}
-
-   Codes path is confirmed from the Firestore console screenshot:
-     services/transaction_code/office_name/{officeName}/codes/{codeId}
-     e.g. services/transaction_code/office_name/Registrar/codes/code1
-     Each code doc has { code: "sss", status: "used" } — no office
-     field on the doc itself, so we read the office name off the
-     parent doc's ID via a collectionGroup query.
-
-   Offices path is confirmed by generate-code.html: services/offices,
-   read there with a "name" field. Since I can't see the actual docs,
-   this reads "name" if present and falls back to the doc ID so it
-   works either way. */
 const evaluationsCol = collection(db, "services", "evaluations", "records");
 const officesCol      = collection(db, "services", "offices", "records");
-const codesGroup      = collectionGroup(db, "codes"); // CONFIRMED path: services/transaction_code/office_name/{office}/codes
+const codesGroup      = collectionGroup(db, "codes");
 
 let offices   = {};
 let allCodes  = {};
@@ -676,10 +667,6 @@ function avgScore(item) {
   return c?s/c:0;
 }
 
-// ── Listen to transaction codes ──
-// Confirmed structure: services/transaction_code/office_name/{office}/codes/{codeId}
-// { code: "sss", status: "used" }. The office name isn't a field on the
-// code doc, so it's read off the parent office_name doc's ID.
 onSnapshot(codesGroup, (snapshot) => {
   allCodes = {};
   snapshot.forEach(docSnap => {
@@ -689,8 +676,6 @@ onSnapshot(codesGroup, (snapshot) => {
   renderCodeUtilization();
 });
 
-// ── Listen to offices ──
-// Reads a "name" field if present, falls back to the doc ID otherwise.
 onSnapshot(officesCol, (snapshot) => {
   offices = {};
   if (snapshot.empty) {
@@ -706,7 +691,6 @@ onSnapshot(officesCol, (snapshot) => {
   renderCodeUtilization();
 });
 
-// ── Listen to evaluations (matches ServiceEvalActivity.kt write path) ──
 onSnapshot(evaluationsCol, (snapshot) => {
   const today = new Date();
   let daily=0, weekly=0, monthly=0;
@@ -736,9 +720,6 @@ onSnapshot(evaluationsCol, (snapshot) => {
   renderLineChart();
 });
 
-/* ── Polar-to-cartesian helper for pie wedges. Angle is measured in degrees
-   from the top (12 o'clock), increasing clockwise — matches how people read
-   a pie chart, unlike the default SVG angle convention. ── */
 function polarToCartesian(cx, cy, r, angleDeg) {
   const rad = (angleDeg) * Math.PI / 180;
   return {
@@ -792,8 +773,6 @@ function renderCodeUtilization(){
     const angle = (seg.count / totalCodes) * 360;
     const endAngle = startAngle + angle;
 
-    // A single 100% slice can't be drawn as one arc (start === end point),
-    // so draw it as a full circle instead.
     let slice;
     if (segments.length === 1) {
       slice = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -830,7 +809,6 @@ function renderCodeUtilization(){
     slice.addEventListener("mousemove", moveTooltip);
     slice.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
 
-    // Touch support: tap a slice to show its coverage, tap elsewhere to hide.
     slice.addEventListener("touchstart", (evt) => {
       evt.preventDefault();
       showTooltip(evt.touches[0]);
@@ -870,29 +848,24 @@ function renderBarChart(total, pos, neu, neg) {
     { key: "negative", label: "Negative", color: "var(--red)", count: neg }
   ];
 
-  // Calculate percentages
   const posPercent = (pos / total) * 100;
   const neuPercent = (neu / total) * 100;
   const negPercent = (neg / total) * 100;
 
-  // Chart dimensions
   const width = 500;
   const height = 320;
   const padding = { top: 20, right: 30, bottom: 60, left: 50 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
-  // Y-axis scale (0-100%)
   const yMin = 0;
   const yMax = 100;
   const yRange = yMax - yMin;
 
-  // Draw Y-axis gridlines and labels
   for (let i = 0; i <= 5; i++) {
     const yVal = (i / 5) * yMax;
     const y = padding.top + chartH - (yVal / yRange) * chartH;
 
-    // Gridline
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", padding.left);
     line.setAttribute("x2", width - padding.right);
@@ -903,7 +876,6 @@ function renderBarChart(total, pos, neu, neg) {
     line.setAttribute("stroke-dasharray", "4,2");
     svg.appendChild(line);
 
-    // Y-axis label
     const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
     label.setAttribute("x", padding.left - 10);
     label.setAttribute("y", y + 4);
@@ -915,7 +887,6 @@ function renderBarChart(total, pos, neu, neg) {
     svg.appendChild(label);
   }
 
-  // Draw axes
   const xAxisY = padding.top + chartH;
   const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
   xAxis.setAttribute("x1", padding.left);
@@ -935,7 +906,6 @@ function renderBarChart(total, pos, neu, neg) {
   yAxis.setAttribute("stroke-width", "1.5");
   svg.appendChild(yAxis);
 
-  // Draw bars
   const barWidth = chartW / (categories.length * 1.5);
   const barSpacing = chartW / categories.length;
   const baseX = padding.left + barSpacing / 2;
@@ -948,7 +918,6 @@ function renderBarChart(total, pos, neu, neg) {
     const x = baseX + idx * barSpacing - barWidth / 2;
     const y = xAxisY - barHeight;
 
-    // Bar rectangle
     const bar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     bar.setAttribute("x", x);
     bar.setAttribute("y", y);
@@ -960,7 +929,6 @@ function renderBarChart(total, pos, neu, neg) {
     bar.style.cursor = "pointer";
     bar.style.transition = "opacity 0.2s ease";
 
-    // Tooltip on hover
     const showTooltip = (evt) => {
       tooltip.classList.add("show");
       tooltip.innerHTML = `
@@ -987,7 +955,6 @@ function renderBarChart(total, pos, neu, neg) {
       tooltip.classList.remove("show");
     });
 
-    // Touch support
     bar.addEventListener("touchstart", (evt) => {
       evt.preventDefault();
       showTooltip(evt.touches[0]);
@@ -995,7 +962,6 @@ function renderBarChart(total, pos, neu, neg) {
 
     svg.appendChild(bar);
 
-    // Percentage label above bar
     const percentLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
     percentLabel.setAttribute("x", x + barWidth / 2);
     percentLabel.setAttribute("y", y - 8);
@@ -1007,7 +973,6 @@ function renderBarChart(total, pos, neu, neg) {
     percentLabel.textContent = percentage.toFixed(1) + "%";
     svg.appendChild(percentLabel);
 
-    // X-axis label
     const xLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
     xLabel.setAttribute("x", x + barWidth / 2);
     xLabel.setAttribute("y", xAxisY + 25);
@@ -1020,7 +985,6 @@ function renderBarChart(total, pos, neu, neg) {
     svg.appendChild(xLabel);
   });
 
-  // Y-axis label
   const yAxisLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
   yAxisLabel.setAttribute("x", 10);
   yAxisLabel.setAttribute("y", padding.top + chartH / 2);
@@ -1046,7 +1010,6 @@ function renderLineChart(){
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
-  // Build last 7 days
   const days_data = [];
   const fullDayNames = [];
   const dateLabels = [];
@@ -1080,7 +1043,6 @@ function renderLineChart(){
     c
   }));
 
-  // Gridlines
   const gridLines = 4;
   for (let g = 0; g <= gridLines; g++) {
     const y = padding.top + (chartH / gridLines) * g;
@@ -1095,7 +1057,6 @@ function renderLineChart(){
   }
 
   if (points.length > 1) {
-    // Area fill
     const areaPath =
       `M${points[0].x},${padding.top + chartH} ` +
       points.map(p => `L${p.x},${p.y}`).join(" ") +
@@ -1106,7 +1067,6 @@ function renderLineChart(){
     area.setAttribute("stroke", "none");
     svg.appendChild(area);
 
-    // Line
     const linePath = points.map((p, i) => (i === 0 ? "M" : "L") + `${p.x},${p.y}`).join(" ");
     const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
     line.setAttribute("d", linePath);
@@ -1118,7 +1078,6 @@ function renderLineChart(){
     svg.appendChild(line);
   }
 
-  // Dots + labels
   points.forEach((p, i) => {
     const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     dot.setAttribute("cx", p.x);
@@ -1149,8 +1108,6 @@ function renderLineChart(){
     label.textContent = days_data[i];
     svg.appendChild(label);
 
-    // Wider invisible hit-area so hovering near a point (not just the 4px dot)
-    // still triggers the tooltip — the visible dot is too small to target reliably.
     const hitArea = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     hitArea.setAttribute("cx", p.x);
     hitArea.setAttribute("cy", p.y);
