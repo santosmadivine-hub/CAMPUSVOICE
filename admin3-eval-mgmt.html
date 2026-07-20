@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-  /* --- Evaluation Management: Match Admin 1/2 Design --- */
 
   .card {
     background: #fff;
@@ -536,6 +535,8 @@
       <div class="eval-stats">
         <div class="eval-stat-pill">📋 Total <span id="stat-total">0</span></div>
         <div class="eval-stat-pill">🏢 Offices <span id="stat-offices">0</span></div>
+        <div class="eval-stat-pill">📷 Total Images <span id="stat-images">0</span></div>
+        <div class="eval-stat-pill">🎥 Total Videos <span id="stat-videos">0</span></div>
         <div class="eval-stat-pill">⏳ Pending <span id="stat-pending">0</span></div>
         <div class="eval-stat-pill">🙅 No Action <span id="stat-no-action">0</span></div>
         <div class="eval-stat-pill">✅ Resolved <span id="stat-resolved">0</span></div>
@@ -661,25 +662,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Collection names (Firestore).
-// Evaluations + history match what FacilitiesEvalActivity.kt writes to
-// via firestore.collection("facility_evaluations") /
-// firestore.collection("evaluation_history").
+
 const EVAL_COLLECTION = "facility_evaluations";
 const HISTORY_COLLECTION = "evaluation_history";
-// Confirmed via Firestore console: the offices collection is named
-// "offices", with each document holding a "name" field (e.g. "Cashier").
 const OFFICE_COLLECTION = "offices";
-
-// Evaluations with an average rating at or above this threshold (out of 5)
-// are treated as positive feedback and auto-classified as "No Action
-// Required" instead of "Pending", so admins only need to look at
-// genuinely low-rated submissions in the Pending tab. Adjust this single
-// constant to tune the cutoff.
 const LOW_RATING_THRESHOLD = 3;
-
-// Display labels/icons for each status value, used across the table,
-// stat pills, detail modal, and CSV export.
 const STATUS_META = {
   pending: { label: "Pending", icon: "⏳" },
   no_action: { label: "No Action Required", icon: "🙅" },
@@ -715,11 +702,6 @@ function makeCode(officeName, id) {
   return `${prefix}-${suffix}`;
 }
 
-// FacilitiesEvalActivity.kt stores "date" as a human-readable string
-// (e.g. "July 02, 2026 10:29 AM") rather than a numeric timestamp.
-// This converts it into a real millisecond timestamp so sorting,
-// display, and CSV export all work correctly. Falls back to a
-// numeric value if the field is ever stored that way instead.
 function parseEvalDate(ev) {
   if (ev.date === undefined || ev.date === null || ev.date === "") return 0;
 
@@ -737,17 +719,6 @@ function parseEvalDate(ev) {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-// Normalizes whatever is stored under ev.status into "pending",
-// "no_action", or "resolved".
-//
-// Records that predate this feature (no status field) — which today is
-// every record the Kotlin app writes, since it never sets a status field
-// on submit — are auto-classified from their average rating instead of
-// defaulting to "pending":
-//   - avgRating < LOW_RATING_THRESHOLD  -> "pending"   (needs attention)
-//   - avgRating >= LOW_RATING_THRESHOLD -> "no_action"  (positive feedback)
-// Once an admin explicitly sets a status via the Edit modal, that saved
-// value is always respected and skips the auto-classification.
 function parseEvalStatus(ev, avgRating) {
   const stored = (ev.status || "").toString().toLowerCase();
   if (stored === "resolved" || stored === "pending" || stored === "no_action") {
@@ -756,10 +727,6 @@ function parseEvalStatus(ev, avgRating) {
   return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
 }
 
-// Normalizes evidence into a consistent array of { url, type }. Supports
-// the current multi-file Android schema (evidenceUrls[]/evidenceTypes[]),
-// the earlier single-file schema (evidenceUrl/evidenceType), and the
-// original fileUrl-only schema (type guessed from extension).
 function parseEvidence(data) {
   const items = [];
 
@@ -786,8 +753,6 @@ function parseEvidence(data) {
   return items;
 }
 
-// Full text of the 10 questions on the Facilities Evaluation Form,
-// keyed by their rating field. Used in the View modal breakdown.
 const QUESTION_LABELS = {
   rating1: "1. The needed equipment/resources are available.",
   rating2: "2. The equipment/resources are working properly.",
@@ -827,10 +792,7 @@ onSnapshot(officeCollRef, (snapshot) => {
   console.error("Failed to load offices:", err);
 });
 
-// ======================
-// LOAD FACILITY EVALUATIONS -> facility_evaluations collection
-// (real-time — fires for every new Android submission too)
-// ======================
+
 const evalCollRef = collection(db, EVAL_COLLECTION);
 
 onSnapshot(evalCollRef, (snapshot) => {
@@ -941,10 +903,20 @@ function evidenceCellHtml(e) {
 function renderSubmissions() {
   const filtered = getFilteredSubmissions();
 
-  // Stat pills reflect the totals (unfiltered)
   document.getElementById("stat-total").textContent = evaluations.length;
   const distinctOffices = new Set(evaluations.map(e => e.officeName));
   document.getElementById("stat-offices").textContent = distinctOffices.size;
+
+  const totalImages = evaluations.reduce(
+    (sum, e) => sum + e.evidence.filter(item => item.type === "image").length,
+    0
+  );
+  const totalVideos = evaluations.reduce(
+    (sum, e) => sum + e.evidence.filter(item => item.type === "video").length,
+    0
+  );
+  document.getElementById("stat-images").textContent = totalImages;
+  document.getElementById("stat-videos").textContent = totalVideos;
 
   const pendingCount = evaluations.filter(e => e.status === "pending").length;
   const noActionCount = evaluations.filter(e => e.status === "no_action").length;
@@ -969,8 +941,6 @@ function renderSubmissions() {
     return;
   }
 
-  // Edit is only available from the Pending and Resolved tabs — records
-  // under No Action Required only get a View button, matching Admin 2.
   const showEditButtonForTab = showActionColumn && currentTab !== "no_action";
 
   tbody.innerHTML = filtered.map((e, i) => {
@@ -1086,10 +1056,6 @@ document.getElementById("btn-export").addEventListener("click", () => {
 const detailModal = document.getElementById("detail-modal");
 const detailModalBody = document.getElementById("detail-modal-body");
 
-// Renders the thumbnail grid inside the detail modal from a record's
-// normalized evidence array. Images use <img>, videos use a muted
-// <video> frame with a "Video" tag; both are wrapped in a link that
-// opens the full Cloudinary URL in a new tab.
 function evidenceGalleryHtml(e) {
   if (!e.evidence.length) {
     return `<div class="evidence-empty-note">No images or videos were attached.</div>`;
