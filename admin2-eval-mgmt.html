@@ -528,6 +528,8 @@
       <div class="eval-stats">
         <div class="eval-stat-pill">📋 Total <span id="stat-total">0</span></div>
         <div class="eval-stat-pill">🏢 Offices <span id="stat-offices">0</span></div>
+        <div class="eval-stat-pill">📷 Total Images <span id="stat-images">0</span></div>
+        <div class="eval-stat-pill">🎥 Total Videos <span id="stat-videos">0</span></div>
         <div class="eval-stat-pill">⏳ Pending <span id="stat-pending">0</span></div>
         <div class="eval-stat-pill">🙅 No Action <span id="stat-no-action">0</span></div>
         <div class="eval-stat-pill">✅ Resolved <span id="stat-resolved">0</span></div>
@@ -908,9 +910,21 @@ function renderSubmissions() {
   const filtered = getFilteredSubmissions();
 
   // Update stats
+  // Update stats
   document.getElementById("stat-total").textContent = evaluations.length;
   const distinctOffices = new Set(evaluations.map(e => e.officeName));
   document.getElementById("stat-offices").textContent = distinctOffices.size;
+
+  const totalImages = evaluations.reduce(
+    (sum, e) => sum + e.evidence.filter(item => item.type === "image").length,
+    0
+  );
+  const totalVideos = evaluations.reduce(
+    (sum, e) => sum + e.evidence.filter(item => item.type === "video").length,
+    0
+  );
+  document.getElementById("stat-images").textContent = totalImages;
+  document.getElementById("stat-videos").textContent = totalVideos;
 
   const pendingCount = evaluations.filter(e => e.status === "pending").length;
   const noActionCount = evaluations.filter(e => e.status === "no_action").length;
