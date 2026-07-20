@@ -6,6 +6,307 @@
 <title>CampusVoice – Multimedia Feedback | Admin 3</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
+<style>
+  .toolbar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .toolbar-note {
+    font-size: 13px;
+    color: #64748b;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .toolbar-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-select,
+  .filter-date,
+  .filter-search {
+    height: 40px;
+    background: #f8fafc;
+    border: 1px solid #dbe4ee;
+    border-radius: 10px;
+    padding: 0 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: #0f172a;
+  }
+
+  .filter-search {
+    min-width: 200px;
+  }
+
+  .btn-sm {
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: none;
+    background: #e2e8f0;
+    color: #0f172a;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .btn-sm:hover {
+    background: #cbd5e1;
+  }
+
+  .media-stats {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .media-stat-pill {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .media-stat-pill span {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+  }
+
+  .media-thumb {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .media-thumb:hover {
+    box-shadow: 0 8px 20px rgba(15, 27, 50, 0.10);
+    transform: translateY(-2px);
+  }
+
+  .media-thumb-visual {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    background: #0f172a;
+  }
+
+  .media-thumb-visual img,
+  .media-thumb-visual video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .media-tag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(15, 23, 42, 0.75);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .media-thumb-body {
+    padding: 10px 12px 12px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .media-office {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .media-date {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  .empty-media {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    grid-column: 1 / -1;
+  }
+
+  .limits-note {
+    margin-top: 24px;
+    font-size: 12px;
+    color: #94a3b8;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* Media viewer modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 27, 50, 0.65);
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 20px;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .media-modal-content {
+    background: #fff;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 560px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(15, 27, 50, 0.2);
+    max-height: 88vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .media-modal-visual {
+    width: 100%;
+    max-height: 380px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0f172a;
+    margin-bottom: 16px;
+  }
+
+  .media-modal-visual img,
+  .media-modal-visual video {
+    width: 100%;
+    max-height: 380px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .modal-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: #334155;
+    gap: 12px;
+  }
+
+  .modal-row:last-of-type {
+    border-bottom: none;
+  }
+
+  .modal-row span:first-child {
+    color: #94a3b8;
+    font-weight: 600;
+    min-width: 100px;
+  }
+
+  .modal-row span:last-child {
+    word-break: break-word;
+    text-align: right;
+  }
+
+  .media-modal-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn-primary {
+    flex: 1;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background: #1d4ed8;
+  }
+
+  .btn-secondary {
+    flex: 1;
+    background: #e2e8f0;
+    color: #0f172a;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-secondary:hover {
+    background: #cbd5e1;
+  }
+
+  @media (max-width: 768px) {
+    .toolbar-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .toolbar-filters {
+      width: 100%;
+    }
+    .filter-search {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+</style>
 </head>
 <body>
 <div class="layout">
@@ -13,34 +314,362 @@
   <main class="main fade-in">
     <div id="topbar-mount"></div>
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-      <div style="font-size:0.85rem;color:var(--muted)">User-submitted photos and videos as evaluation evidence</div>
-      <div style="display:flex;gap:10px;">
-        <button class="btn btn-ghost btn-sm">Filter by Office</button>
-        <button class="btn btn-ghost btn-sm">Filter by Date</button>
+    <div style="margin-top: 28px;">
+
+      <div class="media-stats">
+        <div class="media-stat-pill">🗂️ Total Files <span id="stat-total-files">0</span></div>
+        <div class="media-stat-pill">📷 Images <span id="stat-total-images">0</span></div>
+        <div class="media-stat-pill">🎥 Videos <span id="stat-total-videos">0</span></div>
+        <div class="media-stat-pill">🏢 Offices <span id="stat-total-offices">0</span></div>
       </div>
-    </div>
 
-    <div class="media-grid">
-      <div class="media-thumb"><div class="icon">🖼️</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Comfort Room 1</div><div class="media-tag">Image</div></div>
-      <div class="media-thumb"><div class="icon">🎥</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Gymnasium Roof</div><div class="media-tag">Video</div></div>
-      <div class="media-thumb"><div class="icon">🖼️</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Canteen Area</div><div class="media-tag">Image</div></div>
-      <div class="media-thumb"><div class="icon">🖼️</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Library Entrance</div><div class="media-tag">Image</div></div>
-      <div class="media-thumb"><div class="icon">🎥</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Hallway Flood</div><div class="media-tag">Video</div></div>
-      <div class="media-thumb"><div class="icon">🖼️</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Lab Equipment</div><div class="media-tag">Image</div></div>
-      <div class="media-thumb"><div class="icon">🖼️</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Parking Lot</div><div class="media-tag">Image</div></div>
-      <div class="media-thumb"><div class="icon">🎥</div><div style="font-size:0.73rem;color:var(--label);text-align:center">Classroom Damage</div><div class="media-tag">Video</div></div>
-    </div>
+      <div class="toolbar-row">
+        <div class="toolbar-note">User-submitted photos and videos as evaluation evidence</div>
+        <div class="toolbar-filters">
+          <input type="text" id="media-search" class="filter-search" placeholder="Search by office…">
+          <select id="office-filter" class="filter-select">
+            <option value="">All Offices</option>
+          </select>
+          <select id="type-filter" class="filter-select">
+            <option value="">All Types</option>
+            <option value="image">Images Only</option>
+            <option value="video">Videos Only</option>
+          </select>
+          <input type="date" id="date-filter" class="filter-date">
+          <button class="btn-sm" id="btn-clear-filters">Clear</button>
+        </div>
+      </div>
 
-    <div style="margin-top:20px;font-size:0.78rem;color:var(--muted);">
-      File limits: Images (.png, .jpg, .jpeg) max 10 MB &nbsp;·&nbsp; Videos max 60 MB &nbsp;·&nbsp; Comments: 1–300 words
+      <div class="media-grid" id="media-grid">
+        <div class="empty-media">Loading evidence…</div>
+      </div>
+
+      <div class="limits-note">
+        File limits: Images (.png, .jpg, .jpeg) max 10 MB &nbsp;·&nbsp; Videos max 60 MB &nbsp;·&nbsp; Comments: 1–300 words
+      </div>
+
     </div>
   </main>
 </div>
+
+<!-- MEDIA VIEWER MODAL -->
+<div class="modal-overlay" id="media-modal">
+  <div class="media-modal-content">
+    <div class="media-modal-visual" id="media-modal-visual"></div>
+    <div id="media-modal-body"></div>
+    <div class="media-modal-footer">
+      <button class="btn-secondary" id="media-modal-close">Close</button>
+      <a class="btn-primary" id="media-modal-open-new" href="#" target="_blank" rel="noopener" style="text-align:center; text-decoration:none;">Open Full Size</a>
+    </div>
+  </div>
+</div>
+
 <script src="shared.js"></script>
-<script>
-  document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin3', 'multimedia');
-  document.getElementById('topbar-mount').innerHTML = buildTopbar('Multimedia Feedback', 'admin3');
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  onSnapshot,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain: "kristal-adb78.firebaseapp.com",
+  projectId: "kristal-adb78",
+  storageBucket: "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId: "G-LK8D1CBQ2J"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Matches what FacilitiesEvalActivity.kt writes to via
+// firestore.collection("facility_evaluations").
+const EVAL_COLLECTION = "facility_evaluations";
+
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin3', 'multimedia');
+document.getElementById('topbar-mount').innerHTML = buildTopbar('Multimedia Feedback', 'admin3');
+
+// ======================
+// STATE
+// ======================
+let mediaItems = []; // flattened: one entry per image/video across all evaluations
+let searchTerm = "";
+let officeFilter = "";
+let typeFilter = "";
+let dateFilter = "";
+
+// ======================
+// HELPERS
+// ======================
+
+// Normalizes evidence into a consistent array of { url, type }. Supports
+// the current multi-file schema written by FacilitiesEvalActivity.kt
+// (evidenceUrls[]/evidenceTypes[]), an earlier single-file schema
+// (evidenceUrl/evidenceType), and a fileUrl-only fallback (type guessed
+// from extension), so nothing breaks if older records exist.
+function parseEvidence(data) {
+  const items = [];
+
+  if (Array.isArray(data.evidenceUrls) && data.evidenceUrls.length) {
+    const urls = data.evidenceUrls;
+    const types = Array.isArray(data.evidenceTypes) ? data.evidenceTypes : [];
+    urls.forEach((url, i) => {
+      if (url) items.push({ url, type: types[i] === "video" ? "video" : "image" });
+    });
+    return items;
+  }
+
+  if (data.evidenceUrl) {
+    items.push({ url: data.evidenceUrl, type: data.evidenceType === "video" ? "video" : "image" });
+    return items;
+  }
+
+  if (data.fileUrl) {
+    const isVideo = /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(data.fileUrl);
+    items.push({ url: data.fileUrl, type: isVideo ? "video" : "image" });
+    return items;
+  }
+
+  return items;
+}
+
+// FacilitiesEvalActivity.kt stores "date" as a human-readable string
+// (e.g. "July 02, 2026 10:29 AM"), not a numeric timestamp. This converts
+// it into a real millisecond timestamp for sorting/filtering/display.
+function parseEvalDate(data) {
+  if (data.date === undefined || data.date === null || data.date === "") return 0;
+
+  if (typeof data.date === "number") return data.date;
+
+  if (typeof data.date === "object" && typeof data.date.toMillis === "function") {
+    return data.date.toMillis();
+  }
+
+  const asNumber = Number(data.date);
+  if (!Number.isNaN(asNumber) && String(data.date).trim() !== "") return asNumber;
+
+  const parsed = new Date(data.date).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ======================
+// LOAD FACILITY EVALUATIONS (real-time — new Android submissions with
+// evidence appear here automatically, no refresh needed)
+// ======================
+const evalCollectionRef = collection(db, EVAL_COLLECTION);
+const evalQuery = query(evalCollectionRef, orderBy("date", "desc"));
+
+onSnapshot(evalQuery, (snapshot) => {
+  mediaItems = [];
+
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    const officeName = data.officeName || "Unknown Office";
+    const timestamp = parseEvalDate(data);
+    const comments = data.comments || "";
+    const evidence = parseEvidence(data);
+
+    evidence.forEach((item, index) => {
+      mediaItems.push({
+        evalId: doc.id,
+        url: item.url,
+        type: item.type,
+        officeName,
+        timestamp,
+        comments,
+        index
+      });
+    });
+  });
+
+  populateOfficeFilter();
+  renderMediaGrid();
+}, (err) => {
+  console.error("Failed to load facility evaluations:", err);
+  const grid = document.getElementById("media-grid");
+  grid.innerHTML = `<div class="empty-media">Couldn't load evidence from the database.</div>`;
+});
+
+// ======================
+// FILTER DROPDOWN
+// ======================
+function populateOfficeFilter() {
+  const select = document.getElementById("office-filter");
+  const currentValue = select.value;
+
+  const offices = [...new Set(mediaItems.map(m => m.officeName))].sort();
+  select.innerHTML = ['<option value="">All Offices</option>']
+    .concat(offices.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`))
+    .join("");
+
+  select.value = currentValue;
+}
+
+// ======================
+// FILTERING
+// ======================
+function getFilteredMedia() {
+  const term = searchTerm.trim().toLowerCase();
+
+  return mediaItems.filter(m => {
+    if (officeFilter && m.officeName !== officeFilter) return false;
+    if (typeFilter && m.type !== typeFilter) return false;
+    if (term && !m.officeName.toLowerCase().includes(term)) return false;
+
+    if (dateFilter) {
+      const itemDate = m.timestamp ? new Date(m.timestamp).toISOString().slice(0, 10) : "";
+      if (itemDate !== dateFilter) return false;
+    }
+
+    return true;
+  }).sort((a, b) => b.timestamp - a.timestamp);
+}
+
+// ======================
+// RENDER GRID
+// ======================
+function renderMediaGrid() {
+  // Stats always reflect the full unfiltered dataset
+  const totalImages = mediaItems.filter(m => m.type === "image").length;
+  const totalVideos = mediaItems.filter(m => m.type === "video").length;
+  const distinctOffices = new Set(mediaItems.map(m => m.officeName));
+
+  document.getElementById("stat-total-files").textContent = mediaItems.length;
+  document.getElementById("stat-total-images").textContent = totalImages;
+  document.getElementById("stat-total-videos").textContent = totalVideos;
+  document.getElementById("stat-total-offices").textContent = distinctOffices.size;
+
+  const grid = document.getElementById("media-grid");
+  const filtered = getFilteredMedia();
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-media">No matching evidence found.</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((m, i) => {
+    const date = m.timestamp
+      ? new Date(m.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : "-";
+
+    const visual = m.type === "video"
+      ? `<video src="${m.url}" muted></video>`
+      : `<img src="${m.url}" alt="Evidence" loading="lazy">`;
+
+    return `
+      <div class="media-thumb" data-media-index="${i}">
+        <div class="media-thumb-visual">
+          ${visual}
+          <span class="media-tag">${m.type === "video" ? "Video" : "Image"}</span>
+        </div>
+        <div class="media-thumb-body">
+          <div class="media-office">${escapeHtml(m.officeName)}</div>
+          <div class="media-date">${date}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  currentFilteredMedia = filtered;
+
+  grid.querySelectorAll(".media-thumb").forEach(el => {
+    el.addEventListener("click", () => {
+      const idx = Number(el.getAttribute("data-media-index"));
+      openMediaModal(currentFilteredMedia[idx]);
+    });
+  });
+}
+
+let currentFilteredMedia = [];
+
+// ======================
+// FILTER EVENT LISTENERS
+// ======================
+document.getElementById("media-search").addEventListener("input", (ev) => {
+  searchTerm = ev.target.value;
+  renderMediaGrid();
+});
+
+document.getElementById("office-filter").addEventListener("change", (ev) => {
+  officeFilter = ev.target.value;
+  renderMediaGrid();
+});
+
+document.getElementById("type-filter").addEventListener("change", (ev) => {
+  typeFilter = ev.target.value;
+  renderMediaGrid();
+});
+
+document.getElementById("date-filter").addEventListener("change", (ev) => {
+  dateFilter = ev.target.value;
+  renderMediaGrid();
+});
+
+document.getElementById("btn-clear-filters").addEventListener("click", () => {
+  searchTerm = "";
+  officeFilter = "";
+  typeFilter = "";
+  dateFilter = "";
+  document.getElementById("media-search").value = "";
+  document.getElementById("office-filter").value = "";
+  document.getElementById("type-filter").value = "";
+  document.getElementById("date-filter").value = "";
+  renderMediaGrid();
+});
+
+// ======================
+// MEDIA VIEWER MODAL
+// ======================
+const mediaModal = document.getElementById("media-modal");
+const mediaModalVisual = document.getElementById("media-modal-visual");
+const mediaModalBody = document.getElementById("media-modal-body");
+const mediaModalOpenNew = document.getElementById("media-modal-open-new");
+
+function openMediaModal(m) {
+  if (!m) return;
+
+  const date = m.timestamp ? new Date(m.timestamp).toLocaleString() : "-";
+
+  mediaModalVisual.innerHTML = m.type === "video"
+    ? `<video src="${m.url}" controls autoplay></video>`
+    : `<img src="${m.url}" alt="Evidence">`;
+
+  mediaModalBody.innerHTML = `
+    <div class="modal-row"><span>Office</span><span>${escapeHtml(m.officeName)}</span></div>
+    <div class="modal-row"><span>Type</span><span>${m.type === "video" ? "Video" : "Image"}</span></div>
+    <div class="modal-row"><span>Submitted</span><span>${date}</span></div>
+    <div class="modal-row"><span>Comments</span><span>${escapeHtml(m.comments) || "-"}</span></div>
+  `;
+
+  mediaModalOpenNew.href = m.url;
+  mediaModal.classList.add("open");
+}
+
+document.getElementById("media-modal-close").addEventListener("click", closeMediaModal);
+mediaModal.addEventListener("click", (ev) => {
+  if (ev.target === mediaModal) closeMediaModal();
+});
+
+function closeMediaModal() {
+  mediaModal.classList.remove("open");
+  mediaModalVisual.innerHTML = ""; // stop video playback
+}
+
 </script>
 </body>
 </html>
