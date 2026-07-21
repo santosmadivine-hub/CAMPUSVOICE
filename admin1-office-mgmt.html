@@ -240,39 +240,72 @@
   flex-wrap: wrap;
 }
 
-.stat-card-row {
+.stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
   margin-bottom: 24px;
 }
 
-.stat-card-mini {
-  background: white;
+.stat-card {
+  position: relative;
+  background: #ffffff;
   border: 1px solid #bae6fd;
-  border-top:4px solid var(#2563eb);
-  border-radius:16px;
-  padding:20px 20px 22px;
-  text-align: center;
+  border-top: 4px solid #2563eb;
+  border-radius: 16px;
+  padding: 20px 20px 22px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.stat-card-mini-label {
+.stat-card.blue {
+  border-top-color: #2563eb;
+}
+
+.stat-card.green {
+  border-top-color: #059669;
+}
+
+.stat-card.amber {
+  border-top-color: #d97706;
+}
+
+.stat-icon {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.stat-card-label {
   font-size: 12px;
-  color: #64748b;
+  color: #94a3b8;
   font-weight: 600;
-  margin-bottom: 8px;
   text-transform: uppercase;
-  letter-spacing: .05em;
+  letter-spacing: 0.05em;
 }
 
-.stat-card-mini-value {
-  font-size: 28px;
+.stat-card-value {
+  font-size: 36px;
   font-weight: 800;
   font-family: 'Syne', sans-serif;
-  color: #0c4a6e;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  word-break: break-word;
+  color: #1e293b;
+}
+
+.stat-card-subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
 
@@ -283,7 +316,17 @@
   border: 1px solid #bae6fd;
 }
 
+@media (max-width: 1024px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+
   .header-row {
     flex-direction: column;
     align-items: flex-start;
@@ -296,10 +339,6 @@
   .header-actions button {
     flex: 1;
     min-width: 120px;
-  }
-
-  .stat-card-row {
-    grid-template-columns: 1fr;
   }
 
   .rating-cell {
@@ -327,23 +366,31 @@
     <div id="topbar-mount"></div>
 
     <div class="office-section">
-      <!-- Stats Row -->
-      <div class="stat-card-row">
-        <div class="stat-card-mini">
-          <div class="stat-card-mini-label">Total Offices</div>
-          <div class="stat-card-mini-value" id="totalOffices">0</div>
+      <!-- Stats Grid -->
+      <div class="stat-grid">
+        <div class="stat-card blue">
+          <div class="stat-card-label">Total Offices</div>
+          <div class="stat-card-value" id="totalOffices">0</div>
+          <div class="stat-card-subtitle">All Offices</div>
+          <div class="stat-icon">🏢</div>
         </div>
-        <div class="stat-card-mini">
-          <div class="stat-card-mini-label">Total Evaluations</div>
-          <div class="stat-card-mini-value" id="totalEvals">0</div>
+        <div class="stat-card blue">
+          <div class="stat-card-label">Total Evaluations</div>
+          <div class="stat-card-value" id="totalEvals">0</div>
+          <div class="stat-card-subtitle">All Time</div>
+          <div class="stat-icon">📋</div>
         </div>
-        <div class="stat-card-mini">
-          <div class="stat-card-mini-label">Highest Rating</div>
-          <div class="stat-card-mini-value" id="highestOffice">—</div>
+        <div class="stat-card blue">
+          <div class="stat-card-label">Highest Rating</div>
+          <div class="stat-card-value" id="highestOffice">—</div>
+          <div class="stat-card-subtitle">Top Office</div>
+          <div class="stat-icon">⭐</div>
         </div>
-        <div class="stat-card-mini">
-          <div class="stat-card-mini-label">Lowest Rating</div>
-          <div class="stat-card-mini-value" id="lowestOffice">—</div>
+        <div class="stat-card green">
+          <div class="stat-card-label">Lowest Rating</div>
+          <div class="stat-card-value" id="lowestOffice">—</div>
+          <div class="stat-card-subtitle">Needs Support</div>
+          <div class="stat-icon">📊</div>
         </div>
       </div>
 
