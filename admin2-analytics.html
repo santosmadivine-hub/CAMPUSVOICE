@@ -162,6 +162,47 @@
     }
   }
 
+  /* ===== SUBMISSION STATUS TREND CHART ===== */
+  .status-trend-wrap {
+    margin-top: 12px;
+  }
+
+  .status-chart-svg {
+    width: 100%;
+    height: 200px;
+  }
+
+  .status-axis-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .status-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: #475569;
+  }
+
+  .status-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+  }
+
   .trend-chart-wrap {
     margin-top: 10px;
   }
@@ -712,8 +753,8 @@
     <!-- ROW: SUBMISSION STATUS + RATING DISTRIBUTION -->
     <div class="analytics-grid">
       <div class="card">
-        <div class="card-title">Submission Status <span class="card-sub">— review progress</span></div>
-        <div class="bar-chart" id="status-breakdown-chart" style="margin-top: 12px;"></div>
+        <div class="card-title">Submission Status <span class="card-sub">— review progress over time</span></div>
+        <div class="status-trend-wrap" id="status-breakdown-chart"></div>
       </div>
 
       <div class="card">
@@ -1030,34 +1071,137 @@ function renderStatCards() {
 }
 
 // ======================
-// SUBMISSION STATUS BREAKDOWN (Pending / No Action Required / Resolved)
+// SUBMISSION STATUS BREAKDOWN (as trend chart over time)
+// Now renders as a line/area chart showing pending, no_action, resolved counts over time
 // ======================
 function renderStatusBreakdown() {
   const el = document.getElementById("status-breakdown-chart");
-  const total = evaluations.length;
-
-  const counts = { pending: 0, no_action: 0, resolved: 0 };
-  evaluations.forEach(e => {
-    counts[e.status] = (counts[e.status] || 0) + 1;
-  });
-
-  if (total === 0) {
+  
+  if (evaluations.length === 0) {
     el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
     return;
   }
 
-  el.innerHTML = ["pending", "no_action", "resolved"].map(key => {
-    const meta = STATUS_META[key];
-    const count = counts[key];
-    const pct = total ? Math.round((count / total) * 100) : 0;
-    return `
-      <div class="bar-row" title="${meta.icon} ${meta.label}: ${count} evaluation${count !== 1 ? 's' : ''} (${pct}%)">
-        <div class="bar-label">${meta.icon} ${meta.label}</div>
-        <div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: ${meta.color};"></div></div>
-        <div class="bar-value">${pct}%</div>
+  // Build daily data for the trend
+  const dailyData = {};
+  evaluations.forEach(e => {
+    if (!e.timestamp) return;
+    const d = new Date(e.timestamp);
+    const dateKey = d.toISOString().split('T')[0]; // YYYY-MM-DD
+    if (!dailyData[dateKey]) {
+      dailyData[dateKey] = { pending: 0, no_action: 0, resolved: 0 };
+    }
+    dailyData[dateKey][e.status]++;
+  });
+
+  const dates = Object.keys(dailyData).sort();
+  const last30Days = dates.slice(Math.max(0, dates.length - 30));
+  
+  if (last30Days.length === 0) {
+    el.innerHTML = `<div class="lb-empty">No data for the last 30 days.</div>`;
+    return;
+  }
+
+  // Get max count for y-axis scaling
+  let maxCount = 0;
+  last30Days.forEach(dateKey => {
+    const total = dailyData[dateKey].pending + dailyData[dateKey].no_action + dailyData[dateKey].resolved;
+    maxCount = Math.max(maxCount, total);
+  });
+  maxCount = Math.ceil(maxCount * 1.1); // 10% padding
+
+  const CHART_WIDTH = 600;
+  const CHART_HEIGHT = 180;
+  const CHART_PADDING = 40;
+
+  const chartWidth = CHART_WIDTH - 2 * CHART_PADDING;
+  const chartHeight = CHART_HEIGHT - 2 * CHART_PADDING;
+  const pointSpacing = chartWidth / Math.max(1, last30Days.length - 1);
+
+  // Color for each status
+  const statusColors = {
+    pending: "#f59e0b",
+    no_action: "#6366f1",
+    resolved: "#10b981"
+  };
+
+  // Build SVG paths for each status
+  const buildPath = (status) => {
+    let pathData = "";
+    last30Days.forEach((dateKey, i) => {
+      const count = dailyData[dateKey][status];
+      const x = CHART_PADDING + i * pointSpacing;
+      const y = CHART_HEIGHT - CHART_PADDING - (count / maxCount) * chartHeight;
+      pathData += (i === 0 ? "M" : "L") + x + " " + y;
+    });
+    return pathData;
+  };
+
+  // Build area paths (filled regions)
+  const buildAreaPath = (status) => {
+    let pathData = "M " + CHART_PADDING + " " + (CHART_HEIGHT - CHART_PADDING);
+    last30Days.forEach((dateKey, i) => {
+      const count = dailyData[dateKey][status];
+      const x = CHART_PADDING + i * pointSpacing;
+      const y = CHART_HEIGHT - CHART_PADDING - (count / maxCount) * chartHeight;
+      pathData += " L " + x + " " + y;
+    });
+    pathData += " L " + (CHART_PADDING + (last30Days.length - 1) * pointSpacing) + " " + (CHART_HEIGHT - CHART_PADDING) + " Z";
+    return pathData;
+  };
+
+  // Build the SVG
+  let svgContent = `
+    <svg width="100%" viewBox="0 0 ${CHART_WIDTH} ${CHART_HEIGHT}" class="status-chart-svg" style="min-height: 200px;">
+      <!-- Grid lines -->
+      ${[0, 0.25, 0.5, 0.75, 1].map(ratio => {
+        const y = CHART_HEIGHT - CHART_PADDING - (ratio * chartHeight);
+        return `<line x1="${CHART_PADDING}" y1="${y}" x2="${CHART_WIDTH - CHART_PADDING}" y2="${y}" stroke="#e2e8f0" stroke-width="1" vector-effect="non-scaling-stroke"></line>`;
+      }).join('')}
+      
+      <!-- Area fills (semi-transparent) -->
+      <path d="${buildAreaPath('resolved')}" fill="${statusColors.resolved}" opacity="0.15"></path>
+      <path d="${buildAreaPath('no_action')}" fill="${statusColors.no_action}" opacity="0.15"></path>
+      <path d="${buildAreaPath('pending')}" fill="${statusColors.pending}" opacity="0.15"></path>
+      
+      <!-- Line strokes -->
+      <path d="${buildPath('resolved')}" stroke="${statusColors.resolved}" stroke-width="2.5" fill="none" vector-effect="non-scaling-stroke" opacity="0.8"></path>
+      <path d="${buildPath('no_action')}" stroke="${statusColors.no_action}" stroke-width="2.5" fill="none" vector-effect="non-scaling-stroke" opacity="0.8"></path>
+      <path d="${buildPath('pending')}" stroke="${statusColors.pending}" stroke-width="2.5" fill="none" vector-effect="non-scaling-stroke" opacity="0.8"></path>
+      
+      <!-- Y-axis and X-axis -->
+      <line x1="${CHART_PADDING}" y1="${CHART_PADDING}" x2="${CHART_PADDING}" y2="${CHART_HEIGHT - CHART_PADDING}" stroke="#cbd5e1" stroke-width="1"></line>
+      <line x1="${CHART_PADDING}" y1="${CHART_HEIGHT - CHART_PADDING}" x2="${CHART_WIDTH - CHART_PADDING}" y2="${CHART_HEIGHT - CHART_PADDING}" stroke="#cbd5e1" stroke-width="1"></line>
+    </svg>
+  `;
+
+  // Y-axis labels
+  let axisLabels = '<div class="status-axis-labels">';
+  for (let i = 0; i <= 4; i++) {
+    const label = Math.round((i / 4) * maxCount);
+    axisLabels += `<div style="text-align: right; width: 35px;">${label}</div>`;
+  }
+  axisLabels += '</div>';
+
+  // Legend
+  const legend = `
+    <div class="status-legend">
+      <div class="status-legend-item">
+        <span class="status-legend-swatch" style="background: ${statusColors.pending};"></span>
+        <span>${STATUS_META.pending.icon} ${STATUS_META.pending.label}</span>
       </div>
-    `;
-  }).join("");
+      <div class="status-legend-item">
+        <span class="status-legend-swatch" style="background: ${statusColors.no_action};"></span>
+        <span>${STATUS_META.no_action.icon} ${STATUS_META.no_action.label}</span>
+      </div>
+      <div class="status-legend-item">
+        <span class="status-legend-swatch" style="background: ${statusColors.resolved};"></span>
+        <span>${STATUS_META.resolved.icon} ${STATUS_META.resolved.label}</span>
+      </div>
+    </div>
+  `;
+
+  el.innerHTML = svgContent + axisLabels + legend;
 }
 
 // ======================
