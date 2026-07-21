@@ -695,6 +695,12 @@
         <div class="stat-value" id="stat-avg-satisfaction">0%</div>
         <div class="stat-sub">Across all ratings</div>
       </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">🗂️</div>
+        <div class="stat-label">Total Evidence</div>
+        <div class="stat-value" id="stat-total-evidence">0</div>
+        <div class="stat-sub" id="stat-total-evidence-sub">0 images · 0 videos</div>
+      </div>
       <div class="stat-card green">
         <div class="stat-icon">🏢</div>
         <div class="stat-label">Active Offices</div>
@@ -703,15 +709,11 @@
       </div>
     </div>
 
-    <!-- ROW: SUBMISSION TREND + RATING DISTRIBUTION -->
+    <!-- ROW: SUBMISSION STATUS + RATING DISTRIBUTION -->
     <div class="analytics-grid">
       <div class="card">
-        <div class="card-title">Submission Trend <span class="card-sub">— last 30 days</span></div>
-        <div class="trend-chart-wrap">
-          <svg viewBox="0 0 300 140" class="trend-svg" id="trend-svg" preserveAspectRatio="none"></svg>
-          <div class="trend-axis-row" id="trend-axis-row"></div>
-          <div class="trend-legend"><span class="dot"></span> Daily submissions</div>
-        </div>
+        <div class="card-title">Submission Status <span class="card-sub">— review progress</span></div>
+        <div class="bar-chart" id="status-breakdown-chart" style="margin-top: 12px;"></div>
       </div>
 
       <div class="card">
@@ -829,6 +831,20 @@ const EVALUATIONS_COLLECTION = "cleanliness_evaluations";
 // constant so there's only one place to change it.
 const TOTAL_RATING_QUESTIONS = 15;
 
+// Evaluations with an average rating at or above this threshold (out of
+// 5) are treated as positive feedback and auto-classified as "No Action
+// Required" instead of "Pending" — mirrors Evaluation Management so the
+// status breakdown here matches the counts on that page exactly.
+const LOW_RATING_THRESHOLD = 3;
+
+// Display labels/icons for each status value, used for the status
+// breakdown bar chart below.
+const STATUS_META = {
+  pending: { label: "Pending", icon: "⏳", color: "#f59e0b" },
+  no_action: { label: "No Action Required", icon: "🙅", color: "#6366f1" },
+  resolved: { label: "Resolved", icon: "✅", color: "#10b981" }
+};
+
 // ======================
 // STATE
 // ======================
@@ -841,6 +857,48 @@ function avgOf(e) {
     sum += e["rating" + i] || 0;
   }
   return sum / TOTAL_RATING_QUESTIONS;
+}
+
+// Normalizes whatever is stored under a record's status into "pending",
+// "no_action", or "resolved" (mirrors Evaluation Management's logic
+// exactly so the two pages always agree).
+function parseEvalStatus(data, avgRating) {
+  const stored = (data.status || "").toString().toLowerCase();
+  if (stored === "resolved" || stored === "pending" || stored === "no_action") {
+    return stored;
+  }
+  return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
+}
+
+// Normalizes evidence into a consistent array of { url, type }.
+// Supports the current multi-file Android schema (evidenceUrls[] /
+// evidenceTypes[]), the earlier single-file schema (evidenceUrl /
+// evidenceType), and the very first schema (fileUrl only, type unknown —
+// guessed from the file extension). Mirrors Evaluation Management.
+function parseEvidence(data) {
+  const items = [];
+
+  if (Array.isArray(data.evidenceUrls) && data.evidenceUrls.length) {
+    const urls = data.evidenceUrls;
+    const types = Array.isArray(data.evidenceTypes) ? data.evidenceTypes : [];
+    urls.forEach((url, i) => {
+      if (url) items.push({ url, type: types[i] === "video" ? "video" : "image" });
+    });
+    return items;
+  }
+
+  if (data.evidenceUrl) {
+    items.push({ url: data.evidenceUrl, type: data.evidenceType === "video" ? "video" : "image" });
+    return items;
+  }
+
+  if (data.fileUrl) {
+    const isVideo = /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(data.fileUrl);
+    items.push({ url: data.fileUrl, type: isVideo ? "video" : "image" });
+    return items;
+  }
+
+  return items;
 }
 
 // ======================
@@ -919,11 +977,13 @@ onSnapshot(evalQuery, (snapshot) => {
       userCategory: ev.userCategory || "",
       userId: ev.userId || "",
       year: ev.year || "",
-      timestamp: Number(ev.timestamp) || 0
+      timestamp: Number(ev.timestamp) || 0,
+      evidence: parseEvidence(ev)
     };
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
       record["rating" + i] = Number(ev["rating" + i]) || 0;
     }
+    record.status = parseEvalStatus(ev, avgOf(record));
     evaluations.push(record);
   });
   renderAll();
@@ -934,7 +994,7 @@ onSnapshot(evalQuery, (snapshot) => {
 // ======================
 function renderAll() {
   renderStatCards();
-  renderSubmissionTrend();
+  renderStatusBreakdown();
   renderOfficeTrend();
   renderRatingDistribution();
   renderDimensionPerformance();
@@ -952,6 +1012,17 @@ function renderStatCards() {
     : 0;
   document.getElementById("stat-avg-satisfaction").textContent = `${avgSatisfaction}%`;
 
+  const totalImages = evaluations.reduce(
+    (sum, e) => sum + e.evidence.filter(item => item.type === "image").length,
+    0
+  );
+  const totalVideos = evaluations.reduce(
+    (sum, e) => sum + e.evidence.filter(item => item.type === "video").length,
+    0
+  );
+  document.getElementById("stat-total-evidence").textContent = totalImages + totalVideos;
+  document.getElementById("stat-total-evidence-sub").textContent = `${totalImages} images · ${totalVideos} videos`;
+
   const activeOffices = new Set(evaluations.map(e => e.officeName)).size;
   const totalOffices = Object.keys(offices).length;
   document.getElementById("stat-active-offices").textContent = activeOffices;
@@ -959,62 +1030,34 @@ function renderStatCards() {
 }
 
 // ======================
-// SUBMISSION TREND (last 30 days)
+// SUBMISSION STATUS BREAKDOWN (Pending / No Action Required / Resolved)
 // ======================
-function renderSubmissionTrend() {
-  const days = 30;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+function renderStatusBreakdown() {
+  const el = document.getElementById("status-breakdown-chart");
+  const total = evaluations.length;
 
-  const buckets = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    buckets.push({ date: d, count: 0 });
+  const counts = { pending: 0, no_action: 0, resolved: 0 };
+  evaluations.forEach(e => {
+    counts[e.status] = (counts[e.status] || 0) + 1;
+  });
+
+  if (total === 0) {
+    el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
+    return;
   }
 
-  evaluations.forEach(e => {
-    if (!e.timestamp) return;
-    const d = new Date(e.timestamp);
-    d.setHours(0, 0, 0, 0);
-    const bucket = buckets.find(b => b.date.getTime() === d.getTime());
-    if (bucket) bucket.count++;
-  });
-
-  const maxCount = Math.max(1, ...buckets.map(b => b.count));
-  const width = 300, height = 140, padding = 6;
-  const usableHeight = height - padding * 2;
-  const stepX = (width - padding * 2) / (buckets.length - 1);
-
-  const points = buckets.map((b, i) => {
-    const x = padding + i * stepX;
-    const y = padding + usableHeight - (b.count / maxCount) * usableHeight;
-    return { x, y };
-  });
-
-  const linePoints = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const areaPath = `M${points[0].x.toFixed(1)},${(height - padding).toFixed(1)} ` +
-    points.map(p => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") +
-    ` L${points[points.length - 1].x.toFixed(1)},${(height - padding).toFixed(1)} Z`;
-
-  // Add tooltip points for each day
-  const tooltipCircles = points.map((p, i) => 
-    `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="transparent" style="cursor:pointer;"><title>${buckets[i].date.toDateString()}: ${buckets[i].count} submission${buckets[i].count !== 1 ? 's' : ''}</title></circle>`
-  ).join("");
-
-  const svg = document.getElementById("trend-svg");
-  svg.innerHTML = `
-    <path d="${areaPath}" fill="rgba(37,99,235,0.12)" stroke="none"></path>
-    <polyline points="${linePoints}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
-    ${tooltipCircles}
-  `;
-
-  // Axis labels: evenly spaced day-of-month ticks
-  const axisRow = document.getElementById("trend-axis-row");
-  const tickIndices = [0, 5, 10, 15, 20, 25, buckets.length - 1];
-  axisRow.innerHTML = tickIndices
-    .map(i => `<span>${buckets[i].date.getDate()}</span>`)
-    .join("");
+  el.innerHTML = ["pending", "no_action", "resolved"].map(key => {
+    const meta = STATUS_META[key];
+    const count = counts[key];
+    const pct = total ? Math.round((count / total) * 100) : 0;
+    return `
+      <div class="bar-row" title="${meta.icon} ${meta.label}: ${count} evaluation${count !== 1 ? 's' : ''} (${pct}%)">
+        <div class="bar-label">${meta.icon} ${meta.label}</div>
+        <div class="bar-track"><div class="bar-fill" style="width: ${pct}%; background: ${meta.color};"></div></div>
+        <div class="bar-value">${pct}%</div>
+      </div>
+    `;
+  }).join("");
 }
 
 // ======================
