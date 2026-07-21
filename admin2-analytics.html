@@ -753,7 +753,7 @@
     <!-- ROW: SUBMISSION STATUS + RATING DISTRIBUTION -->
     <div class="analytics-grid">
       <div class="card">
-        <div class="card-title">Submission Status <span class="card-sub">— review progress over time</span></div>
+        <div class="card-title">Submission Status <span class="card-sub">— % of total evaluations</span></div>
         <div class="status-trend-wrap" id="status-breakdown-chart"></div>
       </div>
 
@@ -1071,132 +1071,105 @@ function renderStatCards() {
 }
 
 // ======================
-// SUBMISSION STATUS BREAKDOWN (as trend chart over time)
-// Now renders as a line/area chart showing pending, no_action, resolved counts over time
+// SUBMISSION STATUS COMPARISON (Pending / No Action Required / Resolved)
+// Column chart: x-axis = the three statuses, y-axis = percentage of
+// total evaluations (0–100%, 10% gridlines).
 // ======================
 function renderStatusBreakdown() {
   const el = document.getElementById("status-breakdown-chart");
-  
+
   if (evaluations.length === 0) {
     el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
     return;
   }
 
-  // Build daily data for the trend
-  const dailyData = {};
-  evaluations.forEach(e => {
-    if (!e.timestamp) return;
-    const d = new Date(e.timestamp);
-    const dateKey = d.toISOString().split('T')[0]; // YYYY-MM-DD
-    if (!dailyData[dateKey]) {
-      dailyData[dateKey] = { pending: 0, no_action: 0, resolved: 0 };
-    }
-    dailyData[dateKey][e.status]++;
-  });
+  const total = evaluations.length;
+  const counts = { pending: 0, no_action: 0, resolved: 0 };
+  evaluations.forEach(e => { counts[e.status]++; });
 
-  const dates = Object.keys(dailyData).sort();
-  const last30Days = dates.slice(Math.max(0, dates.length - 30));
-  
-  if (last30Days.length === 0) {
-    el.innerHTML = `<div class="lb-empty">No data for the last 30 days.</div>`;
-    return;
-  }
+  const statusOrder = ["pending", "no_action", "resolved"];
+  const bars = statusOrder.map(key => ({
+    key,
+    count: counts[key],
+    pct: (counts[key] / total) * 100,
+    meta: STATUS_META[key]
+  }));
 
-  // Get max count for y-axis scaling
-  let maxCount = 0;
-  last30Days.forEach(dateKey => {
-    const total = dailyData[dateKey].pending + dailyData[dateKey].no_action + dailyData[dateKey].resolved;
-    maxCount = Math.max(maxCount, total);
-  });
-  maxCount = Math.ceil(maxCount * 1.1); // 10% padding
+  const CHART_WIDTH = 400;
+  const CHART_HEIGHT = 220;
+  const PAD_LEFT = 46;
+  const PAD_RIGHT = 16;
+  const PAD_TOP = 20;
+  const PAD_BOTTOM = 16;
 
-  const CHART_WIDTH = 600;
-  const CHART_HEIGHT = 180;
-  const CHART_PADDING = 40;
+  const plotW = CHART_WIDTH - PAD_LEFT - PAD_RIGHT;
+  const plotH = CHART_HEIGHT - PAD_TOP - PAD_BOTTOM;
 
-  const chartWidth = CHART_WIDTH - 2 * CHART_PADDING;
-  const chartHeight = CHART_HEIGHT - 2 * CHART_PADDING;
-  const pointSpacing = chartWidth / Math.max(1, last30Days.length - 1);
+  const colWidth = plotW / bars.length;
+  const barWidth = Math.min(70, colWidth * 0.5);
 
-  // Color for each status
-  const statusColors = {
-    pending: "#f59e0b",
-    no_action: "#6366f1",
-    resolved: "#10b981"
-  };
+  // Y-axis: 10% to 100% in 10% steps, scaled against a 0–100 baseline
+  // so bar heights map directly to their percentage value.
+  const yTicks = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+  const yFor = (pct) => PAD_TOP + plotH - (Math.min(pct, 100) / 100) * plotH;
+  const baselineY = yFor(0);
 
-  // Build SVG paths for each status
-  const buildPath = (status) => {
-    let pathData = "";
-    last30Days.forEach((dateKey, i) => {
-      const count = dailyData[dateKey][status];
-      const x = CHART_PADDING + i * pointSpacing;
-      const y = CHART_HEIGHT - CHART_PADDING - (count / maxCount) * chartHeight;
-      pathData += (i === 0 ? "M" : "L") + x + " " + y;
-    });
-    return pathData;
-  };
+  const gridLines = yTicks.map(t => {
+    const y = yFor(t);
+    return `<line x1="${PAD_LEFT}" y1="${y.toFixed(1)}" x2="${CHART_WIDTH - PAD_RIGHT}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1" vector-effect="non-scaling-stroke"></line>`;
+  }).join("");
 
-  // Build area paths (filled regions)
-  const buildAreaPath = (status) => {
-    let pathData = "M " + CHART_PADDING + " " + (CHART_HEIGHT - CHART_PADDING);
-    last30Days.forEach((dateKey, i) => {
-      const count = dailyData[dateKey][status];
-      const x = CHART_PADDING + i * pointSpacing;
-      const y = CHART_HEIGHT - CHART_PADDING - (count / maxCount) * chartHeight;
-      pathData += " L " + x + " " + y;
-    });
-    pathData += " L " + (CHART_PADDING + (last30Days.length - 1) * pointSpacing) + " " + (CHART_HEIGHT - CHART_PADDING) + " Z";
-    return pathData;
-  };
+  const yLabels = yTicks.map(t => {
+    const y = yFor(t);
+    return `<text x="${PAD_LEFT - 8}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-family="DM Sans, sans-serif" font-size="9.5" fill="#94a3b8">${t}%</text>`;
+  }).join("");
 
-  // Build the SVG
-  let svgContent = `
-    <svg width="100%" viewBox="0 0 ${CHART_WIDTH} ${CHART_HEIGHT}" class="status-chart-svg" style="min-height: 200px;">
-      <!-- Grid lines -->
-      ${[0, 0.25, 0.5, 0.75, 1].map(ratio => {
-        const y = CHART_HEIGHT - CHART_PADDING - (ratio * chartHeight);
-        return `<line x1="${CHART_PADDING}" y1="${y}" x2="${CHART_WIDTH - CHART_PADDING}" y2="${y}" stroke="#e2e8f0" stroke-width="1" vector-effect="non-scaling-stroke"></line>`;
-      }).join('')}
-      
-      <!-- Area fills (semi-transparent) -->
-      <path d="${buildAreaPath('resolved')}" fill="${statusColors.resolved}" opacity="0.15"></path>
-      <path d="${buildAreaPath('no_action')}" fill="${statusColors.no_action}" opacity="0.15"></path>
-      <path d="${buildAreaPath('pending')}" fill="${statusColors.pending}" opacity="0.15"></path>
-      
-      <!-- Line strokes -->
-      <path d="${buildPath('resolved')}" stroke="${statusColors.resolved}" stroke-width="2.5" fill="none" vector-effect="non-scaling-stroke" opacity="0.8"></path>
-      <path d="${buildPath('no_action')}" stroke="${statusColors.no_action}" stroke-width="2.5" fill="none" vector-effect="non-scaling-stroke" opacity="0.8"></path>
-      <path d="${buildPath('pending')}" stroke="${statusColors.pending}" stroke-width="2.5" fill="none" vector-effect="non-scaling-stroke" opacity="0.8"></path>
-      
-      <!-- Y-axis and X-axis -->
-      <line x1="${CHART_PADDING}" y1="${CHART_PADDING}" x2="${CHART_PADDING}" y2="${CHART_HEIGHT - CHART_PADDING}" stroke="#cbd5e1" stroke-width="1"></line>
-      <line x1="${CHART_PADDING}" y1="${CHART_HEIGHT - CHART_PADDING}" x2="${CHART_WIDTH - CHART_PADDING}" y2="${CHART_HEIGHT - CHART_PADDING}" stroke="#cbd5e1" stroke-width="1"></line>
+  const barsSvg = bars.map((b, i) => {
+    const colX0 = PAD_LEFT + i * colWidth;
+    const barX = colX0 + (colWidth - barWidth) / 2;
+    const barH = (b.pct / 100) * plotH;
+    const barY = baselineY - barH;
+    return `
+      <rect x="${barX.toFixed(1)}" y="${barY.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" rx="6" fill="${b.meta.color}">
+        <title>${b.meta.icon} ${b.meta.label}: ${b.count} of ${total} evaluations (${b.pct.toFixed(1)}%)</title>
+      </rect>
+      <text x="${(barX + barWidth / 2).toFixed(1)}" y="${(barY - 8).toFixed(1)}" text-anchor="middle" font-family="Syne, sans-serif" font-weight="700" font-size="12" fill="#0f1b32">${b.pct.toFixed(1)}%</text>
+    `;
+  }).join("");
+
+  const axisLine = `<line x1="${PAD_LEFT}" y1="${baselineY.toFixed(1)}" x2="${CHART_WIDTH - PAD_RIGHT}" y2="${baselineY.toFixed(1)}" stroke="#cbd5e1" stroke-width="1"></line>`;
+  const yAxisLine = `<line x1="${PAD_LEFT}" y1="${PAD_TOP}" x2="${PAD_LEFT}" y2="${baselineY.toFixed(1)}" stroke="#cbd5e1" stroke-width="1"></line>`;
+
+  const svgContent = `
+    <svg width="100%" viewBox="0 0 ${CHART_WIDTH} ${CHART_HEIGHT}" class="status-chart-svg" style="min-height: 220px;">
+      ${gridLines}
+      ${yLabels}
+      ${barsSvg}
+      ${yAxisLine}
+      ${axisLine}
     </svg>
   `;
 
-  // Y-axis labels
-  let axisLabels = '<div class="status-axis-labels">';
-  for (let i = 0; i <= 4; i++) {
-    const label = Math.round((i / 4) * maxCount);
-    axisLabels += `<div style="text-align: right; width: 35px;">${label}</div>`;
-  }
-  axisLabels += '</div>';
+  // X-axis labels — one per status column, aligned under each bar.
+  const axisLabels = `
+    <div class="status-axis-labels" style="padding: 0 16px 0 46px;">
+      ${bars.map(b => `<div style="text-align: center; flex: 1;">${b.meta.icon} ${b.meta.label}</div>`).join("")}
+    </div>
+  `;
 
-  // Legend
   const legend = `
     <div class="status-legend">
       <div class="status-legend-item">
-        <span class="status-legend-swatch" style="background: ${statusColors.pending};"></span>
-        <span>${STATUS_META.pending.icon} ${STATUS_META.pending.label}</span>
+        <span class="status-legend-swatch" style="background: ${STATUS_META.pending.color};"></span>
+        <span>${STATUS_META.pending.icon} ${STATUS_META.pending.label}: ${counts.pending} (${((counts.pending / total) * 100).toFixed(1)}%)</span>
       </div>
       <div class="status-legend-item">
-        <span class="status-legend-swatch" style="background: ${statusColors.no_action};"></span>
-        <span>${STATUS_META.no_action.icon} ${STATUS_META.no_action.label}</span>
+        <span class="status-legend-swatch" style="background: ${STATUS_META.no_action.color};"></span>
+        <span>${STATUS_META.no_action.icon} ${STATUS_META.no_action.label}: ${counts.no_action} (${((counts.no_action / total) * 100).toFixed(1)}%)</span>
       </div>
       <div class="status-legend-item">
-        <span class="status-legend-swatch" style="background: ${statusColors.resolved};"></span>
-        <span>${STATUS_META.resolved.icon} ${STATUS_META.resolved.label}</span>
+        <span class="status-legend-swatch" style="background: ${STATUS_META.resolved.color};"></span>
+        <span>${STATUS_META.resolved.icon} ${STATUS_META.resolved.label}: ${counts.resolved} (${((counts.resolved / total) * 100).toFixed(1)}%)</span>
       </div>
     </div>
   `;
