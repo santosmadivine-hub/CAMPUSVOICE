@@ -298,6 +298,30 @@
   min-height: 340px;
 }
 
+/* Distribution Overview row: Client Type and Rating Distribution
+   should be equal-width and equal-height regardless of content. */
+.dist-row {
+  grid-template-columns: 1fr 1fr;
+}
+
+.dist-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 340px;
+}
+
+.dist-card .pie-wrap,
+.dist-card .bar-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .dist-card { min-height: 0; }
+}
+
 .rp-card .pie-wrap,
 .rp-card .bar-wrap {
   flex: 1;
@@ -716,10 +740,10 @@
     <div class="an-section">
       <div class="section-eyebrow"><span>Distribution Overview</span></div>
 
-      <div class="an-row2">
+      <div class="an-row2 dist-row">
 
         <!-- CLIENT TYPE DISTRIBUTION -->
-        <div class="card">
+        <div class="card dist-card">
           <div class="card-head">
             <div class="card-title">Client Type Distribution</div>
             <div class="card-sub">— respondent classification</div>
@@ -728,7 +752,7 @@
         </div>
 
         <!-- RATING BREAKDOWN (5-1) -->
-        <div class="card">
+        <div class="card dist-card">
           <div class="card-head">
             <div class="card-title">Rating Distribution</div>
             <div class="card-sub">— all individual SQD responses</div>
@@ -1301,7 +1325,6 @@ function renderRatingBreakdown(rows) {
     ]);
     return `
       <rect class="cv-hover" data-tt-title="${labels[i]}" data-tt-lines='${lines}' x="${x}" y="${y}" width="${BAR_W}" height="${barH}" rx="8" fill="${colors[i]}"/>
-      <text x="${x + BAR_W / 2}" y="${y - 10}" text-anchor="middle" font-size="14" font-weight="800" fill="#0f172a" font-family="Syne, sans-serif">${pct.toFixed(0)}%</text>
       <text x="${x + BAR_W / 2}" y="${H - PAD_BOTTOM + 18}" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">${rating}★</text>
     `;
   }).join("");
