@@ -85,20 +85,21 @@
   border: 1px solid #bae6fd;
   border-top: 4px solid #2563eb;
   border-radius: 16px;
-  padding: 20px 20px 22px;
+  padding: 20px;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  min-height: 140px;
 }
 
 .stat-icon-circle {
   position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   background: #f1f5f9;
   display: flex;
   align-items: center;
@@ -112,33 +113,23 @@
 .icon-used     { background: #f1f5f9; }
 .icon-offices  { background: #f1f5f9; }
 
-.stat-info { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 6px;
-}
-
-.stat-top-row { 
-  display: flex; 
-  align-items: baseline; 
-  gap: 8px; 
+.stat-label { 
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px; 
+  color: #94a3b8; 
+  font-weight: 600; 
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
 }
 
 .txn-stat-num { 
-  font-size: 34px; 
+  font-size: 36px; 
   font-weight: 800; 
   color: #0f172a; 
-  line-height: 1.1; 
-  font-family: 'Syne', sans-serif; 
-}
-
-.stat-label { 
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px; 
-  color: #64748b; 
-  font-weight: 500; 
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  line-height: 1; 
+  font-family: 'Syne', sans-serif;
+  margin: 8px 0 4px 0;
 }
 
 .stat-percent-badge {
@@ -189,7 +180,7 @@
 /* RESPONSIVE */
 @media (max-width: 1200px) {
   .txn-stat-num {
-    font-size: 30px;
+    font-size: 32px;
   }
 }
 
@@ -212,11 +203,16 @@
   }
 
   .txn-stat-card {
-    padding: 16px 16px 18px;
+    padding: 16px;
+    min-height: 130px;
   }
 
   .txn-stat-num {
-    font-size: 26px;
+    font-size: 28px;
+  }
+
+  .stat-label {
+    font-size: 11px;
   }
 
   .stat-icon-circle {
@@ -230,11 +226,12 @@
 
 @media (max-width: 600px) {
   .txn-stat-card {
-    padding: 16px 16px 18px;
+    padding: 16px;
+    min-height: 130px;
   }
 
   .txn-stat-num {
-    font-size: 26px;
+    font-size: 28px;
   }
 
   .stat-icon-circle {
@@ -252,7 +249,7 @@
   }
 
   .txn-stat-num {
-    font-size: 28px;
+    font-size: 30px;
   }
 }
 
@@ -262,7 +259,8 @@
   }
 
   .txn-stat-card {
-    padding: 14px 14px 18px;
+    padding: 14px;
+    min-height: 120px;
   }
 }
 
@@ -279,47 +277,31 @@
     <!-- STAT CARDS -->
     <div class="txn-stat-grid">
       <div class="txn-stat-card">
+        <div class="stat-label">Total Codes</div>
+        <div class="txn-stat-num" id="scTotal">0</div>
+        <span class="stat-percent-badge percent-neutral" id="scTotalBadge">All offices</span>
         <div class="stat-icon-circle icon-total">🎟️</div>
-        <div class="stat-info">
-          <div class="stat-top-row">
-            <div class="stat-label">Total Codes</div>
-            <div class="txn-stat-num" id="scTotal">0</div>
-          </div>
-          <span class="stat-percent-badge percent-neutral" id="scTotalBadge">All offices</span>
-        </div>
       </div>
 
       <div class="txn-stat-card">
+        <div class="stat-label">Unused</div>
+        <div class="txn-stat-num" id="scUnused">0</div>
+        <span class="stat-percent-badge percent-good" id="scUnusedBadge">0%</span>
         <div class="stat-icon-circle icon-unused">✅</div>
-        <div class="stat-info">
-          <div class="stat-top-row">
-            <div class="txn-stat-num" id="scUnused">0</div>
-          </div>
-          <div class="stat-label">Unused</div>
-          <span class="stat-percent-badge percent-good" id="scUnusedBadge">0%</span>
-        </div>
       </div>
 
       <div class="txn-stat-card">
+        <div class="stat-label">Used</div>
+        <div class="txn-stat-num" id="scUsed">0</div>
+        <span class="stat-percent-badge percent-bad" id="scUsedBadge">0%</span>
         <div class="stat-icon-circle icon-used">🔒</div>
-        <div class="stat-info">
-          <div class="stat-top-row">
-            <div class="txn-stat-num" id="scUsed">0</div>
-          </div>
-          <div class="stat-label">Used</div>
-          <span class="stat-percent-badge percent-bad" id="scUsedBadge">0%</span>
-        </div>
       </div>
 
       <div class="txn-stat-card">
+        <div class="stat-label">Offices</div>
+        <div class="txn-stat-num" id="scOffices">0</div>
+        <span class="stat-percent-badge percent-info" id="scOfficesBadge">0 avg / office</span>
         <div class="stat-icon-circle icon-offices">🏢</div>
-        <div class="stat-info">
-          <div class="stat-top-row">
-            <div class="txn-stat-num" id="scOffices">0</div>
-          </div>
-          <div class="stat-label">Offices</div>
-          <span class="stat-percent-badge percent-info" id="scOfficesBadge">0 avg / office</span>
-        </div>
       </div>
     </div>
 
