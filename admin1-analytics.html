@@ -710,49 +710,18 @@
     </div>
 
     <!-- ═══════════════════════════════ -->
-    <!-- TREND + RATING DISTRIBUTION     -->
+    <!-- CLIENT TYPE DISTRIBUTION        -->
     <!-- ═══════════════════════════════ -->
 
     <div class="an-section">
-      <div class="section-eyebrow"><span>Performance Trends</span></div>
+      <div class="section-eyebrow"><span>Client Type Distribution</span></div>
 
-      <div class="an-row2 pt-row">
-
-        <!-- TREND -->
-        <div class="card pt-card">
-          <div class="card-head">
-            <div class="card-title">Submission Trend</div>
-            <div class="card-sub" id="trendRange">— last 30 days</div>
-          </div>
-
-          <div class="trend-svg-wrap">
-            <svg viewBox="0 0 600 160" class="trend-svg" id="trendSvg" preserveAspectRatio="none" style="width:100%;height:190px;">
-              <polygon id="trendArea" class="trend-area" fill="#2563eb" points=""/>
-              <polyline id="trendLine" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points=""/>
-            </svg>
-            <div id="trendLabels" style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:#94a3b8;"></div>
-          </div>
-
-          <div class="trend-legend">
-            <div class="trend-legend-item"><div class="trend-legend-dot" style="background:#2563eb;"></div>Daily submissions</div>
-          </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Client Type Distribution</div>
+          <div class="card-sub">— respondent classification</div>
         </div>
-
-        <!-- RATING DISTRIBUTION -->
-        <div class="card pt-card">
-          <div class="card-head">
-            <div class="card-title">Rating Distribution</div>
-            <div class="card-sub">— all offices</div>
-          </div>
-          <div class="star-list" style="display:flex;flex-direction:column;gap:18px;margin-top:16px;">
-            <div class="star-row"><div class="star-row-label">5 Stars</div><div class="star-track"><div class="star-fill" id="r5"></div></div><div class="star-val" id="v5">0%</div></div>
-            <div class="star-row"><div class="star-row-label">4 Stars</div><div class="star-track"><div class="star-fill" id="r4"></div></div><div class="star-val" id="v4">0%</div></div>
-            <div class="star-row"><div class="star-row-label">3 Stars</div><div class="star-track"><div class="star-fill" id="r3"></div></div><div class="star-val" id="v3">0%</div></div>
-            <div class="star-row"><div class="star-row-label">2 Stars</div><div class="star-track"><div class="star-fill" id="r2"></div></div><div class="star-val" id="v2">0%</div></div>
-            <div class="star-row"><div class="star-row-label">1 Star</div><div class="star-track"><div class="star-fill" id="r1"></div></div><div class="star-val" id="v1">0%</div></div>
-          </div>
-        </div>
-
+        <div id="clientTypeWrap" class="pie-wrap"></div>
       </div>
     </div>
 
@@ -1040,6 +1009,16 @@ function normalizeSex(item) {
   return null;
 }
 
+/* ── Normalize client type field ── */
+function normalizeClientType(item) {
+  const raw = (item.clientType ?? item.client_type ?? item.ClientType ?? "").toString().trim().toLowerCase();
+  if (!raw) return null;
+  if (raw.includes("citizen")) return "Citizen";
+  if (raw.includes("business")) return "Business";
+  if (raw.includes("government")) return "Government";
+  return null;
+}
+
 /* ════════════════════════════════
    LOAD: OFFICES
 ════════════════════════════════ */
@@ -1090,8 +1069,7 @@ function render() {
   const rows = Object.values(allEvals);
 
   renderKPIs(rows);
-  renderTrend(rows);
-  renderStars(rows);
+  renderClientType(rows);
   renderSexPie(rows);
   renderOfficeTrend(rows);
   renderSQD(rows);
@@ -1120,52 +1098,79 @@ function renderKPIs(rows) {
   document.getElementById("kpiOfficesSub").textContent = `of ${Object.keys(allOffices).length} total offices`;
 }
 
-/* ── TREND (last 30 days) ── */
-function renderTrend(rows) {
-  const today = new Date();
-  const DAYS  = 30;
-  const counts = [];
-  const dayLabels = [];
+/* ── CLIENT TYPE DISTRIBUTION — PIE CHART ── */
+function renderClientType(rows) {
+  const wrap = document.getElementById("clientTypeWrap");
 
-  for (let i = DAYS - 1; i >= 0; i--) {
-    const d = new Date();
-    d.setHours(0,0,0,0);
-    d.setDate(today.getDate() - i);
-    const key = d.toISOString().split("T")[0];
+  let citizen = 0, business = 0, government = 0, unknown = 0;
+  rows.forEach(r => {
+    const ct = normalizeClientType(r);
+    if (ct === "Citizen") citizen++;
+    else if (ct === "Business") business++;
+    else if (ct === "Government") government++;
+    else unknown++;
+  });
 
-    const count = rows.filter(r => {
-      if (!r.date) return false;
-      const rd = new Date(r.date);
-      if (isNaN(rd)) return false;
-      return rd.toISOString().split("T")[0] === key;
-    }).length;
+  const known = citizen + business + government;
 
-    counts.push(count);
-    dayLabels.push(d.getDate());
+  if (!known) {
+    wrap.innerHTML = `<div class="an-empty"><div class="icon">👥</div>No client type data recorded yet.</div>`;
+    return;
   }
 
-  const max = Math.max(...counts, 1);
-  const W = 600, H = 160, PAD = 6;
+  const citizenPct   = (citizen   / known) * 100;
+  const businessPct  = (business  / known) * 100;
+  const governmentPct = (government / known) * 100;
 
-  const points = counts.map((c, i) => {
-    const x = (i / (DAYS - 1)) * W;
-    const y = H - PAD - ((c / max) * (H - PAD * 2));
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(" ");
+  const CX = 90, CY = 90, R = 80;
 
-  const areaPoints = `0,${H} ${points} ${W},${H}`;
+  function arcPath(startPct, endPct) {
+    const startAngle = (startPct / 100) * 2 * Math.PI - Math.PI / 2;
+    const endAngle   = (endPct   / 100) * 2 * Math.PI - Math.PI / 2;
+    const x1 = CX + R * Math.cos(startAngle);
+    const y1 = CY + R * Math.sin(startAngle);
+    const x2 = CX + R * Math.cos(endAngle);
+    const y2 = CY + R * Math.sin(endAngle);
+    const largeArc = (endPct - startPct) > 50 ? 1 : 0;
+    return `M${CX},${CY} L${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${largeArc} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`;
+  }
 
-  document.getElementById("trendLine").setAttribute("points", points);
-  document.getElementById("trendArea").setAttribute("points", areaPoints);
+  let svgSlices = "";
+  let startPct = 0;
+  if (citizen > 0)    { svgSlices += `<path class="cv-hover" data-tt-title="Citizen" data-tt-lines='["${citizen} of ${known} respondents","${citizenPct.toFixed(1)}% share"]' d="${arcPath(startPct, startPct + citizenPct)}" fill="#2563eb"/>`; startPct += citizenPct; }
+  if (business > 0)   { svgSlices += `<path class="cv-hover" data-tt-title="Business" data-tt-lines='["${business} of ${known} respondents","${businessPct.toFixed(1)}% share"]' d="${arcPath(startPct, startPct + businessPct)}" fill="#f97316"/>`; startPct += businessPct; }
+  if (government > 0) { svgSlices += `<path class="cv-hover" data-tt-title="Government" data-tt-lines='["${government} of ${known} respondents","${governmentPct.toFixed(1)}% share"]' d="${arcPath(startPct, startPct + governmentPct)}" fill="#38bdf8"/>`; }
 
-  /* show every ~5th day label to avoid crowding; on narrow screens
-     thin it out further so labels don't collide. */
-  const wrapWidth = document.getElementById("trendSvg").clientWidth || W;
-  const everyN = wrapWidth < 380 ? 8 : 5;
-  const labelsHtml = dayLabels.map((d, i) =>
-    (i % everyN === 0 || i === dayLabels.length - 1) ? `<span>${d}</span>` : `<span></span>`
-  ).join("");
-  document.getElementById("trendLabels").innerHTML = labelsHtml;
+  wrap.innerHTML = `
+    <svg class="pie-svg" viewBox="0 0 180 180">
+      <circle cx="${CX}" cy="${CY}" r="${R}" fill="#f1f5f9"/>
+      ${svgSlices}
+    </svg>
+    <div class="pie-legend">
+      ${citizen > 0 ? `<div class="pie-legend-item">
+        <div class="pie-legend-dot" style="background:#2563eb;"></div>
+        <div>
+          <div class="pie-legend-label">Citizen</div>
+          <div class="pie-legend-val">${citizen} (${citizenPct.toFixed(0)}%)</div>
+        </div>
+      </div>` : ""}
+      ${business > 0 ? `<div class="pie-legend-item">
+        <div class="pie-legend-dot" style="background:#f97316;"></div>
+        <div>
+          <div class="pie-legend-label">Business</div>
+          <div class="pie-legend-val">${business} (${businessPct.toFixed(0)}%)</div>
+        </div>
+      </div>` : ""}
+      ${government > 0 ? `<div class="pie-legend-item">
+        <div class="pie-legend-dot" style="background:#38bdf8;"></div>
+        <div>
+          <div class="pie-legend-label">Government</div>
+          <div class="pie-legend-val">${government} (${governmentPct.toFixed(0)}%)</div>
+        </div>
+      </div>` : ""}
+      ${unknown ? `<div class="pie-legend-item"><div class="pie-legend-dot" style="background:#e2e8f0;"></div><div><div class="pie-legend-label" style="color:#94a3b8;">Unspecified</div><div class="pie-legend-val">${unknown}</div></div></div>` : ""}
+    </div>
+  `;
 }
 
 /* ── SQD BREAKDOWN ── */
@@ -1293,51 +1298,6 @@ function renderCodeStatusBar() {
       <text x="${x2 + BAR_W / 2}" y="${H - PAD_BOTTOM + 18}" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Unused</text>
     </svg>
   `;
-}
-
-/* ── STAR DISTRIBUTION — COUNT ACTUAL RATINGS ── */
-function renderStars(rows) {
-  let s5 = 0, s4 = 0, s3 = 0, s2 = 0, s1 = 0, counted = 0;
-
-  rows.forEach(r => {
-    const explicit = parseInt(r.user_rating ?? r.rating ?? r.stars ?? NaN);
-    const avg = avgScore(r);
-    const rating = !isNaN(explicit) ? explicit : (avg > 0 ? Math.round(avg) : 0);
-
-    if (rating < 1 || rating > 5) return;
-    counted++;
-
-    if (rating === 5) s5++;
-    else if (rating === 4) s4++;
-    else if (rating === 3) s3++;
-    else if (rating === 2) s2++;
-    else if (rating === 1) s1++;
-  });
-
-  const total = counted;
-
-  const setStar = (id, val, vid, label) => {
-    const p = total ? (val / total) * 100 : 0;
-    const fillEl = document.getElementById(id);
-    fillEl.style.width = p + "%";
-    document.getElementById(vid).textContent = p.toFixed(0) + "%";
-
-    // Hover target is the whole track (not just the fill), so the
-    // tooltip is easy to trigger even when the bar is thin/empty.
-    const trackEl = fillEl.parentElement;
-    trackEl.classList.add("cv-hover");
-    trackEl.dataset.ttTitle = label;
-    trackEl.dataset.ttLines = JSON.stringify([
-      `${val} of ${total} evaluations`,
-      `${p.toFixed(1)}% of total`
-    ]);
-  };
-
-  setStar("r5", s5, "v5", "5 Stars");
-  setStar("r4", s4, "v4", "4 Stars");
-  setStar("r3", s3, "v3", "3 Stars");
-  setStar("r2", s2, "v2", "2 Stars");
-  setStar("r1", s1, "v1", "1 Star");
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1591,9 +1551,7 @@ function renderSexPie(rows) {
    The trend chart's day-label density does depend on available width
    though (see renderTrend), so re-run it on resize/orientation change
    using the data already in memory — no need to hit Firebase again. */
-CVOnResize([
-  () => renderTrend(Object.values(allEvals))
-]);
+CVOnResize([]);
 
 </script>
 </body>
