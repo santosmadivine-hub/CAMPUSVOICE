@@ -94,26 +94,6 @@
 }
 .header-meta .dot { margin: 0 8px; }
 
-.btn-print {
-  border: none;
-  background: var(--brand);
-  color: white;
-  padding: 12px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 700;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-  transition: all .3s ease;
-  white-space: nowrap;
-}
-.btn-print:hover { 
-  background: var(--brand-deep);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
-}
-
 /* ── BANNERS ── */
 .state-banner {
   padding: 48px 24px;
@@ -449,10 +429,6 @@
   padding: 22px 24px;
 }
 
-@media print {
-  #sidebar-mount, #topbar-mount, .back-link, .btn-print { display: none !important; }
-}
-
 @media (max-width: 768px) {
   .analytics-header .header-row {
     flex-direction: column;
@@ -495,9 +471,6 @@
             <span class="dot">•</span>
             <span id="office-respondents">—</span>
           </div>
-        </div>
-        <button id="btn-print" class="btn-print">🖨 Print Report</button>
-      </div>
     </header>
 
     <!-- Loading / Empty states -->
@@ -733,8 +706,6 @@ function renderCodeUsage(codes) {
     });
   });
 }
-
-document.getElementById("btn-print").addEventListener("click", () => window.print());
 
 async function main() {
   const officeKey = getQueryParam("office");
