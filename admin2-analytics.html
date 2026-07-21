@@ -1157,24 +1157,7 @@ function renderStatusBreakdown() {
     </div>
   `;
 
-  const legend = `
-    <div class="status-legend">
-      <div class="status-legend-item">
-        <span class="status-legend-swatch" style="background: ${STATUS_META.pending.color};"></span>
-        <span>${STATUS_META.pending.icon} ${STATUS_META.pending.label}: ${counts.pending} (${((counts.pending / total) * 100).toFixed(1)}%)</span>
-      </div>
-      <div class="status-legend-item">
-        <span class="status-legend-swatch" style="background: ${STATUS_META.no_action.color};"></span>
-        <span>${STATUS_META.no_action.icon} ${STATUS_META.no_action.label}: ${counts.no_action} (${((counts.no_action / total) * 100).toFixed(1)}%)</span>
-      </div>
-      <div class="status-legend-item">
-        <span class="status-legend-swatch" style="background: ${STATUS_META.resolved.color};"></span>
-        <span>${STATUS_META.resolved.icon} ${STATUS_META.resolved.label}: ${counts.resolved} (${((counts.resolved / total) * 100).toFixed(1)}%)</span>
-      </div>
-    </div>
-  `;
-
-  el.innerHTML = svgContent + axisLabels + legend;
+  el.innerHTML = svgContent + axisLabels;
 }
 
 // ======================
