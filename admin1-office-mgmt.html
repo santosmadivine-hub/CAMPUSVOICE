@@ -270,6 +270,9 @@
   font-weight: 800;
   font-family: 'Syne', sans-serif;
   color: #0c4a6e;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 
@@ -331,12 +334,16 @@
           <div class="stat-card-mini-value" id="totalOffices">0</div>
         </div>
         <div class="stat-card-mini">
-          <div class="stat-card-mini-label">Avg Rating</div>
-          <div class="stat-card-mini-value" id="avgRating">0.0</div>
-        </div>
-        <div class="stat-card-mini">
           <div class="stat-card-mini-label">Total Evaluations</div>
           <div class="stat-card-mini-value" id="totalEvals">0</div>
+        </div>
+        <div class="stat-card-mini">
+          <div class="stat-card-mini-label">Highest Rating</div>
+          <div class="stat-card-mini-value" id="highestOffice">—</div>
+        </div>
+        <div class="stat-card-mini">
+          <div class="stat-card-mini-label">Lowest Rating</div>
+          <div class="stat-card-mini-value" id="lowestOffice">—</div>
         </div>
       </div>
 
@@ -491,20 +498,30 @@ onSnapshot(evaluationsCol, (snapshot) => {
 
 function updateStats() {
   let totalEvals = allEvaluations.length;
-  let totalScore = 0;
-  let countWithRating = 0;
+  let highestOffice = "—";
+  let lowestOffice = "—";
+  let highestRating = -1;
+  let lowestRating = 6;
   
-  Object.values(offices).forEach(office => {
-    if(office.count > 0) {
-      countWithRating++;
-      totalScore += office.total / office.count;
+  Object.keys(offices).forEach(office => {
+    if(offices[office].count > 0) {
+      const avg = offices[office].total / offices[office].count;
+      
+      if(avg > highestRating) {
+        highestRating = avg;
+        highestOffice = office;
+      }
+      
+      if(avg < lowestRating) {
+        lowestRating = avg;
+        lowestOffice = office;
+      }
     }
   });
   
-  const avgRating = countWithRating > 0 ? (totalScore / countWithRating) : 0;
-  
   document.getElementById("totalEvals").textContent = totalEvals;
-  document.getElementById("avgRating").textContent = avgRating.toFixed(1);
+  document.getElementById("highestOffice").textContent = highestOffice;
+  document.getElementById("lowestOffice").textContent = lowestOffice;
 }
 
 function renderOfficeTable() {
