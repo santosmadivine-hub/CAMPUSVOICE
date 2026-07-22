@@ -17,8 +17,6 @@
 .header-titles h1 { margin: 0; font-family: 'Syne', sans-serif; font-size: 32px; color: #0c4a6e; font-weight: 800; }
 .header-meta { font-size: 14px; color: #64748b; font-weight: 500; }
 .header-meta .dot { margin: 0 8px; }
-.btn-print { border: none; background: #1e3a8a; color: white; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; font-family: 'DM Sans', sans-serif; font-size: 14px; box-shadow: 0 4px 12px rgba(30,58,138,.2); transition: all .3s ease; white-space: nowrap; }
-.btn-print:hover { background: #1e40af; transform: translateY(-2px); box-shadow: 0 8px 16px rgba(30,58,138,.3); }
 .state-banner { padding: 48px 24px; text-align: center; color: #64748b; font-size: 14px; background: white; border: 1px solid #bae6fd; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 .state-empty { color: #92400e; background: #fffbeb; border-color: #fde68a; }
 .state-error { color: #991b1b; background: #fef2f2; border-color: #fecaca; text-align: left; }
@@ -127,19 +125,15 @@
         <div class="analytics-page">
 
             <header class="analytics-header">
-              <a href="admin2-office-mgmt.html" class="back-link">← Back to Office Management</a>
+              <a href="admin2-office-mgmt.html" class="back-link">← Back</a>
               <div class="header-row">
                 <div class="header-titles">
-                  <div class="eyebrow">Summary Analytics Report</div>
                   <h1 id="office-name">Loading office…</h1>
                   <div class="header-meta">
                     <span id="office-date-range">—</span>
                     <span class="dot">•</span>
                     <span id="office-respondents">—</span>
-                  </div>
-                </div>
-                <button class="btn-print" id="btn-print">🖨️ Print Report</button>
-              </div>
+                  </d>
             </header>
 
             <div class="state-banner" id="loading-banner">Loading evaluation data…</div>
@@ -159,11 +153,6 @@
                   <div class="stat-icon">📋</div>
                   <div class="stat-label">Total Evaluations</div>
                   <div class="stat-value" id="stat-total-evals">0</div>
-                </div>
-                <div class="stat-card stat-primary">
-                  <div class="stat-icon">😊</div>
-                  <div class="stat-label">Avg Satisfaction</div>
-                  <div class="stat-value" id="stat-satisfaction">0%</div>
                 </div>
                 <div class="stat-card stat-warning">
                   <div class="stat-icon">⭐</div>
@@ -780,10 +769,6 @@ async function main() {
   }
 }
 
-// Print functionality
-document.getElementById("btn-print").addEventListener("click", () => {
-  window.print();
-});
 
 main();
 </script>
