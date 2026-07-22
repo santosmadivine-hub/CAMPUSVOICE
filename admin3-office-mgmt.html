@@ -599,7 +599,6 @@ function updateSummary() {
   });
 
   document.getElementById("summary-total-offices-count").textContent = totalOffices;
-  document.getElementById("summary-avg-rating").textContent = highestRating > -1 ? highestRating.toFixed(1) : "—";
   document.getElementById("summary-total-evals").textContent = totalEvals;
   document.getElementById("summary-highest-office").textContent = highestOffice;
   document.getElementById("summary-lowest-office").textContent = lowestOffice;
@@ -633,7 +632,7 @@ function renderOfficeTable() {
     const name = offices[key];
     const stats = statsByKey[normalizeName(name)] || { total: 0, sum: 0 };
     const avg = stats.total > 0 ? stats.sum / stats.total : 0;
-    const pct = (avg / 10) * 100;
+    const pct = (avg / 5) * 100;
 
     return `
       <tr>
