@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-  /* --- Analytics (cleanliness): stat cards, trend chart, leaderboard, trend rows --- */
   .card {
     background: #fff;
     border-radius: 18px;
@@ -28,7 +27,6 @@
     color: #94a3b8;
   }
 
-  /* ─── Summary stat cards — identical to Admin 1's stat-card system ─── */
   .stat-grid{
     display:grid;
     grid-template-columns:repeat(4, 1fr);
@@ -845,7 +843,6 @@ document.getElementById("sidebar-mount").innerHTML =
 document.getElementById("topbar-mount").innerHTML =
   buildTopbar("Analytics", "admin2");
 
-// Office Trend dropdown open/close (elements are static, so wire once)
 document.getElementById("ot-dropdown-btn").addEventListener("click", (e) => {
   e.stopPropagation();
   document.getElementById("ot-dropdown-panel").classList.toggle("open");
@@ -858,39 +855,18 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// ======================
-// FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
-// (matches Evaluation Management / Reports pages exactly)
-// ======================
 const OFFICES_COLLECTION = "office-names";
 const EVALUATIONS_COLLECTION = "cleanliness_evaluations";
-
-// Confirmed from Firestore console: cleanliness_evaluations documents
-// store rating1 ... rating15 (plus comments, course, date,
-// evaluationId, officeName, sex, timestamp, userCategory, userId,
-// year). Everything that loops over rating questions drives off this
-// constant so there's only one place to change it.
 const TOTAL_RATING_QUESTIONS = 15;
-
-// Evaluations with an average rating at or above this threshold (out of
-// 5) are treated as positive feedback and auto-classified as "No Action
-// Required" instead of "Pending" — mirrors Evaluation Management so the
-// status breakdown here matches the counts on that page exactly.
 const LOW_RATING_THRESHOLD = 3;
-
-// Display labels/icons for each status value, used for the status
-// breakdown bar chart below.
 const STATUS_META = {
-  pending: { label: "Pending", icon: "⏳", color: "#f59e0b" },
-  no_action: { label: "No Action Required", icon: "🙅", color: "#6366f1" },
-  resolved: { label: "Resolved", icon: "✅", color: "#10b981" }
+  pending: { label: "Pending", color: "#f59e0b" },
+  no_action: { label: "No Action Required", color: "#6366f1" },
+  resolved: { label: "Resolved", color: "#10b981" }
 };
 
-// ======================
-// STATE
-// ======================
-let evaluations = [];   // [{id, officeName, rating1..15, timestamp, ...}]
-let offices = {};       // { officeDocId: officeName }
+let evaluations = [];   
+let offices = {};       
 
 function avgOf(e) {
   let sum = 0;
@@ -900,9 +876,6 @@ function avgOf(e) {
   return sum / TOTAL_RATING_QUESTIONS;
 }
 
-// Normalizes whatever is stored under a record's status into "pending",
-// "no_action", or "resolved" (mirrors Evaluation Management's logic
-// exactly so the two pages always agree).
 function parseEvalStatus(data, avgRating) {
   const stored = (data.status || "").toString().toLowerCase();
   if (stored === "resolved" || stored === "pending" || stored === "no_action") {
@@ -911,11 +884,6 @@ function parseEvalStatus(data, avgRating) {
   return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
 }
 
-// Normalizes evidence into a consistent array of { url, type }.
-// Supports the current multi-file Android schema (evidenceUrls[] /
-// evidenceTypes[]), the earlier single-file schema (evidenceUrl /
-// evidenceType), and the very first schema (fileUrl only, type unknown —
-// guessed from the file extension). Mirrors Evaluation Management.
 function parseEvidence(data) {
   const items = [];
 
@@ -942,9 +910,6 @@ function parseEvidence(data) {
   return items;
 }
 
-// ======================
-// EVALUATION QUESTION LABELS (rating1 -> rating15)
-// ======================
 const KNOWN_DIMENSION_LABELS = {
   1: "The area surrounding the office is free from litter.",
   2: "The office entrance is clean and well-maintained.",
@@ -986,9 +951,6 @@ function ratingFillClass(pct) {
   return "rating-poor-fill";
 }
 
-// ======================
-// LOAD OFFICES (Firestore: office-names)
-// ======================
 onSnapshot(collection(db, OFFICES_COLLECTION), (snapshot) => {
   offices = {};
   snapshot.forEach((docSnap) => {
@@ -998,9 +960,6 @@ onSnapshot(collection(db, OFFICES_COLLECTION), (snapshot) => {
   renderAll();
 });
 
-// ======================
-// LOAD CLEANLINESS EVALUATIONS (Firestore: cleanliness_evaluations)
-// ======================
 const evalQuery = query(collection(db, EVALUATIONS_COLLECTION), orderBy("timestamp", "desc"));
 
 onSnapshot(evalQuery, (snapshot) => {
@@ -1030,9 +989,6 @@ onSnapshot(evalQuery, (snapshot) => {
   renderAll();
 });
 
-// ======================
-// RENDER ORCHESTRATOR
-// ======================
 function renderAll() {
   renderStatCards();
   renderStatusBreakdown();
@@ -1042,9 +998,6 @@ function renderAll() {
   renderRespondentPies();
 }
 
-// ======================
-// STAT CARDS
-// ======================
 function renderStatCards() {
   document.getElementById("stat-total").textContent = evaluations.length;
 
@@ -1070,11 +1023,6 @@ function renderStatCards() {
   document.getElementById("stat-active-offices-sub").textContent = `of ${totalOffices} total offices`;
 }
 
-// ======================
-// SUBMISSION STATUS COMPARISON (Pending / No Action Required / Resolved)
-// Column chart: x-axis = the three statuses, y-axis = percentage of
-// total evaluations (0–100%, 10% gridlines).
-// ======================
 function renderStatusBreakdown() {
   const el = document.getElementById("status-breakdown-chart");
 
@@ -1108,8 +1056,6 @@ function renderStatusBreakdown() {
   const colWidth = plotW / bars.length;
   const barWidth = Math.min(70, colWidth * 0.5);
 
-  // Y-axis: 10% to 100% in 10% steps, scaled against a 0–100 baseline
-  // so bar heights map directly to their percentage value.
   const yTicks = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
   const yFor = (pct) => PAD_TOP + plotH - (Math.min(pct, 100) / 100) * plotH;
   const baselineY = yFor(0);
@@ -1150,7 +1096,6 @@ function renderStatusBreakdown() {
     </svg>
   `;
 
-  // X-axis labels — one per status column, aligned under each bar.
   const axisLabels = `
     <div class="status-axis-labels" style="padding: 0 16px 0 46px;">
       ${bars.map(b => `<div style="text-align: center; flex: 1;">${b.meta.icon} ${b.meta.label}</div>`).join("")}
@@ -1160,18 +1105,9 @@ function renderStatusBreakdown() {
   el.innerHTML = svgContent + axisLabels;
 }
 
-// ======================
-// OFFICE TREND OVER TIME (monthly average score per office)
-// Question answered: is an office improving or declining?
-// Layout: offices are grouped along the x-axis; within each office
-// group there is one bar per month (color-coded) so the trend across
-// months is still visible per office. Horizontal, non-rotated labels;
-// the chart scrolls horizontally when there isn't room for every
-// selected office.
-// ======================
 const OT_MONTHS_WINDOW = 6;
 const OT_MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-let otSelectedOffices = null; // null = auto (top 5 by volume); Set<string> once the user picks manually
+let otSelectedOffices = null;
 
 function otBuildMonths() {
   const now = new Date();
@@ -1203,13 +1139,9 @@ function otTopOffices(n) {
   return counts.sort((a, b) => b.count - a.count).slice(0, n).map(c => c.name);
 }
 
-// Fixed pixel geometry for the scrollable bar chart (not viewBox-scaled,
-// so a group always takes the same amount of horizontal space and the
-// wrapper can scroll instead of squeezing labels).
-// ===== INCREASED BAR WIDTH FOR BETTER VISIBILITY =====
-const OT_GROUP_WIDTH = 110;   // px per office group (increased from 96)
-const OT_BAR_WIDTH = 14;      // bar width in pixels (increased from 9)
-const OT_BAR_GAP = 2;         // gap between bars (decreased from 3 to fit bigger bars)
+const OT_GROUP_WIDTH = 110; 
+const OT_BAR_WIDTH = 14;      
+const OT_BAR_GAP = 2;         
 const OT_CHART_HEIGHT = 190;
 
 function renderOfficeTrend() {
@@ -1283,8 +1215,6 @@ function renderOfficeTrend() {
     return;
   }
 
-  // Fixed-pixel width so the wrapper can scroll horizontally instead of
-  // squeezing office groups/labels when there are many offices selected.
   const totalWidth = activeNames.length * OT_GROUP_WIDTH;
   svg.setAttribute("width", totalWidth);
   svg.setAttribute("height", OT_CHART_HEIGHT);
@@ -1315,13 +1245,10 @@ function renderOfficeTrend() {
 
   svg.innerHTML = gridLines + barsSvg;
 
-  // Diagonal office name labels, one per group, matching the group
-  // width in the SVG above so they line up while scrolling.
   groupLabelsEl.innerHTML = activeNames.map(name => `
     <div class="ot-group-label" style="width:${OT_GROUP_WIDTH}px;" title="${name}"><span>${name}</span></div>
   `).join("");
 
-  // Legend now represents months (bar color), since offices are on the x-axis.
   legendEl.innerHTML = months.map((m, j) => `
     <div class="ot-line-legend-item">
       <span class="ot-line-legend-swatch" style="background:${monthColors[j]};"></span>
@@ -1330,9 +1257,6 @@ function renderOfficeTrend() {
   `).join("");
 }
 
-// ======================
-// RATING DISTRIBUTION (all offices)
-// ======================
 function renderRatingDistribution() {
   const el = document.getElementById("rating-distribution-chart");
   const total = evaluations.length;
@@ -1356,10 +1280,6 @@ function renderRatingDistribution() {
   }).join("");
 }
 
-// ======================
-// DIMENSION PERFORMANCE (all 15 evaluation questions, all offices)
-// x-axis: evaluation question | y-axis: average percentage
-// ======================
 function renderDimensionPerformance() {
   const el = document.getElementById("dimension-performance-chart");
 
@@ -1389,9 +1309,6 @@ function renderDimensionPerformance() {
   }).join("");
 }
 
-// ======================
-// RESPONDENT BREAKDOWN (sex + user category) — pie charts
-// ======================
 const PIE_COLORS = ["#2563eb", "#FB923C", "#F87171", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
 function renderPieChart(circleId, legendId, values) {
