@@ -641,11 +641,6 @@
                   <div class="stat-label">Total Evaluations</div>
                   <div class="stat-value" id="stat-total-evals">0</div>
                 </div>
-                <div class="stat-card stat-primary">
-                  <div class="stat-icon">😊</div>
-                  <div class="stat-label">Avg Satisfaction</div>
-                  <div class="stat-value" id="stat-satisfaction">0%</div>
-                </div>
                 <div class="stat-card stat-warning">
                   <div class="stat-icon">⭐</div>
                   <div class="stat-label">Overall Rating</div>
@@ -1086,7 +1081,6 @@ async function main() {
   });
 
   document.getElementById("stat-total-evals").textContent = total;
-  document.getElementById("stat-satisfaction").textContent = `${satisfactionPct.toFixed(1)}%`;
   document.getElementById("stat-overall-rating").textContent = `${overallAvg.toFixed(1)} / 5`;
   document.getElementById("stat-overall-label").textContent = ratingLabel(overallAvg);
   document.getElementById("stat-respondents").textContent = respondents;
