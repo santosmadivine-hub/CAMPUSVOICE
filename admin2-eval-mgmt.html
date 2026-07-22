@@ -280,24 +280,17 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-
   .table-wrap::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+  width: 5px;
   }
+  .table-wrap::-webkit-scrollbar {
+  height: 10px;   /* Change this value to make it thicker or thinner */
+}
 
-  .table-wrap::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .table-wrap::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-  }
-
-  .table-wrap::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-  }
+/* Vertical scrollbar (if needed) */
+.table-wrap::-webkit-scrollbar {
+  width: 7px;
+}
 
   .submissions-table {
     width: 100%;
@@ -644,7 +637,24 @@
           <div class="stat-value" id="stat-total">0</div>
           <div class="stat-sub">All Submissions</div>
         </div>
-
+        <div class="stat-card blue">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-label">Offices</div>
+          <div class="stat-value" id="stat-offices">0</div>
+          <div class="stat-sub">With Submissions</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">📷</div>
+          <div class="stat-label">Total Images</div>
+          <div class="stat-value" id="stat-images">0</div>
+          <div class="stat-sub">Evidence Attached</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">🎥</div>
+          <div class="stat-label">Total Videos</div>
+          <div class="stat-value" id="stat-videos">0</div>
+          <div class="stat-sub">Evidence Attached</div>
+        </div>
         <div class="stat-card blue">
           <div class="stat-icon">⏳</div>
           <div class="stat-label">Pending</div>
@@ -677,10 +687,10 @@
 
         <!-- Tabs -->
         <div class="eval-tabs" id="eval-tabs">
-          <button class="eval-tab active" data-tab="recent">Recent</button>
-          <button class="eval-tab" data-tab="pending">Pending</button>
-          <button class="eval-tab" data-tab="no_action">No Action Required</button>
-          <button class="eval-tab" data-tab="resolved">Resolved</button>
+          <button class="eval-tab active" data-tab="recent">Recent <span class="tab-count" id="tab-count-recent">0</span></button>
+          <button class="eval-tab" data-tab="pending">Pending <span class="tab-count" id="tab-count-pending">0</span></button>
+          <button class="eval-tab" data-tab="no_action">No Action Required <span class="tab-count" id="tab-count-no_action">0</span></button>
+          <button class="eval-tab" data-tab="resolved">Resolved <span class="tab-count" id="tab-count-resolved">0</span></button>
         </div>
 
         <!-- Filters -->
