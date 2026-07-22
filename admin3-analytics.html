@@ -155,49 +155,40 @@
     }
   }
 
-  /* Submission Status — % of total evaluations (bar chart) */
-  .status-chart-wrap {
-    margin-top: 14px;
+  .trend-chart-wrap {
+    margin-top: 10px;
   }
 
-  .status-svg {
+  .trend-svg {
     width: 100%;
-    height: 220px;
-    display: block;
-    overflow: visible;
+    height: 140px;
   }
 
-  .status-svg .status-gridline {
-    stroke: #eef2f7;
-    stroke-width: 1;
-  }
-
-  .status-svg .status-axis-label {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 9px;
-    fill: #a5b4fc;
-  }
-
-  .status-svg .status-pct-label {
-    font-family: 'Syne', sans-serif;
-    font-size: 12.5px;
-    font-weight: 800;
-    fill: #0f172a;
-  }
-
-  .status-svg .status-cat-label {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    fill: #a5b4fc;
-  }
-
-  .status-empty {
-    text-align: center;
+  .trend-axis-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 0.7rem;
     color: #94a3b8;
-    padding: 30px 0;
     font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
+  }
+
+  .trend-legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #64748b;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .trend-legend .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2563eb;
+    display: inline-block;
   }
 
   .bar-chart {
@@ -699,9 +690,11 @@
     <!-- ROW: SUBMISSION TREND + RATING DISTRIBUTION -->
     <div class="analytics-grid">
       <div class="card">
-        <div class="card-title">Submission Status <span class="card-sub">— % of total evaluations</span></div>
-        <div class="status-chart-wrap" id="status-chart-wrap">
-          <svg viewBox="0 0 320 220" class="status-svg" id="status-svg" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="card-title">Submission Trend <span class="card-sub">— last 30 days</span></div>
+        <div class="trend-chart-wrap">
+          <svg viewBox="0 0 300 140" class="trend-svg" id="trend-svg" preserveAspectRatio="none"></svg>
+          <div class="trend-axis-row" id="trend-axis-row"></div>
+          <div class="trend-legend"><span class="dot"></span> Daily submissions</div>
         </div>
       </div>
 
@@ -892,26 +885,6 @@ function ratingFillClass(pct) {
   return "rating-poor-fill";
 }
 
-// Status derivation — matches parseEvalStatus in admin3-eval-mgmt.html.
-// An explicit "status" field on the record wins; otherwise it's derived
-// from the average rating (below LOW_RATING_THRESHOLD -> pending,
-// otherwise no_action) so both pages classify submissions identically.
-const LOW_RATING_THRESHOLD = 3;
-
-const STATUS_CATEGORIES = [
-  { key: "pending", label: "Pending", color: "#f59e0b" },
-  { key: "no_action", label: "No Action Required", color: "#6366f1" },
-  { key: "resolved", label: "Resolved", color: "#10b981" }
-];
-
-function parseEvalStatus(rawStatus, avgRating) {
-  const stored = (rawStatus || "").toString().toLowerCase();
-  if (stored === "resolved" || stored === "pending" || stored === "no_action") {
-    return stored;
-  }
-  return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
-}
-
 // ======================
 // LOAD OFFICES (Firestore: offices)
 // ======================
@@ -943,13 +916,11 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
       userCategory: ev.userCategory || "",
       userId: ev.userId || "",
       year: ev.year || "",
-      rawStatus: ev.status || "",
       timestamp: parseEvalTimestamp(ev)
     };
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
       record["rating" + i] = Number(ev["rating" + i]) || 0;
     }
-    record.status = parseEvalStatus(record.rawStatus, avgOf(record));
     evaluations.push(record);
   });
   renderAll();
@@ -962,7 +933,7 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
 // ======================
 function renderAll() {
   renderStatCards();
-  renderSubmissionStatus();
+  renderSubmissionTrend();
   renderOfficeTrend();
   renderRatingDistribution();
   renderDimensionPerformance();
@@ -987,62 +958,62 @@ function renderStatCards() {
 }
 
 // ======================
-// SUBMISSION STATUS (% of total evaluations, by pending / no action / resolved)
+// SUBMISSION TREND (last 30 days)
 // ======================
-function renderSubmissionStatus() {
-  const svg = document.getElementById("status-svg");
-  const total = evaluations.length;
+function renderSubmissionTrend() {
+  const days = 30;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  if (total === 0) {
-    document.getElementById("status-chart-wrap").innerHTML = `<div class="status-empty">No evaluations yet.</div>`;
-    return;
+  const buckets = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    buckets.push({ date: d, count: 0 });
   }
 
-  const counts = { pending: 0, no_action: 0, resolved: 0 };
-  evaluations.forEach(e => { counts[e.status] = (counts[e.status] || 0) + 1; });
+  evaluations.forEach(e => {
+    if (!e.timestamp) return;
+    const d = new Date(e.timestamp);
+    d.setHours(0, 0, 0, 0);
+    const bucket = buckets.find(b => b.date.getTime() === d.getTime());
+    if (bucket) bucket.count++;
+  });
 
-  const width = 320, height = 220;
-  const leftPad = 30, rightPad = 10, topPad = 26, bottomPad = 34;
-  const chartTop = topPad, chartBottom = height - bottomPad;
-  const chartHeight = chartBottom - chartTop;
-  const chartLeft = leftPad, chartRight = width - rightPad;
-  const chartWidth = chartRight - chartLeft;
+  const maxCount = Math.max(1, ...buckets.map(b => b.count));
+  const width = 300, height = 140, padding = 6;
+  const usableHeight = height - padding * 2;
+  const stepX = (width - padding * 2) / (buckets.length - 1);
 
-  function yFor(pct) {
-    return chartBottom - (pct / 100) * chartHeight;
-  }
+  const points = buckets.map((b, i) => {
+    const x = padding + i * stepX;
+    const y = padding + usableHeight - (b.count / maxCount) * usableHeight;
+    return { x, y };
+  });
 
-  // Gridlines + axis labels, every 10%
-  const gridSteps = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-  const gridlines = gridSteps.map(pct => {
-    const y = yFor(pct);
-    return `<line class="status-gridline" x1="${chartLeft}" y1="${y.toFixed(1)}" x2="${chartRight}" y2="${y.toFixed(1)}"></line>
-      <text class="status-axis-label" x="${chartLeft - 6}" y="${(y + 3).toFixed(1)}" text-anchor="end">${pct}%</text>`;
-  }).join("");
+  const linePoints = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const areaPath = `M${points[0].x.toFixed(1)},${(height - padding).toFixed(1)} ` +
+    points.map(p => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") +
+    ` L${points[points.length - 1].x.toFixed(1)},${(height - padding).toFixed(1)} Z`;
 
-  // Bars — one per status category, evenly spaced across the chart width
-  const n = STATUS_CATEGORIES.length;
-  const slotWidth = chartWidth / n;
-  const barWidth = Math.min(64, slotWidth * 0.5);
+  // Add tooltip points for each day
+  const tooltipCircles = points.map((p, i) => 
+    `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="transparent" style="cursor:pointer;"><title>${buckets[i].date.toDateString()}: ${buckets[i].count} submission${buckets[i].count !== 1 ? 's' : ''}</title></circle>`
+  ).join("");
 
-  const bars = STATUS_CATEGORIES.map((cat, i) => {
-    const count = counts[cat.key] || 0;
-    const pct = total ? (count / total) * 100 : 0;
-    const slotCenter = chartLeft + slotWidth * (i + 0.5);
-    const barX = slotCenter - barWidth / 2;
-    const barY = yFor(pct);
-    const barH = chartBottom - barY;
+  const svg = document.getElementById("trend-svg");
+  svg.innerHTML = `
+    <path d="${areaPath}" fill="rgba(37,99,235,0.12)" stroke="none"></path>
+    <polyline points="${linePoints}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    ${tooltipCircles}
+  `;
 
-    return `
-      <rect x="${barX.toFixed(1)}" y="${barY.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" rx="6" fill="${cat.color}">
-        <title>${cat.label}: ${count} evaluation${count !== 1 ? 's' : ''} (${pct.toFixed(1)}%)</title>
-      </rect>
-      <text class="status-pct-label" x="${slotCenter.toFixed(1)}" y="${(barY - 10).toFixed(1)}" text-anchor="middle">${pct.toFixed(1)}%</text>
-      <text class="status-cat-label" x="${slotCenter.toFixed(1)}" y="${(chartBottom + 20).toFixed(1)}" text-anchor="middle">${count} ${cat.label}</text>
-    `;
-  }).join("");
-
-  svg.innerHTML = gridlines + bars;
+  // Axis labels: evenly spaced day-of-month ticks
+  const axisRow = document.getElementById("trend-axis-row");
+  const tickIndices = [0, 5, 10, 15, 20, 25, buckets.length - 1];
+  axisRow.innerHTML = tickIndices
+    .map(i => `<span>${buckets[i].date.getDate()}</span>`)
+    .join("");
 }
 
 // ======================
