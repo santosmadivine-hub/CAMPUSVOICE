@@ -109,7 +109,6 @@
 .evidence-btn-secondary { flex: 1; background: #e2e8f0; color: #0f172a; border: none; padding: 10px 16px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer; }
 .evidence-btn-secondary:hover { background: #cbd5e1; }
 
-@media print { #sidebar-mount, #topbar-mount, .back-link, .btn-print { display: none !important; } }
 @media (max-width: 1024px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 768px) { .analytics-header .header-row { flex-direction: column; } .stat-grid { grid-template-columns: 1fr; } .stat-value { font-size: 28px; } }
 </style>
@@ -133,7 +132,8 @@
                     <span id="office-date-range">—</span>
                     <span class="dot">•</span>
                     <span id="office-respondents">—</span>
-                  </d>
+                  </div>
+               
             </header>
 
             <div class="state-banner" id="loading-banner">Loading evaluation data…</div>
@@ -153,6 +153,11 @@
                   <div class="stat-icon">📋</div>
                   <div class="stat-label">Total Evaluations</div>
                   <div class="stat-value" id="stat-total-evals">0</div>
+                </div>
+                <div class="stat-card stat-primary">
+                  <div class="stat-icon">😊</div>
+                  <div class="stat-label">Avg Satisfaction</div>
+                  <div class="stat-value" id="stat-satisfaction">0%</div>
                 </div>
                 <div class="stat-card stat-warning">
                   <div class="stat-icon">⭐</div>
