@@ -25,16 +25,35 @@
 .state-error strong { display: block; margin-bottom: 6px; }
 .state-error code { display: block; margin-top: 8px; background: #fff; padding: 8px 10px; border-radius: 6px; font-size: 12px; overflow-x: auto; }
 .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; padding: 20px; background: white; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-.stat-card { background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%); padding: 22px; border-radius: 12px; border: 1px solid #e2e8f0; position: relative; transition: all .3s ease; }
+
+/* ─── Stat cards — font sizes, top border, and corner radius unified with Admin 1's stat-card system ─── */
+.stat-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%);
+  padding: 22px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  border-top: 4px solid #2563eb;
+  position: relative;
+  transition: all .3s ease;
+}
 .stat-card:hover { border-color: #7dd3fc; box-shadow: 0 4px 12px rgba(2,132,199,0.12); transform: translateY(-3px); background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); }
 .stat-icon { font-size: 32px; margin-bottom: 12px; }
-.stat-label { font-size: 11px; color: #64748b; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .06em; }
-.stat-value { font-size: 36px; font-weight: 800; font-family: 'Syne', sans-serif; color: #0c4a6e; line-height: 1; }
+.stat-label { font-size: 13px; color: #64748b; font-weight: 500; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .04em; font-family: 'DM Sans', sans-serif; }
+.stat-value { font-size: 30px; font-weight: 700; font-family: 'Syne', sans-serif; color: #0c4a6e; line-height: 1.1; }
 .stat-sub { font-size: 12px; color: #0369a1; font-weight: 700; margin-top: 8px; }
-.stat-primary { border-color: #7dd3fc; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); }
-.stat-warning { border-color: #fde68a; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); }
-.stat-success { border-color: #86efac; background: linear-gradient(135deg, #f0fdf4 0%, #e7f5e9 100%); }
-.stat-media { border-color: #d8b4fe; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); }
+.stat-primary { border-color: #7dd3fc; border-top-color: #0284c7; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); }
+.stat-warning { border-color: #fde68a; border-top-color: #d97706; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); }
+.stat-success { border-color: #86efac; border-top-color: #16a34a; background: linear-gradient(135deg, #f0fdf4 0%, #e7f5e9 100%); }
+.stat-media { border-color: #d8b4fe; border-top-color: #8b5cf6; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); }
+
+@media (max-width: 1200px) {
+  .stat-value { font-size: 30px; }
+}
+@media (max-width: 600px) {
+  .stat-card { padding: 16px; }
+  .stat-value { font-size: 26px; }
+}
+
 .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
 @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
 .chart-card { background: white; padding: 20px; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
