@@ -67,27 +67,33 @@
     color: #94a3b8;
   }
 
+  /* Toolbar Improvements */
   .toolbar-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 20px;
     margin-bottom: 20px;
     padding: 0 20px;
+    flex-wrap: wrap;
   }
 
   .toolbar-note {
     font-size: 13px;
     color: #64748b;
     font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .toolbar-filters {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
     align-items: center;
+    flex: 1;
+    justify-content: flex-end;
+    min-width: 0;
   }
 
   .filter-select,
@@ -101,6 +107,7 @@
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
     color: #0f172a;
+    flex-shrink: 0;
   }
 
   .filter-select:focus,
@@ -108,32 +115,44 @@
   .filter-search:focus {
     outline: none;
     border-color: #0284c7;
+    background: #fff;
   }
 
   .filter-search {
-    min-width: 200px;
+    min-width: 180px;
+    flex-shrink: 1;
   }
 
   .filter-search::placeholder {
     color: #94a3b8;
   }
 
+  .filter-select {
+    min-width: 120px;
+  }
+
+  .filter-date {
+    min-width: 130px;
+  }
+
   .btn-sm {
     height: 40px;
-    padding: 0 14px;
+    padding: 0 16px;
     border-radius: 10px;
     border: none;
-    background: #e2e8f0;
+    background: #cbd5e1;
     color: #0f172a;
     font-family: 'DM Sans', sans-serif;
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
     transition: background 0.2s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .btn-sm:hover {
-    background: #cbd5e1;
+    background: #94a3b8;
   }
 
   .media-grid {
@@ -359,17 +378,30 @@
 
     .toolbar-row {
       flex-direction: column;
-      align-items: flex-start;
+      align-items: stretch;
       padding: 0;
+      gap: 12px;
+    }
+
+    .toolbar-note {
+      white-space: normal;
     }
 
     .toolbar-filters {
+      flex-direction: column;
       width: 100%;
+      justify-content: stretch;
     }
 
-    .filter-search {
-      flex: 1;
-      min-width: 0;
+    .filter-search,
+    .filter-select,
+    .filter-date {
+      width: 100%;
+      min-width: unset;
+    }
+
+    .btn-sm {
+      width: 100%;
     }
 
     .media-grid {
@@ -437,6 +469,7 @@
         </div>
       </div>
 
+      <!-- Toolbar with Filters -->
       <div class="toolbar-row">
         <div class="toolbar-note">User-submitted photos and videos as evaluation evidence</div>
         <div class="toolbar-filters">
