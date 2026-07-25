@@ -155,40 +155,91 @@
     }
   }
 
-  .trend-chart-wrap {
-    margin-top: 10px;
-  }
-
-  .trend-svg {
-    width: 100%;
-    height: 140px;
-  }
-
-  .trend-axis-row {
+  /* Submission Status Bar Chart */
+  .status-chart-wrap {
+    margin-top: 16px;
     display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    height: 280px;
+    position: relative;
+  }
+
+  .status-chart-yaxis {
+    width: 50px;
+    display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    margin-top: 6px;
-    font-size: 0.7rem;
-    color: #94a3b8;
+    text-align: right;
     font-family: 'DM Sans', sans-serif;
-  }
-
-  .trend-legend {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 10px;
     font-size: 12px;
-    color: #64748b;
-    font-family: 'DM Sans', sans-serif;
+    color: #94a3b8;
+    padding-bottom: 30px;
   }
 
-  .trend-legend .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+  .status-chart-bars {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 32px;
+    height: 100%;
+    position: relative;
+  }
+
+  .status-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+  }
+
+  .status-bar-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+    min-height: 24px;
+  }
+
+  .status-bar-visual {
+    flex: 1;
+    width: 100%;
+    background: #f1f5f9;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .status-bar-fill {
+    width: 100%;
+    border-radius: 8px;
+    transition: height 0.3s ease;
+  }
+
+  .status-bar-fill.pending {
+    background: #f59e0b;
+  }
+
+  .status-bar-fill.no-action {
     background: #2563eb;
-    display: inline-block;
+  }
+
+  .status-bar-fill.resolved {
+    background: #10b981;
+  }
+
+  .status-bar-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    text-align: center;
+    margin-top: 12px;
+    white-space: nowrap;
   }
 
   .bar-chart {
@@ -687,15 +738,11 @@
       </div>
     </div>
 
-    <!-- ROW: SUBMISSION TREND + RATING DISTRIBUTION -->
+    <!-- ROW: SUBMISSION STATUS + RATING DISTRIBUTION -->
     <div class="analytics-grid">
       <div class="card">
-        <div class="card-title">Submission Trend <span class="card-sub">— last 30 days</span></div>
-        <div class="trend-chart-wrap">
-          <svg viewBox="0 0 300 140" class="trend-svg" id="trend-svg" preserveAspectRatio="none"></svg>
-          <div class="trend-axis-row" id="trend-axis-row"></div>
-          <div class="trend-legend"><span class="dot"></span> Daily submissions</div>
-        </div>
+        <div class="card-title">Submission Status <span class="card-sub">— % of total evaluations</span></div>
+        <div class="status-chart-wrap" id="status-chart-wrap"></div>
       </div>
 
       <div class="card">
@@ -885,6 +932,12 @@ function ratingFillClass(pct) {
   return "rating-poor-fill";
 }
 
+// Derive status based on average rating (same logic as admin3-eval-mgmt.html)
+const LOW_RATING_THRESHOLD = 3;
+function getStatusForAverage(avgRating) {
+  return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
+}
+
 // ======================
 // LOAD OFFICES (Firestore: offices)
 // ======================
@@ -916,11 +969,14 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
       userCategory: ev.userCategory || "",
       userId: ev.userId || "",
       year: ev.year || "",
-      timestamp: parseEvalTimestamp(ev)
+      timestamp: parseEvalTimestamp(ev),
+      rawStatus: ev.status || ""
     };
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
       record["rating" + i] = Number(ev["rating" + i]) || 0;
     }
+    const avg = avgOf(record);
+    record.status = record.rawStatus === "resolved" ? "resolved" : getStatusForAverage(avg);
     evaluations.push(record);
   });
   renderAll();
@@ -933,7 +989,7 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
 // ======================
 function renderAll() {
   renderStatCards();
-  renderSubmissionTrend();
+  renderSubmissionStatus();
   renderOfficeTrend();
   renderRatingDistribution();
   renderDimensionPerformance();
@@ -958,62 +1014,57 @@ function renderStatCards() {
 }
 
 // ======================
-// SUBMISSION TREND (last 30 days)
+// SUBMISSION STATUS BAR CHART (replaces trend)
 // ======================
-function renderSubmissionTrend() {
-  const days = 30;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const buckets = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    buckets.push({ date: d, count: 0 });
+function renderSubmissionStatus() {
+  const chartWrap = document.getElementById("status-chart-wrap");
+  
+  const total = evaluations.length;
+  if (total === 0) {
+    chartWrap.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
+    return;
   }
 
-  evaluations.forEach(e => {
-    if (!e.timestamp) return;
-    const d = new Date(e.timestamp);
-    d.setHours(0, 0, 0, 0);
-    const bucket = buckets.find(b => b.date.getTime() === d.getTime());
-    if (bucket) bucket.count++;
-  });
+  const pendingCount = evaluations.filter(e => e.status === "pending").length;
+  const noActionCount = evaluations.filter(e => e.status === "no_action").length;
+  const resolvedCount = evaluations.filter(e => e.status === "resolved").length;
 
-  const maxCount = Math.max(1, ...buckets.map(b => b.count));
-  const width = 300, height = 140, padding = 6;
-  const usableHeight = height - padding * 2;
-  const stepX = (width - padding * 2) / (buckets.length - 1);
+  const pendingPct = (pendingCount / total) * 100;
+  const noActionPct = (noActionCount / total) * 100;
+  const resolvedPct = (resolvedCount / total) * 100;
 
-  const points = buckets.map((b, i) => {
-    const x = padding + i * stepX;
-    const y = padding + usableHeight - (b.count / maxCount) * usableHeight;
-    return { x, y };
-  });
+  const yAxisTicks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
-  const linePoints = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const areaPath = `M${points[0].x.toFixed(1)},${(height - padding).toFixed(1)} ` +
-    points.map(p => `L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") +
-    ` L${points[points.length - 1].x.toFixed(1)},${(height - padding).toFixed(1)} Z`;
+  const yAxisHtml = yAxisTicks.map(tick => `<span>${tick}%</span>`).join("");
 
-  // Add tooltip points for each day
-  const tooltipCircles = points.map((p, i) => 
-    `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="transparent" style="cursor:pointer;"><title>${buckets[i].date.toDateString()}: ${buckets[i].count} submission${buckets[i].count !== 1 ? 's' : ''}</title></circle>`
-  ).join("");
-
-  const svg = document.getElementById("trend-svg");
-  svg.innerHTML = `
-    <path d="${areaPath}" fill="rgba(37,99,235,0.12)" stroke="none"></path>
-    <polyline points="${linePoints}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
-    ${tooltipCircles}
+  const barsHtml = `
+    <div class="status-bar-group">
+      <div class="status-bar-value">${pendingPct.toFixed(1)}%</div>
+      <div class="status-bar-visual">
+        <div class="status-bar-fill pending" style="height: ${pendingPct}%;"></div>
+      </div>
+      <div class="status-bar-label">Pending</div>
+    </div>
+    <div class="status-bar-group">
+      <div class="status-bar-value">${noActionPct.toFixed(1)}%</div>
+      <div class="status-bar-visual">
+        <div class="status-bar-fill no-action" style="height: ${noActionPct}%;"></div>
+      </div>
+      <div class="status-bar-label">No Action Required</div>
+    </div>
+    <div class="status-bar-group">
+      <div class="status-bar-value">${resolvedPct.toFixed(1)}%</div>
+      <div class="status-bar-visual">
+        <div class="status-bar-fill resolved" style="height: ${resolvedPct}%;"></div>
+      </div>
+      <div class="status-bar-label">Resolved</div>
+    </div>
   `;
 
-  // Axis labels: evenly spaced day-of-month ticks
-  const axisRow = document.getElementById("trend-axis-row");
-  const tickIndices = [0, 5, 10, 15, 20, 25, buckets.length - 1];
-  axisRow.innerHTML = tickIndices
-    .map(i => `<span>${buckets[i].date.getDate()}</span>`)
-    .join("");
+  chartWrap.innerHTML = `
+    <div class="status-chart-yaxis">${yAxisHtml}</div>
+    <div class="status-chart-bars">${barsHtml}</div>
+  `;
 }
 
 // ======================
