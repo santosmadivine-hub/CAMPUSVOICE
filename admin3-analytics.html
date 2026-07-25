@@ -156,90 +156,23 @@
   }
 
   /* Submission Status Bar Chart */
-  .status-chart-wrap {
-    margin-top: 16px;
-    display: flex;
-    align-items: flex-end;
-    gap: 24px;
-    height: 280px;
-    position: relative;
+  .status-trend-wrap {
+    margin-top: 12px;
   }
 
-  .status-chart-yaxis {
-    width: 50px;
+  .status-chart-svg {
+    width: 100%;
+    height: 220px;
+  }
+
+  .status-axis-labels {
     display: flex;
-    flex-direction: column;
     justify-content: space-between;
-    text-align: right;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    color: #94a3b8;
-    padding-bottom: 30px;
-  }
-
-  .status-chart-bars {
-    flex: 1;
-    display: flex;
-    align-items: flex-end;
-    gap: 32px;
-    height: 100%;
-    position: relative;
-  }
-
-  .status-bar-group {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100%;
-  }
-
-  .status-bar-value {
-    font-family: 'Syne', sans-serif;
-    font-size: 18px;
-    font-weight: 800;
-    color: #0f172a;
-    margin-bottom: 8px;
-    min-height: 24px;
-  }
-
-  .status-bar-visual {
-    flex: 1;
-    width: 100%;
-    background: #f1f5f9;
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-  }
-
-  .status-bar-fill {
-    width: 100%;
-    border-radius: 8px;
-    transition: height 0.3s ease;
-  }
-
-  .status-bar-fill.pending {
-    background: #f59e0b;
-  }
-
-  .status-bar-fill.no-action {
-    background: #2563eb;
-  }
-
-  .status-bar-fill.resolved {
-    background: #10b981;
-  }
-
-  .status-bar-label {
+    margin-top: 12px;
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
     font-weight: 600;
     color: #334155;
-    text-align: center;
-    margin-top: 12px;
-    white-space: nowrap;
   }
 
   .bar-chart {
@@ -742,7 +675,7 @@
     <div class="analytics-grid">
       <div class="card">
         <div class="card-title">Submission Status <span class="card-sub">— % of total evaluations</span></div>
-        <div class="status-chart-wrap" id="status-chart-wrap"></div>
+        <div class="status-trend-wrap" id="status-breakdown-chart"></div>
       </div>
 
       <div class="card">
@@ -1014,57 +947,96 @@ function renderStatCards() {
 }
 
 // ======================
-// SUBMISSION STATUS BAR CHART (replaces trend)
+// SUBMISSION STATUS BAR CHART (Admin 2 style)
 // ======================
+const STATUS_META = {
+  pending: { label: "Pending", color: "#f59e0b", icon: "⏳" },
+  no_action: { label: "No Action Required", color: "#2563eb", icon: "🙅" },
+  resolved: { label: "Resolved", color: "#10b981", icon: "✅" }
+};
+
 function renderSubmissionStatus() {
-  const chartWrap = document.getElementById("status-chart-wrap");
+  const el = document.getElementById("status-breakdown-chart");
   
   const total = evaluations.length;
   if (total === 0) {
-    chartWrap.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
+    el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
     return;
   }
 
-  const pendingCount = evaluations.filter(e => e.status === "pending").length;
-  const noActionCount = evaluations.filter(e => e.status === "no_action").length;
-  const resolvedCount = evaluations.filter(e => e.status === "resolved").length;
+  const counts = { pending: 0, no_action: 0, resolved: 0 };
+  evaluations.forEach(e => { 
+    counts[e.status] = (counts[e.status] || 0) + 1;
+  });
 
-  const pendingPct = (pendingCount / total) * 100;
-  const noActionPct = (noActionCount / total) * 100;
-  const resolvedPct = (resolvedCount / total) * 100;
+  const statusOrder = ["pending", "no_action", "resolved"];
+  const bars = statusOrder.map(key => ({
+    key,
+    count: counts[key] || 0,
+    pct: ((counts[key] || 0) / total) * 100,
+    meta: STATUS_META[key]
+  }));
 
-  const yAxisTicks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+  const CHART_WIDTH = 400;
+  const CHART_HEIGHT = 220;
+  const PAD_LEFT = 46;
+  const PAD_RIGHT = 16;
+  const PAD_TOP = 20;
+  const PAD_BOTTOM = 16;
 
-  const yAxisHtml = yAxisTicks.map(tick => `<span>${tick}%</span>`).join("");
+  const plotW = CHART_WIDTH - PAD_LEFT - PAD_RIGHT;
+  const plotH = CHART_HEIGHT - PAD_TOP - PAD_BOTTOM;
 
-  const barsHtml = `
-    <div class="status-bar-group">
-      <div class="status-bar-value">${pendingPct.toFixed(1)}%</div>
-      <div class="status-bar-visual">
-        <div class="status-bar-fill pending" style="height: ${pendingPct}%;"></div>
-      </div>
-      <div class="status-bar-label">Pending</div>
-    </div>
-    <div class="status-bar-group">
-      <div class="status-bar-value">${noActionPct.toFixed(1)}%</div>
-      <div class="status-bar-visual">
-        <div class="status-bar-fill no-action" style="height: ${noActionPct}%;"></div>
-      </div>
-      <div class="status-bar-label">No Action Required</div>
-    </div>
-    <div class="status-bar-group">
-      <div class="status-bar-value">${resolvedPct.toFixed(1)}%</div>
-      <div class="status-bar-visual">
-        <div class="status-bar-fill resolved" style="height: ${resolvedPct}%;"></div>
-      </div>
-      <div class="status-bar-label">Resolved</div>
+  const colWidth = plotW / bars.length;
+  const barWidth = Math.min(70, colWidth * 0.5);
+
+  const yTicks = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+  const yFor = (pct) => PAD_TOP + plotH - (Math.min(pct, 100) / 100) * plotH;
+  const baselineY = yFor(0);
+
+  const gridLines = yTicks.map(t => {
+    const y = yFor(t);
+    return `<line x1="${PAD_LEFT}" y1="${y.toFixed(1)}" x2="${CHART_WIDTH - PAD_RIGHT}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1" vector-effect="non-scaling-stroke"></line>`;
+  }).join("");
+
+  const yLabels = yTicks.map(t => {
+    const y = yFor(t);
+    return `<text x="${PAD_LEFT - 8}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-family="DM Sans, sans-serif" font-size="9.5" fill="#94a3b8">${t}%</text>`;
+  }).join("");
+
+  const barsSvg = bars.map((b, i) => {
+    const colX0 = PAD_LEFT + i * colWidth;
+    const barX = colX0 + (colWidth - barWidth) / 2;
+    const barH = (b.pct / 100) * plotH;
+    const barY = baselineY - barH;
+    return `
+      <rect x="${barX.toFixed(1)}" y="${barY.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" rx="6" fill="${b.meta.color}">
+        <title>${b.meta.icon} ${b.meta.label}: ${b.count} of ${total} evaluations (${b.pct.toFixed(1)}%)</title>
+      </rect>
+      <text x="${(barX + barWidth / 2).toFixed(1)}" y="${(barY - 8).toFixed(1)}" text-anchor="middle" font-family="Syne, sans-serif" font-weight="700" font-size="12" fill="#0f1b32">${b.pct.toFixed(1)}%</text>
+    `;
+  }).join("");
+
+  const axisLine = `<line x1="${PAD_LEFT}" y1="${baselineY.toFixed(1)}" x2="${CHART_WIDTH - PAD_RIGHT}" y2="${baselineY.toFixed(1)}" stroke="#cbd5e1" stroke-width="1"></line>`;
+  const yAxisLine = `<line x1="${PAD_LEFT}" y1="${PAD_TOP}" x2="${PAD_LEFT}" y2="${baselineY.toFixed(1)}" stroke="#cbd5e1" stroke-width="1"></line>`;
+
+  const svgContent = `
+    <svg width="100%" viewBox="0 0 ${CHART_WIDTH} ${CHART_HEIGHT}" class="status-chart-svg" style="min-height: 220px;">
+      ${gridLines}
+      ${yLabels}
+      ${barsSvg}
+      ${yAxisLine}
+      ${axisLine}
+    </svg>
+  `;
+
+  const axisLabels = `
+    <div class="status-axis-labels" style="padding: 0 16px 0 46px;">
+      ${bars.map(b => `<div style="text-align: center; flex: 1;">${b.meta.icon} ${b.meta.label}</div>`).join("")}
     </div>
   `;
 
-  chartWrap.innerHTML = `
-    <div class="status-chart-yaxis">${yAxisHtml}</div>
-    <div class="status-chart-bars">${barsHtml}</div>
-  `;
+  el.innerHTML = svgContent + axisLabels;
 }
 
 // ======================
