@@ -32,6 +32,8 @@
 
     body {
       font-family: 'DM Sans', sans-serif;
+
+      /* Campus gate photo as background, with a lighter scrim for visibility */
       background:
         linear-gradient(
           160deg,
@@ -40,10 +42,12 @@
           rgba(7,11,22,0.38)
         ),
         url('8.png');
+
       background-size: cover;
       background-position: center 30%;
       background-repeat: no-repeat;
       background-attachment: fixed;
+
       color: var(--text);
       min-height: 100vh;
       display: flex;
@@ -54,6 +58,7 @@
       overflow: hidden;
     }
 
+    /* Soft ambient glow blobs behind the card */
     body::before,
     body::after {
       content: '';
@@ -94,6 +99,7 @@
       animation: fadeUp 0.6s ease both;
     }
 
+    /* Top accent bar */
     .login-box::before {
       content: '';
       position: absolute;
@@ -108,6 +114,7 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* Logo */
     .login-logo {
       text-align: center;
       margin-bottom: 30px;
@@ -134,6 +141,7 @@
       object-fit: cover;
     }
 
+    /* Fallback glyph shown if 5.png fails to load */
     .login-logo .logo-mark .logo-fallback {
       display: none;
       font-family: 'Syne', sans-serif;
@@ -202,6 +210,11 @@
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
     }
 
+    .form-group input:focus-visible {
+      outline: 2px solid var(--accent2);
+      outline-offset: 2px;
+    }
+
     .password-wrapper {
       position: relative;
     }
@@ -260,6 +273,11 @@
       transform: none;
     }
 
+    .btn-login:focus-visible {
+      outline: 2px solid var(--accent2);
+      outline-offset: 3px;
+    }
+
     .login-error {
       display: none;
       margin-top: 12px;
@@ -291,6 +309,7 @@
       font-weight: 500;
     }
 
+    /* Small screens: let the card breathe without losing padding */
     @media (max-width: 420px) {
       .login-box {
         padding: 34px 26px 26px;
@@ -307,6 +326,7 @@
 
   <div class="login-box">
 
+    <!-- Header / Logo -->
     <div class="login-logo">
       <div class="logo-mark">
         <img
@@ -320,13 +340,15 @@
       <div class="sub">ISUFST – San Enrique Campus</div>
     </div>
 
+    <!-- Credentials -->
     <div class="form-group">
-      <label for="login-email">Email</label>
-      <input type="email" id="login-email" placeholder="Enter email" autocomplete="email">
+      <label for="login-user">Username</label>
+      <input type="text" id="login-user" placeholder="Enter username" autocomplete="username">
     </div>
 
     <div class="form-group">
       <label for="login-pass">Password</label>
+
       <div class="password-wrapper">
         <input
           type="password"
@@ -335,12 +357,15 @@
           autocomplete="current-password"
           onkeydown="if (event.key === 'Enter') doLogin()"
         >
-        <span class="toggle-password" onclick="togglePassword()" role="button" tabindex="0" aria-label="Show password" onkeydown="if(event.key==='Enter'||event.key===' '){togglePassword();}">👁️</span>
+
+        <span class="toggle-password" onclick="togglePassword()" role="button" tabindex="0" aria-label="Show password" onkeydown="if(event.key==='Enter'||event.key===' '){togglePassword();}"></span>
       </div>
     </div>
 
+    <!-- Submit -->
     <button class="btn-login" id="loginBtn" onclick="doLogin()">Sign In to Dashboard</button>
 
+    <!-- Error -->
     <div class="login-error" id="login-error">❌ Invalid credentials. Please try again.</div>
 
     <div class="login-hint">Authorized <span>ISUFST-SEC</span> personnel only</div>
@@ -349,11 +374,6 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithEmailAndPassword,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -368,80 +388,49 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Map of admin emails to their dashboard URLs
-    const ADMIN_ROLES = {
-      'admin1@campusvoice.local': { redirect: 'admin1-dashboard.html', displayName: 'Admin 1' },
-      'admin2@campusvoice.local': { redirect: 'admin2-dashboard.html', displayName: 'Admin 2' },
-      'admin3@campusvoice.local': { redirect: 'admin3-dashboard.html', displayName: 'Admin 3' }
+    /* Fallback / seed credentials — used the first time, before any admin
+       has changed their username or password via Settings. Once a
+       Firestore doc exists for an admin, its username/password win. */
+    const ROLES = {
+      admin1: { user: 'admin1', pass: 'admin123', redirect: 'admin1-dashboard.html' },
+      admin2: { user: 'admin2', pass: 'admin456', redirect: 'admin2-dashboard.html' },
+      admin3: { user: 'admin3', pass: 'admin789', redirect: 'admin3-dashboard.html' }
     };
 
     window.doLogin = async () => {
-      const email = document.getElementById('login-email').value.trim();
+      const username = document.getElementById('login-user').value.trim();
       const password = document.getElementById('login-pass').value;
-      const errorEl = document.getElementById('login-error');
-      const btn = document.getElementById('loginBtn');
-
-      // Validation
-      if (!email || !password) {
-        errorEl.textContent = '❌ Email and password are required';
-        errorEl.style.display = 'block';
-        return;
-      }
-
-      if (!ADMIN_ROLES[email]) {
-        errorEl.textContent = '❌ This account is not authorized';
-        errorEl.style.display = 'block';
-        return;
-      }
+      const errorEl  = document.getElementById('login-error');
+      const btn      = document.getElementById('loginBtn');
 
       errorEl.style.display = 'none';
       btn.disabled = true;
       btn.textContent = 'Checking…';
 
       try {
-        // Sign in with Firebase Authentication
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+        for (const [adminId, fallback] of Object.entries(ROLES)) {
+          let effectiveUser = fallback.user;
+          let effectivePass = fallback.pass;
 
-        // Get admin role from Firestore
-        try {
-          const adminDocRef = doc(db, 'admins', user.uid);
-          const adminSnap = await getDoc(adminDocRef);
-          
-          if (adminSnap.exists() && adminSnap.data().role === 'admin') {
-            // Valid admin, redirect to dashboard
-            const redirectUrl = ADMIN_ROLES[email].redirect;
-            window.location.href = redirectUrl;
+          try {
+            const snap = await getDoc(doc(db, 'admin_settings', adminId));
+            if (snap.exists()) {
+              const data = snap.data();
+              if (data.username) effectiveUser = data.username;
+              if (data.password) effectivePass = data.password;
+            }
+          } catch (e) {
+            console.error(`Could not check Firestore credentials for ${adminId}, using fallback`, e);
+          }
+
+          if (effectiveUser === username && effectivePass === password) {
+            window.location.href = fallback.redirect;
             return;
           }
-        } catch (firestoreError) {
-          console.warn('Could not verify admin role in Firestore:', firestoreError);
-          // Allow login to proceed even if Firestore check fails
-          // This provides a fallback for initial setup
-          const redirectUrl = ADMIN_ROLES[email].redirect;
-          window.location.href = redirectUrl;
-          return;
         }
 
-        errorEl.textContent = '❌ Account not authorized as admin';
-        errorEl.style.display = 'block';
-
-      } catch (error) {
-        console.error('Login error:', error);
-        
-        // User-friendly error messages
-        if (error.code === 'auth/user-not-found') {
-          errorEl.textContent = '❌ Email not found';
-        } else if (error.code === 'auth/wrong-password') {
-          errorEl.textContent = '❌ Incorrect password';
-        } else if (error.code === 'auth/invalid-email') {
-          errorEl.textContent = '❌ Invalid email format';
-        } else {
-          errorEl.textContent = '❌ Login failed. Please try again.';
-        }
         errorEl.style.display = 'block';
       } finally {
         btn.disabled = false;
@@ -456,14 +445,6 @@
       const toggle = document.querySelector('.toggle-password');
       toggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
     };
-
-    // Check if already logged in
-    onAuthStateChanged(auth, (user) => {
-      if (user && ADMIN_ROLES[user.email]) {
-        const redirectUrl = ADMIN_ROLES[user.email].redirect;
-        window.location.href = redirectUrl;
-      }
-    });
   </script>
 
 </body>
