@@ -11,7 +11,7 @@ function buildSidebar(role, activePage) {
     { id: 'eval-mgmt', icon: '📑', label: 'Evaluation Management', href: 'admin1-eval-mgmt.html' },
     { id: 'reports', icon: '📁', label: 'Reports', href: 'admin1-reports.html' },
     { id: 'analytics', icon: '📈', label: 'Analytics', href: 'admin1-analytics.html' },
-    { id: 'settings', icon: '⚙️', label: 'Settings', href: 'admin1-settings.html' }
+ 
   ];
 
   const navAdmin2 = [
@@ -21,7 +21,7 @@ function buildSidebar(role, activePage) {
     { id: 'multimedia', icon: '🎞️', label: 'Multimedia Feedback', href: 'admin2-multimedia.html' },
     { id: 'reports', icon: '📁', label: 'Reports', href: 'admin2-reports.html' },
     { id: 'analytics', icon: '📈', label: 'Analytics', href: 'admin2-analytics.html' },
-    { id: 'settings', icon: '⚙️', label: 'Settings', href: 'admin2-settings.html' }
+   
   ];
 
   const navAdmin3 = [
@@ -31,7 +31,7 @@ function buildSidebar(role, activePage) {
     { id: 'multimedia', icon: '🎞️', label: 'Multimedia Feedback', href: 'admin3-multimedia.html' },
     { id: 'reports', icon: '📁', label: 'Reports', href: 'admin3-reports.html' },
     { id: 'analytics', icon: '📈', label: 'Analytics', href: 'admin3-analytics.html' },
-    { id: 'settings', icon: '⚙️', label: 'Settings', href: 'admin3-settings.html' }
+  
   ];
 
   const nav =
