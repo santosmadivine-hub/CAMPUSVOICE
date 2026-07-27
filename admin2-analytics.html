@@ -23,7 +23,7 @@
 
   .card-sub {
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 400;
     color: #94a3b8;
   }
 
@@ -1077,7 +1077,7 @@ function renderStatusBreakdown() {
     const barY = baselineY - barH;
     return `
       <rect x="${barX.toFixed(1)}" y="${barY.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" rx="6" fill="${b.meta.color}">
-        <title>${b.meta.icon} ${b.meta.label}: ${b.count} of ${total} evaluations (${b.pct.toFixed(1)}%)</title>
+        <title>${b.meta.label}: ${b.count} of ${total} evaluations (${b.pct.toFixed(1)}%)</title>
       </rect>
       <text x="${(barX + barWidth / 2).toFixed(1)}" y="${(barY - 8).toFixed(1)}" text-anchor="middle" font-family="Syne, sans-serif" font-weight="700" font-size="12" fill="#0f1b32">${b.pct.toFixed(1)}%</text>
     `;
@@ -1098,7 +1098,7 @@ function renderStatusBreakdown() {
 
   const axisLabels = `
     <div class="status-axis-labels" style="padding: 0 16px 0 46px;">
-      ${bars.map(b => `<div style="text-align: center; flex: 1;">${b.meta.icon} ${b.meta.label}</div>`).join("")}
+      ${bars.map(b => `<div style="text-align: center; flex: 1;">${b.meta.label}</div>`).join("")}
     </div>
   `;
 
