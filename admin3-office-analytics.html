@@ -95,26 +95,6 @@
 }
 .header-meta .dot { margin: 0 8px; }
 
-.btn-print {
-  border: none;
-  background: var(--ink);
-  color: #fff;
-  padding: 12px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 700;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  box-shadow: 0 4px 12px rgba(11, 18, 32, .15);
-  transition: all .3s ease;
-  white-space: nowrap;
-}
-.btn-print:hover {
-  background: var(--brand-deep);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(37, 99, 235, .25);
-}
-
 /* ── BANNERS ── */
 .state-banner {
   padding: 48px 24px;
@@ -616,9 +596,6 @@
   padding: 22px 24px;
 }
 
-@media print {
-  #sidebar-mount, #topbar-mount, .back-link, .btn-print { display: none !important; }
-}
 
 @media (max-width: 768px) {
   .analytics-header .header-row {
@@ -647,19 +624,15 @@
         <div class="analytics-page">
 
             <header class="analytics-header">
-              <a href="admin3-office-mgmt.html" class="back-link">← Back to Office Management</a>
+              <a href="admin3-office-mgmt.html" class="back-link">← Back </a>
               <div class="header-row">
                 <div class="header-titles">
-                  <div class="eyebrow">Facility Analytics Report</div>
                   <h1 id="office-name">Loading office…</h1>
                   <div class="header-meta">
                     <span id="office-date-range">—</span>
                     <span class="dot">•</span>
                     <span id="office-respondents">—</span>
                   </div>
-                </div>
-                <button class="btn-print" id="btn-print">🖨️ Print Report</button>
-              </div>
             </header>
 
             <div class="state-banner" id="loading-banner">Loading evaluation data…</div>
@@ -1289,10 +1262,6 @@ async function main() {
   }
 }
 
-// Print functionality
-document.getElementById("btn-print").addEventListener("click", () => {
-  window.print();
-});
 
 main();
 </script>
