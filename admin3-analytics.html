@@ -74,6 +74,10 @@
     border-top-color: #8b5cf6;
   }
 
+  .stat-card-alt.accent-orange {
+    border-top-color: #f97316;
+  }
+
   .stat-card-alt .sca-label {
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
@@ -97,6 +101,10 @@
 
   .stat-card-alt.accent-purple .sca-value {
     color: #8b5cf6;
+  }
+
+  .stat-card-alt.accent-orange .sca-value {
+    color: #f97316;
   }
 
   .stat-card-alt .sca-sub {
@@ -669,6 +677,11 @@
         <div class="sca-value" id="stat-active-offices">0</div>
         <div class="sca-sub" id="stat-active-offices-sub">of 0 total offices</div>
       </div>
+      <div class="stat-card-alt accent-orange" data-icon="🖼️">
+        <div class="sca-label">Total Evidence</div>
+        <div class="sca-value" id="stat-total-evidence">0</div>
+        <div class="sca-sub" id="stat-total-evidence-sub">0 images · 0 videos</div>
+      </div>
     </div>
 
     <!-- ROW: SUBMISSION STATUS + RATING DISTRIBUTION -->
@@ -795,7 +808,7 @@ const TOTAL_RATING_QUESTIONS = 10;
 // ======================
 // STATE
 // ======================
-let evaluations = [];   // [{id, officeName, rating1..10, timestamp, sex, userCategory, ...}]
+let evaluations = [];   // [{id, officeName, rating1..10, timestamp, sex, userCategory, evidence, ...}]
 let offices = {};       // { officeDocId: officeName }
 
 function avgOf(e) {
@@ -821,6 +834,36 @@ function parseEvalTimestamp(ev) {
   if (!Number.isNaN(asNumber) && String(ev.date).trim() !== "") return asNumber;
   const parsed = new Date(ev.date).getTime();
   return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+// Same evidence-parsing logic as admin3-eval-mgmt.html: supports the
+// multi-file evidenceUrls[]/evidenceTypes[] shape, the older single
+// evidenceUrl/evidenceType shape, and a bare fileUrl fallback (type
+// inferred from the extension).
+function parseEvidence(data) {
+  const items = [];
+
+  if (Array.isArray(data.evidenceUrls) && data.evidenceUrls.length) {
+    const urls = data.evidenceUrls;
+    const types = Array.isArray(data.evidenceTypes) ? data.evidenceTypes : [];
+    urls.forEach((url, i) => {
+      if (url) items.push({ url, type: types[i] === "video" ? "video" : "image" });
+    });
+    return items;
+  }
+
+  if (data.evidenceUrl) {
+    items.push({ url: data.evidenceUrl, type: data.evidenceType === "video" ? "video" : "image" });
+    return items;
+  }
+
+  if (data.fileUrl) {
+    const isVideo = /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(data.fileUrl);
+    items.push({ url: data.fileUrl, type: isVideo ? "video" : "image" });
+    return items;
+  }
+
+  return items;
 }
 
 // ======================
@@ -903,7 +946,8 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
       userId: ev.userId || "",
       year: ev.year || "",
       timestamp: parseEvalTimestamp(ev),
-      rawStatus: ev.status || ""
+      rawStatus: ev.status || "",
+      evidence: parseEvidence(ev)
     };
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
       record["rating" + i] = Number(ev["rating" + i]) || 0;
@@ -944,6 +988,17 @@ function renderStatCards() {
   const totalOffices = Object.keys(offices).length;
   document.getElementById("stat-active-offices").textContent = activeOffices;
   document.getElementById("stat-active-offices-sub").textContent = `of ${totalOffices} total offices`;
+
+  const totalImages = evaluations.reduce(
+    (sum, e) => sum + e.evidence.filter(item => item.type === "image").length,
+    0
+  );
+  const totalVideos = evaluations.reduce(
+    (sum, e) => sum + e.evidence.filter(item => item.type === "video").length,
+    0
+  );
+  document.getElementById("stat-total-evidence").textContent = totalImages + totalVideos;
+  document.getElementById("stat-total-evidence-sub").textContent = `${totalImages} images · ${totalVideos} videos`;
 }
 
 // ======================
