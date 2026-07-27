@@ -371,8 +371,8 @@
               <th>#</th>
               <th>CODE</th>
               <th>OFFICE</th>
-              <th>SQ1</th><th>SQ2</th><th>SQ3</th><th>SQ4</th>
-              <th>SQ5</th><th>SQ6</th><th>SQ7</th><th>SQ8</th>
+              <th>SQD0</th><th>SQD1</th><th>SQD2</th><th>SQD3</th><th>SQD4</th>
+              <th>SQD5</th><th>SQD6</th><th>SQD7</th><th>SQD8</th>
               <th>COMMENTS</th>
               <th>DATE</th>
               <th>ACTION</th>
@@ -515,9 +515,9 @@ function renderTable() {
 
   table.innerHTML = filtered.map(([key, item], i) => {
 
-    const sq = [1,2,3,4,5,6,7,8].map(n => {
-      return item[`sqd${n}`] ?? item[`sq${n}`] ?? item[`sqd${n - 1}`] ?? "-";
-    });
+    const sqd = Array.from({ length: 9 }, (_, n) =>
+  item[`sqd${n}`] ?? "-"
+);
 
     const dateDisplay = item.date
       ? new Date(item.date).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })
@@ -528,8 +528,8 @@ function renderTable() {
         <td style="color:#94a3b8;font-size:12px;">${i + 1}</td>
         <td class="txn-code">${item.transactionCode || item.code || "-"}</td>
         <td>${item.office || "-"}</td>
-        <td>${sq[0]}</td><td>${sq[1]}</td><td>${sq[2]}</td><td>${sq[3]}</td>
-        <td>${sq[4]}</td><td>${sq[5]}</td><td>${sq[6]}</td><td>${sq[7]}</td>
+        <td>${sqd[0]}</td><td>${sqd[1]}</td><td>${sqd[2]}</td><td>${sqd[3]}</td>
+        <td>${sqd[4]}</td><td>${sqd[5]}</td><td>${sqd[6]}</td><td>${sqd[7]}</td>
         <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;">
           ${item.suggestions || "-"}
         </td>
@@ -546,18 +546,25 @@ window.openModal = (key) => {
   const item = allData[key];
   if (!item) return;
 
-  const sq = [1,2,3,4,5,6,7,8].map(n =>
-    item[`sqd${n}`] ?? item[`sq${n}`] ?? item[`sqd${n - 1}`] ?? "-"
-  );
+  const sqd = Array.from({ length: 9 }, (_, n) =>
+  item[`sqd${n}`] ?? "-"
+);
 
   const rows = [
-    ["Transaction Code", item.transactionCode || item.code || "-"],
-    ["Office",           item.office || "-"],
-    ["Date",             item.date   || "-"],
-    ["Comments",         item.suggestions || "-"],
-    ["SQ1",  sq[0]], ["SQ2", sq[1]], ["SQ3", sq[2]], ["SQ4", sq[3]],
-    ["SQ5",  sq[4]], ["SQ6", sq[5]], ["SQ7", sq[6]], ["SQ8", sq[7]],
-  ];
+  ["Transaction Code", item.transactionCode || item.code || "-"],
+  ["Office", item.office || "-"],
+  ["Date", item.date || "-"],
+  ["Comments", item.suggestions || "-"],
+  ["SQD0", sqd[0]],
+  ["SQD1", sqd[1]],
+  ["SQD2", sqd[2]],
+  ["SQD3", sqd[3]],
+  ["SQD4", sqd[4]],
+  ["SQD5", sqd[5]],
+  ["SQD6", sqd[6]],
+  ["SQD7", sqd[7]],
+  ["SQD8", sqd[8]],
+];
 
   document.getElementById("modalBody").innerHTML = rows.map(([label, value]) => `
     <div class="modal-row">
@@ -579,17 +586,17 @@ document.getElementById("modal").addEventListener("click", (e) => {
 
 document.getElementById("exportBtn").onclick = () => {
 
-  const headers = ["#","Code","Office","SQ1","SQ2","SQ3","SQ4","SQ5","SQ6","SQ7","SQ8","Comments","Date"];
+  const headers = ["#","Code","Office","SQD1","SQD2","SQD3","SQD4","SQD5","SQD6","SQD7","SQD8","Comments","Date"];
 
   const rows = Object.values(allData).map((item, i) => {
-    const sq = [1,2,3,4,5,6,7,8].map(n =>
-      item[`sqd${n}`] ?? item[`sq${n}`] ?? item[`sqd${n - 1}`] ?? ""
+    const sqd = [0,1,2,3,4,5,6,7,8].map(n =>
+      item[`sqd${n}`] ?? item[`sqd${n}`] ?? item[`sqd${n - 1}`] ?? ""
     );
     return [
       i + 1,
       item.transactionCode || item.code || "",
       item.office   || "",
-      ...sq,
+      ...sqd,
       item.suggestions || "",
       item.date     || ""
     ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
