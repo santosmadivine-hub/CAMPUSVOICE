@@ -535,12 +535,30 @@ function fmtShort(v) {
   return new Date(v).toLocaleDateString("en-PH",{ month:"short", day:"numeric", year:"numeric" });
 }
 
-/* ── Helper: Convert any date format to ISO date string (YYYY-MM-DD) ── */
-function toISODate(dateStr) {
-  if (!dateStr) return null;
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return null;
-  return d.toISOString().split('T')[0];
+/* ── Safe, timezone-consistent date-only parsing ──
+   Handles both:
+   - "YYYY-MM-DD" (from <input type="date">) — parsed manually to avoid
+     the UTC-midnight shift that new Date("YYYY-MM-DD") triggers.
+   - "Month D, YYYY" / "Month DD, YYYY" (Firestore date strings, no
+     leading zero required) — new Date() already parses these as local
+     time correctly, so we just strip the time component.
+   Returns a local Date set to midnight, or null if unparsable. ── */
+function parseDateOnly(value) {
+  if (!value) return null;
+
+  const str = String(value).trim();
+  if (!str) return null;
+
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(str);
+  if (iso) {
+    const dt = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+
+  const parsed = new Date(str);
+  if (isNaN(parsed.getTime())) return null;
+
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 }
 
 /* ── State ── */
@@ -676,7 +694,6 @@ onSnapshot(reportsCol, (snapshot) => {
 
 /* ══════════════════════════════════════════════════════
    4. GENERATE REPORT
-      ✨ FIXED: Use ISO date string comparison to avoid timezone issues
 ══════════════════════════════════════════════════════ */
 window.generateReport = () => {
   const office   = document.getElementById("officeFilter").value;
@@ -688,67 +705,30 @@ window.generateReport = () => {
     return;
   }
 
+  const start = parseDateOnly(startVal);
+  const end   = parseDateOnly(endVal);
+
+  if (!start || !end) {
+    alert("Invalid date range selected.");
+    return;
+  }
+
+  start.setHours(0, 0, 0, 0);
+  end.setHours(23, 59, 59, 999);
+
   /* normalize for tolerant matching (trim + case-insensitive) */
   const officeNorm = office.trim().toLowerCase();
 
-  console.log("🔍 GENERATE REPORT DEBUG LOG");
-  console.log("Selected office:", office);
-  console.log("Office normalized:", officeNorm);
-  console.log("Date range:", startVal, "to", endVal);
-  console.log("Total evaluation records:", Object.keys(allEvals).length);
-  console.log("---");
-
-  /* filter evaluations for chosen office + date range
-     ✨ FIX: Compare using ISO date strings (YYYY-MM-DD) instead of Date objects
-     This avoids timezone-dependent hour adjustments that could exclude end-date records */
-  const allMatchingRecords = [];
-  const officeMatchedRecords = [];
-  
-  const rows = Object.values(allEvals).filter((i, idx) => {
+  /* filter evaluations for chosen office + date range */
+  const rows = Object.values(allEvals).filter(i => {
     const rowOffice = (i.office || "").trim().toLowerCase();
-    const evalDateISO = toISODate(i.date);
-    
-    allMatchingRecords.push({
-      index: idx,
-      office: i.office,
-      date: i.date,
-      dateISO: evalDateISO,
-      officeMatch: rowOffice === officeNorm,
-      dateMatch: evalDateISO && evalDateISO >= startVal && evalDateISO <= endVal
-    });
-    
-    if (rowOffice !== officeNorm) {
-      return false;
-    }
-    
-    officeMatchedRecords.push({
-      office: i.office,
-      date: i.date,
-      dateISO: evalDateISO,
-      dateInRange: evalDateISO && evalDateISO >= startVal && evalDateISO <= endVal
-    });
-    
-    if (!evalDateISO) {
-      console.warn(`⚠️ Record has unparseable date: "${i.date}"`);
-      return false;
-    }
+    if (rowOffice !== officeNorm) return false;
 
-    const isInRange = evalDateISO >= startVal && evalDateISO <= endVal;
-    if (!isInRange) {
-      console.warn(`⚠️ Record outside date range: ${evalDateISO} (${i.date})`);
-    }
-    
-    return isInRange;
+    const d = parseDateOnly(i.date);
+    if (!d) return false; // skip records with missing/bad dates
+
+    return d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
   });
-
-  console.log("📋 ALL RECORDS SUMMARY:");
-  console.table(allMatchingRecords);
-  
-  console.log("📋 OFFICE-MATCHED RECORDS:");
-  console.table(officeMatchedRecords);
-  
-  console.log("✅ FINAL MATCHED RECORDS:", rows.length);
-  console.log("---");
 
   if (!rows.length) {
     console.warn("[generateReport] No matches.", {
@@ -756,7 +736,7 @@ window.generateReport = () => {
       totalEvalRecords: Object.keys(allEvals).length,
       officesFoundInData: [...new Set(Object.values(allEvals).map(e => e.office))]
     });
-    alert("No feedback records found for the selected office and date range.\n\n✅ DEBUG INFO IS NOW IN THE BROWSER CONSOLE (F12):\n- Table 1: ALL records with office & date match status\n- Table 2: Records that matched the office filter\n- Check the 'Date Parsed' and 'Match' columns to see why records are excluded.");
+    alert("No feedback records found for the selected office and date range.\n\nOpen the browser console (F12) — it now logs the exact office names stored in your evaluation records, so you can check they match the dropdown (spelling/case/whitespace) and that dates are in range.");
     return;
   }
 
