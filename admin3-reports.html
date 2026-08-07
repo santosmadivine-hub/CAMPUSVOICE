@@ -882,6 +882,29 @@ function parseEvalTimestamp(ev) {
   return 0;
 }
 
+// Safe, timezone-consistent date-only parsing for the report filter
+// inputs (#start-date / #end-date). These are <input type="date">,
+// which give "YYYY-MM-DD" strings. new Date("YYYY-MM-DD") parses that
+// as UTC midnight, which can silently shift to the previous/next local
+// day depending on timezone and drop evaluations on the boundary dates.
+// This parses the Y/M/D components directly as LOCAL midnight instead,
+// so the comparison against evaluation timestamps lines up correctly.
+function parseDateOnly(value) {
+  if (!value) return null;
+  const str = String(value).trim();
+  if (!str) return null;
+
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(str);
+  if (iso) {
+    const dt = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+
+  const parsed = new Date(str);
+  if (isNaN(parsed.getTime())) return null;
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+}
+
 // ======================
 // LOAD OFFICES -> office-names collection
 // ======================
@@ -1126,8 +1149,22 @@ function generateReport() {
 
   const officeEvals = evaluations.filter(e => e.officeName === selectedOffice);
 
-  const startTs = new Date(startDate).getTime();
-  const endTs = new Date(endDate).getTime() + (24 * 60 * 60 * 1000); // Include end date
+  // Normalize the picked range to LOCAL start-of-day / end-of-day so
+  // evaluations dated on either boundary are always included, without
+  // any UTC/timezone shift and without requiring leading-zero dates.
+  const start = parseDateOnly(startDate);
+  const end = parseDateOnly(endDate);
+
+  if (!start || !end) {
+    alert("Invalid date range selected.");
+    return;
+  }
+
+  start.setHours(0, 0, 0, 0);
+  end.setHours(23, 59, 59, 999);
+
+  const startTs = start.getTime();
+  const endTs = end.getTime();
 
   const filteredEvals = officeEvals.filter(e => e.timestamp >= startTs && e.timestamp <= endTs);
 
