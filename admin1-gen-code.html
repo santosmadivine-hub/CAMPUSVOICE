@@ -366,16 +366,6 @@ function makeCode(officePrefix) {
   return `${prefix}-${random}`;
 }
 
-/* ========================= */
-/* DYNAMIC OFFICES           */
-/* ── Pulled from services/offices (same source as dashboard).
-   NOTE ON STRUCTURE: the RTDB version of this page read entries with a
-   "name" field. Your transaction_code codes, by contrast, use the office
-   name directly as the doc ID (confirmed from your console screenshot).
-   Since I don't know for certain which pattern services/offices follows
-   in Firestore, this reads a "name" field if present and falls back to
-   the doc ID otherwise — so it works either way. ──
-/* ========================= */
 
 let dynamicOffices = []; // array of office name strings
 
@@ -404,7 +394,7 @@ function buildOfficeCards() {
     return `
       <div class="office-gen-card">
         <div class="office-gen-top">
-          <span class="office-gen-label">🏢 ${office}</span>
+          <span class="office-gen-label"> ${office}</span>
           <button class="btn-generate" id="genBtn-${id}" onclick="generateCodes('${office}')">
             ⚡ Generate
           </button>
@@ -420,13 +410,6 @@ function buildOfficeCards() {
   }).join("");
 }
 
-/* ========================= */
-/* GENERATE CODES            */
-/* Confirmed path: services/transaction_code/office_name/{office}/codes/{codeId}
-   with fields { code, status }. "createdAt" is added here too so the
-   table/exports can still sort and display a created date, even though
-   it wasn't visible in your screenshot's example doc.               */
-/* ========================= */
 
 window.generateCodes = async (office) => {
   const id   = office.replace(/\s+/g, "_");
@@ -451,7 +434,7 @@ window.generateCodes = async (office) => {
 
   prog.style.display = "none";
   btn.disabled    = false;
-  btn.textContent = "⚡ Generate";
+  btn.textContent = " Generate";
   showToast(`✅ ${qty} code${qty > 1 ? "s" : ""} generated for ${office}`);
 };
 
