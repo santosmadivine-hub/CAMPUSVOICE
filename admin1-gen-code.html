@@ -265,7 +265,7 @@
 
     <!-- GENERATE SECTION -->
     <div class="generate-section">
-      <h3>⚡ Generate Codes per Office</h3>
+      <h3>Generate Codes per Office</h3>
       <p class="sub">Set how many codes to generate per office, then click Generate.</p>
       <div class="office-gen-grid" id="officeGenGrid">
         <p class="no-offices-msg">Loading offices…</p>
@@ -396,7 +396,7 @@ function buildOfficeCards() {
         <div class="office-gen-top">
           <span class="office-gen-label"> ${office}</span>
           <button class="btn-generate" id="genBtn-${id}" onclick="generateCodes('${office}')">
-            ⚡ Generate
+             Generate
           </button>
         </div>
         <div class="qty-row">
@@ -434,7 +434,7 @@ window.generateCodes = async (office) => {
 
   prog.style.display = "none";
   btn.disabled    = false;
-  btn.textContent = " Generate";
+  btn.textContent = "Generate";
   showToast(`✅ ${qty} code${qty > 1 ? "s" : ""} generated for ${office}`);
 };
 
@@ -451,13 +451,6 @@ window.deleteCode = async (key) => {
   showToast("🗑️ Code deleted.");
 };
 
-/* ========================= */
-/* LIVE TRANSACTION CODES    */
-/* Uses a collectionGroup query across every office's "codes"
-   subcollection, matching the dashboard's approach. Office name is
-   read off the parent office_name doc's ID since it isn't a field
-   on the code doc itself.                                          */
-/* ========================= */
 
 let allCodes       = {};
 let filteredEntries = [];
