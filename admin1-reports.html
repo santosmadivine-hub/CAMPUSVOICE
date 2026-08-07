@@ -535,6 +535,14 @@ function fmtShort(v) {
   return new Date(v).toLocaleDateString("en-PH",{ month:"short", day:"numeric", year:"numeric" });
 }
 
+/* ── Helper: Convert any date format to ISO date string (YYYY-MM-DD) ── */
+function toISODate(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().split('T')[0];
+}
+
 /* ── State ── */
 let allEvals     = {};   // services/evaluations
 let currentReport = null; // last generated — held for saving / PDF
@@ -668,6 +676,7 @@ onSnapshot(reportsCol, (snapshot) => {
 
 /* ══════════════════════════════════════════════════════
    4. GENERATE REPORT
+      ✨ FIXED: Use ISO date string comparison to avoid timezone issues
 ══════════════════════════════════════════════════════ */
 window.generateReport = () => {
   const office   = document.getElementById("officeFilter").value;
@@ -679,22 +688,20 @@ window.generateReport = () => {
     return;
   }
 
-  const start = new Date(startVal);
-  const end   = new Date(endVal);
-  end.setHours(23,59,59,999);
-
   /* normalize for tolerant matching (trim + case-insensitive) */
   const officeNorm = office.trim().toLowerCase();
 
-  /* filter evaluations for chosen office + date range */
+  /* filter evaluations for chosen office + date range
+     ✨ FIX: Compare using ISO date strings (YYYY-MM-DD) instead of Date objects
+     This avoids timezone-dependent hour adjustments that could exclude end-date records */
   const rows = Object.values(allEvals).filter(i => {
     const rowOffice = (i.office || "").trim().toLowerCase();
     if (rowOffice !== officeNorm) return false;
 
-    const d = new Date(i.date);
-    if (isNaN(d.getTime())) return false; // skip records with missing/bad dates
+    const evalDateISO = toISODate(i.date);
+    if (!evalDateISO) return false; // skip records with missing/bad dates
 
-    return d >= start && d <= end;
+    return evalDateISO >= startVal && evalDateISO <= endVal;
   });
 
   if (!rows.length) {
