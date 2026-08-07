@@ -691,18 +691,64 @@ window.generateReport = () => {
   /* normalize for tolerant matching (trim + case-insensitive) */
   const officeNorm = office.trim().toLowerCase();
 
+  console.log("🔍 GENERATE REPORT DEBUG LOG");
+  console.log("Selected office:", office);
+  console.log("Office normalized:", officeNorm);
+  console.log("Date range:", startVal, "to", endVal);
+  console.log("Total evaluation records:", Object.keys(allEvals).length);
+  console.log("---");
+
   /* filter evaluations for chosen office + date range
      ✨ FIX: Compare using ISO date strings (YYYY-MM-DD) instead of Date objects
      This avoids timezone-dependent hour adjustments that could exclude end-date records */
-  const rows = Object.values(allEvals).filter(i => {
+  const allMatchingRecords = [];
+  const officeMatchedRecords = [];
+  
+  const rows = Object.values(allEvals).filter((i, idx) => {
     const rowOffice = (i.office || "").trim().toLowerCase();
-    if (rowOffice !== officeNorm) return false;
-
     const evalDateISO = toISODate(i.date);
-    if (!evalDateISO) return false; // skip records with missing/bad dates
+    
+    allMatchingRecords.push({
+      index: idx,
+      office: i.office,
+      date: i.date,
+      dateISO: evalDateISO,
+      officeMatch: rowOffice === officeNorm,
+      dateMatch: evalDateISO && evalDateISO >= startVal && evalDateISO <= endVal
+    });
+    
+    if (rowOffice !== officeNorm) {
+      return false;
+    }
+    
+    officeMatchedRecords.push({
+      office: i.office,
+      date: i.date,
+      dateISO: evalDateISO,
+      dateInRange: evalDateISO && evalDateISO >= startVal && evalDateISO <= endVal
+    });
+    
+    if (!evalDateISO) {
+      console.warn(`⚠️ Record has unparseable date: "${i.date}"`);
+      return false;
+    }
 
-    return evalDateISO >= startVal && evalDateISO <= endVal;
+    const isInRange = evalDateISO >= startVal && evalDateISO <= endVal;
+    if (!isInRange) {
+      console.warn(`⚠️ Record outside date range: ${evalDateISO} (${i.date})`);
+    }
+    
+    return isInRange;
   });
+
+  console.log("📋 ALL RECORDS SUMMARY:");
+  console.table(allMatchingRecords);
+  
+  console.log("📋 OFFICE-MATCHED RECORDS:");
+  console.table(officeMatchedRecords);
+  
+  console.log("✅ FINAL MATCHED RECORDS:", rows.length);
+  console.log("---");
 
   if (!rows.length) {
     console.warn("[generateReport] No matches.", {
@@ -710,7 +756,7 @@ window.generateReport = () => {
       totalEvalRecords: Object.keys(allEvals).length,
       officesFoundInData: [...new Set(Object.values(allEvals).map(e => e.office))]
     });
-    alert("No feedback records found for the selected office and date range.\n\nOpen the browser console (F12) — it now logs the exact office names stored in your evaluation records, so you can check they match the dropdown (spelling/case/whitespace) and that dates are in range.");
+    alert("No feedback records found for the selected office and date range.\n\n✅ DEBUG INFO IS NOW IN THE BROWSER CONSOLE (F12):\n- Table 1: ALL records with office & date match status\n- Table 2: Records that matched the office filter\n- Check the 'Date Parsed' and 'Match' columns to see why records are excluded.");
     return;
   }
 
