@@ -464,32 +464,10 @@
     font-size: 13px;
     cursor: pointer;
     padding: 0;
-    margin-right: 14px;
   }
 
   .btn-edit:hover {
     text-decoration: underline;
-  }
-
-  .btn-delete {
-    background: none;
-    border: none;
-    color: #dc2626;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    padding: 0;
-  }
-
-  .btn-delete:hover {
-    text-decoration: underline;
-  }
-
-  .btn-delete:disabled {
-    opacity: 0.5;
-    cursor: default;
-    text-decoration: none;
   }
 
   /* Modals */
@@ -610,14 +588,6 @@
   .btn-primary:disabled {
     opacity: 0.6;
     cursor: default;
-  }
-
-  .btn-primary.danger {
-    background: #dc2626;
-  }
-
-  .btn-primary.danger:hover:not(:disabled) {
-    background: #b91c1c;
   }
 
   .btn-secondary {
@@ -866,21 +836,6 @@
   </div>
 </div>
 
-<!-- DELETE CONFIRM MODAL -->
-<div class="modal-overlay" id="delete-modal">
-  <div class="modal-content">
-    <h3>🗑️ Delete Submission</h3>
-    <div id="delete-modal-meta" style="margin-bottom: 18px;"></div>
-    <p style="font-family:'DM Sans',sans-serif; font-size:14px; color:#64748b; margin: 0;">
-      This will permanently remove this evaluation submission. This action cannot be undone.
-    </p>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" id="delete-modal-cancel">Cancel</button>
-      <button class="btn btn-primary danger" id="delete-modal-confirm">Delete</button>
-    </div>
-  </div>
-</div>
-
 <script src="shared.js"></script>
 
 <script type="module">
@@ -893,8 +848,7 @@ import {
   query,
   orderBy,
   doc,
-  updateDoc,
-  deleteDoc
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase Configuration
@@ -934,8 +888,7 @@ document.getElementById("topbar-mount").innerHTML =
 //      single onSnapshot listener show every submission across both
 //      categories and every office at once.
 // When an admin edits a submission's status here, we write to BOTH
-// locations (see saveStatusUpdate) so they stay in sync. Deletes follow
-// the same pattern (see deleteEvaluation).
+// locations (see saveStatusUpdate) so they stay in sync.
 const EVAL_HISTORY_COLLECTION = "evaluation_history";
 const NESTED_EVAL_ROOT = "cleanliness_evaluations";
 
@@ -984,7 +937,6 @@ let officeFilter = "";
 let categoryFilter = "all"; // "all" | "Comfort Room" | "Surroundings"
 let currentTab = "recent";
 let editingId = null;
-let deletingId = null;
 
 // ======================
 // HELPERS
@@ -1083,7 +1035,7 @@ function renderTableHeader() {
     <th>Evidence</th>
     <th>Status</th>
     <th>Date</th>
-    <th>Action</th>
+    <th id="action-col-header">Action</th>
   `;
 }
 renderTableHeader();
@@ -1293,30 +1245,30 @@ function renderSubmissions() {
   document.getElementById("tab-count-resolved").textContent = resolvedCount;
 
   const tbody = document.getElementById("submissions-tbody");
+  const showActionColumn = currentTab !== "recent";
+  const actionHeader = document.getElementById("action-col-header");
+  if (actionHeader) actionHeader.style.display = showActionColumn ? "" : "none";
 
-  // #, Office, Category, Q1..Q5, Comments, Evidence, Status, Date, Action
-  // The Action column (View / Edit / Delete) is now shown on every tab
-  // and every category, so Delete is always reachable, not just from
-  // the Pending/Resolved tabs.
-  const colCount = 3 + TOTAL_RATING_QUESTIONS + 5;
+  // #, Office, Category, Q1..Q5, Comments, Evidence, Status, Date [, Action]
+  const colCount = 3 + TOTAL_RATING_QUESTIONS + 4 + (showActionColumn ? 1 : 0);
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="${colCount}">No submissions found.</td></tr>`;
     return;
   }
 
-  // Edit is only available for Pending and Resolved records — records
-  // that are No Action Required only get View + Delete, matching Admin 3.
+  // Edit is only available from the Pending and Resolved tabs — records
+  // under No Action Required only get a View button, matching Admin 3.
+  const showEditButton = showActionColumn && currentTab !== "no_action";
+
   tbody.innerHTML = filtered.map((e, i) => {
     const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-";
     const meta = STATUS_META[e.status] || STATUS_META.pending;
-    const showEditButton = e.status !== "no_action";
-    const actionCell = `
+    const actionCell = showActionColumn ? `
         <td>
           <button class="btn-view" data-eval-id="${e.id}">View</button>
           ${showEditButton ? `<button class="btn-edit" data-eval-id="${e.id}">Edit</button>` : ""}
-          <button class="btn-delete" data-eval-id="${e.id}">Delete</button>
-        </td>`;
+        </td>` : "";
     return `
       <tr>
         <td class="row-index">${i + 1}</td>
@@ -1336,9 +1288,6 @@ function renderSubmissions() {
   });
   tbody.querySelectorAll(".btn-edit").forEach(btn => {
     btn.addEventListener("click", () => openEditModal(btn.getAttribute("data-eval-id")));
-  });
-  tbody.querySelectorAll(".btn-delete").forEach(btn => {
-    btn.addEventListener("click", () => openDeleteModal(btn.getAttribute("data-eval-id")));
   });
   tbody.querySelectorAll(".evidence-cell").forEach(badge => {
     badge.addEventListener("click", () => openDetailModal(badge.getAttribute("data-eval-id")));
@@ -1580,91 +1529,6 @@ editSaveBtn.addEventListener("click", async () => {
   } finally {
     editSaveBtn.disabled = false;
     editSaveBtn.textContent = "Save Changes";
-  }
-});
-
-// ======================
-// DELETE MODAL
-// ======================
-const deleteModal = document.getElementById("delete-modal");
-const deleteModalMeta = document.getElementById("delete-modal-meta");
-const deleteConfirmBtn = document.getElementById("delete-modal-confirm");
-
-function openDeleteModal(evalId) {
-  const e = evaluations.find(item => item.id === evalId);
-  if (!e) return;
-
-  const date = e.timestamp ? new Date(e.timestamp).toLocaleString() : "-";
-  const meta = STATUS_META[e.status] || STATUS_META.pending;
-
-  deletingId = evalId;
-  deleteModalMeta.innerHTML = `
-    <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
-    <div class="modal-row"><span>Category</span><span>${categoryPillHtml(e.cleanlinessCategory)}</span></div>
-    <div class="modal-row"><span>Status</span><span>${meta.icon} ${meta.label}</span></div>
-    <div class="modal-row"><span>Date</span><span>${date}</span></div>
-  `;
-
-  deleteModal.classList.add("open");
-}
-
-document.getElementById("delete-modal-cancel").addEventListener("click", () => {
-  deleteModal.classList.remove("open");
-  deletingId = null;
-});
-deleteModal.addEventListener("click", (ev) => {
-  if (ev.target === deleteModal) {
-    deleteModal.classList.remove("open");
-    deletingId = null;
-  }
-});
-
-// Deletes both copies of the record — the flat evaluation_history/{id}
-// mirror this page reads from, and the nested
-// cleanliness_evaluations/{category}/offices/{officeName}/evaluations/{id}
-// doc the Android app originally wrote — so a deleted submission
-// disappears everywhere, not just here.
-async function deleteEvaluation(record) {
-  const flatRef = doc(db, EVAL_HISTORY_COLLECTION, record.id);
-  const nestedRef = doc(
-    db,
-    NESTED_EVAL_ROOT,
-    record.cleanlinessCategory,
-    "offices",
-    record.officeName,
-    "evaluations",
-    record.id
-  );
-
-  await Promise.all([
-    deleteDoc(flatRef),
-    deleteDoc(nestedRef).catch(() => {
-      // If the nested doc can't be found/deleted (e.g. office was
-      // renamed after submission, breaking the path) we still remove
-      // the flat mirror — which this page relies on.
-    })
-  ]);
-}
-
-deleteConfirmBtn.addEventListener("click", async () => {
-  if (!deletingId) return;
-
-  const record = evaluations.find(item => item.id === deletingId);
-  if (!record) return;
-
-  deleteConfirmBtn.disabled = true;
-  deleteConfirmBtn.textContent = "Deleting...";
-
-  try {
-    await deleteEvaluation(record);
-    deleteModal.classList.remove("open");
-    deletingId = null;
-  } catch (err) {
-    alert("Failed to delete submission. Please try again.");
-    console.error(err);
-  } finally {
-    deleteConfirmBtn.disabled = false;
-    deleteConfirmBtn.textContent = "Delete";
   }
 });
 
