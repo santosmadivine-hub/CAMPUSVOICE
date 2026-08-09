@@ -776,14 +776,29 @@ buildTopbar("Dashboard", "admin2");
 // ======================
 // FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
 // ======================
-// Confirmed from the actual Firestore console: the offices collection
-// is named "office-names" (NOT "offices").
-const OFFICES_COLLECTION = "office-names";
+// ComfortRoomEvalActivity / SurroundingsEvalActivity write each
+// evaluation to a nested per-office doc AND to a flat mirror at
+// evaluation_history/{id} (see admin2-eval-mgmt.html). This dashboard
+// reads from the flat mirror, same as Eval Mgmt, so counts/status here
+// always match what admins see and edit there.
+const EVAL_HISTORY_COLLECTION = "evaluation_history";
 
-// Confirmed from the actual Firestore console: cleanliness_evaluations
-// documents store 15 rating fields (rating1 ... rating15), not just
-// rating1-4.
-const TOTAL_RATING_QUESTIONS = 15;
+// Each cleanliness category keeps its own office list, in a separately
+// named Firestore collection (mirrors CleanOfficeSelectActivity /
+// admin2-office-mgmt.html). Kept exactly as named in the app, including
+// the differing hyphen vs underscore convention.
+const OFFICE_COLLECTIONS = {
+  "Comfort Room": "office-names-comfort-room",
+  "Surroundings": "office_names_surroundings"
+};
+const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
+const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved before cleanlinessCategory existed
+
+// ComfortRoomEvalActivity / SurroundingsEvalActivity both set
+// TOTAL_QUESTIONS = 5 and only ever write rating1...rating5 — confirmed
+// directly from the submission code (see admin2-eval-mgmt.html), not
+// rating1-15.
+const TOTAL_RATING_QUESTIONS = 5;
 
 // Evaluations with an average rating at or above this threshold (out of
 // 5, matching the Evaluation Management page) are treated as positive
@@ -798,14 +813,16 @@ const LOW_RATING_THRESHOLD = 3;
 let evaluations = [];
 let officeCount = 0;
 let officeNames = [];
-let offices = {};
+let comfortOffices = {};      // id -> {id, name}, from office-names-comfort-room
+let surroundingsOffices = {}; // id -> {id, name}, from office_names_surroundings
+let offices = {};             // combined view of both categories, keyed by doc id
 
 // Normalizes office names for consistent comparison
 function normalizeName(name) {
   return (name || "").toString().trim().toLowerCase();
 }
 
-// Average of rating1 through rating15 for a single evaluation record.
+// Average of rating1 through rating5 for a single evaluation record.
 function avgOf(ev) {
   let sum = 0;
   let count = 0;
@@ -863,20 +880,13 @@ function parseEvalStatus(data, avgRating) {
 }
 
 // ======================
-// LOAD OFFICE LIST -> office-names collection
+// LOAD OFFICE LISTS -> one listener per category, then combined
 // ======================
-const officesCollectionRef = collection(db, OFFICES_COLLECTION);
-const officesQuery = query(officesCollectionRef, orderBy("name", "asc"));
-
-onSnapshot(officesQuery, (snapshot) => {
-  offices = {};
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    offices[doc.id] = {
-      id: doc.id,
-      name: data.name || data.officeName || doc.id
-    };
-  });
+// Recomputes the combined `offices` map (used for the Total Office stat,
+// the office <select>, and buildOfficeStats) whenever either category's
+// office list changes.
+function rebuildOffices() {
+  offices = { ...comfortOffices, ...surroundingsOffices };
 
   officeCount = Object.keys(offices).length;
   officeNames = Object.values(offices).map(o => o.name);
@@ -889,12 +899,32 @@ onSnapshot(officesQuery, (snapshot) => {
   populateOfficeSelect();
   renderDashboard();
   renderEvalStatus();
+}
+
+onSnapshot(query(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), orderBy("name", "asc")), (snapshot) => {
+  comfortOffices = {};
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    comfortOffices[doc.id] = { id: doc.id, name: data.name || data.officeName || doc.id };
+  });
+  rebuildOffices();
+});
+
+onSnapshot(query(collection(db, OFFICE_COLLECTIONS["Surroundings"]), orderBy("name", "asc")), (snapshot) => {
+  surroundingsOffices = {};
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    surroundingsOffices[doc.id] = { id: doc.id, name: data.name || data.officeName || doc.id };
+  });
+  rebuildOffices();
 });
 
 // ======================
-// LOAD CLEANLINESS EVALUATIONS -> cleanliness_evaluations collection
+// LOAD EVALUATIONS -> flat evaluation_history mirror (same source Eval
+// Mgmt reads from, so this dashboard's counts/status always agree with
+// it — real-time across both categories and every office in one listener)
 // ======================
-const evalCollectionRef = collection(db, "cleanliness_evaluations");
+const evalCollectionRef = collection(db, EVAL_HISTORY_COLLECTION);
 const evalQuery = query(evalCollectionRef, orderBy("timestamp", "desc"));
 
 onSnapshot(evalQuery, (snapshot) => {
@@ -902,15 +932,19 @@ onSnapshot(evalQuery, (snapshot) => {
   snapshot.forEach((doc) => {
     const data = doc.data();
 
+    const rawCategory = data.cleanlinessCategory;
+    const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+
     const record = {
       id: doc.id,
       officeName: data.officeName || "Unknown",
+      cleanlinessCategory: category,
       comments: data.comments || "",
       timestamp: Number(data.timestamp) || 0
     };
 
-    // Pull rating1 ... rating15 (matches the actual documents in
-    // Firestore, which go up to rating15, not rating4).
+    // Pull rating1 ... rating5 (matches what ComfortRoomEvalActivity /
+    // SurroundingsEvalActivity actually write — TOTAL_QUESTIONS = 5).
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
       record["rating" + i] = Number(data["rating" + i]) || 0;
     }
