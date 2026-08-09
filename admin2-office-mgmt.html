@@ -524,7 +524,12 @@ const db = getFirestore(app);
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin2", "office-mgmt");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Office Management", "admin2");
 
-const TOTAL_RATING_QUESTIONS = 15;
+// ComfortRoomEvalActivity / SurroundingsEvalActivity both set
+// TOTAL_QUESTIONS = 5 and only ever write rating1...rating5 — confirmed
+// directly from the submission code (see admin2-eval-mgmt.html), not
+// rating1-15. Avg Rating and eval counts below are wrong unless this
+// matches.
+const TOTAL_RATING_QUESTIONS = 5;
 
 // Mirrors CleanOfficeSelectActivity.officeCollectionName() in the Android
 // app: Comfort Room and Surroundings each keep their own office list,
@@ -621,7 +626,13 @@ onSnapshot(query(collection(db, OFFICE_COLLECTIONS["Surroundings"]), orderBy("na
   renderOfficeTable();
 });
 
-const evalCollectionRef = collection(db, "cleanliness_evaluations");
+// Reads from the flat evaluation_history mirror — the same source
+// admin2-eval-mgmt.html reads from — instead of the raw
+// cleanliness_evaluations tree, so Avg Rating / Total Evaluations here
+// always match what Eval Mgmt shows (including any status edits/deletes
+// made there, since deletes there remove from this mirror too).
+const EVAL_HISTORY_COLLECTION = "evaluation_history";
+const evalCollectionRef = collection(db, EVAL_HISTORY_COLLECTION);
 
 onSnapshot(evalCollectionRef, (snapshot) => {
   evaluations = [];
