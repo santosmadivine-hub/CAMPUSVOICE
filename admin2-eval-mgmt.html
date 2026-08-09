@@ -180,6 +180,82 @@
     background: #cbd5e1;
   }
 
+  /* Category tabs (Comfort Room / Surroundings) */
+  .category-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .category-tab {
+    border: 1px solid #bae6fd;
+    background: #ffffff;
+    color: #0369a1;
+    padding: 9px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    transition: background .2s, color .2s, transform .2s, border-color .2s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .category-tab:hover {
+    border-color: #0284c7;
+    transform: translateY(-1px);
+  }
+
+  .category-tab.active {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(2,132,199,.3);
+  }
+
+  .category-tab.active[data-category="Surroundings"] {
+    background: #16a34a;
+    border-color: #16a34a;
+    box-shadow: 0 4px 14px rgba(22,163,74,.3);
+  }
+
+  .category-tab .tab-count {
+    background: rgba(255,255,255,0.35);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 11px;
+  }
+
+  .category-tab:not(.active) .tab-count {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+
+  .category-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .category-pill.comfort-room {
+    background: #e0f2fe;
+    color: #0369a1;
+  }
+
+  .category-pill.surroundings {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
   /* Tabs */
   .eval-tabs {
     display: flex;
@@ -631,7 +707,7 @@
           <div class="stat-icon">📋</div>
           <div class="stat-label">Total</div>
           <div class="stat-value" id="stat-total">0</div>
-          <div class="stat-sub">All Submissions</div>
+          <div class="stat-sub" id="stat-total-sub">All Submissions</div>
         </div>
         <div class="stat-card blue">
           <div class="stat-icon">🏢</div>
@@ -681,6 +757,17 @@
           </div>
         </div>
 
+        <!-- Category tabs: cleanliness evaluations are split into Comfort
+             Room and Surroundings (separate office lists + separate
+             Firestore subtree per the Android app). Switching tabs
+             filters stats, the office dropdown, and the table to just
+             that category. -->
+        <div class="category-tabs" id="category-tabs">
+          <button class="category-tab active" data-category="all">🗂 All Categories <span class="tab-count" id="cat-count-all">0</span></button>
+          <button class="category-tab" data-category="Comfort Room">🚻 Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
+          <button class="category-tab" data-category="Surroundings">🌳 Surroundings <span class="tab-count" id="cat-count-surroundings">0</span></button>
+        </div>
+
         <!-- Tabs -->
         <div class="eval-tabs" id="eval-tabs">
           <button class="eval-tab active" data-tab="recent">Recent <span class="tab-count" id="tab-count-recent">0</span></button>
@@ -705,10 +792,10 @@
           <table class="submissions-table">
             <thead>
               <tr id="submissions-thead-row">
-                <!-- #, Office, Q1..Q15, Comments, Evidence, Status, Date, Action
-                     are built dynamically in JS so the number of rating
-                     columns (TOTAL_RATING_QUESTIONS) only needs to be
-                     changed in one place. -->
+                <!-- #, Office, Category, Q1..Q5, Comments, Evidence, Status,
+                     Date, Action are built dynamically in JS so the number
+                     of rating columns (TOTAL_RATING_QUESTIONS) only needs
+                     to be changed in one place. -->
               </tr>
             </thead>
             <tbody id="submissions-tbody"></tbody>
@@ -789,16 +876,40 @@ document.getElementById("topbar-mount").innerHTML =
 // ======================
 // FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
 // ======================
-// Confirmed from the actual Firestore console: the offices collection
-// is named "office-names" (NOT "offices").
-const OFFICES_COLLECTION = "office-names";
+// ComfortRoomEvalActivity / SurroundingsEvalActivity write each
+// evaluation to TWO places:
+//   1. cleanliness_evaluations/{category}/offices/{officeName}/evaluations/{id}
+//      — nested, useful for per-office queries, but hard to list "all
+//      evaluations across every office" from without a collection-group
+//      query.
+//   2. evaluation_history/{id} — a FLAT mirror of the exact same data
+//      (same fields, same id == evaluationId), written right after #1
+//      succeeds. This is what this page reads from, since it lets a
+//      single onSnapshot listener show every submission across both
+//      categories and every office at once.
+// When an admin edits a submission's status here, we write to BOTH
+// locations (see saveStatusUpdate) so they stay in sync.
+const EVAL_HISTORY_COLLECTION = "evaluation_history";
+const NESTED_EVAL_ROOT = "cleanliness_evaluations";
 
-// Confirmed from the actual Firestore console: cleanliness_evaluations
-// documents store 15 rating fields (rating1 ... rating15), not just
-// rating1-4. Every place that needs to loop over the rating questions
-// (table headers, row cells, detail modal, CSV export) drives off this
-// constant so there's only one place to change if it's ever adjusted.
-const TOTAL_RATING_QUESTIONS = 15;
+// Each cleanliness category keeps its own office list, in a separately
+// named Firestore collection (mirrors CleanOfficeSelectActivity.officeCollectionName()).
+// Kept exactly as named in the app, including the differing hyphen vs
+// underscore convention.
+const OFFICE_COLLECTIONS = {
+  "Comfort Room": "office-names-comfort-room",
+  "Surroundings": "office_names_surroundings"
+};
+const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
+const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved before cleanlinessCategory existed
+
+// ComfortRoomEvalActivity / SurroundingsEvalActivity both set
+// TOTAL_QUESTIONS = 5 and only ever write rating1...rating5 — confirmed
+// directly from the submission code, not just the console. Every place
+// that needs to loop over the rating questions (table headers, row
+// cells, detail modal, CSV export) drives off this constant so there's
+// only one place to change if it's ever adjusted.
+const TOTAL_RATING_QUESTIONS = 5;
 
 // Evaluations with an average rating at or above this threshold (out of
 // 5, matching Admin 3's eval-mgmt page) are treated as positive feedback
@@ -819,9 +930,11 @@ const STATUS_META = {
 // STATE
 // ======================
 let evaluations = [];
-let offices = {};
+let comfortOffices = {};      // id -> name, from office-names-comfort-room
+let surroundingsOffices = {}; // id -> name, from office_names_surroundings
 let searchTerm = "";
 let officeFilter = "";
+let categoryFilter = "all"; // "all" | "Comfort Room" | "Surroundings"
 let currentTab = "recent";
 let editingId = null;
 
@@ -896,8 +1009,14 @@ function parseEvalStatus(data, avgRating) {
   return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
 }
 
+function categoryPillHtml(category) {
+  const cls = category === "Surroundings" ? "surroundings" : "comfort-room";
+  const icon = category === "Surroundings" ? "🌳" : "🚻";
+  return `<span class="category-pill ${cls}">${icon} ${category}</span>`;
+}
+
 // ======================
-// BUILD TABLE HEADER (# / Office / Q1..Q15 / Comments / Evidence / Status / Date / Action)
+// BUILD TABLE HEADER (# / Office / Category / Q1..Q5 / Comments / Evidence / Status / Date / Action)
 // ======================
 function renderTableHeader() {
   const headRow = document.getElementById("submissions-thead-row");
@@ -910,6 +1029,7 @@ function renderTableHeader() {
   headRow.innerHTML = `
     <th>#</th>
     <th>Office</th>
+    <th>Category</th>
     ${questionHeaders}
     <th>Comments</th>
     <th>Evidence</th>
@@ -921,25 +1041,33 @@ function renderTableHeader() {
 renderTableHeader();
 
 // ======================
-// LOAD OFFICES
+// LOAD OFFICES (both category collections, always on — used to build the
+// office filter dropdown for whichever category tab is active)
 // ======================
-const officesCollectionRef = collection(db, OFFICES_COLLECTION);
-
-onSnapshot(officesCollectionRef, (snapshot) => {
-  offices = {};
+onSnapshot(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), (snapshot) => {
+  comfortOffices = {};
   snapshot.forEach((doc) => {
     const data = doc.data();
-    offices[doc.id] = data.name || data.officeName || doc.id;
+    comfortOffices[doc.id] = data.name || data.officeName || doc.id;
   });
-
   populateOfficeFilter();
-  renderSubmissions();
+});
+
+onSnapshot(collection(db, OFFICE_COLLECTIONS["Surroundings"]), (snapshot) => {
+  surroundingsOffices = {};
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    surroundingsOffices[doc.id] = data.name || data.officeName || doc.id;
+  });
+  populateOfficeFilter();
 });
 
 // ======================
-// LOAD EVALUATIONS (real-time — fires for every new Android submission too)
+// LOAD EVALUATIONS from the flat evaluation_history mirror (real-time —
+// fires for every new Android submission, across both categories and
+// every office, in one listener)
 // ======================
-const evalCollectionRef = collection(db, "cleanliness_evaluations");
+const evalCollectionRef = collection(db, EVAL_HISTORY_COLLECTION);
 const evalQuery = query(evalCollectionRef, orderBy("timestamp", "desc"));
 
 onSnapshot(evalQuery, (snapshot) => {
@@ -947,16 +1075,20 @@ onSnapshot(evalQuery, (snapshot) => {
   snapshot.forEach((doc) => {
     const data = doc.data();
 
+    const rawCategory = data.cleanlinessCategory;
+    const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+
     const record = {
       id: doc.id,
       officeName: data.officeName || "Unknown",
+      cleanlinessCategory: category,
       comments: data.comments || "",
       timestamp: Number(data.timestamp) || 0,
       evidence: parseEvidence(data)
     };
 
-    // Pull rating1 ... rating15 (matches the actual documents in
-    // Firestore, which go up to rating15, not rating4).
+    // Pull rating1 ... rating5 (matches what ComfortRoomEvalActivity /
+    // SurroundingsEvalActivity actually write — TOTAL_QUESTIONS = 5).
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
       record["rating" + i] = Number(data["rating" + i]) || 0;
     }
@@ -971,6 +1103,21 @@ onSnapshot(evalQuery, (snapshot) => {
     ev.code = makeCode(ev.officeName, ev.id);
   });
 
+  populateOfficeFilter();
+  renderSubmissions();
+});
+
+// ======================
+// CATEGORY TABS
+// ======================
+document.getElementById("category-tabs").addEventListener("click", (ev) => {
+  const btn = ev.target.closest(".category-tab");
+  if (!btn) return;
+  categoryFilter = btn.getAttribute("data-category");
+  document.querySelectorAll(".category-tab").forEach(t => t.classList.toggle("active", t === btn));
+  officeFilter = ""; // switching category invalidates the previously selected office
+  document.getElementById("office-filter").value = "";
+  populateOfficeFilter();
   renderSubmissions();
 });
 
@@ -988,21 +1135,36 @@ document.getElementById("eval-tabs").addEventListener("click", (ev) => {
 // ======================
 // RENDER
 // ======================
+function officesForCategory(category) {
+  if (category === "Comfort Room") return comfortOffices;
+  if (category === "Surroundings") return surroundingsOffices;
+  // "all" — combine both, since evaluations may reference either list
+  return { ...comfortOffices, ...surroundingsOffices };
+}
+
 function populateOfficeFilter() {
   const select = document.getElementById("office-filter");
   const currentValue = select.value;
 
+  const officeNames = Array.from(new Set(Object.values(officesForCategory(categoryFilter)))).sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" })
+  );
+
   const options = ['<option value="">All Offices</option>']
-    .concat(Object.values(offices).map(name => `<option value="${name}">${name}</option>`));
+    .concat(officeNames.map(name => `<option value="${name}">${name}</option>`));
 
   select.innerHTML = options.join("");
   select.value = currentValue;
 }
 
+function getCategoryFilteredSubmissions() {
+  return evaluations.filter(e => categoryFilter === "all" ? true : e.cleanlinessCategory === categoryFilter);
+}
+
 function getFilteredSubmissions() {
   const term = searchTerm.trim().toLowerCase();
 
-  return evaluations
+  return getCategoryFilteredSubmissions()
     .filter(e => currentTab === "recent" ? true : e.status === currentTab)
     .filter(e => !officeFilter || e.officeName === officeFilter)
     .filter(e => {
@@ -1015,7 +1177,7 @@ function getFilteredSubmissions() {
     .sort((a, b) => b.timestamp - a.timestamp);
 }
 
-// Builds the Q1..Q15 <td> cells for one evaluation row.
+// Builds the Q1..Q5 <td> cells for one evaluation row.
 function ratingCellsHtml(e) {
   let html = "";
   for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
@@ -1043,33 +1205,41 @@ function evidenceCellHtml(e) {
 }
 
 function renderSubmissions() {
+  const categoryScoped = getCategoryFilteredSubmissions();
   const filtered = getFilteredSubmissions();
 
-  // Update stats
-  // Update stats
-  document.getElementById("stat-total").textContent = evaluations.length;
-  const distinctOffices = new Set(evaluations.map(e => e.officeName));
+  // Category tab counts always reflect ALL evaluations (unfiltered by
+  // status/office/search), so the tabs read as a stable overview.
+  document.getElementById("cat-count-all").textContent = evaluations.length;
+  document.getElementById("cat-count-comfort").textContent = evaluations.filter(e => e.cleanlinessCategory === "Comfort Room").length;
+  document.getElementById("cat-count-surroundings").textContent = evaluations.filter(e => e.cleanlinessCategory === "Surroundings").length;
+
+  // Update stats (scoped to the active category tab)
+  document.getElementById("stat-total").textContent = categoryScoped.length;
+  document.getElementById("stat-total-sub").textContent = categoryFilter === "all" ? "All Submissions" : categoryFilter;
+
+  const distinctOffices = new Set(categoryScoped.map(e => e.officeName));
   document.getElementById("stat-offices").textContent = distinctOffices.size;
 
-  const totalImages = evaluations.reduce(
+  const totalImages = categoryScoped.reduce(
     (sum, e) => sum + e.evidence.filter(item => item.type === "image").length,
     0
   );
-  const totalVideos = evaluations.reduce(
+  const totalVideos = categoryScoped.reduce(
     (sum, e) => sum + e.evidence.filter(item => item.type === "video").length,
     0
   );
   document.getElementById("stat-images").textContent = totalImages;
   document.getElementById("stat-videos").textContent = totalVideos;
 
-  const pendingCount = evaluations.filter(e => e.status === "pending").length;
-  const noActionCount = evaluations.filter(e => e.status === "no_action").length;
-  const resolvedCount = evaluations.filter(e => e.status === "resolved").length;
+  const pendingCount = categoryScoped.filter(e => e.status === "pending").length;
+  const noActionCount = categoryScoped.filter(e => e.status === "no_action").length;
+  const resolvedCount = categoryScoped.filter(e => e.status === "resolved").length;
   document.getElementById("stat-pending").textContent = pendingCount;
   document.getElementById("stat-no-action").textContent = noActionCount;
   document.getElementById("stat-resolved").textContent = resolvedCount;
 
-  document.getElementById("tab-count-recent").textContent = evaluations.length;
+  document.getElementById("tab-count-recent").textContent = categoryScoped.length;
   document.getElementById("tab-count-pending").textContent = pendingCount;
   document.getElementById("tab-count-no_action").textContent = noActionCount;
   document.getElementById("tab-count-resolved").textContent = resolvedCount;
@@ -1079,8 +1249,8 @@ function renderSubmissions() {
   const actionHeader = document.getElementById("action-col-header");
   if (actionHeader) actionHeader.style.display = showActionColumn ? "" : "none";
 
-  // #, Office, Q1..Q15, Comments, Evidence, Status, Date [, Action]
-  const colCount = 2 + TOTAL_RATING_QUESTIONS + 4 + (showActionColumn ? 1 : 0);
+  // #, Office, Category, Q1..Q5, Comments, Evidence, Status, Date [, Action]
+  const colCount = 3 + TOTAL_RATING_QUESTIONS + 4 + (showActionColumn ? 1 : 0);
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="${colCount}">No submissions found.</td></tr>`;
@@ -1103,6 +1273,7 @@ function renderSubmissions() {
       <tr>
         <td class="row-index">${i + 1}</td>
         <td>${e.officeName}</td>
+        <td>${categoryPillHtml(e.cleanlinessCategory)}</td>
         ${ratingCellsHtml(e)}
         <td>${e.comments || "-"}</td>
         <td>${evidenceCellHtml(e)}</td>
@@ -1167,7 +1338,7 @@ document.getElementById("btn-export").addEventListener("click", () => {
     questionHeaders.push("Q" + i);
   }
 
-  const header = ["#", "Office", ...questionHeaders, "Avg", "Comments", "Image URLs", "Video URLs", "Status", "Date"];
+  const header = ["#", "Office", "Category", ...questionHeaders, "Avg", "Comments", "Image URLs", "Video URLs", "Status", "Date"];
 
   const rows = filtered.map((e, i) => {
     const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString() : "-";
@@ -1182,7 +1353,7 @@ document.getElementById("btn-export").addEventListener("click", () => {
     const imageUrls = `"${e.evidence.filter(item => item.type === "image").map(item => item.url).join(" | ")}"`;
     const videoUrls = `"${e.evidence.filter(item => item.type === "video").map(item => item.url).join(" | ")}"`;
 
-    return [i + 1, e.officeName, ...ratingValues, e.avgRating.toFixed(1), comments, imageUrls, videoUrls, status, date].join(",");
+    return [i + 1, e.officeName, e.cleanlinessCategory, ...ratingValues, e.avgRating.toFixed(1), comments, imageUrls, videoUrls, status, date].join(",");
   });
 
   const csvContent = [header.join(","), ...rows].join("\n");
@@ -1191,7 +1362,7 @@ document.getElementById("btn-export").addEventListener("click", () => {
 
   const link = document.createElement("a");
   link.href = url;
-  link.download = `cleanliness-submissions-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `cleanliness-submissions-${categoryFilter === "all" ? "all" : categoryFilter.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -1218,6 +1389,7 @@ function openDetailModal(evalId) {
 
   detailModalBody.innerHTML = `
     <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
+    <div class="modal-row"><span>Category</span><span>${categoryPillHtml(e.cleanlinessCategory)}</span></div>
     <div class="modal-row"><span>Avg Rating</span><span>${e.avgRating.toFixed(1)} / 5</span></div>
     ${questionRows}
     <div class="modal-row"><span>Comments</span><span>${e.comments || "-"}</span></div>
@@ -1287,6 +1459,7 @@ function openEditModal(evalId) {
   editingId = evalId;
   editModalMeta.innerHTML = `
     <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
+    <div class="modal-row"><span>Category</span><span>${categoryPillHtml(e.cleanlinessCategory)}</span></div>
     <div class="modal-row"><span>ID</span><span>${e.id}</span></div>
     <div class="modal-row"><span>Avg Rating</span><span>${e.avgRating.toFixed(1)} / 5</span></div>
     <div class="modal-row"><span>Date</span><span>${date}</span></div>
@@ -1307,8 +1480,39 @@ editModal.addEventListener("click", (ev) => {
   }
 });
 
+// Writes the new status to BOTH copies of the record — the flat
+// evaluation_history/{id} mirror this page reads from, and the nested
+// cleanliness_evaluations/{category}/offices/{officeName}/evaluations/{id}
+// doc the Android app originally wrote — so nothing goes out of sync if
+// another surface (e.g. an office analytics page) reads the nested tree
+// directly.
+async function saveStatusUpdate(record, newStatus) {
+  const flatRef = doc(db, EVAL_HISTORY_COLLECTION, record.id);
+  const nestedRef = doc(
+    db,
+    NESTED_EVAL_ROOT,
+    record.cleanlinessCategory,
+    "offices",
+    record.officeName,
+    "evaluations",
+    record.id
+  );
+
+  await Promise.all([
+    updateDoc(flatRef, { status: newStatus }),
+    updateDoc(nestedRef, { status: newStatus }).catch(() => {
+      // If the nested doc can't be found/updated (e.g. office was
+      // renamed after submission, breaking the path) we still keep the
+      // flat mirror — which this page relies on — up to date.
+    })
+  ]);
+}
+
 editSaveBtn.addEventListener("click", async () => {
   if (!editingId) return;
+
+  const record = evaluations.find(item => item.id === editingId);
+  if (!record) return;
 
   const newStatus = editStatusSelect.value;
 
@@ -1316,9 +1520,7 @@ editSaveBtn.addEventListener("click", async () => {
   editSaveBtn.textContent = "Saving...";
 
   try {
-    await updateDoc(doc(db, "cleanliness_evaluations", editingId), {
-      status: newStatus
-    });
+    await saveStatusUpdate(record, newStatus);
     editModal.classList.remove("open");
     editingId = null;
   } catch (err) {
