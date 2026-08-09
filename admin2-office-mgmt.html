@@ -38,6 +38,40 @@
 .search-input:focus { border-color: #0284c7; }
 .search-input::placeholder { color: #94a3b8; }
 
+/* ── Category tabs (Comfort Room / Surroundings) ── */
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.category-tab {
+  border: 1px solid #bae6fd;
+  background: #ffffff;
+  color: #0369a1;
+  padding: 9px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  transition: background .2s, color .2s, transform .2s, border-color .2s;
+  white-space: nowrap;
+}
+
+.category-tab:hover {
+  border-color: #0284c7;
+  transform: translateY(-1px);
+}
+
+.category-tab.active {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(2,132,199,.3);
+}
+
 /* Office table */
 .office-table-wrap {
   max-height: 600px;
@@ -399,7 +433,7 @@
           <div class="stat-icon">📋</div>
           <div class="stat-label">Total Evaluations</div>
           <div class="stat-value" id="totalEvals">0</div>
-          <div class="stat-sub">All Time</div>
+          <div class="stat-sub" id="totalEvalsSub">All Time</div>
         </div>
         <div class="stat-card blue">
           <div class="stat-icon">⭐</div>
@@ -417,6 +451,13 @@
 
       <!-- Main Card -->
       <div class="card">
+        <!-- Category tabs: filter everything below by cleanliness category -->
+        <div class="category-tabs" id="category-tabs">
+          <button type="button" class="category-tab active" data-category="all">🗂 All Categories</button>
+          <button type="button" class="category-tab" data-category="Comfort Room">🚻 Comfort Room</button>
+          <button type="button" class="category-tab" data-category="Surroundings">🌳 Surroundings</button>
+        </div>
+
         <!-- Search box + Add Office button, side by side -->
         <div class="search-add-row">
           <input type="text" id="office-search-input" class="search-input" placeholder="🔍 Search offices by name...">
@@ -478,8 +519,16 @@ document.getElementById("topbar-mount").innerHTML = buildTopbar("Office Manageme
 const OFFICES_COLLECTION = "office-names";
 const TOTAL_RATING_QUESTIONS = 15;
 
+// The two cleanliness categories chosen on the Android app's
+// CleanlinessCategorySelectActivity screen. Evaluations submitted from
+// that screen are tagged with one of these via the "cleanlinessCategory"
+// field on the Firestore document.
+const CLEANLINESS_CATEGORIES = ["Comfort Room", "Surroundings"];
+const DEFAULT_CATEGORY = "Comfort Room"; // fallback for older records saved before the category field existed
+
 let evaluations = [];
 let offices = {};
+let categoryFilter = "all"; // "all" | "Comfort Room" | "Surroundings"
 
 function normalizeName(name) {
   return (name || "").toString().trim().toLowerCase();
@@ -500,6 +549,11 @@ function avgOf(ev) {
   return count > 0 ? sum / count : 0;
 }
 
+function evaluationsForCategory() {
+  if (categoryFilter === "all") return evaluations;
+  return evaluations.filter(e => e.cleanlinessCategory === categoryFilter);
+}
+
 function buildOfficeStats() {
   const statsByKey = {};
 
@@ -507,7 +561,7 @@ function buildOfficeStats() {
     statsByKey[key] = { displayName: office.name, total: 0, sum: 0 };
   });
 
-  evaluations.forEach(e => {
+  evaluationsForCategory().forEach(e => {
     const matchingOfficeKey = Object.entries(offices).find(([_, office]) => 
       normalizeName(office.name) === normalizeName(e.officeName)
     )?.[0];
@@ -544,9 +598,17 @@ onSnapshot(evalCollectionRef, (snapshot) => {
   snapshot.forEach((doc) => {
     const data = doc.data();
 
+    // cleanlinessCategory comes from CleanlinessCategorySelectActivity
+    // ("Comfort Room" or "Surroundings"). Older docs saved before this
+    // field existed fall back to DEFAULT_CATEGORY so they still show up
+    // under a tab instead of disappearing from stats.
+    const rawCategory = data.cleanlinessCategory;
+    const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+
     const record = {
       id: doc.id,
       officeName: data.officeName || "Unknown",
+      cleanlinessCategory: category,
       comments: data.comments || "",
       timestamp: Number(data.timestamp) || 0
     };
@@ -563,12 +625,27 @@ onSnapshot(evalCollectionRef, (snapshot) => {
 
 const officeTableBody = document.getElementById("office-table-body");
 const officeSearchInput = document.getElementById("office-search-input");
+const categoryTabsEl = document.getElementById("category-tabs");
+const totalEvalsSubEl = document.getElementById("totalEvalsSub");
 
 let officeSearchTerm = "";
 
 officeSearchInput.addEventListener("input", (e) => {
   officeSearchTerm = e.target.value.toLowerCase();
   renderOfficeTable();
+});
+
+// Category tab clicks — swap the active tab and re-filter everything
+// (stat cards + table) to only that category's evaluations.
+categoryTabsEl.querySelectorAll(".category-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    categoryFilter = btn.getAttribute("data-category");
+
+    categoryTabsEl.querySelectorAll(".category-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    renderOfficeTable();
+  });
 });
 
 function updateSummary() {
@@ -605,6 +682,7 @@ function updateSummary() {
   document.getElementById("totalEvals").textContent = totalEvals;
   document.getElementById("highestOffice").textContent = highestOffice;
   document.getElementById("lowestOffice").textContent = lowestOffice;
+  totalEvalsSubEl.textContent = categoryFilter === "all" ? "All Time" : categoryFilter;
 }
 
 function renderOfficeTable() {
@@ -675,7 +753,9 @@ function renderOfficeTable() {
 window.viewOfficeAnalytics = function(key) {
   const office = offices[key];
   const name = office.name || "";
-  const url = `admin2-office-analytics.html?office=${encodeURIComponent(key)}&name=${encodeURIComponent(name)}`;
+  // Pass the currently selected category along so the analytics page can
+  // open pre-filtered to whichever tab the admin was looking at.
+  const url = `admin2-office-analytics.html?office=${encodeURIComponent(key)}&name=${encodeURIComponent(name)}&category=${encodeURIComponent(categoryFilter)}`;
   window.location.href = url;
 };
 
