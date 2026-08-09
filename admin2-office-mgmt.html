@@ -72,6 +72,12 @@
   box-shadow: 0 4px 14px rgba(2,132,199,.3);
 }
 
+.category-tab.active[data-category="Surroundings"] {
+  background: #16a34a;
+  border-color: #16a34a;
+  box-shadow: 0 4px 14px rgba(22,163,74,.3);
+}
+
 /* Office table */
 .office-table-wrap {
   max-height: 600px;
@@ -451,17 +457,19 @@
 
       <!-- Main Card -->
       <div class="card">
-        <!-- Category tabs: filter everything below by cleanliness category -->
+        <!-- Category tabs: each category has its own Firestore office
+             collection (office-names-comfort-room / office_names_surroundings),
+             so switching tabs swaps which office list + stats are shown,
+             and which collection "+ Add Office" writes to. -->
         <div class="category-tabs" id="category-tabs">
-          <button type="button" class="category-tab active" data-category="all">🗂 All Categories</button>
-          <button type="button" class="category-tab" data-category="Comfort Room">🚻 Comfort Room</button>
+          <button type="button" class="category-tab active" data-category="Comfort Room">🚻 Comfort Room</button>
           <button type="button" class="category-tab" data-category="Surroundings">🌳 Surroundings</button>
         </div>
 
         <!-- Search box + Add Office button, side by side -->
         <div class="search-add-row">
           <input type="text" id="office-search-input" class="search-input" placeholder="🔍 Search offices by name...">
-          <button id="btn-add-office" class="primary-btn">+ Add Office</button>
+          <button id="btn-add-office" class="primary-btn">+ Add Comfort Room Office</button>
         </div>
 
         <div class="office-table-wrap">
@@ -516,19 +524,37 @@ const db = getFirestore(app);
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin2", "office-mgmt");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Office Management", "admin2");
 
-const OFFICES_COLLECTION = "office-names";
 const TOTAL_RATING_QUESTIONS = 15;
+
+// Mirrors CleanOfficeSelectActivity.officeCollectionName() in the Android
+// app: Comfort Room and Surroundings each keep their own office list,
+// in collections with different naming conventions (hyphen vs underscore) —
+// kept exactly as-is so this matches the real Firestore data.
+const OFFICE_COLLECTIONS = {
+  "Comfort Room": "office-names-comfort-room",
+  "Surroundings": "office_names_surroundings"
+};
 
 // The two cleanliness categories chosen on the Android app's
 // CleanlinessCategorySelectActivity screen. Evaluations submitted from
 // that screen are tagged with one of these via the "cleanlinessCategory"
-// field on the Firestore document.
-const CLEANLINESS_CATEGORIES = ["Comfort Room", "Surroundings"];
-const DEFAULT_CATEGORY = "Comfort Room"; // fallback for older records saved before the category field existed
+// field on the Firestore document, so an evaluation can be matched back
+// to the right office list even if a name were ever reused across categories.
+const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
+const DEFAULT_CATEGORY = "Comfort Room"; // fallback for older eval records saved before the category field existed
 
 let evaluations = [];
-let offices = {};
-let categoryFilter = "all"; // "all" | "Comfort Room" | "Surroundings"
+let comfortOffices = {};      // docs from office-names-comfort-room
+let surroundingsOffices = {}; // docs from office_names_surroundings
+let activeCategory = "Comfort Room"; // "Comfort Room" | "Surroundings" — which tab is selected
+
+function currentOffices() {
+  return activeCategory === "Comfort Room" ? comfortOffices : surroundingsOffices;
+}
+
+function currentOfficeCollectionName() {
+  return OFFICE_COLLECTIONS[activeCategory];
+}
 
 function normalizeName(name) {
   return (name || "").toString().trim().toLowerCase();
@@ -549,19 +575,19 @@ function avgOf(ev) {
   return count > 0 ? sum / count : 0;
 }
 
-function evaluationsForCategory() {
-  if (categoryFilter === "all") return evaluations;
-  return evaluations.filter(e => e.cleanlinessCategory === categoryFilter);
+function evaluationsForActiveCategory() {
+  return evaluations.filter(e => e.cleanlinessCategory === activeCategory);
 }
 
 function buildOfficeStats() {
   const statsByKey = {};
+  const offices = currentOffices();
 
   Object.entries(offices).forEach(([key, office]) => {
     statsByKey[key] = { displayName: office.name, total: 0, sum: 0 };
   });
 
-  evaluationsForCategory().forEach(e => {
+  evaluationsForActiveCategory().forEach(e => {
     const matchingOfficeKey = Object.entries(offices).find(([_, office]) => 
       normalizeName(office.name) === normalizeName(e.officeName)
     )?.[0];
@@ -575,19 +601,23 @@ function buildOfficeStats() {
   return statsByKey;
 }
 
-const officesCollectionRef = collection(db, OFFICES_COLLECTION);
-const officesQuery = query(officesCollectionRef, orderBy("name", "asc"));
-
-onSnapshot(officesQuery, (snapshot) => {
-  offices = {};
+// Two permanent listeners — one per category's office collection — so
+// switching tabs is instant and doesn't need to re-subscribe.
+onSnapshot(query(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), orderBy("name", "asc")), (snapshot) => {
+  comfortOffices = {};
   snapshot.forEach((doc) => {
     const data = doc.data();
-    offices[doc.id] = {
-      id: doc.id,
-      name: data.name || data.officeName || doc.id
-    };
+    comfortOffices[doc.id] = { id: doc.id, name: data.name || data.officeName || doc.id };
   });
+  renderOfficeTable();
+});
 
+onSnapshot(query(collection(db, OFFICE_COLLECTIONS["Surroundings"]), orderBy("name", "asc")), (snapshot) => {
+  surroundingsOffices = {};
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    surroundingsOffices[doc.id] = { id: doc.id, name: data.name || data.officeName || doc.id };
+  });
   renderOfficeTable();
 });
 
@@ -627,6 +657,7 @@ const officeTableBody = document.getElementById("office-table-body");
 const officeSearchInput = document.getElementById("office-search-input");
 const categoryTabsEl = document.getElementById("category-tabs");
 const totalEvalsSubEl = document.getElementById("totalEvalsSub");
+const addOfficeBtn = document.getElementById("btn-add-office");
 
 let officeSearchTerm = "";
 
@@ -635,20 +666,24 @@ officeSearchInput.addEventListener("input", (e) => {
   renderOfficeTable();
 });
 
-// Category tab clicks — swap the active tab and re-filter everything
-// (stat cards + table) to only that category's evaluations.
+// Category tab clicks — swap which office collection + evaluations
+// (stat cards + table) are shown, and re-label the Add Office button
+// so it's clear which list a new office will be added to.
 categoryTabsEl.querySelectorAll(".category-tab").forEach(btn => {
   btn.addEventListener("click", () => {
-    categoryFilter = btn.getAttribute("data-category");
+    activeCategory = btn.getAttribute("data-category");
 
     categoryTabsEl.querySelectorAll(".category-tab").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
+
+    addOfficeBtn.textContent = `+ Add ${activeCategory} Office`;
 
     renderOfficeTable();
   });
 });
 
 function updateSummary() {
+  const offices = currentOffices();
   const keys = Object.keys(offices);
   const totalOffices = keys.length;
 
@@ -682,12 +717,13 @@ function updateSummary() {
   document.getElementById("totalEvals").textContent = totalEvals;
   document.getElementById("highestOffice").textContent = highestOffice;
   document.getElementById("lowestOffice").textContent = lowestOffice;
-  totalEvalsSubEl.textContent = categoryFilter === "all" ? "All Time" : categoryFilter;
+  totalEvalsSubEl.textContent = activeCategory;
 }
 
 function renderOfficeTable() {
   updateSummary();
-  
+
+  const offices = currentOffices();
   const keys = Object.keys(offices).sort((a, b) =>
     offices[a].name.localeCompare(offices[b].name, undefined, {
       sensitivity: "base"
@@ -695,7 +731,7 @@ function renderOfficeTable() {
   );
 
   if (keys.length === 0) {
-    officeTableBody.innerHTML = `<tr><td colspan="4" class="no-results">No offices added yet.</td></tr>`;
+    officeTableBody.innerHTML = `<tr><td colspan="4" class="no-results">No ${activeCategory} offices added yet.</td></tr>`;
     return;
   }
 
@@ -751,24 +787,24 @@ function renderOfficeTable() {
 }
 
 window.viewOfficeAnalytics = function(key) {
-  const office = offices[key];
+  const office = currentOffices()[key];
   const name = office.name || "";
-  // Pass the currently selected category along so the analytics page can
-  // open pre-filtered to whichever tab the admin was looking at.
-  const url = `admin2-office-analytics.html?office=${encodeURIComponent(key)}&name=${encodeURIComponent(name)}&category=${encodeURIComponent(categoryFilter)}`;
+  // Pass the active category along so the analytics page knows to match
+  // evaluations against this office's cleanlinessCategory too.
+  const url = `admin2-office-analytics.html?office=${encodeURIComponent(key)}&name=${encodeURIComponent(name)}&category=${encodeURIComponent(activeCategory)}`;
   window.location.href = url;
 };
 
 window.editOffice = async function(key) {
-  const office = offices[key];
+  const office = currentOffices()[key];
   const currentName = office.name || "";
-  const newName = prompt("Edit office name:", currentName);
+  const newName = prompt(`Edit ${activeCategory} office name:`, currentName);
   if (newName === null) return;
   const trimmed = newName.trim();
   if (!trimmed || trimmed === currentName) return;
 
   try {
-    await updateDoc(doc(db, OFFICES_COLLECTION, key), { name: trimmed });
+    await updateDoc(doc(db, currentOfficeCollectionName(), key), { name: trimmed });
     alert("✓ Office updated successfully!");
   } catch (err) {
     alert("Couldn't update office: " + err.message);
@@ -776,33 +812,35 @@ window.editOffice = async function(key) {
 };
 
 window.deleteOffice = async function(key) {
-  const office = offices[key];
+  const office = currentOffices()[key];
   const name = office.name || "this office";
-  if (!confirm(`Remove "${name}" from the office list?`)) return;
+  if (!confirm(`Remove "${name}" from the ${activeCategory} office list?`)) return;
 
   try {
-    await deleteDoc(doc(db, OFFICES_COLLECTION, key));
+    await deleteDoc(doc(db, currentOfficeCollectionName(), key));
     alert("✓ Office deleted successfully!");
   } catch (err) {
     alert("Couldn't remove office: " + err.message);
   }
 };
 
+// Adds to whichever category is currently active — Comfort Room offices
+// and Surroundings offices are never mixed into the same collection.
 window.addOffice = async function() {
-  const name = prompt("New office name (e.g. Registrar):");
+  const name = prompt(`New ${activeCategory} office name (e.g. Registrar):`);
   if (name === null) return;
   const trimmed = name.trim();
   if (!trimmed) return;
 
   try {
-    await addDoc(collection(db, OFFICES_COLLECTION), { name: trimmed });
-    alert("✓ Office added successfully!");
+    await addDoc(collection(db, currentOfficeCollectionName()), { name: trimmed });
+    alert(`✓ Office added to ${activeCategory} successfully!`);
   } catch (err) {
     alert("Couldn't add office: " + err.message);
   }
 };
 
-document.getElementById("btn-add-office").addEventListener("click", addOffice);
+addOfficeBtn.addEventListener("click", addOffice);
 
 </script>
 </body>
