@@ -314,7 +314,7 @@
 /* ─── Quick Access Section ─── */
 .quick-access-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   margin-top: 12px;
 }
@@ -423,9 +423,6 @@
   }
   .stat-value {
     font-size: 30px;
-  }
-  .quick-access-grid {
-    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -636,60 +633,61 @@
         </div>
       </div>
 
-      <!-- EVALUATION STATUS -->
-      <div class="eval-status-card">
-        <div class="eval-status-header">
-          <div class="card-title">Evaluation Status <span class="card-sub">— Submitted, pending &amp; resolved</span></div>
-        </div>
+      <!-- EVALUATION STATUS + QUICK ACCESS -->
+      <div class="charts-grid">
+        <div class="card eval-status-card">
+          <div class="eval-status-header">
+            <div class="card-title">Evaluation Status <span class="card-sub">— Submitted, pending &amp; resolved</span></div>
+          </div>
 
-        <div class="eval-filters">
-          <div class="eval-filter-group">
-            <label class="eval-filter-label" for="eval-office-select">Office</label>
-            <select id="eval-office-select" class="eval-filter-select">
-              <option value="all">All Offices</option>
-            </select>
+          <div class="eval-filters">
+            <div class="eval-filter-group">
+              <label class="eval-filter-label" for="eval-office-select">Office</label>
+              <select id="eval-office-select" class="eval-filter-select">
+                <option value="all">All Offices</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="chart-legend" style="margin-top:14px;">
+            <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Comfort Room</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Surroundings</div>
+          </div>
+
+          <div class="status-chart-wrap" id="statusChartWrap">
+            <svg id="status-chart-svg" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="pie-tooltip" id="status-tooltip"></div>
           </div>
         </div>
 
-        <div class="chart-legend" style="margin-top:14px;">
-          <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Comfort Room</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Surroundings</div>
-        </div>
-
-        <div class="status-chart-wrap" id="statusChartWrap">
-          <svg id="status-chart-svg" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet"></svg>
-          <div class="pie-tooltip" id="status-tooltip"></div>
-        </div>
-      </div>
-
-      <!-- QUICK ACCESS -->
-      <div class="card">
-        <div class="card-title">Quick Access</div>
-        <div class="quick-access-grid">
-          <a href="admin2-analytics.html" class="quick-access-btn">
-            <div class="qa-icon">📈</div>
-            <div class="qa-label">Analytics</div>
-          </a>
-          <a href="admin2-office-mgmt.html" class="quick-access-btn">
-            <div class="qa-icon">📑</div>
-            <div class="qa-label">Office Management</div>
-          </a>
-          <a href="admin2-eval-mgmt.html" class="quick-access-btn">
-            <div class="qa-icon">📑</div>
-            <div class="qa-label">Evaluation Mgmt</div>
-          </a>
-          <a href="admin2-multimedia.html" class="quick-access-btn">
-            <div class="qa-icon">🎞️</div>
-            <div class="qa-label">Multimedia Feedback</div>
-          </a>
-          <a href="admin2-reports.html" class="quick-access-btn">
-            <div class="qa-icon">📁</div>
-            <div class="qa-label">Reports</div>
-          </a>
-          <a href="admin2-settings.html" class="quick-access-btn">
-            <div class="qa-icon">⚙️</div>
-            <div class="qa-label">Settings</div>
-          </a>
+        <div class="card">
+          <div class="card-title">Quick Access</div>
+          <div class="quick-access-grid">
+            <a href="admin2-analytics.html" class="quick-access-btn">
+              <div class="qa-icon">📈</div>
+              <div class="qa-label">Analytics</div>
+            </a>
+            <a href="admin2-office-mgmt.html" class="quick-access-btn">
+              <div class="qa-icon">📑</div>
+              <div class="qa-label">Office Management</div>
+            </a>
+            <a href="admin2-eval-mgmt.html" class="quick-access-btn">
+              <div class="qa-icon">📑</div>
+              <div class="qa-label">Evaluation Mgmt</div>
+            </a>
+            <a href="admin2-multimedia.html" class="quick-access-btn">
+              <div class="qa-icon">🎞️</div>
+              <div class="qa-label">Multimedia Feedback</div>
+            </a>
+            <a href="admin2-reports.html" class="quick-access-btn">
+              <div class="qa-icon">📁</div>
+              <div class="qa-label">Reports</div>
+            </a>
+            <a href="admin2-settings.html" class="quick-access-btn">
+              <div class="qa-icon">⚙️</div>
+              <div class="qa-label">Settings</div>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -1280,8 +1278,8 @@ function drawStatusChart(counts, grandTotal) {
   }
 
   const barSlot = chartW / STATUS_DEFS.length;
-  const groupWidth = Math.min(100, barSlot * 0.65);
-  const barGap = 6;
+  const groupWidth = Math.min(90, barSlot * 0.72);
+  const barGap = 8;
   const barWidth = (groupWidth - barGap) / 2;
 
   function attachTooltip(el, statusLabel, categoryLabel, count) {
