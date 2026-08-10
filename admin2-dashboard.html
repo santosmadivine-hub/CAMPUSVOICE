@@ -7,12 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-/* ─── Base Styles ─── */
-body {
-  background-color: #f8fafc;
-}
-
-/* ─── Tooltip styling ─── */
+/* ─── Tooltip styling (matches admin1) ─── */
 .pie-tooltip{
   position:fixed;
   pointer-events:none;
@@ -77,10 +72,10 @@ body {
   gap:6px;
 }
 
-.stat-card.blue{ border-top-color:#2563eb; }
+.stat-card.blue{ border-top-color:#0284c7; }
 .stat-card.cyan{ border-top-color:#0ea5e9; }
-.stat-card.purple{ border-top-color:#2563eb; }
-.stat-card.green{ border-top-color:#16a34a; }
+.stat-card.purple{ border-top-color:#0284c7; }
+.stat-card.green{ border-top-color:#0284c7; }
 
 .stat-icon{
   position:absolute;
@@ -98,16 +93,16 @@ body {
 
 .stat-label{
   font-family:'DM Sans',sans-serif;
-  font-size:11px;
-  font-weight:600;
+  font-size:13px;
+  font-weight:500;
   color:#64748b;
   text-transform:uppercase;
-  letter-spacing:.06em;
+  letter-spacing:.04em;
 }
 
 .stat-value{
   font-family:'Syne',sans-serif;
-  font-weight:800;
+  font-weight:700;
   font-size:30px;
   color:#0f172a;
   line-height:1.1;
@@ -116,15 +111,16 @@ body {
 .stat-sub{
   font-family:'DM Sans',sans-serif;
   font-size:12px;
-  color:#64748b;
+  color:#94a3b8;
 }
 
 /* ─── Chart cards grid ─── */
 .charts-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  align-items: stretch;
   gap: 24px;
-  width: 100%;
+  flex-wrap: wrap;
+  margin-bottom: 0;
 }
 
 .card {
@@ -136,6 +132,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex: 1 1 420px;
+  min-width: 0;
 }
 
 .card-title{
@@ -168,9 +166,9 @@ body {
   color:#3b82f6;
   font-family:'Syne',sans-serif;
   font-weight:700;
-  font-size:12px;
-  padding:6px 12px;
-  border-radius:20px;
+  font-size:13px;
+  padding:6px 14px;
+  border-radius:999px;
   border:1px solid rgba(59,130,246,0.35);
   white-space:nowrap;
 }
@@ -298,6 +296,7 @@ body {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
   padding: 20px;
+  flex: 1.7 1 500px;
 }
 .eval-status-header{
   display:flex;
@@ -318,7 +317,8 @@ body {
   display:block;
 }
 
-/* ─── Chart legend ─── */
+/* ─── Category legend (Comfort Room vs Surroundings) — reused above the
+     line chart and the evaluation status chart ─── */
 .chart-legend{
   display:flex;
   gap:16px;
@@ -343,17 +343,13 @@ body {
 
 /* ─── Quick Access Section ─── */
 .quick-access-card{
-  background: #ffffff;
-  border: 1px solid #bae6fd;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
-  padding: 20px;
+  flex: 1 1 300px;
 }
 
 .quick-access-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 16px;
   margin-top: 12px;
 }
 
@@ -362,23 +358,40 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 18px 14px;
-  background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+  gap: 12px;
+  padding: 20px 16px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
   border: 1.5px solid #bae6fd;
-  border-radius: 12px;
+  border-radius: 14px;
   text-decoration: none;
   color: #0f172a;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   font-family: 'Syne', sans-serif;
   position: relative;
+  overflow: hidden;
+}
+
+.quick-access-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.04) 100%);
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
 }
 
 .quick-access-btn:hover {
   border-color: #7dd3fc;
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12);
   transform: translateY(-2px);
+}
+
+.quick-access-btn:hover::before {
+  left: 0;
 }
 
 .quick-access-btn:active {
@@ -388,6 +401,8 @@ body {
 .qa-icon {
   font-size: 28px;
   line-height: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .qa-label {
@@ -396,30 +411,79 @@ body {
   font-size: 13px;
   color: #0f172a;
   text-align: center;
+  position: relative;
+  z-index: 1;
   line-height: 1.3;
+}
+
+/* ─── Stat Mini Cards (from Office Management) ─── */
+.stat-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stat-mini-card {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+  text-align: center;
+}
+
+.stat-mini-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.stat-mini-value {
+  font-size: 28px;
+  font-weight: 800;
+  font-family: 'Syne', sans-serif;
+  color: #0c4a6e;
 }
 
 /* ─── Responsive breakpoints ─── */
 
+/* Large tablets / small laptops */
 @media (max-width: 1200px) {
   .dashboard-container {
     max-width: 100%;
-    padding: 24px 28px 12px;
+  }
+  .stat-value {
+    font-size: 30px;
   }
 }
 
+/* Tablets */
 @media (max-width: 1024px) {
   .stat-grid{
     grid-template-columns:repeat(2, 1fr);
   }
-  .charts-grid {
-    grid-template-columns: 1fr;
+  .charts-grid > .card {
+    flex-basis: 300px;
+  }
+  .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
+/* Small tablets / large phones — stack charts, tighten spacing */
 @media (max-width: 900px) {
   .charts-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+  .charts-grid > .card {
+    flex-basis: auto;
+    width: 100%;
+  }
+  .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -435,6 +499,7 @@ body {
   }
   .dashboard-container {
     padding: 20px 16px 28px;
+    border-radius: 16px;
     gap: 18px;
   }
   .stat-grid{
@@ -452,8 +517,8 @@ body {
     gap: 12px;
   }
   .quick-access-btn {
-    padding: 14px 12px;
-    gap: 8px;
+    padding: 16px 12px;
+    gap: 10px;
   }
   .qa-icon {
     font-size: 24px;
@@ -463,6 +528,7 @@ body {
   }
 }
 
+/* Phones */
 @media (max-width: 600px) {
   .stat-card {
     padding: 16px 16px 18px;
@@ -488,6 +554,7 @@ body {
   }
 }
 
+/* Small phones */
 @media (max-width: 480px) {
   .dashboard-container {
     padding: 16px 12px 24px;
@@ -508,7 +575,7 @@ body {
     gap: 10px;
   }
   .quick-access-btn {
-    padding: 12px 10px;
+    padding: 14px 12px;
   }
   .qa-icon {
     font-size: 22px;
@@ -558,7 +625,7 @@ body {
           <div class="stat-value" data-stat="monthly">0</div>
           <div class="stat-sub">Evaluations this month</div>
         </div>
-        <div class="stat-card green">
+        <div class="stat-card blue">
           <div class="stat-icon">🏢</div>
           <div class="stat-label">Total Office</div>
           <div class="stat-value" data-stat="totalOffice">0</div>
@@ -570,7 +637,8 @@ body {
       <div class="charts-grid">
         <div class="card">
           <div class="card-header-row">
-            <div class="card-title">Weekly Reports Trend <span class="card-sub">— Evaluation trends</span></div>
+            <div class="card-title">Weekly Reports <span class="card-sub">— Evaluation trends</span></div>
+            <div class="badge-pill" id="office-count-badge">Total Offices: 0</div>
           </div>
           <div class="chart-legend">
             <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Comfort Room</div>
@@ -582,7 +650,8 @@ body {
           </div>
         </div>
         <div class="card">
-          <div class="card-title">Evaluator Demographics <span class="card-sub">— User categories breakdown</span></div>
+          <div class="card-title">User Category Distribution</div>
+          <div class="card-sub" style="margin-top:-2px;">Students are grouped by course</div>
           <div class="donut-wrap" id="donutWrap">
             <svg id="donut-svg" viewBox="0 0 200 200" width="240" height="240">
               <circle cx="100" cy="100" r="82" fill="none" stroke="#eef2f7" stroke-width="14"/>
@@ -598,7 +667,7 @@ body {
       <div class="charts-grid">
         <div class="card eval-status-card">
           <div class="eval-status-header">
-            <div class="card-title">Status by Area <span class="card-sub">— Submitted, pending & resolved</span></div>
+            <div class="card-title">Evaluation Status <span class="card-sub">— Submitted, pending &amp; resolved</span></div>
           </div>
 
           <div class="chart-legend" style="margin-top:14px;">
@@ -613,7 +682,7 @@ body {
         </div>
 
         <div class="card quick-access-card">
-          <div class="card-title">Quick Tools</div>
+          <div class="card-title">Quick Access</div>
           <div class="quick-access-grid">
             <a href="admin2-analytics.html" class="quick-access-btn">
               <div class="qa-icon">📈</div>
@@ -621,15 +690,15 @@ body {
             </a>
             <a href="admin2-office-mgmt.html" class="quick-access-btn">
               <div class="qa-icon">📑</div>
-              <div class="qa-label">Office Mgmt</div>
+              <div class="qa-label">Office Management</div>
             </a>
             <a href="admin2-eval-mgmt.html" class="quick-access-btn">
-              <div class="qa-icon">✓</div>
-              <div class="qa-label">Eval Mgmt</div>
+              <div class="qa-icon">📑</div>
+              <div class="qa-label">Evaluation Mgmt</div>
             </a>
             <a href="admin2-multimedia.html" class="quick-access-btn">
               <div class="qa-icon">🎞️</div>
-              <div class="qa-label">Multimedia</div>
+              <div class="qa-label">Multimedia Feedback</div>
             </a>
             <a href="admin2-reports.html" class="quick-access-btn">
               <div class="qa-icon">📁</div>
@@ -685,16 +754,35 @@ buildTopbar("Dashboard", "admin2");
 // ======================
 // FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
 // ======================
+// ComfortRoomEvalActivity / SurroundingsEvalActivity write each
+// evaluation to a nested per-office doc AND to a flat mirror at
+// evaluation_history/{id} (see admin2-eval-mgmt.html). This dashboard
+// reads from the flat mirror, same as Eval Mgmt, so counts/status here
+// always match what admins see and edit there.
 const EVAL_HISTORY_COLLECTION = "evaluation_history";
 
+// Each cleanliness category keeps its own office list, in a separately
+// named Firestore collection (mirrors CleanOfficeSelectActivity /
+// admin2-office-mgmt.html). Kept exactly as named in the app, including
+// the differing hyphen vs underscore convention.
 const OFFICE_COLLECTIONS = {
   "Comfort Room": "office-names-comfort-room",
   "Surroundings": "office_names_surroundings"
 };
 const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
-const DEFAULT_CATEGORY = "Comfort Room";
+const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved before cleanlinessCategory existed
 
+// ComfortRoomEvalActivity / SurroundingsEvalActivity both set
+// TOTAL_QUESTIONS = 5 and only ever write rating1...rating5 — confirmed
+// directly from the submission code (see admin2-eval-mgmt.html), not
+// rating1-15.
 const TOTAL_RATING_QUESTIONS = 5;
+
+// Evaluations with an average rating at or above this threshold (out of
+// 5, matching the Evaluation Management page) are treated as positive
+// feedback and auto-classified as "No Action Required" instead of
+// "Pending", so this dashboard's status breakdown matches Eval Mgmt.
+// Adjust this single constant to tune the cutoff.
 const LOW_RATING_THRESHOLD = 3;
 
 // ======================
@@ -703,17 +791,20 @@ const LOW_RATING_THRESHOLD = 3;
 let evaluations = [];
 let officeCount = 0;
 let officeNames = [];
-let comfortOffices = {};
-let surroundingsOffices = {};
-let offices = {};
+let comfortOffices = {};      // id -> {id, name}, from office-names-comfort-room
+let surroundingsOffices = {}; // id -> {id, name}, from office_names_surroundings
+let offices = {};             // combined view of both categories, keyed by doc id
 
+// Normalizes office names for consistent comparison
 function normalizeName(name) {
   return (name || "").toString().trim().toLowerCase();
 }
 
+// Average of rating1 through rating5 for a single evaluation record.
 function avgOf(ev) {
   let sum = 0;
   let count = 0;
+
   for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
     const val = ev["rating" + i];
     if (typeof val === "number" && !isNaN(val)) {
@@ -721,26 +812,43 @@ function avgOf(ev) {
       count++;
     }
   }
+
   return count > 0 ? sum / count : 0;
 }
 
+// Build statistics per office with normalized name matching
 function buildOfficeStats() {
   const statsByKey = {};
+
   Object.entries(offices).forEach(([key, office]) => {
     statsByKey[key] = { displayName: office.name, total: 0, sum: 0 };
   });
+
   evaluations.forEach(e => {
     const matchingOfficeKey = Object.entries(offices).find(([_, office]) => 
       normalizeName(office.name) === normalizeName(e.officeName)
     )?.[0];
+    
     if (matchingOfficeKey) {
       statsByKey[matchingOfficeKey].total += 1;
       statsByKey[matchingOfficeKey].sum += avgOf(e);
     }
   });
+
   return statsByKey;
 }
 
+// Normalizes whatever is stored under a record's status into "pending",
+// "no_action", or "resolved" (mirrors the Evaluation Management page).
+//
+// Records with no status field at all — which today is every record the
+// app writes, since it never sets a status field on submit — are
+// auto-classified from their average rating instead of defaulting to
+// "pending":
+//   - avgRating < LOW_RATING_THRESHOLD  -> "pending"    (needs attention)
+//   - avgRating >= LOW_RATING_THRESHOLD -> "no_action"   (positive feedback)
+// Once an admin explicitly sets a status via the Eval Mgmt Edit modal,
+// that saved value is always respected and skips the auto-classification.
 function parseEvalStatus(data, avgRating) {
   const stored = (data.status || "").toString().toLowerCase();
   if (stored === "resolved" || stored === "pending" || stored === "no_action") {
@@ -750,13 +858,22 @@ function parseEvalStatus(data, avgRating) {
 }
 
 // ======================
-// LOAD OFFICE LISTS
+// LOAD OFFICE LISTS -> one listener per category, then combined
 // ======================
+// Recomputes the combined `offices` map (used for the Total Office stat,
+// the office <select>, and buildOfficeStats) whenever either category's
+// office list changes.
 function rebuildOffices() {
   offices = { ...comfortOffices, ...surroundingsOffices };
+
   officeCount = Object.keys(offices).length;
   officeNames = Object.values(offices).map(o => o.name);
+
   document.querySelector('[data-stat="totalOffice"]').textContent = officeCount;
+
+  const badge = document.getElementById("office-count-badge");
+  if (badge) badge.textContent = `Total Offices: ${officeCount}`;
+
   renderDashboard();
   renderEvalStatus();
 }
@@ -780,7 +897,9 @@ onSnapshot(query(collection(db, OFFICE_COLLECTIONS["Surroundings"]), orderBy("na
 });
 
 // ======================
-// LOAD EVALUATIONS
+// LOAD EVALUATIONS -> flat evaluation_history mirror (same source Eval
+// Mgmt reads from, so this dashboard's counts/status always agree with
+// it — real-time across both categories and every office in one listener)
 // ======================
 const evalCollectionRef = collection(db, EVAL_HISTORY_COLLECTION);
 const evalQuery = query(evalCollectionRef, orderBy("timestamp", "desc"));
@@ -789,8 +908,10 @@ onSnapshot(evalQuery, (snapshot) => {
   evaluations = [];
   snapshot.forEach((doc) => {
     const data = doc.data();
+
     const rawCategory = data.cleanlinessCategory;
     const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+
     const record = {
       id: doc.id,
       officeName: data.officeName || "Unknown",
@@ -800,10 +921,17 @@ onSnapshot(evalQuery, (snapshot) => {
       userCategory: (data.userCategory || "").toString().trim() || "Unspecified",
       course: (data.course || "").toString().trim()
     };
+
+    // Pull rating1 ... rating5 (matches what ComfortRoomEvalActivity /
+    // SurroundingsEvalActivity actually write — TOTAL_QUESTIONS = 5).
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
       record["rating" + i] = Number(data["rating" + i]) || 0;
     }
+
+    // Status depends on the average rating, so it's computed after the
+    // rating fields are populated above.
     record.status = parseEvalStatus(data, avgOf(record));
+
     evaluations.push(record);
   });
 
@@ -812,7 +940,7 @@ onSnapshot(evalQuery, (snapshot) => {
 });
 
 // ======================
-// RENDER FUNCTIONS
+// RENDER
 // ======================
 
 function renderDashboard() {
@@ -824,8 +952,10 @@ function renderDashboard() {
 function renderStatCards() {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
+
   const startOfWeek = new Date(startOfDay);
   startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+
   const startOfMonth = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), 1);
 
   const daily = evaluations.filter(e => e.timestamp >= startOfDay.getTime()).length;
@@ -839,24 +969,25 @@ function renderStatCards() {
 }
 
 // ======================
-// WEEKLY REPORTS — LINE CHART
+// WEEKLY REPORTS — LINE CHART (last 7 days)
 // ======================
 function renderLineChart() {
   const svg = document.getElementById("line-chart-svg");
   const tooltip = document.getElementById("line-tooltip");
+  const wrap = document.getElementById("lineWrap");
   svg.innerHTML = "";
   tooltip.classList.remove("show");
 
-  const width = 600, height = 240;
+  const width = 600, height = 220;
   const padding = { top: 24, right: 20, bottom: 34, left: 28 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
+  // Build last 7 days (oldest -> newest), split by cleanlinessCategory
   const days = [];
   const fullDayNames = [];
   const comfortCounts = [];
   const surroundingsCounts = [];
-  
   for (let i = 6; i >= 0; i--) {
     const dayStart = new Date();
     dayStart.setHours(0, 0, 0, 0);
@@ -903,6 +1034,7 @@ function renderLineChart() {
     svg.appendChild(line);
   }
 
+  // Draws one category's trend line + its dots, in the given color.
   function drawSeries(points, color) {
     if (points.length > 1) {
       const linePath = points.map((p, i) => (i === 0 ? "M" : "L") + `${p.x},${p.y}`).join(" ");
@@ -930,6 +1062,9 @@ function renderLineChart() {
   drawSeries(comfortPoints, "#2563eb");
   drawSeries(surroundingsPoints, "#16a34a");
 
+  // Day labels (x axis) + one shared hit-area per day covering the full
+  // chart height, so hovering anywhere over a day's column shows both
+  // categories' counts for that day at once.
   comfortPoints.forEach((p, i) => {
     const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
     label.setAttribute("x", p.x);
@@ -989,18 +1124,25 @@ function renderLineChart() {
 }
 
 // ======================
-// USER CATEGORY DISTRIBUTION — DONUT
+// USER CATEGORY DISTRIBUTION — nested donut
+//   inner ring  -> userCategory (Student / Faculty-Staff / Guest / Visitor)
+//   outer ring  -> course breakdown, drawn only across the Student arc
+// Both rings are built live from the userCategory/course fields on each
+// evaluation_history record (written by ComfortRoomEvalActivity /
+// SurroundingsEvalActivity), so this always reflects real Firestore data.
 // ======================
 const USER_CATEGORY_ORDER = ["Student", "Faculty/Staff", "Guest", "Visitor"];
 const USER_CATEGORY_COLORS = {
-  "Student": "#2563eb",
-  "Faculty/Staff": "#06b6d4",
-  "Guest": "#16a34a",
-  "Visitor": "#ea580c"
+  "Student": "#8b5cf6",
+  "Faculty/Staff": "#3b82f6",
+  "Guest": "#22c55e",
+  "Visitor": "#f97316"
 };
-const OTHER_CATEGORY_COLOR = "#94a3b8;";
-const COURSE_COLOR_PALETTE = ["#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe", "#eff6ff"];
+const OTHER_CATEGORY_COLOR = "#94a3b8";
+const COURSE_COLOR_PALETTE = ["#a78bfa", "#c4b5fd", "#ddd6fe", "#e9d5ff", "#f3e8ff", "#ede9fe"];
 
+// Tallies evaluations by userCategory, and separately by course for
+// whichever records are tagged "Student".
 function computeUserCategoryBreakdown() {
   const categoryCounts = {};
   const courseCounts = {};
@@ -1017,6 +1159,8 @@ function computeUserCategoryBreakdown() {
   return { categoryCounts, courseCounts };
 }
 
+// Known categories first (in a fixed order, matching the app's user
+// category options), then any other/legacy values sorted by count.
 function buildCategorySegments(categoryCounts) {
   const known = USER_CATEGORY_ORDER.map(name => ({
     key: name, label: name, color: USER_CATEGORY_COLORS[name], count: categoryCounts[name] || 0
@@ -1028,6 +1172,8 @@ function buildCategorySegments(categoryCounts) {
   return [...known, ...extras];
 }
 
+// Courses sorted by count (most common first), colored from a lightening
+// purple palette so they read as sub-shades of the Student segment.
 function buildCourseSegments(courseCounts) {
   return Object.entries(courseCounts)
     .sort((a, b) => b[1] - a[1])
@@ -1087,7 +1233,7 @@ function renderUserCategoryDonut() {
     }, { passive: false });
   }
 
-  // Inner ring
+  // Inner ring — top-level user categories
   let offsetPct = 0;
   let studentStartPct = 0;
   let studentPct = 0;
@@ -1122,7 +1268,7 @@ function renderUserCategoryDonut() {
     offsetPct += pct;
   });
 
-  // Outer ring
+  // Outer ring — course breakdown, drawn only across the Student arc
   if (studentPct > 0 && courseSegments.length > 0) {
     let courseOffsetPct = studentStartPct;
     courseSegments.forEach(cs => {
@@ -1170,7 +1316,7 @@ function renderUserCategoryDonut() {
   totalNumber.setAttribute("y", String(cy + 8));
   totalNumber.setAttribute("text-anchor", "middle");
   totalNumber.setAttribute("fill", "#0f172a");
-  totalNumber.setAttribute("font-size", "28");
+  totalNumber.setAttribute("font-size", "30");
   totalNumber.setAttribute("font-family", "Syne, sans-serif");
   totalNumber.setAttribute("font-weight", "800");
   totalNumber.textContent = String(total);
@@ -1178,7 +1324,7 @@ function renderUserCategoryDonut() {
 
   const totalSub = document.createElementNS("http://www.w3.org/2000/svg", "text");
   totalSub.setAttribute("x", String(cx));
-  totalSub.setAttribute("y", String(cy + 22));
+  totalSub.setAttribute("y", String(cy + 24));
   totalSub.setAttribute("text-anchor", "middle");
   totalSub.setAttribute("fill", "#94a3b8");
   totalSub.setAttribute("font-size", "10");
@@ -1188,7 +1334,7 @@ function renderUserCategoryDonut() {
   totalSub.textContent = "RESPONDENTS";
   svg.appendChild(totalSub);
 
-  // Legend
+  // Legend table — category rows, with indented course sub-rows under Student
   let rows = "";
   categorySegments.forEach(seg => {
     if (seg.count <= 0) return;
@@ -1218,20 +1364,27 @@ function renderUserCategoryDonut() {
 
   legend.innerHTML = `
     <div class="category-table">
-      <div class="category-table-head"><span>Category</span><span>%</span></div>
+      <div class="category-table-head"><span>Category</span><span>Respondents</span></div>
       ${rows}
     </div>`;
 }
 
 // ======================
-// EVALUATION STATUS
+// EVALUATION STATUS — Submitted / Pending / Resolved across all offices
+// Rendered as a vertical (grouped column) bar chart:
+//   x-axis  -> the three statuses (No Action Required / Pending / Resolved)
+//   y-axis  -> percentage of the total (0–100%, gridlines every 10%)
+//   each status has two side-by-side columns: blue = Comfort Room, green = Surroundings
 // ======================
 const STATUS_DEFS = [
-  { key: "no_action", label: "No Action" },
+  { key: "no_action", label: "No Action Required" },
   { key: "pending", label: "Pending" },
   { key: "resolved", label: "Resolved" }
 ];
 
+// Draws the stacked column chart for the given per-status comfort/
+// surroundings counts, scaling each column's height to that status's
+// share of grandTotal (0–100%).
 function drawStatusChart(counts, grandTotal) {
   const svg = document.getElementById("status-chart-svg");
   const tooltip = document.getElementById("status-tooltip");
@@ -1240,14 +1393,14 @@ function drawStatusChart(counts, grandTotal) {
   svg.innerHTML = "";
   tooltip.classList.remove("show");
 
-  const width = 500, height = 280;
+  const width = 500, height = 300;
   const padding = { top: 20, right: 20, bottom: 50, left: 44 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
   const baseY = padding.top + chartH;
 
-  // Gridlines
-  for (let p = 0; p <= 100; p += 20) {
+  // Y-axis gridlines + % labels, 10% through 100%
+  for (let p = 0; p <= 100; p += 10) {
     const y = padding.top + chartH - (p / 100) * chartH;
 
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -1259,7 +1412,7 @@ function drawStatusChart(counts, grandTotal) {
     line.setAttribute("stroke-width", "1");
     svg.appendChild(line);
 
-    if (p > 0) {
+    if (p >= 10) {
       const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
       label.setAttribute("x", padding.left - 8);
       label.setAttribute("y", y + 4);
@@ -1273,7 +1426,7 @@ function drawStatusChart(counts, grandTotal) {
   }
 
   const barSlot = chartW / STATUS_DEFS.length;
-  const groupWidth = Math.min(80, barSlot * 0.68);
+  const groupWidth = Math.min(90, barSlot * 0.72);
   const barGap = 8;
   const barWidth = (groupWidth - barGap) / 2;
 
@@ -1284,7 +1437,7 @@ function drawStatusChart(counts, grandTotal) {
       tooltip.classList.add("show");
       tooltip.innerHTML = `
         <div class="tt-title">${statusLabel}</div>
-        <div>${dot} ${categoryLabel}: ${count}</div>
+        <div>${dot} ${categoryLabel}: ${count} evaluation${count === 1 ? "" : "s"}</div>
         <div class="tt-sub">${pct}% of total</div>
       `;
       moveTooltip(evt);
@@ -1302,10 +1455,13 @@ function drawStatusChart(counts, grandTotal) {
     }, { passive: false });
   }
 
+  // Draws one bar (either category) at the given center x, with its own
+  // independent height, color, and value label above it.
   function drawBar(cx, count, color, statusLabel, categoryLabel) {
     const pct = grandTotal > 0 ? (count / grandTotal) * 100 : 0;
     const barH = (pct / 100) * chartH;
 
+    // Invisible full-height hit area so hovering works even at 0%
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     hit.setAttribute("x", cx - barWidth / 2);
     hit.setAttribute("y", padding.top);
@@ -1327,19 +1483,19 @@ function drawStatusChart(counts, grandTotal) {
       rect.style.cursor = "pointer";
       attachTooltip(rect, statusLabel, categoryLabel, count);
       svg.appendChild(rect);
+    }
 
-      if (pct > 5) {
-        const pctLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        pctLabel.setAttribute("x", cx);
-        pctLabel.setAttribute("y", baseY - barH - 8);
-        pctLabel.setAttribute("text-anchor", "middle");
-        pctLabel.setAttribute("font-size", "10");
-        pctLabel.setAttribute("font-family", "Syne, sans-serif");
-        pctLabel.setAttribute("font-weight", "700");
-        pctLabel.setAttribute("fill", "#0f172a");
-        pctLabel.textContent = pct.toFixed(0) + "%";
-        svg.appendChild(pctLabel);
-      }
+    if (pct > 0) {
+      const pctLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      pctLabel.setAttribute("x", cx);
+      pctLabel.setAttribute("y", baseY - barH - 8);
+      pctLabel.setAttribute("text-anchor", "middle");
+      pctLabel.setAttribute("font-size", "11");
+      pctLabel.setAttribute("font-family", "Syne, sans-serif");
+      pctLabel.setAttribute("font-weight", "700");
+      pctLabel.setAttribute("fill", "#0f172a");
+      pctLabel.textContent = pct.toFixed(0) + "%";
+      svg.appendChild(pctLabel);
     }
   }
 
@@ -1353,6 +1509,7 @@ function drawStatusChart(counts, grandTotal) {
     drawBar(comfortCx, c.comfort, "#2563eb", st.label, "Comfort Room");
     drawBar(surrCx, c.surroundings, "#16a34a", st.label, "Surroundings");
 
+    // X-axis status label
     const xLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
     xLabel.setAttribute("x", cx);
     xLabel.setAttribute("y", height - 18);
@@ -1364,6 +1521,7 @@ function drawStatusChart(counts, grandTotal) {
     xLabel.textContent = st.label;
     svg.appendChild(xLabel);
 
+    // Raw count under the status label
     const countLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
     countLabel.setAttribute("x", cx);
     countLabel.setAttribute("y", height - 6);
@@ -1372,7 +1530,7 @@ function drawStatusChart(counts, grandTotal) {
     countLabel.setAttribute("font-family", "DM Sans, sans-serif");
     countLabel.setAttribute("fill", "#94a3b8");
     const total = c.comfort + c.surroundings;
-    countLabel.textContent = `${total}`;
+    countLabel.textContent = `${total} eval${total === 1 ? "" : "s"}`;
     svg.appendChild(countLabel);
   });
 
@@ -1384,12 +1542,15 @@ function drawStatusChart(counts, grandTotal) {
     empty.setAttribute("font-size", "13");
     empty.setAttribute("font-family", "DM Sans, sans-serif");
     empty.setAttribute("fill", "#94a3b8");
-    empty.textContent = "No evaluations yet";
+    empty.textContent = "No evaluations for this filter";
     svg.appendChild(empty);
   }
 }
 
 function renderEvalStatus() {
+  // Each status bucket tracks its Comfort Room / Surroundings split so
+  // the column itself visually shows the category breakdown, not just a
+  // single total. No office filtering — this always reflects all offices.
   const counts = {
     no_action: { comfort: 0, surroundings: 0 },
     pending: { comfort: 0, surroundings: 0 },
