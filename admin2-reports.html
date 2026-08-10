@@ -10,51 +10,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   @media print {
-    #sidebar-mount, #topbar-mount, .filter-row, .stat-grid, .saved-reports-section, .category-tabs { display: none !important; }
+    #sidebar-mount, #topbar-mount, .filter-row, .stat-grid, .saved-reports-section { display: none !important; }
     .report-section { break-inside: avoid; }
   }
 
-  /* ── Category tabs (Comfort Room / Surroundings) — same pattern as
-       Office Management / Evaluation Management ── */
-  .category-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
-
-  .category-tab {
-    border: 1px solid #bae6fd;
-    background: #ffffff;
-    color: #0369a1;
-    padding: 9px 16px;
-    border-radius: 999px;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 13px;
-    font-family: 'DM Sans', sans-serif;
-    transition: background .2s, color .2s, transform .2s, border-color .2s;
-    white-space: nowrap;
-  }
-
-  .category-tab:hover {
-    border-color: #0284c7;
-    transform: translateY(-1px);
-  }
-
-  .category-tab.active {
-    background: #0284c7;
-    border-color: #0284c7;
-    color: #ffffff;
-    box-shadow: 0 4px 14px rgba(2,132,199,.3);
-  }
-
-  .category-tab.active[data-category="Surroundings"] {
-    background: #16a34a;
-    border-color: #16a34a;
-    box-shadow: 0 4px 14px rgba(22,163,74,.3);
-  }
-
+  /* Category pill — used in the saved-reports table to label which
+     category (Comfort Room / Surroundings) each saved report belongs to */
   .category-pill {
     display: inline-flex;
     align-items: center;
@@ -830,22 +791,26 @@
       </div>
     </div>
 
-    <!-- Category tabs: Comfort Room and Surroundings each keep their own
-         office list and their own 5-question evaluation form (see
-         Office Management / Evaluation Management). The active tab
-         drives the stat cards above and which office list populates the
-         "Select Office" dropdown below. -->
-    <div class="category-tabs" id="category-tabs">
-      <button type="button" class="category-tab active" data-category="Comfort Room">🚻 Comfort Room</button>
-      <button type="button" class="category-tab" data-category="Surroundings">🌳 Surroundings</button>
-    </div>
-
+    <!-- Filter order matches the intended admin workflow: Start Date →
+         End Date → Category → Office → Generate Report. Comfort Room and
+         Surroundings each keep their own office list and their own
+         5-question evaluation form (see Office Management / Evaluation
+         Management); the Category selection here drives which office
+         list populates the "Select Office" dropdown, and the report is
+         only generated once a category, an office, and both dates are
+         set. -->
     <div class="filter-row">
       <input type="date" class="filter-date" id="start-date">
       <input type="date" class="filter-date" id="end-date">
 
-      <select class="filter-select" id="location-filter">
-        <option value="">Select Office...</option>
+      <select class="filter-select" id="category-filter">
+        <option value="">Select Category...</option>
+        <option value="Comfort Room">🚻 Comfort Room</option>
+        <option value="Surroundings">🌳 Surroundings</option>
+      </select>
+
+      <select class="filter-select" id="location-filter" disabled>
+        <option value="">Select Category First</option>
       </select>
 
       <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
@@ -941,7 +906,7 @@ const TOTAL_RATING_QUESTIONS = 5;
 let evaluations = [];
 let comfortOffices = {};      // name -> name, from office-names-comfort-room
 let surroundingsOffices = {}; // name -> name, from office_names_surroundings
-let activeCategory = "Comfort Room"; // "Comfort Room" | "Surroundings" — which tab is selected
+let selectedCategory = "";    // "" | "Comfort Room" | "Surroundings" — from the Category dropdown
 let selectedOffice = "";
 let startDate = "";
 let endDate = "";
@@ -1024,7 +989,7 @@ function categoryPillHtml(category) {
 
 // ======================
 // LOAD OFFICES (both category collections, always on — used to build the
-// office dropdown for whichever category tab is active)
+// office dropdown once a category is picked)
 // ======================
 onSnapshot(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), (snapshot) => {
   comfortOffices = {};
@@ -1033,7 +998,7 @@ onSnapshot(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), (snapshot) => {
     const name = data.name || data.officeName || docSnap.id;
     comfortOffices[name] = name;
   });
-  if (activeCategory === "Comfort Room") populateLocationFilter();
+  if (selectedCategory === "Comfort Room") populateLocationFilter();
 });
 
 onSnapshot(collection(db, OFFICE_COLLECTIONS["Surroundings"]), (snapshot) => {
@@ -1043,11 +1008,11 @@ onSnapshot(collection(db, OFFICE_COLLECTIONS["Surroundings"]), (snapshot) => {
     const name = data.name || data.officeName || docSnap.id;
     surroundingsOffices[name] = name;
   });
-  if (activeCategory === "Surroundings") populateLocationFilter();
+  if (selectedCategory === "Surroundings") populateLocationFilter();
 });
 
 function currentOffices() {
-  return activeCategory === "Comfort Room" ? comfortOffices : surroundingsOffices;
+  return selectedCategory === "Comfort Room" ? comfortOffices : surroundingsOffices;
 }
 
 // ======================
@@ -1116,7 +1081,17 @@ function evalAvgScore(e) {
 
 function populateLocationFilter() {
   const select = document.getElementById("location-filter");
+
+  if (!selectedCategory) {
+    select.innerHTML = '<option value="">Select Category First</option>';
+    select.value = "";
+    select.disabled = true;
+    selectedOffice = "";
+    return;
+  }
+
   const current = select.value;
+  select.disabled = false;
   const names = Object.values(currentOffices()).sort((a, b) => a.localeCompare(b));
   select.innerHTML = ['<option value="">Select Office...</option>']
     .concat(names.map(n => `<option value="${n}">${n}</option>`)).join("");
@@ -1125,33 +1100,27 @@ function populateLocationFilter() {
 }
 
 // ======================
-// CATEGORY TABS
+// CATEGORY DROPDOWN
 // ======================
-document.getElementById("category-tabs").addEventListener("click", (ev) => {
-  const btn = ev.target.closest(".category-tab");
-  if (!btn) return;
+document.getElementById("category-filter").addEventListener("change", (ev) => {
+  selectedCategory = ev.target.value;
 
-  activeCategory = btn.getAttribute("data-category");
-  document.querySelectorAll(".category-tab").forEach(t => t.classList.toggle("active", t === btn));
-
-  // Switching category invalidates the previously selected office
+  // Switching (or clearing) category invalidates the previously selected office
   selectedOffice = "";
   populateLocationFilter();
-  renderStats();
 });
 
 // ======================
-// STATS — scoped to the active category tab
+// STATS — combined across both categories (Comfort Room + Surroundings)
 // ======================
 function renderStats() {
-  const scoped = evaluations.filter(e => e.cleanlinessCategory === activeCategory);
-  const total = scoped.length;
+  const total = evaluations.length;
 
   document.getElementById("stat-total").textContent = total;
-  document.getElementById("stat-total-sub").textContent = activeCategory;
+  document.getElementById("stat-total-sub").textContent = "All Categories";
 
-  const positive = scoped.filter(e => evalAvgScore(e) >= 4).length;
-  const negative = scoped.filter(e => evalAvgScore(e) < 3).length;
+  const positive = evaluations.filter(e => evalAvgScore(e) >= 4).length;
+  const negative = evaluations.filter(e => evalAvgScore(e) < 3).length;
   document.getElementById("stat-positive").textContent = positive;
   document.getElementById("stat-negative").textContent = negative;
 }
@@ -1269,20 +1238,27 @@ function createOfficialDocument(report) {
 // GENERATE REPORT
 // ======================
 function generateReport() {
-  if (!selectedOffice) {
-    alert("Please select an office");
-    return;
-  }
-
+  // Validated in the same order as the filter bar: Start Date → End Date
+  // → Category → Office.
   if (!startDate || !endDate) {
     alert("Please select both start and end dates");
     return;
   }
 
-  // Scope to the active category tab AND the selected office — a name
+  if (!selectedCategory) {
+    alert("Please select a category (Comfort Room or Surroundings)");
+    return;
+  }
+
+  if (!selectedOffice) {
+    alert("Please select an office");
+    return;
+  }
+
+  // Scope to the selected category AND the selected office — a name
   // could in theory appear in both office lists, so the category match
   // matters, not just the office name.
-  const officeEvals = evaluations.filter(e => e.cleanlinessCategory === activeCategory && e.officeName === selectedOffice);
+  const officeEvals = evaluations.filter(e => e.cleanlinessCategory === selectedCategory && e.officeName === selectedOffice);
 
   // Normalize the picked range to LOCAL start-of-day / end-of-day so
   // evaluations dated on either boundary are always included, without
@@ -1316,10 +1292,10 @@ function generateReport() {
   }
 
   // Calculate averages for each dimension (rating1 -> rating5), using
-  // the question labels for whichever category is active.
+  // the question labels for the selected category.
   const dimensionAverages = [];
 
-  dimensionsForCategory(activeCategory).forEach(dim => {
+  dimensionsForCategory(selectedCategory).forEach(dim => {
     const values = filteredEvals.map(e => e[dim.field]).filter(v => v > 0);
     if (values.length > 0) {
       const avg = values.reduce((a, b) => a + b, 0) / values.length;
@@ -1339,7 +1315,7 @@ function generateReport() {
   // Snapshot ready to be saved
   currentReport = {
     office: selectedOffice,
-    category: activeCategory,
+    category: selectedCategory,
     startDate,
     endDate,
     respondents: filteredEvals.length,
@@ -1354,7 +1330,7 @@ function generateReport() {
   const officialDoc = createOfficialDocument(currentReport);
   document.getElementById("report-container").innerHTML = officialDoc;
 
-  document.getElementById("previewLabel").textContent = `📄 Report Preview — ${selectedOffice} (${activeCategory})  (${startDate} → ${endDate})`;
+  document.getElementById("previewLabel").textContent = `📄 Report Preview — ${selectedOffice} (${selectedCategory})  (${startDate} → ${endDate})`;
   document.getElementById("reportPreview").style.display = "block";
   document.getElementById("reportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -1492,10 +1468,11 @@ function viewSavedReport(id) {
 
   const category = CLEANLINESS_CATEGORIES.includes(r.category) ? r.category : DEFAULT_CATEGORY;
 
-  // Switch to the saved report's category tab first, so the office
-  // dropdown is rebuilt from the right collection before we set its value.
-  activeCategory = category;
-  document.querySelectorAll(".category-tab").forEach(t => t.classList.toggle("active", t.getAttribute("data-category") === category));
+  // Switch the Category dropdown to the saved report's category first, so
+  // the office dropdown is rebuilt from the right collection before we
+  // set its value.
+  selectedCategory = category;
+  document.getElementById("category-filter").value = category;
   populateLocationFilter();
 
   const officialDoc = createOfficialDocument(r);
