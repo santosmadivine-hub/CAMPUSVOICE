@@ -226,6 +226,7 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
   padding: 20px;
+  flex: 1.7 1 500px;
 }
 .eval-status-header{
   display:flex;
@@ -233,47 +234,6 @@
   justify-content:space-between;
   flex-wrap:wrap;
   gap:16px;
-}
-.eval-filters{
-  display:flex;
-  gap:16px;
-  flex-wrap:wrap;
-  margin-top:14px;
-}
-.eval-filter-group{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  min-width:180px;
-}
-.eval-filter-label{
-  font-family:'DM Sans',sans-serif;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:0.06em;
-  text-transform:uppercase;
-  color:#94a3b8;
-}
-.eval-filter-select{
-  appearance:none;
-  -webkit-appearance:none;
-  background:#fff;
-  border:1px solid #e2e8f0;
-  border-radius:10px;
-  padding:10px 36px 10px 14px;
-  font-family:'DM Sans',sans-serif;
-  font-size:14px;
-  font-weight:500;
-  color:#1e293b;
-  cursor:pointer;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-  background-repeat:no-repeat;
-  background-position:right 12px center;
-}
-.eval-filter-select:focus{
-  outline:none;
-  border-color:#2563eb;
-  box-shadow:0 0 0 3px rgba(37,99,235,0.12);
 }
 
 /* ─── Evaluation Status — vertical bar chart ─── */
@@ -283,7 +243,7 @@
 }
 #status-chart-svg{
   width:100%;
-  height:300px;
+  height:340px;
   display:block;
 }
 
@@ -312,6 +272,10 @@
 }
 
 /* ─── Quick Access Section ─── */
+.quick-access-card{
+  flex: 1 1 300px;
+}
+
 .quick-access-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -478,12 +442,6 @@
   .card-title {
     font-size: 15px;
   }
-  .eval-filters {
-    flex-direction: column;
-  }
-  .eval-filter-group {
-    min-width: 100%;
-  }
   .quick-access-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
@@ -640,15 +598,6 @@
             <div class="card-title">Evaluation Status <span class="card-sub">— Submitted, pending &amp; resolved</span></div>
           </div>
 
-          <div class="eval-filters">
-            <div class="eval-filter-group">
-              <label class="eval-filter-label" for="eval-office-select">Office</label>
-              <select id="eval-office-select" class="eval-filter-select">
-                <option value="all">All Offices</option>
-              </select>
-            </div>
-          </div>
-
           <div class="chart-legend" style="margin-top:14px;">
             <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Comfort Room</div>
             <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Surroundings</div>
@@ -660,7 +609,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <div class="card quick-access-card">
           <div class="card-title">Quick Access</div>
           <div class="quick-access-grid">
             <a href="admin2-analytics.html" class="quick-access-btn">
@@ -853,7 +802,6 @@ function rebuildOffices() {
   const badge = document.getElementById("office-count-badge");
   if (badge) badge.textContent = `Total Offices: ${officeCount}`;
 
-  populateOfficeSelect();
   renderDashboard();
   renderEvalStatus();
 }
@@ -914,7 +862,6 @@ onSnapshot(evalQuery, (snapshot) => {
   });
 
   renderDashboard();
-  populateOfficeSelect();
   renderEvalStatus();
 });
 
@@ -1205,29 +1152,12 @@ function renderDonut() {
 }
 
 // ======================
-// EVALUATION STATUS — Submitted / Pending / Resolved, filterable by office
+// EVALUATION STATUS — Submitted / Pending / Resolved across all offices
 // Rendered as a vertical (grouped column) bar chart:
 //   x-axis  -> the three statuses (No Action Required / Pending / Resolved)
-//   y-axis  -> percentage of the filtered total (0–100%, gridlines every 10%)
+//   y-axis  -> percentage of the total (0–100%, gridlines every 10%)
 //   each status has two side-by-side columns: blue = Comfort Room, green = Surroundings
 // ======================
-function populateOfficeSelect() {
-  const select = document.getElementById("eval-office-select");
-  if (!select) return;
-
-  const officeList = Object.values(offices).map(o => o.name);
-  const namesFromEvals = evaluations.map(e => e.officeName).filter(Boolean);
-  const names = Array.from(new Set([...officeList, ...namesFromEvals])).sort();
-
-  const prevValue = select.value || "all";
-
-  select.innerHTML =
-    `<option value="all">All Offices</option>` +
-    names.map(n => `<option value="${n}">${n}</option>`).join("");
-
-  select.value = names.includes(prevValue) || prevValue === "all" ? prevValue : "all";
-}
-
 const STATUS_DEFS = [
   { key: "no_action", label: "No Action Required" },
   { key: "pending", label: "Pending" },
@@ -1400,39 +1330,24 @@ function drawStatusChart(counts, grandTotal) {
 }
 
 function renderEvalStatus() {
-  const officeSelect = document.getElementById("eval-office-select");
-  if (!officeSelect) return;
-
-  const selectedOffice = officeSelect.value || "all";
-
-  const filtered = evaluations.filter(e => {
-    return selectedOffice === "all" || e.officeName === selectedOffice;
-  });
-
   // Each status bucket tracks its Comfort Room / Surroundings split so
   // the column itself visually shows the category breakdown, not just a
-  // single total.
+  // single total. No office filtering — this always reflects all offices.
   const counts = {
     no_action: { comfort: 0, surroundings: 0 },
     pending: { comfort: 0, surroundings: 0 },
     resolved: { comfort: 0, surroundings: 0 }
   };
 
-  filtered.forEach(e => {
+  evaluations.forEach(e => {
     const catKey = e.cleanlinessCategory === "Surroundings" ? "surroundings" : "comfort";
     if (e.status === "no_action") counts.no_action[catKey]++;
     else if (e.status === "pending") counts.pending[catKey]++;
     else if (e.status === "resolved") counts.resolved[catKey]++;
   });
 
-  drawStatusChart(counts, filtered.length);
+  drawStatusChart(counts, evaluations.length);
 }
-
-document.addEventListener("change", (e) => {
-  if (e.target && e.target.id === "eval-office-select") {
-    renderEvalStatus();
-  }
-});
 
 </script>
 </body>
