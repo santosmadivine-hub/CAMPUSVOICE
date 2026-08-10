@@ -7,6 +7,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
+/* ─── Base Styles ─── */
+body {
+  background-color: #f8fafc;
+}
+
 /* ─── Tooltip styling ─── */
 .pie-tooltip{
   position:fixed;
@@ -42,53 +47,49 @@
 /* ─── Main Content Container ─── */
 .dashboard-container {
   flex: 1;
-  padding: 32px 40px 20px;
-  max-width: 1600px;
+  padding: 25px 30px 12px;
+  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
 }
 
 /* ─── Stat cards ─── */
 .stat-grid{
   display:grid;
   grid-template-columns:repeat(4, 1fr);
-  gap:16px;
+  gap:20px;
 }
 
 .stat-card{
   position:relative;
   background:#ffffff;
-  border:1px solid #e2e8f0;
-  border-radius:10px;
-  padding:20px 20px 22px;
-  box-shadow:0 1px 3px rgba(0, 0, 0, 0.06);
+  border:1px solid #bae6fd;
+  border-top:4px solid var(--accent3, #0284c7);
+  border-radius:12px;
+  padding:18px 18px 20px;
+  box-shadow:0 2px 8px rgba(2, 132, 199, 0.08);
   display:flex;
   flex-direction:column;
-  gap:8px;
-  transition: all 0.2s ease;
+  gap:6px;
 }
 
-.stat-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.stat-card.blue{ border-top:3px solid #0284c7; }
-.stat-card.cyan{ border-top:3px solid #0ea5e9; }
-.stat-card.purple{ border-top:3px solid #8b5cf6; }
-.stat-card.green{ border-top:3px solid #16a34a; }
+.stat-card.blue{ border-top-color:#2563eb; }
+.stat-card.cyan{ border-top-color:#0ea5e9; }
+.stat-card.purple{ border-top-color:#2563eb; }
+.stat-card.green{ border-top-color:#16a34a; }
 
 .stat-icon{
   position:absolute;
   top:18px;
   right:18px;
-  width:32px;
-  height:32px;
-  border-radius:8px;
-  background:#f8fafc;
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  background:#f1f5f9;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -99,7 +100,7 @@
   font-family:'DM Sans',sans-serif;
   font-size:11px;
   font-weight:600;
-  color:#94a3b8;
+  color:#64748b;
   text-transform:uppercase;
   letter-spacing:.06em;
 }
@@ -107,47 +108,34 @@
 .stat-value{
   font-family:'Syne',sans-serif;
   font-weight:800;
-  font-size:32px;
+  font-size:30px;
   color:#0f172a;
-  line-height:1;
+  line-height:1.1;
 }
 
 .stat-sub{
   font-family:'DM Sans',sans-serif;
   font-size:12px;
   color:#64748b;
-  font-weight:400;
 }
 
 /* ─── Chart cards grid ─── */
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 28px;
-  width: 100%;
-}
-
-.chart-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 28px;
+  gap: 24px;
   width: 100%;
 }
 
 .card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #bae6fd;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  padding: 24px;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  transition: all 0.2s ease;
-}
-
-.card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  gap: 6px;
 }
 
 .card-title{
@@ -162,7 +150,6 @@
   font-weight:400;
   font-size:13px;
   color:#94a3b8;
-  margin-bottom:8px;
 }
 
 .card-header-row{
@@ -171,31 +158,30 @@
   justify-content:space-between;
   gap:12px;
   flex-wrap:wrap;
-  margin-bottom:8px;
 }
 
 .badge-pill{
   display:inline-flex;
   align-items:center;
   gap:6px;
-  background:rgba(37,99,235,0.08);
-  color:#0c4a6e;
-  font-family:'DM Sans',sans-serif;
-  font-weight:600;
+  background:rgba(37,99,235,0.12);
+  color:#3b82f6;
+  font-family:'Syne',sans-serif;
+  font-weight:700;
   font-size:12px;
   padding:6px 12px;
   border-radius:20px;
-  border:1px solid rgba(2,132,199,0.2);
+  border:1px solid rgba(59,130,246,0.35);
   white-space:nowrap;
 }
 
 /* ─── Line chart styling ─── */
 .line-chart-wrap{
-  margin-top:16px;
+  margin-top:12px;
 }
 #line-chart-svg{
   width:100%;
-  height:240px;
+  height:220px;
   display:block;
 }
 
@@ -204,14 +190,14 @@
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:32px;
+  gap:28px;
   flex-wrap:wrap;
-  padding:16px 0;
+  padding:12px 0;
   flex:1;
 }
 .donut-wrap svg{
   flex-shrink:1;
-  width:200px;
+  width:230px;
   max-width:100%;
   height:auto;
 }
@@ -235,14 +221,14 @@
   flex-shrink:0;
 }
 
-/* ─── Category table ─── */
+/* ─── User Category Distribution — legend table ─── */
 .category-table{
   display:flex;
   flex-direction:column;
   font-family:'DM Sans',sans-serif;
   font-size:13px;
   color:#1e293b;
-  min-width:220px;
+  min-width:200px;
 }
 .category-table-head{
   display:flex;
@@ -254,16 +240,16 @@
   letter-spacing:.05em;
   text-transform:uppercase;
   color:#94a3b8;
-  padding-bottom:10px;
+  padding-bottom:8px;
   border-bottom:1px solid #e2e8f0;
-  margin-bottom:8px;
+  margin-bottom:4px;
 }
 .category-row{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:16px;
-  padding:8px 0;
+  padding:5px 0;
   cursor:default;
 }
 .category-row .cat-name{
@@ -273,7 +259,7 @@
   font-weight:600;
 }
 .category-row.sub{
-  padding:6px 0 6px 20px;
+  padding:3px 0 3px 17px;
   font-size:12px;
   color:#64748b;
 }
@@ -283,8 +269,8 @@
 }
 .category-row.total{
   border-top:1px solid #e2e8f0;
-  margin-top:8px;
-  padding-top:10px;
+  margin-top:6px;
+  padding-top:8px;
   font-family:'Syne',sans-serif;
   font-weight:800;
   color:#0f172a;
@@ -305,46 +291,39 @@
   color:#334155;
 }
 
-/* ─── Status Chart ─── */
+/* ─── Evaluation Status card ─── */
 .eval-status-card{
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #bae6fd;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  padding: 24px;
-  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+  padding: 20px;
 }
-
-.eval-status-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
 .eval-status-header{
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
   flex-wrap:wrap;
   gap:16px;
-  margin-bottom:8px;
 }
 
+/* ─── Evaluation Status — vertical bar chart ─── */
 .status-chart-wrap{
   position:relative;
-  margin-top:24px;
+  margin-top:20px;
 }
 #status-chart-svg{
   width:100%;
-  height:280px;
+  height:340px;
   display:block;
 }
 
 /* ─── Chart legend ─── */
 .chart-legend{
   display:flex;
-  gap:20px;
+  gap:16px;
   flex-wrap:wrap;
-  margin-top:4px;
-  margin-bottom:8px;
+  margin-top:2px;
 }
 .chart-legend .legend-item{
   display:flex;
@@ -365,22 +344,17 @@
 /* ─── Quick Access Section ─── */
 .quick-access-card{
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #bae6fd;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  padding: 24px;
-  transition: all 0.2s ease;
-}
-
-.quick-access-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+  padding: 20px;
 }
 
 .quick-access-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .quick-access-btn {
@@ -390,21 +364,21 @@
   justify-content: center;
   gap: 10px;
   padding: 18px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+  border: 1.5px solid #bae6fd;
+  border-radius: 12px;
   text-decoration: none;
   color: #0f172a;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   font-family: 'Syne', sans-serif;
+  position: relative;
 }
 
 .quick-access-btn:hover {
-  border-color: #cbd5e1;
-  background: #f1f5f9;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+  border-color: #7dd3fc;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12);
+  transform: translateY(-2px);
 }
 
 .quick-access-btn:active {
@@ -412,14 +386,14 @@
 }
 
 .qa-icon {
-  font-size: 24px;
+  font-size: 28px;
   line-height: 1;
 }
 
 .qa-label {
   font-family: 'Syne', sans-serif;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 13px;
   color: #0f172a;
   text-align: center;
   line-height: 1.3;
@@ -427,13 +401,10 @@
 
 /* ─── Responsive breakpoints ─── */
 
-@media (max-width: 1400px) {
+@media (max-width: 1200px) {
   .dashboard-container {
-    padding: 28px 32px 16px;
-    gap: 28px;
-  }
-  .charts-grid, .chart-row {
-    gap: 24px;
+    max-width: 100%;
+    padding: 24px 28px 12px;
   }
 }
 
@@ -441,83 +412,121 @@
   .stat-grid{
     grid-template-columns:repeat(2, 1fr);
   }
-  .charts-grid, .chart-row {
+  .charts-grid {
     grid-template-columns: 1fr;
   }
-  #line-chart-svg { height: 200px; }
-  #status-chart-svg { height: 240px; }
+}
+
+@media (max-width: 900px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
-  .dashboard-container {
-    padding: 20px 16px 16px;
+  #line-chart-svg { height:180px; }
+  #status-chart-svg { height:260px; }
+  .donut-wrap {
+    flex-direction: column;
     gap: 20px;
   }
+  .donut-wrap svg {
+    width: 260px;
+  }
+  .dashboard-container {
+    padding: 20px 16px 28px;
+    gap: 18px;
+  }
   .stat-grid{
-    grid-template-columns:repeat(2, 1fr);
-    gap:12px;
-  }
-  .stat-card {
-    padding: 16px 16px 18px;
-  }
-  .stat-value {
-    font-size: 28px;
-  }
-  .stat-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
   }
   .card {
-    padding: 20px;
+    padding: 18px 18px 22px;
   }
   .card-title {
     font-size: 15px;
   }
   .quick-access-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 12px;
   }
   .quick-access-btn {
-    padding: 14px 10px;
+    padding: 14px 12px;
     gap: 8px;
   }
   .qa-icon {
-    font-size: 20px;
+    font-size: 24px;
   }
   .qa-label {
-    font-size: 11px;
+    font-size: 12px;
   }
-  #line-chart-svg { height: 180px; }
-  #status-chart-svg { height: 220px; }
+}
+
+@media (max-width: 600px) {
+  .stat-card {
+    padding: 16px 16px 18px;
+  }
+  .stat-value {
+    font-size: 26px;
+  }
+  .stat-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    top: 14px;
+    right: 14px;
+  }
+  .badge-pill {
+    font-size: 12px;
+    padding: 5px 12px;
+  }
+  #status-chart-svg { height:230px; }
+  .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
 }
 
 @media (max-width: 480px) {
   .dashboard-container {
-    padding: 16px 12px 12px;
-    gap: 16px;
+    padding: 16px 12px 24px;
   }
   .stat-grid{
     grid-template-columns:1fr;
-    gap:10px;
-  }
-  .stat-card {
-    padding: 14px 14px 16px;
   }
   .stat-value {
-    font-size: 24px;
+    font-size: 28px;
   }
-  .charts-grid, .chart-row {
-    grid-template-columns: 1fr;
-  }
-  #line-chart-svg { height: 160px; }
-  #status-chart-svg { height: 200px; }
-  .donut-wrap {
-    flex-direction: column;
-    gap: 20px;
-  }
+  #line-chart-svg { height:160px; }
+  #status-chart-svg { height:220px; }
   .donut-wrap svg {
-    width: 180px;
+    width: 220px;
+  }
+  .quick-access-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .quick-access-btn {
+    padding: 12px 10px;
+  }
+  .qa-icon {
+    font-size: 22px;
+  }
+  .qa-label {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  .stat-grid{
+    gap: 10px;
+  }
+  .card {
+    padding: 14px 14px 18px;
+  }
+  .quick-access-grid {
+    gap: 8px;
   }
 }
 </style>
@@ -557,29 +566,23 @@
         </div>
       </div>
 
-      <!-- CHARTS ROW 1 -->
-      <div class="chart-row">
+      <!-- CHARTS -->
+      <div class="charts-grid">
         <div class="card">
           <div class="card-header-row">
-            <div>
-              <div class="card-title">Weekly Reports Trend</div>
-              <div class="card-sub">Evaluation trends</div>
-            </div>
+            <div class="card-title">Weekly Reports Trend <span class="card-sub">— Evaluation trends</span></div>
           </div>
           <div class="chart-legend">
             <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Comfort Room</div>
             <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Surroundings</div>
           </div>
           <div class="line-chart-wrap" id="lineWrap">
-            <svg id="line-chart-svg" viewBox="0 0 600 240" preserveAspectRatio="none"></svg>
+            <svg id="line-chart-svg" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
             <div class="pie-tooltip" id="line-tooltip"></div>
           </div>
         </div>
         <div class="card">
-          <div>
-            <div class="card-title">Evaluator Demographics</div>
-            <div class="card-sub">Students are grouped by course</div>
-          </div>
+          <div class="card-title">Evaluator Demographics <span class="card-sub">— User categories breakdown</span></div>
           <div class="donut-wrap" id="donutWrap">
             <svg id="donut-svg" viewBox="0 0 200 200" width="240" height="240">
               <circle cx="100" cy="100" r="82" fill="none" stroke="#eef2f7" stroke-width="14"/>
@@ -591,28 +594,25 @@
         </div>
       </div>
 
-      <!-- CHARTS ROW 2 -->
-      <div class="chart-row">
+      <!-- EVALUATION STATUS + QUICK ACCESS -->
+      <div class="charts-grid">
         <div class="card eval-status-card">
           <div class="eval-status-header">
-            <div>
-              <div class="card-title">Status by Area</div>
-              <div class="card-sub">Submitted, pending & resolved</div>
-            </div>
+            <div class="card-title">Status by Area <span class="card-sub">— Submitted, pending & resolved</span></div>
           </div>
 
-          <div class="chart-legend" style="margin-top:8px;">
+          <div class="chart-legend" style="margin-top:14px;">
             <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Comfort Room</div>
             <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Surroundings</div>
           </div>
 
           <div class="status-chart-wrap" id="statusChartWrap">
-            <svg id="status-chart-svg" viewBox="0 0 500 280" preserveAspectRatio="xMidYMid meet"></svg>
+            <svg id="status-chart-svg" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet"></svg>
             <div class="pie-tooltip" id="status-tooltip"></div>
           </div>
         </div>
 
-        <div class="quick-access-card">
+        <div class="card quick-access-card">
           <div class="card-title">Quick Tools</div>
           <div class="quick-access-grid">
             <a href="admin2-analytics.html" class="quick-access-btn">
