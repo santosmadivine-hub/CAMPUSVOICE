@@ -63,6 +63,83 @@
     background: #cbd5e1;
   }
 
+  /* ── Category tabs (Comfort Room / Surroundings) — same pattern as
+       Office Management / Evaluation Management ── */
+  .category-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .category-tab {
+    border: 1px solid #bae6fd;
+    background: #ffffff;
+    color: #0369a1;
+    padding: 9px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    transition: background .2s, color .2s, transform .2s, border-color .2s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .category-tab:hover {
+    border-color: #0284c7;
+    transform: translateY(-1px);
+  }
+
+  .category-tab.active {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(2,132,199,.3);
+  }
+
+  .category-tab.active[data-category="Surroundings"] {
+    background: #16a34a;
+    border-color: #16a34a;
+    box-shadow: 0 4px 14px rgba(22,163,74,.3);
+  }
+
+  .category-tab .tab-count {
+    background: rgba(255,255,255,0.35);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 11px;
+  }
+
+  .category-tab:not(.active) .tab-count {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+
+  .category-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .category-pill.comfort-room {
+    background: #e0f2fe;
+    color: #0369a1;
+  }
+
+  .category-pill.surroundings {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
   /* ─── Summary stat cards — identical to Admin 1's stat-card system ─── */
   .stat-grid{
     display:grid;
@@ -242,6 +319,13 @@
   }
 
   .media-office {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .media-office-name {
     font-size: 13px;
     font-weight: 700;
     color: #0f172a;
@@ -253,7 +337,7 @@
   .media-date {
     font-size: 11px;
     color: #94a3b8;
-    margin-top: 2px;
+    margin-top: 4px;
   }
 
   .empty-media {
@@ -415,7 +499,7 @@
           <div class="stat-icon">🗂️</div>
           <div class="stat-label">Total Files</div>
           <div class="stat-value" id="stat-total-files">0</div>
-          <div class="stat-sub">All Evidence</div>
+          <div class="stat-sub" id="stat-total-files-sub">All Evidence</div>
         </div>
         <div class="stat-card blue">
           <div class="stat-icon">📷</div>
@@ -435,6 +519,17 @@
           <div class="stat-value" id="stat-total-offices">0</div>
           <div class="stat-sub">With Evidence</div>
         </div>
+      </div>
+
+      <!-- Category tabs: cleanliness evaluations are split into Comfort
+           Room and Surroundings (separate office lists + separate
+           Firestore subtree per the Android app). Switching tabs filters
+           the stats, the office dropdown, and the media grid to just
+           that category's evidence. -->
+      <div class="category-tabs" id="category-tabs">
+        <button class="category-tab active" data-category="all">🗂 All Categories <span class="tab-count" id="cat-count-all">0</span></button>
+        <button class="category-tab" data-category="Comfort Room">🚻 Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
+        <button class="category-tab" data-category="Surroundings">🌳 Surroundings <span class="tab-count" id="cat-count-surroundings">0</span></button>
       </div>
 
       <div class="toolbar-row">
@@ -509,13 +604,32 @@ document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin2', 'mul
 document.getElementById('topbar-mount').innerHTML = buildTopbar('Multimedia Feedback', 'admin2');
 
 // ======================
+// FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
+// (matches Evaluation Management / Office Management exactly)
+// ======================
+// Read from the flat evaluation_history mirror instead of the raw nested
+// cleanliness_evaluations tree — same source Evaluation Management and
+// Office Management read from — so evidence shown here (and the counts
+// on the category tabs) always match those pages, including status
+// edits/deletes made there (deletes remove from this mirror too).
+const EVAL_HISTORY_COLLECTION = "evaluation_history";
+
+// Each cleanliness category (Comfort Room / Surroundings) is tagged on
+// every evaluation_history record via "cleanlinessCategory", written by
+// ComfortRoomEvalActivity / SurroundingsEvalActivity respectively.
+const CLEANLINESS_CATEGORIES = ["Comfort Room", "Surroundings"];
+const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved before cleanlinessCategory existed
+
+// ======================
 // STATE
 // ======================
-let mediaItems = []; // flattened: one entry per image/video across all evaluations
+let evaluations = [];       // raw evaluation_history records (with category)
+let mediaItems = [];        // flattened: one entry per image/video across all evaluations
 let searchTerm = "";
 let officeFilter = "";
 let typeFilter = "";
 let dateFilter = "";
+let categoryFilter = "all"; // "all" | "Comfort Room" | "Surroundings"
 
 // ======================
 // HELPERS
@@ -557,14 +671,21 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function categoryPillHtml(category) {
+  const cls = category === "Surroundings" ? "surroundings" : "comfort-room";
+  const icon = category === "Surroundings" ? "🌳" : "🚻";
+  return `<span class="category-pill ${cls}">${icon} ${escapeHtml(category)}</span>`;
+}
+
 // ======================
 // LOAD EVALUATIONS (real-time — new Android submissions with evidence
 // appear here automatically, no refresh needed)
 // ======================
-const evalCollectionRef = collection(db, "cleanliness_evaluations");
+const evalCollectionRef = collection(db, EVAL_HISTORY_COLLECTION);
 const evalQuery = query(evalCollectionRef, orderBy("timestamp", "desc"));
 
 onSnapshot(evalQuery, (snapshot) => {
+  evaluations = [];
   mediaItems = [];
 
   snapshot.forEach((doc) => {
@@ -574,6 +695,11 @@ onSnapshot(evalQuery, (snapshot) => {
     const comments = data.comments || "";
     const evidence = parseEvidence(data);
 
+    const rawCategory = data.cleanlinessCategory;
+    const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+
+    evaluations.push({ id: doc.id, officeName, timestamp, category });
+
     evidence.forEach((item, index) => {
       mediaItems.push({
         evalId: doc.id,
@@ -582,6 +708,7 @@ onSnapshot(evalQuery, (snapshot) => {
         officeName,
         timestamp,
         comments,
+        category,
         index
       });
     });
@@ -592,13 +719,31 @@ onSnapshot(evalQuery, (snapshot) => {
 });
 
 // ======================
-// FILTER DROPDOWN
+// CATEGORY TABS
 // ======================
+document.getElementById("category-tabs").addEventListener("click", (ev) => {
+  const btn = ev.target.closest(".category-tab");
+  if (!btn) return;
+  categoryFilter = btn.getAttribute("data-category");
+  document.querySelectorAll(".category-tab").forEach(t => t.classList.toggle("active", t === btn));
+  officeFilter = ""; // switching category invalidates the previously selected office
+  document.getElementById("office-filter").value = "";
+  populateOfficeFilter();
+  renderMediaGrid();
+});
+
+// ======================
+// FILTER DROPDOWN (scoped to the active category tab)
+// ======================
+function mediaForCategory(category) {
+  return mediaItems.filter(m => category === "all" ? true : m.category === category);
+}
+
 function populateOfficeFilter() {
   const select = document.getElementById("office-filter");
   const currentValue = select.value;
 
-  const offices = [...new Set(mediaItems.map(m => m.officeName))].sort();
+  const offices = [...new Set(mediaForCategory(categoryFilter).map(m => m.officeName))].sort();
   select.innerHTML = ['<option value="">All Offices</option>']
     .concat(offices.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`))
     .join("");
@@ -612,7 +757,7 @@ function populateOfficeFilter() {
 function getFilteredMedia() {
   const term = searchTerm.trim().toLowerCase();
 
-  return mediaItems.filter(m => {
+  return mediaForCategory(categoryFilter).filter(m => {
     if (officeFilter && m.officeName !== officeFilter) return false;
     if (typeFilter && m.type !== typeFilter) return false;
     if (term && !m.officeName.toLowerCase().includes(term)) return false;
@@ -630,12 +775,21 @@ function getFilteredMedia() {
 // RENDER GRID
 // ======================
 function renderMediaGrid() {
-  // Stats always reflect the full unfiltered dataset
-  const totalImages = mediaItems.filter(m => m.type === "image").length;
-  const totalVideos = mediaItems.filter(m => m.type === "video").length;
-  const distinctOffices = new Set(mediaItems.map(m => m.officeName));
+  // Category tab counts always reflect ALL evaluation records (not media
+  // items, and unfiltered by the other filters), so the tabs read as a
+  // stable overview — matches Evaluation Management.
+  document.getElementById("cat-count-all").textContent = evaluations.length;
+  document.getElementById("cat-count-comfort").textContent = evaluations.filter(e => e.category === "Comfort Room").length;
+  document.getElementById("cat-count-surroundings").textContent = evaluations.filter(e => e.category === "Surroundings").length;
 
-  document.getElementById("stat-total-files").textContent = mediaItems.length;
+  // Stats reflect the active category tab
+  const categoryScoped = mediaForCategory(categoryFilter);
+  const totalImages = categoryScoped.filter(m => m.type === "image").length;
+  const totalVideos = categoryScoped.filter(m => m.type === "video").length;
+  const distinctOffices = new Set(categoryScoped.map(m => m.officeName));
+
+  document.getElementById("stat-total-files").textContent = categoryScoped.length;
+  document.getElementById("stat-total-files-sub").textContent = categoryFilter === "all" ? "All Evidence" : categoryFilter;
   document.getElementById("stat-total-images").textContent = totalImages;
   document.getElementById("stat-total-videos").textContent = totalVideos;
   document.getElementById("stat-total-offices").textContent = distinctOffices.size;
@@ -664,15 +818,18 @@ function renderMediaGrid() {
           <span class="media-tag">${m.type === "video" ? "Video" : "Image"}</span>
         </div>
         <div class="media-thumb-body">
-          <div class="media-office">${escapeHtml(m.officeName)}</div>
+          <div class="media-office">
+            <span class="media-office-name">${escapeHtml(m.officeName)}</span>
+            ${categoryPillHtml(m.category)}
+          </div>
           <div class="media-date">${date}</div>
         </div>
       </div>
     `;
   }).join("");
 
-  // Store the filtered list on the grid element's dataset closure via
-  // a module-level variable so click handlers can look items up by index.
+  // Store the filtered list on a module-level variable so click handlers
+  // can look items up by index.
   currentFilteredMedia = filtered;
 
   grid.querySelectorAll(".media-thumb").forEach(el => {
@@ -739,6 +896,7 @@ function openMediaModal(m) {
 
   mediaModalBody.innerHTML = `
     <div class="modal-row"><span>Office</span><span>${escapeHtml(m.officeName)}</span></div>
+    <div class="modal-row"><span>Category</span><span>${categoryPillHtml(m.category)}</span></div>
     <div class="modal-row"><span>Type</span><span>${m.type === "video" ? "Video" : "Image"}</span></div>
     <div class="modal-row"><span>Submitted</span><span>${date}</span></div>
     <div class="modal-row"><span>Comments</span><span>${escapeHtml(m.comments) || "-"}</span></div>
