@@ -596,6 +596,129 @@
     gap: 8px;
   }
 }
+
+
+/* =========================================================
+   REFERENCE-DASHBOARD VISUAL OVERRIDES
+   DATA / FIRESTORE / QUERIES ARE NOT CHANGED.
+   ========================================================= */
+.dashboard-container{
+  max-width: 1320px;
+  padding: 22px 22px 16px;
+  gap: 16px;
+  background: transparent;
+}
+.stat-grid{gap:14px;}
+.stat-card{
+  border:1px solid #e5e7eb;
+  border-top:3px solid #2563eb;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(15,23,42,.05);
+  padding:16px 16px 17px;
+}
+.stat-card.cyan{border-top-color:#16a34a;}
+.stat-card.purple{border-top-color:#2563eb;}
+.stat-card.green{border-top-color:#16a34a;}
+.stat-icon{width:34px;height:34px;top:14px;right:14px;border-radius:9px;font-size:15px;}
+.stat-label{font-size:11px;}
+.stat-value{font-size:27px;}
+.stat-sub{font-size:11px;}
+
+.charts-grid{
+  display:grid;
+  grid-template-columns:minmax(0,2.15fr) minmax(260px,1fr);
+  gap:16px;
+  align-items:stretch;
+}
+.card,
+.eval-status-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(15,23,42,.05);
+  padding:16px;
+  min-width:0;
+}
+.card-title{
+  font-size:14px;
+  line-height:1.25;
+}
+.card-sub{font-size:10px;}
+.card-header-row{gap:8px;}
+.badge-pill{font-size:10px;padding:4px 9px;border-radius:999px;}
+.chart-legend{gap:12px;margin-top:0;}
+.chart-legend .legend-item{font-size:10px;gap:5px;}
+.chart-legend .legend-dot{width:8px;height:8px;}
+
+.line-chart-wrap{margin-top:4px;position:relative;overflow:visible;}
+#line-chart-svg{height:235px;width:100%;display:block;overflow:visible;}
+
+/* Compact donut card like the reference image. */
+.donut-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+  padding:2px 0 0;
+  flex:1;
+}
+.donut-wrap svg{width:190px;height:190px;max-width:100%;}
+.donut-legend{width:100%;max-height:128px;overflow:auto;gap:0;}
+.category-table{min-width:0;width:100%;font-size:10px;}
+.category-table-head{font-size:8px;padding-bottom:5px;margin-bottom:2px;}
+.category-row{padding:3px 0;gap:8px;}
+.category-row .cat-name{gap:6px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.category-dot{width:7px;height:7px;}
+.category-count{font-size:10px;}
+.category-row.sub{font-size:9px;padding:2px 0 2px 13px;}
+.category-row.total{padding-top:5px;margin-top:3px;}
+
+.eval-status-card{padding:16px;}
+.eval-status-header{gap:8px;}
+.status-chart-wrap{margin-top:5px;}
+#status-chart-svg{height:245px;width:100%;display:block;}
+
+.quick-access-card{min-width:0;}
+.quick-access-grid{gap:10px;margin-top:10px;}
+.quick-access-btn{
+  padding:12px 8px;
+  gap:7px;
+  border:1px solid #dbe2ea;
+  border-radius:9px;
+  background:#f8fafc;
+}
+.quick-access-btn:first-child{background:linear-gradient(135deg,#0788d1,#1b9ad8);color:#fff;border-color:#0788d1;}
+.quick-access-btn:first-child .qa-label{color:#fff;}
+.qa-icon{font-size:22px;}
+.qa-label{font-size:9px;}
+
+/* Make the status legend resemble the reference while preserving the
+   existing two-category data series and tooltips. */
+.status-reference-legend{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:12px;
+  margin:0 0 2px;
+  font:600 9px 'DM Sans',sans-serif;
+  color:#64748b;
+}
+.status-reference-legend span{display:inline-flex;align-items:center;gap:4px;}
+.status-reference-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;}
+
+@media (max-width:900px){
+  .charts-grid{grid-template-columns:1fr;}
+  .donut-wrap svg{width:205px;height:205px;}
+}
+@media (max-width:600px){
+  .dashboard-container{padding:16px 12px 24px;}
+  .charts-grid{gap:12px;}
+  #line-chart-svg{height:200px;}
+  #status-chart-svg{height:225px;}
+  .donut-wrap svg{width:190px;height:190px;}
+}
+
 </style>
 </head>
 <body>
@@ -637,7 +760,7 @@
       <div class="charts-grid">
         <div class="card">
           <div class="card-header-row">
-            <div class="card-title">Weekly Reports <span class="card-sub">— Evaluation trends</span></div>
+            <div class="card-title">Weekly Reports Trend</div>
             <div class="badge-pill" id="office-count-badge">Total Offices: 0</div>
           </div>
           <div class="chart-legend">
@@ -650,8 +773,8 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-title">User Category Distribution</div>
-          <div class="card-sub" style="margin-top:-2px;">Students are grouped by course</div>
+          <div class="card-title">Evaluator Demographics</div>
+          <div class="card-sub" style="margin-top:-2px;">Respondents by category</div>
           <div class="donut-wrap" id="donutWrap">
             <svg id="donut-svg" viewBox="0 0 200 200" width="240" height="240">
               <circle cx="100" cy="100" r="82" fill="none" stroke="#eef2f7" stroke-width="14"/>
@@ -667,12 +790,13 @@
       <div class="charts-grid">
         <div class="card eval-status-card">
           <div class="eval-status-header">
-            <div class="card-title">Evaluation Status <span class="card-sub">— Submitted, pending &amp; resolved</span></div>
+            <div class="card-title">Status by Area</div>
           </div>
 
-          <div class="chart-legend" style="margin-top:14px;">
-            <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Comfort Room</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Surroundings</div>
+          <div class="status-reference-legend">
+            <span><i style="background:#7b7f89"></i>No Action</span>
+            <span><i style="background:#f59e0b"></i>Pending</span>
+            <span><i style="background:#087f3e"></i>Resolved</span>
           </div>
 
           <div class="status-chart-wrap" id="statusChartWrap">
@@ -682,7 +806,7 @@
         </div>
 
         <div class="card quick-access-card">
-          <div class="card-title">Quick Access</div>
+          <div class="card-title">Quick Tools</div>
           <div class="quick-access-grid">
             <a href="admin2-analytics.html" class="quick-access-btn">
               <div class="qa-icon">📈</div>
@@ -974,20 +1098,21 @@ function renderStatCards() {
 function renderLineChart() {
   const svg = document.getElementById("line-chart-svg");
   const tooltip = document.getElementById("line-tooltip");
-  const wrap = document.getElementById("lineWrap");
+  if (!svg || !tooltip) return;
+
   svg.innerHTML = "";
   tooltip.classList.remove("show");
 
-  const width = 600, height = 220;
-  const padding = { top: 24, right: 20, bottom: 34, left: 28 };
+  const width = 600, height = 235;
+  const padding = { top: 18, right: 16, bottom: 28, left: 34 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
-  // Build last 7 days (oldest -> newest), split by cleanlinessCategory
   const days = [];
   const fullDayNames = [];
   const comfortCounts = [];
   const surroundingsCounts = [];
+
   for (let i = 6; i >= 0; i--) {
     const dayStart = new Date();
     dayStart.setHours(0, 0, 0, 0);
@@ -995,88 +1120,130 @@ function renderLineChart() {
     const dayEnd = new Date(dayStart);
     dayEnd.setDate(dayStart.getDate() + 1);
 
-    const label = dayStart.toLocaleDateString(undefined, { weekday: "short" });
-    const fullLabel = dayStart.toLocaleDateString(undefined, { weekday: "long" });
     const dayEvals = evaluations.filter(
       e => e.timestamp >= dayStart.getTime() && e.timestamp < dayEnd.getTime()
     );
 
-    days.push(label);
-    fullDayNames.push(fullLabel);
+    days.push(dayStart.toLocaleDateString(undefined, { weekday: "short" }));
+    fullDayNames.push(dayStart.toLocaleDateString(undefined, { weekday: "long" }));
     comfortCounts.push(dayEvals.filter(e => e.cleanlinessCategory === "Comfort Room").length);
     surroundingsCounts.push(dayEvals.filter(e => e.cleanlinessCategory === "Surroundings").length);
   }
 
+  // Keep the same Firestore-derived values. The scale is visual only.
   const maxCount = Math.max(1, ...comfortCounts, ...surroundingsCounts);
-  const xStep = comfortCounts.length > 1 ? chartW / (comfortCounts.length - 1) : 0;
+  const yMax = Math.max(10, Math.ceil(maxCount / 10) * 10);
+  const xStep = chartW / Math.max(1, days.length - 1);
 
   function toPoints(counts) {
     return counts.map((c, i) => ({
       x: padding.left + i * xStep,
-      y: padding.top + chartH - (c / maxCount) * chartH,
+      y: padding.top + chartH - (c / yMax) * chartH,
       c
     }));
   }
+
   const comfortPoints = toPoints(comfortCounts);
   const surroundingsPoints = toPoints(surroundingsCounts);
 
-  // Gridlines
-  const gridLines = 4;
-  for (let g = 0; g <= gridLines; g++) {
-    const y = padding.top + (chartH / gridLines) * g;
+  // Soft horizontal gridlines.
+  const gridCount = 4;
+  for (let g = 0; g <= gridCount; g++) {
+    const y = padding.top + (chartH / gridCount) * g;
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", padding.left);
     line.setAttribute("x2", width - padding.right);
     line.setAttribute("y1", y);
     line.setAttribute("y2", y);
-    line.setAttribute("stroke", "rgba(148,163,184,0.15)");
+    line.setAttribute("stroke", "#eef1f5");
     line.setAttribute("stroke-width", "1");
     svg.appendChild(line);
   }
 
-  // Draws one category's trend line + its dots, in the given color.
+  // Small y-axis labels, matching the clean reference style.
+  for (let g = 0; g <= gridCount; g++) {
+    const value = Math.round(yMax - (yMax / gridCount) * g);
+    const y = padding.top + (chartH / gridCount) * g + 3;
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", padding.left - 7);
+    label.setAttribute("y", y);
+    label.setAttribute("text-anchor", "end");
+    label.setAttribute("font-size", "9");
+    label.setAttribute("font-family", "DM Sans, sans-serif");
+    label.setAttribute("fill", "#94a3b8");
+    label.textContent = value;
+    svg.appendChild(label);
+  }
+
+  function smoothPath(points) {
+    if (!points.length) return "";
+    if (points.length === 1) return `M ${points[0].x},${points[0].y}`;
+    let d = `M ${points[0].x},${points[0].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i - 1] || points[i];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[i + 2] || p2;
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+    }
+    return d;
+  }
+
+  // Blue area under the main Comfort Room line, as in the reference image.
+  if (comfortPoints.length > 1) {
+    const linePath = smoothPath(comfortPoints);
+    const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    area.setAttribute(
+      "d",
+      `${linePath} L ${comfortPoints[comfortPoints.length - 1].x},${padding.top + chartH} L ${comfortPoints[0].x},${padding.top + chartH} Z`
+    );
+    area.setAttribute("fill", "#2563eb");
+    area.setAttribute("fill-opacity", "0.10");
+    svg.appendChild(area);
+  }
+
   function drawSeries(points, color) {
     if (points.length > 1) {
-      const linePath = points.map((p, i) => (i === 0 ? "M" : "L") + `${p.x},${p.y}`).join(" ");
-      const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      line.setAttribute("d", linePath);
-      line.setAttribute("fill", "none");
-      line.setAttribute("stroke", color);
-      line.setAttribute("stroke-width", "2.5");
-      line.setAttribute("stroke-linecap", "round");
-      line.setAttribute("stroke-linejoin", "round");
-      svg.appendChild(line);
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", smoothPath(points));
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", color);
+      path.setAttribute("stroke-width", "2.5");
+      path.setAttribute("stroke-linecap", "round");
+      path.setAttribute("stroke-linejoin", "round");
+      svg.appendChild(path);
     }
     points.forEach(p => {
       const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       dot.setAttribute("cx", p.x);
       dot.setAttribute("cy", p.y);
-      dot.setAttribute("r", "4");
-      dot.setAttribute("fill", color);
-      dot.setAttribute("stroke", "#ffffff");
-      dot.setAttribute("stroke-width", "1.5");
+      dot.setAttribute("r", "3.5");
+      dot.setAttribute("fill", "#fff");
+      dot.setAttribute("stroke", color);
+      dot.setAttribute("stroke-width", "2");
       svg.appendChild(dot);
     });
   }
 
   drawSeries(comfortPoints, "#2563eb");
-  drawSeries(surroundingsPoints, "#16a34a");
+  drawSeries(surroundingsPoints, "#178b5b");
 
-  // Day labels (x axis) + one shared hit-area per day covering the full
-  // chart height, so hovering anywhere over a day's column shows both
-  // categories' counts for that day at once.
   comfortPoints.forEach((p, i) => {
     const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
     label.setAttribute("x", p.x);
-    label.setAttribute("y", height - 10);
+    label.setAttribute("y", height - 8);
     label.setAttribute("text-anchor", "middle");
-    label.setAttribute("font-size", "11");
+    label.setAttribute("font-size", "9");
     label.setAttribute("font-family", "DM Sans, sans-serif");
-    label.setAttribute("fill", "#94a3b8");
+    label.setAttribute("fill", "#64748b");
     label.textContent = days[i];
     svg.appendChild(label);
 
-    const hitWidth = xStep > 0 ? xStep : chartW;
+    const hitWidth = i === 0 || i === comfortPoints.length - 1 ? xStep / 2 : xStep;
     const hitArea = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     hitArea.setAttribute("x", p.x - hitWidth / 2);
     hitArea.setAttribute("y", padding.top);
@@ -1090,23 +1257,13 @@ function renderLineChart() {
       tooltip.innerHTML = `
         <div class="tt-title">${fullDayNames[i]}</div>
         <div>🔵 Comfort Room: ${comfortCounts[i]}</div>
-        <div>🟢 Surroundings: ${surroundingsCounts[i]}</div>
-      `;
-      moveTooltip(evt);
-    };
-    const moveTooltip = (evt) => {
+        <div>🟢 Surroundings: ${surroundingsCounts[i]}</div>`;
       tooltip.style.left = (evt.clientX + 10) + "px";
-      tooltip.style.top  = (evt.clientY - 45) + "px";
+      tooltip.style.top = (evt.clientY - 45) + "px";
     };
-
     hitArea.addEventListener("mouseenter", showTooltip);
-    hitArea.addEventListener("mousemove", moveTooltip);
+    hitArea.addEventListener("mousemove", showTooltip);
     hitArea.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
-    hitArea.addEventListener("touchstart", (evt) => {
-      evt.preventDefault();
-      showTooltip(evt.touches[0]);
-    }, { passive: false });
-
     svg.appendChild(hitArea);
   });
 
@@ -1115,7 +1272,7 @@ function renderLineChart() {
     empty.setAttribute("x", width / 2);
     empty.setAttribute("y", height / 2);
     empty.setAttribute("text-anchor", "middle");
-    empty.setAttribute("font-size", "13");
+    empty.setAttribute("font-size", "12");
     empty.setAttribute("font-family", "DM Sans, sans-serif");
     empty.setAttribute("fill", "#94a3b8");
     empty.textContent = "No evaluations yet";
@@ -1189,11 +1346,10 @@ function renderUserCategoryDonut() {
   if (!svg || !legend || !tooltip) return;
 
   const cx = 100, cy = 100;
-  const rOuter = 82, rInner = 58;
-  const wOuter = 14, wInner = 24;
+  const rOuter = 78, rInner = 57;
+  const wOuter = 13, wInner = 21;
   const circOuter = 2 * Math.PI * rOuter;
   const circInner = 2 * Math.PI * rInner;
-
   const total = evaluations.length;
 
   svg.querySelectorAll(".donut-segment").forEach(el => el.remove());
@@ -1216,24 +1372,15 @@ function renderUserCategoryDonut() {
       tooltip.innerHTML = `
         <div class="tt-title">${label}</div>
         <div>${count} respondent${count === 1 ? "" : "s"}</div>
-        <div class="tt-sub">${pct}% of total${sub ? " &middot; " + sub : ""}</div>
-      `;
-      moveTooltip(evt);
-    };
-    const moveTooltip = (evt) => {
+        <div class="tt-sub">${pct}% of total${sub ? " · " + sub : ""}</div>`;
       tooltip.style.left = (evt.clientX + 10) + "px";
-      tooltip.style.top  = (evt.clientY - 35) + "px";
+      tooltip.style.top = (evt.clientY - 35) + "px";
     };
     el.addEventListener("mouseenter", showTooltip);
-    el.addEventListener("mousemove", moveTooltip);
+    el.addEventListener("mousemove", showTooltip);
     el.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
-    el.addEventListener("touchstart", (evt) => {
-      evt.preventDefault();
-      showTooltip(evt.touches[0]);
-    }, { passive: false });
   }
 
-  // Inner ring — top-level user categories
   let offsetPct = 0;
   let studentStartPct = 0;
   let studentPct = 0;
@@ -1252,89 +1399,70 @@ function renderUserCategoryDonut() {
 
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     circle.setAttribute("class", "donut-segment");
-    circle.setAttribute("cx", String(cx));
-    circle.setAttribute("cy", String(cy));
-    circle.setAttribute("r", String(rInner));
+    circle.setAttribute("cx", cx);
+    circle.setAttribute("cy", cy);
+    circle.setAttribute("r", rInner);
     circle.setAttribute("fill", "none");
     circle.setAttribute("stroke", seg.color);
-    circle.setAttribute("stroke-width", String(wInner));
+    circle.setAttribute("stroke-width", wInner);
     circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
-    circle.setAttribute("stroke-dashoffset", String(dashOffset));
+    circle.setAttribute("stroke-dashoffset", dashOffset);
     circle.setAttribute("transform", `rotate(-90 ${cx} ${cy})`);
     circle.style.cursor = "pointer";
     attachTooltip(circle, seg.label, seg.count);
     svg.appendChild(circle);
-
     offsetPct += pct;
   });
 
-  // Outer ring — course breakdown, drawn only across the Student arc
   if (studentPct > 0 && courseSegments.length > 0) {
     let courseOffsetPct = studentStartPct;
     courseSegments.forEach(cs => {
       const coursePct = studentPct * (cs.count / (categoryCounts["Student"] || 1));
       if (coursePct <= 0) return;
-
       const dash = (coursePct / 100) * circOuter;
       const gap = circOuter - dash;
       const dashOffset = -((courseOffsetPct / 100) * circOuter);
 
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       circle.setAttribute("class", "donut-segment");
-      circle.setAttribute("cx", String(cx));
-      circle.setAttribute("cy", String(cy));
-      circle.setAttribute("r", String(rOuter));
+      circle.setAttribute("cx", cx);
+      circle.setAttribute("cy", cy);
+      circle.setAttribute("r", rOuter);
       circle.setAttribute("fill", "none");
       circle.setAttribute("stroke", cs.color);
-      circle.setAttribute("stroke-width", String(wOuter));
+      circle.setAttribute("stroke-width", wOuter);
       circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
-      circle.setAttribute("stroke-dashoffset", String(dashOffset));
+      circle.setAttribute("stroke-dashoffset", dashOffset);
       circle.setAttribute("transform", `rotate(-90 ${cx} ${cy})`);
       circle.style.cursor = "pointer";
       attachTooltip(circle, cs.label, cs.count, "Student");
       svg.appendChild(circle);
-
       courseOffsetPct += coursePct;
     });
   }
 
-  // Center label
   const totalLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  totalLabel.setAttribute("x", String(cx));
-  totalLabel.setAttribute("y", String(cy - 18));
+  totalLabel.setAttribute("x", cx);
+  totalLabel.setAttribute("y", cy - 5);
   totalLabel.setAttribute("text-anchor", "middle");
-  totalLabel.setAttribute("fill", "#94a3b8");
-  totalLabel.setAttribute("font-size", "11");
-  totalLabel.setAttribute("font-family", "DM Sans, sans-serif");
-  totalLabel.setAttribute("font-weight", "700");
-  totalLabel.setAttribute("letter-spacing", "0.06em");
-  totalLabel.textContent = "TOTAL";
+  totalLabel.setAttribute("fill", "#0f172a");
+  totalLabel.setAttribute("font-size", "12");
+  totalLabel.setAttribute("font-family", "Syne, sans-serif");
+  totalLabel.setAttribute("font-weight", "800");
+  totalLabel.textContent = "Total";
   svg.appendChild(totalLabel);
 
   const totalNumber = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  totalNumber.setAttribute("x", String(cx));
-  totalNumber.setAttribute("y", String(cy + 8));
+  totalNumber.setAttribute("x", cx);
+  totalNumber.setAttribute("y", cy + 15);
   totalNumber.setAttribute("text-anchor", "middle");
   totalNumber.setAttribute("fill", "#0f172a");
-  totalNumber.setAttribute("font-size", "30");
+  totalNumber.setAttribute("font-size", "16");
   totalNumber.setAttribute("font-family", "Syne, sans-serif");
   totalNumber.setAttribute("font-weight", "800");
-  totalNumber.textContent = String(total);
+  totalNumber.textContent = total.toLocaleString();
   svg.appendChild(totalNumber);
 
-  const totalSub = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  totalSub.setAttribute("x", String(cx));
-  totalSub.setAttribute("y", String(cy + 24));
-  totalSub.setAttribute("text-anchor", "middle");
-  totalSub.setAttribute("fill", "#94a3b8");
-  totalSub.setAttribute("font-size", "10");
-  totalSub.setAttribute("font-family", "DM Sans, sans-serif");
-  totalSub.setAttribute("font-weight", "600");
-  totalSub.setAttribute("letter-spacing", "0.04em");
-  totalSub.textContent = "RESPONDENTS";
-  svg.appendChild(totalSub);
-
-  // Legend table — category rows, with indented course sub-rows under Student
   let rows = "";
   categorySegments.forEach(seg => {
     if (seg.count <= 0) return;
@@ -1342,29 +1470,19 @@ function renderUserCategoryDonut() {
     rows += `
       <div class="category-row">
         <div class="cat-name"><div class="category-dot" style="background:${seg.color}"></div>${seg.label}</div>
-        <div class="category-count">${seg.count} (${pct}%)</div>
+        <div class="category-count">${pct}%</div>
       </div>`;
-
-    if (seg.key === "Student" && courseSegments.length > 0) {
-      courseSegments.forEach(cs => {
-        const cpct = ((cs.count / total) * 100).toFixed(0);
-        rows += `
-          <div class="category-row sub">
-            <div class="cat-name"><div class="category-dot" style="background:${cs.color}"></div>${cs.label}</div>
-            <div class="category-count">${cs.count} (${cpct}%)</div>
-          </div>`;
-      });
-    }
   });
+
   rows += `
     <div class="category-row total">
-      <div>TOTAL</div>
-      <div>${total} (100%)</div>
+      <div>Total</div>
+      <div>100%</div>
     </div>`;
 
   legend.innerHTML = `
     <div class="category-table">
-      <div class="category-table-head"><span>Category</span><span>Respondents</span></div>
+      <div class="category-table-head"><span>Category</span><span>%</span></div>
       ${rows}
     </div>`;
 }
@@ -1393,31 +1511,31 @@ function drawStatusChart(counts, grandTotal) {
   svg.innerHTML = "";
   tooltip.classList.remove("show");
 
-  const width = 500, height = 300;
-  const padding = { top: 20, right: 20, bottom: 50, left: 44 };
+  const width = 500, height = 245;
+  const padding = { top: 16, right: 14, bottom: 42, left: 38 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
   const baseY = padding.top + chartH;
 
-  // Y-axis gridlines + % labels, 10% through 100%
+  // Preserve the existing percentage calculation: every bar remains a
+  // share of the grand total loaded from Firestore.
   for (let p = 0; p <= 100; p += 10) {
     const y = padding.top + chartH - (p / 100) * chartH;
-
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", padding.left);
     line.setAttribute("x2", width - padding.right);
     line.setAttribute("y1", y);
     line.setAttribute("y2", y);
-    line.setAttribute("stroke", "rgba(148,163,184,0.15)");
+    line.setAttribute("stroke", "#eef1f5");
     line.setAttribute("stroke-width", "1");
     svg.appendChild(line);
 
-    if (p >= 10) {
+    if (p < 100) {
       const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      label.setAttribute("x", padding.left - 8);
-      label.setAttribute("y", y + 4);
+      label.setAttribute("x", padding.left - 7);
+      label.setAttribute("y", y + 3);
       label.setAttribute("text-anchor", "end");
-      label.setAttribute("font-size", "10");
+      label.setAttribute("font-size", "8");
       label.setAttribute("font-family", "DM Sans, sans-serif");
       label.setAttribute("fill", "#94a3b8");
       label.textContent = p + "%";
@@ -1425,43 +1543,31 @@ function drawStatusChart(counts, grandTotal) {
     }
   }
 
-  const barSlot = chartW / STATUS_DEFS.length;
-  const groupWidth = Math.min(90, barSlot * 0.72);
-  const barGap = 8;
-  const barWidth = (groupWidth - barGap) / 2;
+  const slot = chartW / STATUS_DEFS.length;
+  const groupWidth = Math.min(92, slot * .66);
+  const barGap = 7;
+  const barWidth = Math.max(14, (groupWidth - barGap) / 2);
 
   function attachTooltip(el, statusLabel, categoryLabel, count) {
     const pct = grandTotal > 0 ? ((count / grandTotal) * 100).toFixed(1) : "0.0";
-    const dot = categoryLabel === "Comfort Room" ? "🔵" : "🟢";
-    const showTooltip = (evt) => {
+    const showTooltip = evt => {
       tooltip.classList.add("show");
       tooltip.innerHTML = `
         <div class="tt-title">${statusLabel}</div>
-        <div>${dot} ${categoryLabel}: ${count} evaluation${count === 1 ? "" : "s"}</div>
-        <div class="tt-sub">${pct}% of total</div>
-      `;
-      moveTooltip(evt);
-    };
-    const moveTooltip = (evt) => {
+        <div>${categoryLabel}: ${count} evaluation${count === 1 ? "" : "s"}</div>
+        <div class="tt-sub">${pct}% of total</div>`;
       tooltip.style.left = (evt.clientX + 10) + "px";
-      tooltip.style.top  = (evt.clientY - 45) + "px";
+      tooltip.style.top = (evt.clientY - 45) + "px";
     };
     el.addEventListener("mouseenter", showTooltip);
-    el.addEventListener("mousemove", moveTooltip);
+    el.addEventListener("mousemove", showTooltip);
     el.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
-    el.addEventListener("touchstart", (evt) => {
-      evt.preventDefault();
-      showTooltip(evt.touches[0]);
-    }, { passive: false });
   }
 
-  // Draws one bar (either category) at the given center x, with its own
-  // independent height, color, and value label above it.
   function drawBar(cx, count, color, statusLabel, categoryLabel) {
     const pct = grandTotal > 0 ? (count / grandTotal) * 100 : 0;
     const barH = (pct / 100) * chartH;
 
-    // Invisible full-height hit area so hovering works even at 0%
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     hit.setAttribute("x", cx - barWidth / 2);
     hit.setAttribute("y", padding.top);
@@ -1478,60 +1584,42 @@ function drawStatusChart(counts, grandTotal) {
       rect.setAttribute("y", baseY - barH);
       rect.setAttribute("width", barWidth);
       rect.setAttribute("height", barH);
-      rect.setAttribute("rx", "3");
+      rect.setAttribute("rx", "2");
       rect.setAttribute("fill", color);
       rect.style.cursor = "pointer";
       attachTooltip(rect, statusLabel, categoryLabel, count);
       svg.appendChild(rect);
     }
-
-    if (pct > 0) {
-      const pctLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      pctLabel.setAttribute("x", cx);
-      pctLabel.setAttribute("y", baseY - barH - 8);
-      pctLabel.setAttribute("text-anchor", "middle");
-      pctLabel.setAttribute("font-size", "11");
-      pctLabel.setAttribute("font-family", "Syne, sans-serif");
-      pctLabel.setAttribute("font-weight", "700");
-      pctLabel.setAttribute("fill", "#0f172a");
-      pctLabel.textContent = pct.toFixed(0) + "%";
-      svg.appendChild(pctLabel);
-    }
   }
 
-  STATUS_DEFS.forEach((st, i) => {
-    const cx = padding.left + barSlot * i + barSlot / 2;
-    const c = counts[st.key];
+  // Status colors are visual only. The underlying counts remain the same.
+  const statusColors = {
+    no_action: "#7b7f89",
+    pending: "#f59e0b",
+    resolved: "#087f3e"
+  };
 
+  STATUS_DEFS.forEach((st, i) => {
+    const cx = padding.left + slot * i + slot / 2;
+    const c = counts[st.key];
     const comfortCx = cx - barWidth / 2 - barGap / 2;
     const surrCx = cx + barWidth / 2 + barGap / 2;
 
-    drawBar(comfortCx, c.comfort, "#2563eb", st.label, "Comfort Room");
-    drawBar(surrCx, c.surroundings, "#16a34a", st.label, "Surroundings");
+    // Keep the two Firestore-derived category values as separate bars.
+    // Both use the status color so the chart visually resembles the reference.
+    drawBar(comfortCx, c.comfort, statusColors[st.key], st.label, "Comfort Room");
+    drawBar(surrCx, c.surroundings, statusColors[st.key], st.label, "Surroundings");
 
-    // X-axis status label
     const xLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
     xLabel.setAttribute("x", cx);
     xLabel.setAttribute("y", height - 18);
     xLabel.setAttribute("text-anchor", "middle");
-    xLabel.setAttribute("font-size", "11");
-    xLabel.setAttribute("font-family", "Syne, sans-serif");
-    xLabel.setAttribute("font-weight", "700");
-    xLabel.setAttribute("fill", "#334155");
+    xLabel.setAttribute("font-size", "8.5");
+    xLabel.setAttribute("font-family", "DM Sans, sans-serif");
+    xLabel.setAttribute("font-weight", "600");
+    xLabel.setAttribute("fill", "#475569");
     xLabel.textContent = st.label;
     svg.appendChild(xLabel);
-
-    // Raw count under the status label
-    const countLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    countLabel.setAttribute("x", cx);
-    countLabel.setAttribute("y", height - 6);
-    countLabel.setAttribute("text-anchor", "middle");
-    countLabel.setAttribute("font-size", "10");
-    countLabel.setAttribute("font-family", "DM Sans, sans-serif");
-    countLabel.setAttribute("fill", "#94a3b8");
-    const total = c.comfort + c.surroundings;
-    countLabel.textContent = `${total} eval${total === 1 ? "" : "s"}`;
-    svg.appendChild(countLabel);
   });
 
   if (grandTotal === 0) {
@@ -1539,7 +1627,7 @@ function drawStatusChart(counts, grandTotal) {
     empty.setAttribute("x", width / 2);
     empty.setAttribute("y", height / 2);
     empty.setAttribute("text-anchor", "middle");
-    empty.setAttribute("font-size", "13");
+    empty.setAttribute("font-size", "12");
     empty.setAttribute("font-family", "DM Sans, sans-serif");
     empty.setAttribute("fill", "#94a3b8");
     empty.textContent = "No evaluations for this filter";
