@@ -195,9 +195,13 @@
 }
 .donut-wrap svg{
   flex-shrink:1;
-  width:230px;
+  width:320px;
   max-width:100%;
   height:auto;
+  overflow:visible;
+}
+.donut-card{
+  flex:1.15 1 480px;
 }
 .donut-legend{
   display:flex;
@@ -533,7 +537,7 @@
     gap: 20px;
   }
   .donut-wrap svg {
-    width: 260px;
+    width: 280px;
   }
   .dashboard-container {
     padding: 20px 16px 28px;
@@ -606,7 +610,7 @@
   #line-chart-svg { height:160px; }
   #status-chart-svg { height:220px; }
   .donut-wrap svg {
-    width: 220px;
+    width: 240px;
   }
   .quick-access-grid {
     grid-template-columns: 1fr;
@@ -687,11 +691,11 @@
             <div class="pie-tooltip" id="line-tooltip"></div>
           </div>
         </div>
-        <div class="card">
+        <div class="card donut-card">
           <div class="card-title">User Category Distribution</div>
           <div class="card-sub" style="margin-top:-2px;">Students are grouped by course</div>
           <div class="donut-wrap" id="donutWrap">
-            <svg id="donut-svg" viewBox="0 0 260 260" width="300" height="300"></svg>
+            <svg id="donut-svg" viewBox="0 0 400 400" width="340" height="340"></svg>
             <div class="pie-tooltip" id="donut-tooltip"></div>
             <div class="donut-legend" id="donut-legend"></div>
           </div>
@@ -1241,12 +1245,13 @@ function renderUserCategoryDonut() {
   const footnote = document.getElementById("donut-footnote");
   if (!svg || !legend || !tooltip) return;
 
-  const cx = 130, cy = 130;
-  const rOuter = 110;   // outer edge of the ring (label anchor radius)
-  const rInner = 62;    // inner edge of the ring / hole radius
+  const cx = 200, cy = 200;
+  const rOuter = 124;   // outer edge of the ring
+  const rInner = 68;    // inner edge of the ring / hole radius
   const rMid = (rOuter + rInner) / 2;
   const strokeW = rOuter - rInner;
   const circMid = 2 * Math.PI * rMid;
+  const SEGMENT_GAP_PX = 3; // small white gap drawn between adjacent wedges
 
   const total = evaluations.length;
 
@@ -1313,7 +1318,7 @@ function renderUserCategoryDonut() {
     const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
     t.setAttribute("x", x);
     t.setAttribute("y", y);
-    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("text-anchor", opts.anchor || "middle");
     t.setAttribute("font-family", opts.family || "DM Sans, sans-serif");
     t.setAttribute("font-size", opts.size || "11");
     t.setAttribute("font-weight", opts.weight || "600");
@@ -1323,11 +1328,19 @@ function renderUserCategoryDonut() {
     return t;
   }
 
-  // Draw each slice as a thick ring arc, plus its on-slice label stack
-  // (name / percent / count) placed at the arc's mid-angle & mid-radius.
+  // Rough estimate of rendered text width in px, used only to decide
+  // whether a label fits its wedge — doesn't need to be exact.
+  function estTextWidth(text, fontSize, bold) {
+    return text.length * fontSize * (bold ? 0.62 : 0.54);
+  }
+
+  // ---- PASS 1: draw every wedge first, and record each slice's angular
+  // span + text-color choice. Labels are drawn in a later, separate pass
+  // so a later wedge can never paint over an earlier wedge's text. ----
   let offsetPct = 0;
   let studentStartPct = null;
   let studentEndPct = null;
+  const placedSlices = [];
 
   slices.forEach(seg => {
     const pct = (seg.count / total) * 100;
@@ -1338,18 +1351,20 @@ function renderUserCategoryDonut() {
       studentEndPct = offsetPct + pct;
     }
 
-    const dash = (pct / 100) * circMid;
+    const fullDash = (pct / 100) * circMid;
+    const trim = fullDash > SEGMENT_GAP_PX * 3 ? SEGMENT_GAP_PX : 0;
+    const dash = fullDash - trim;
     const gap = circMid - dash;
-    const dashOffset = -((offsetPct / 100) * circMid);
+    const dashOffset = -(((offsetPct / 100) * circMid) + trim / 2);
 
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    circle.setAttribute("class", "donut-segment");
     circle.setAttribute("cx", String(cx));
     circle.setAttribute("cy", String(cy));
     circle.setAttribute("r", String(rMid));
     circle.setAttribute("fill", "none");
     circle.setAttribute("stroke", seg.color);
     circle.setAttribute("stroke-width", String(strokeW));
+    circle.setAttribute("stroke-linecap", "round");
     circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
     circle.setAttribute("stroke-dashoffset", String(dashOffset));
     circle.setAttribute("transform", `rotate(-90 ${cx} ${cy})`);
@@ -1357,39 +1372,69 @@ function renderUserCategoryDonut() {
     attachTooltip(circle, seg.label, seg.count, seg.isCourse ? "Student" : null);
     svg.appendChild(circle);
 
-    // On-slice label (only if the wedge is wide enough to hold text)
-    if (pct >= 4) {
-      const midPct = offsetPct + pct / 2;
-      const midAngle = (midPct / 100) * 360;
-      const labelR = seg.isCourse ? rMid + 4 : rMid;
-      const pos = polar(labelR, midAngle);
-      const light = seg.isCourse && seg.color !== "#7c3aed";
-      const textColor = light ? "#3b0764" : "#ffffff";
-
-      addText(pos.x, pos.y - 6, seg.label, { size: "11", weight: "700", fill: textColor });
-      addText(pos.x, pos.y + 7, pct.toFixed(0) + "%", { size: "12", weight: "800", family: "Syne, sans-serif", fill: textColor });
-      addText(pos.x, pos.y + 19, "(" + seg.count + ")", { size: "9.5", weight: "600", fill: textColor });
-    }
-
+    placedSlices.push({ seg, pct, startPct: offsetPct });
     offsetPct += pct;
   });
 
-  // "Student" band label, centered over the merged course arc, sitting
-  // just inside the ring (near the hole) so it doesn't collide with the
-  // individual course labels sitting mid-ring.
+  // ---- PASS 2: labels, drawn after every wedge so nothing covers them. ----
+  placedSlices.forEach(({ seg, pct, startPct }) => {
+    if (pct < 3) return; // too thin to label on-chart; still in tooltip + legend
+
+    const midPct = startPct + pct / 2;
+    const midAngle = (midPct / 100) * 360;
+    const labelR = rMid;
+    const pos = polar(labelR, midAngle);
+    const light = seg.isCourse && seg.color !== "#7c3aed";
+    const textColor = light ? "#3b0764" : "#ffffff";
+
+    const arcLenPx = (pct / 100) * circMid;
+    const pctStr = pct.toFixed(0) + "%";
+    const nameFits = arcLenPx >= estTextWidth(seg.label, 11, true) + 6;
+    const pctFits = arcLenPx >= estTextWidth(pctStr, 12, true) + 6;
+
+    if (nameFits) {
+      addText(pos.x, pos.y - 8, seg.label, { size: "11", weight: "700", fill: textColor });
+      addText(pos.x, pos.y + 6, pctStr, { size: "12.5", weight: "800", family: "Syne, sans-serif", fill: textColor });
+      addText(pos.x, pos.y + 19, "(" + seg.count + ")", { size: "9.5", weight: "600", fill: textColor });
+    } else if (pctFits) {
+      addText(pos.x, pos.y - 1, pctStr, { size: "12", weight: "800", family: "Syne, sans-serif", fill: textColor });
+      addText(pos.x, pos.y + 11, "(" + seg.count + ")", { size: "9", weight: "600", fill: textColor });
+    }
+  });
+
+  // "Student" group label — placed OUTSIDE the ring with a short leader
+  // line, at a different radius from every on-ring label, so it never
+  // collides with the individual course labels even when the group only
+  // spans a couple of narrow course wedges.
   if (studentStartPct !== null && studentCount > 0) {
     const midPct = (studentStartPct + studentEndPct) / 2;
     const midAngle = (midPct / 100) * 360;
-    const pos = polar(rInner + 14, midAngle);
-    addText(pos.x, pos.y - 7, "Student", { size: "12", weight: "700", fill: "#ffffff" });
-    addText(pos.x, pos.y + 8, studentPct.toFixed(0) + "%", { size: "14", weight: "800", family: "Syne, sans-serif", fill: "#ffffff" });
-    addText(pos.x, pos.y + 21, "(" + studentCount + ")", { size: "10", weight: "600", fill: "#ffffff" });
+    const ringPos = polar(rOuter, midAngle);
+    const leaderR = rOuter + 16;
+    const labelR = rOuter + 26;
+    const leaderPos = polar(leaderR, midAngle);
+    const labelPos = polar(labelR, midAngle);
+
+    const leader = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    leader.setAttribute("x1", ringPos.x);
+    leader.setAttribute("y1", ringPos.y);
+    leader.setAttribute("x2", leaderPos.x);
+    leader.setAttribute("y2", leaderPos.y);
+    leader.setAttribute("stroke", "#c4b5fd");
+    leader.setAttribute("stroke-width", "1.5");
+    svg.appendChild(leader);
+
+    // Anchor left/right depending on which side of the circle the leader
+    // lands on, so the label reads outward rather than back over the ring.
+    const anchor = labelPos.x < cx - 4 ? "end" : labelPos.x > cx + 4 ? "start" : "middle";
+    addText(labelPos.x, labelPos.y - 4, "Student", { size: "12", weight: "700", fill: "#6d28d9", anchor });
+    addText(labelPos.x, labelPos.y + 11, studentPct.toFixed(0) + "% (" + studentCount + ")", { size: "11", weight: "700", fill: "#6d28d9", anchor });
   }
 
   // Center label
-  addText(cx, cy - 12, "TOTAL", { size: "11", weight: "700", fill: "#94a3b8", family: "DM Sans, sans-serif" }).setAttribute("letter-spacing", "0.06em");
-  const totalNumber = addText(cx, cy + 14, String(total), { size: "30", weight: "800", fill: "#0f172a", family: "Syne, sans-serif" });
-  const totalSub = addText(cx, cy + 30, "RESPONDENTS", { size: "9.5", weight: "600", fill: "#94a3b8", family: "DM Sans, sans-serif" });
+  addText(cx, cy - 16, "TOTAL", { size: "12", weight: "700", fill: "#94a3b8", family: "DM Sans, sans-serif" }).setAttribute("letter-spacing", "0.06em");
+  addText(cx, cy + 16, String(total), { size: "34", weight: "800", fill: "#0f172a", family: "Syne, sans-serif" });
+  const totalSub = addText(cx, cy + 36, "RESPONDENTS", { size: "10", weight: "600", fill: "#94a3b8", family: "DM Sans, sans-serif" });
   totalSub.setAttribute("letter-spacing", "0.04em");
 
   // Legend table — non-student category rows, then Student total row with
