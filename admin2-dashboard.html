@@ -276,65 +276,19 @@
   box-shadow:0 0 0 3px rgba(37,99,235,0.12);
 }
 
-.status-rows{
-  margin-top:24px;
-  display:flex;
-  flex-direction:column;
-  gap:18px;
+/* ─── Evaluation Status — vertical bar chart ─── */
+.status-chart-wrap{
+  position:relative;
+  margin-top:20px;
 }
-.status-row{
-  display:grid;
-  grid-template-columns:130px 1fr 36px;
-  align-items:center;
-  gap:14px;
-}
-.status-label-wrap{
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-.status-dot{
-  width:9px;
-  height:9px;
-  border-radius:50%;
-  flex-shrink:0;
-}
-.status-label{
-  font-family:'Syne',sans-serif;
-  font-weight:700;
-  font-size:14px;
-}
-.status-bar-track{
-  background:#e9edf3;
-  border-radius:999px;
-  height:10px;
+#status-chart-svg{
   width:100%;
-  overflow:hidden;
-}
-.status-bar-fill-wrap{
-  display:flex;
-  height:100%;
-  width:0%;
-  border-radius:999px;
-  overflow:hidden;
-  transition:width 0.4s ease;
-}
-.status-bar-seg{
-  height:100%;
-  min-width:0;
-}
-.status-bar-seg.comfort{ background:#2563eb; }
-.status-bar-seg.surroundings{ background:#16a34a; }
-.status-count{
-  font-family:'Syne',sans-serif;
-  font-weight:800;
-  font-size:15px;
-  color:#0f172a;
-  text-align:right;
+  height:300px;
+  display:block;
 }
 
 /* ─── Category legend (Comfort Room vs Surroundings) — reused above the
-     line chart and the evaluation status bars ─── */
+     line chart and the evaluation status chart ─── */
 .chart-legend{
   display:flex;
   gap:16px;
@@ -504,6 +458,7 @@
 
 @media (max-width: 768px) {
   #line-chart-svg { height:180px; }
+  #status-chart-svg { height:260px; }
   .donut-wrap {
     flex-direction: column;
     gap: 20px;
@@ -567,10 +522,7 @@
     font-size: 12px;
     padding: 5px 12px;
   }
-  .status-row {
-    grid-template-columns: 110px 1fr 30px;
-    gap: 10px;
-  }
+  #status-chart-svg { height:230px; }
   .quick-access-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
@@ -589,6 +541,7 @@
     font-size: 28px;
   }
   #line-chart-svg { height:160px; }
+  #status-chart-svg { height:220px; }
   .donut-wrap svg {
     width: 220px;
   }
@@ -707,48 +660,8 @@
           <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Surroundings</div>
         </div>
 
-        <div class="status-rows" id="statusRowsWrap">
-          <div class="status-row" data-status="no_action">
-            <div class="status-label-wrap">
-              <div class="status-dot" style="background:#3b82f6"></div>
-              <div class="status-label" style="color:#3b82f6">No Action Required</div>
-            </div>
-            <div class="status-bar-track">
-              <div class="status-bar-fill-wrap" id="bar-no_action">
-                <div class="status-bar-seg comfort" id="bar-no_action-comfort"></div>
-                <div class="status-bar-seg surroundings" id="bar-no_action-surroundings"></div>
-              </div>
-            </div>
-            <div class="status-count" id="count-no_action">0</div>
-          </div>
-
-          <div class="status-row" data-status="pending">
-            <div class="status-label-wrap">
-              <div class="status-dot" style="background:#f59e0b"></div>
-              <div class="status-label" style="color:#f59e0b">Pending</div>
-            </div>
-            <div class="status-bar-track">
-              <div class="status-bar-fill-wrap" id="bar-pending">
-                <div class="status-bar-seg comfort" id="bar-pending-comfort"></div>
-                <div class="status-bar-seg surroundings" id="bar-pending-surroundings"></div>
-              </div>
-            </div>
-            <div class="status-count" id="count-pending">0</div>
-          </div>
-
-          <div class="status-row" data-status="resolved">
-            <div class="status-label-wrap">
-              <div class="status-dot" style="background:#10b981"></div>
-              <div class="status-label" style="color:#10b981">Resolved</div>
-            </div>
-            <div class="status-bar-track">
-              <div class="status-bar-fill-wrap" id="bar-resolved">
-                <div class="status-bar-seg comfort" id="bar-resolved-comfort"></div>
-                <div class="status-bar-seg surroundings" id="bar-resolved-surroundings"></div>
-              </div>
-            </div>
-            <div class="status-count" id="count-resolved">0</div>
-          </div>
+        <div class="status-chart-wrap" id="statusChartWrap">
+          <svg id="status-chart-svg" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet"></svg>
           <div class="pie-tooltip" id="status-tooltip"></div>
         </div>
       </div>
@@ -1217,7 +1130,7 @@ function renderDonut() {
   }
 
   // Comfort Room vs Surroundings — same category split shown in the line
-  // chart above and the status bars below, so all three charts agree.
+  // chart above and the status chart below, so all three charts agree.
   const buckets = { "Comfort Room": 0, "Surroundings": 0 };
   evaluations.forEach(e => {
     const key = e.cleanlinessCategory === "Surroundings" ? "Surroundings" : "Comfort Room";
@@ -1300,6 +1213,10 @@ function renderDonut() {
 
 // ======================
 // EVALUATION STATUS — Submitted / Pending / Resolved by month + office
+// Rendered as a vertical (column) bar chart:
+//   x-axis  -> the three statuses (No Action Required / Pending / Resolved)
+//   y-axis  -> percentage of the filtered total (0–100%, gridlines every 10%)
+//   each column is stacked: blue = Comfort Room share, green = Surroundings share
 // ======================
 function monthKey(ts) {
   const d = new Date(ts);
@@ -1350,29 +1267,183 @@ function populateOfficeSelect() {
   select.value = names.includes(prevValue) || prevValue === "all" ? prevValue : "all";
 }
 
-// Sets one status row's bar width (relative to the busiest status) and
-// splits that width between the Comfort Room and Surroundings segments,
-// proportional to each category's share within this status. Segment
-// counts are also stashed on the wrap element's dataset so the shared
-// tooltip handler (attached once, see addStatusBarTooltips) can read
-// the current breakdown on hover without re-binding listeners per render.
-function setBar(kind, catCounts, max) {
-  const total = catCounts.comfort + catCounts.surroundings;
-  const wrap = document.getElementById(`bar-${kind}`);
-  const countEl = document.getElementById(`count-${kind}`);
-  const comfortSeg = document.getElementById(`bar-${kind}-comfort`);
-  const surroundingsSeg = document.getElementById(`bar-${kind}-surroundings`);
+const STATUS_DEFS = [
+  { key: "no_action", label: "No Action Required" },
+  { key: "pending", label: "Pending" },
+  { key: "resolved", label: "Resolved" }
+];
 
-  const pct = max > 0 ? Math.max((total / max) * 100, total > 0 ? 4 : 0) : 0;
+// Draws the stacked column chart for the given per-status comfort/
+// surroundings counts, scaling each column's height to that status's
+// share of grandTotal (0–100%).
+function drawStatusChart(counts, grandTotal) {
+  const svg = document.getElementById("status-chart-svg");
+  const tooltip = document.getElementById("status-tooltip");
+  if (!svg || !tooltip) return;
 
-  if (wrap) {
-    wrap.style.width = `${pct}%`;
-    wrap.dataset.comfort = String(catCounts.comfort);
-    wrap.dataset.surroundings = String(catCounts.surroundings);
+  svg.innerHTML = "";
+  tooltip.classList.remove("show");
+
+  const width = 500, height = 300;
+  const padding = { top: 20, right: 20, bottom: 50, left: 44 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+  const baseY = padding.top + chartH;
+
+  // Y-axis gridlines + % labels, 10% through 100%
+  for (let p = 0; p <= 100; p += 10) {
+    const y = padding.top + chartH - (p / 100) * chartH;
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", padding.left);
+    line.setAttribute("x2", width - padding.right);
+    line.setAttribute("y1", y);
+    line.setAttribute("y2", y);
+    line.setAttribute("stroke", "rgba(148,163,184,0.15)");
+    line.setAttribute("stroke-width", "1");
+    svg.appendChild(line);
+
+    if (p >= 10) {
+      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      label.setAttribute("x", padding.left - 8);
+      label.setAttribute("y", y + 4);
+      label.setAttribute("text-anchor", "end");
+      label.setAttribute("font-size", "10");
+      label.setAttribute("font-family", "DM Sans, sans-serif");
+      label.setAttribute("fill", "#94a3b8");
+      label.textContent = p + "%";
+      svg.appendChild(label);
+    }
   }
-  if (comfortSeg) comfortSeg.style.flex = total > 0 ? `${catCounts.comfort} 0 0` : "0 0 0";
-  if (surroundingsSeg) surroundingsSeg.style.flex = total > 0 ? `${catCounts.surroundings} 0 0` : "0 0 0";
-  if (countEl) countEl.textContent = String(total);
+
+  const barSlot = chartW / STATUS_DEFS.length;
+  const barWidth = Math.min(70, barSlot * 0.5);
+
+  function attachTooltip(el, statusLabel, c) {
+    const total = c.comfort + c.surroundings;
+    const pct = grandTotal > 0 ? ((total / grandTotal) * 100).toFixed(1) : "0.0";
+    const showTooltip = (evt) => {
+      tooltip.classList.add("show");
+      tooltip.innerHTML = `
+        <div class="tt-title">${statusLabel}</div>
+        <div>${total} evaluation${total === 1 ? "" : "s"} (${pct}%)</div>
+        <div class="tt-sub">🔵 Comfort Room: ${c.comfort} &nbsp; 🟢 Surroundings: ${c.surroundings}</div>
+      `;
+      moveTooltip(evt);
+    };
+    const moveTooltip = (evt) => {
+      tooltip.style.left = (evt.clientX + 10) + "px";
+      tooltip.style.top  = (evt.clientY - 45) + "px";
+    };
+    el.addEventListener("mouseenter", showTooltip);
+    el.addEventListener("mousemove", moveTooltip);
+    el.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
+    el.addEventListener("touchstart", (evt) => {
+      evt.preventDefault();
+      showTooltip(evt.touches[0]);
+    }, { passive: false });
+  }
+
+  STATUS_DEFS.forEach((st, i) => {
+    const cx = padding.left + barSlot * i + barSlot / 2;
+    const c = counts[st.key];
+    const comfortPct = grandTotal > 0 ? (c.comfort / grandTotal) * 100 : 0;
+    const surrPct = grandTotal > 0 ? (c.surroundings / grandTotal) * 100 : 0;
+    const totalPct = comfortPct + surrPct;
+
+    const comfortH = (comfortPct / 100) * chartH;
+    const surrH = (surrPct / 100) * chartH;
+
+    // Full-column invisible hit area (drawn first so bar segments sit on top,
+    // still lets the whole column respond to hover even at 0% height)
+    const hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    hit.setAttribute("x", cx - barWidth / 2);
+    hit.setAttribute("y", padding.top);
+    hit.setAttribute("width", barWidth);
+    hit.setAttribute("height", chartH);
+    hit.setAttribute("fill", "transparent");
+    hit.style.cursor = "pointer";
+    attachTooltip(hit, st.label, c);
+    svg.appendChild(hit);
+
+    // Comfort Room segment (bottom, blue)
+    if (comfortH > 0) {
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", cx - barWidth / 2);
+      rect.setAttribute("y", baseY - comfortH);
+      rect.setAttribute("width", barWidth);
+      rect.setAttribute("height", comfortH);
+      rect.setAttribute("rx", "3");
+      rect.setAttribute("fill", "#2563eb");
+      rect.style.cursor = "pointer";
+      attachTooltip(rect, st.label, c);
+      svg.appendChild(rect);
+    }
+
+    // Surroundings segment (stacked on top, green)
+    if (surrH > 0) {
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", cx - barWidth / 2);
+      rect.setAttribute("y", baseY - comfortH - surrH);
+      rect.setAttribute("width", barWidth);
+      rect.setAttribute("height", surrH);
+      rect.setAttribute("rx", "3");
+      rect.setAttribute("fill", "#16a34a");
+      rect.style.cursor = "pointer";
+      attachTooltip(rect, st.label, c);
+      svg.appendChild(rect);
+    }
+
+    // Total % label above the column
+    if (totalPct > 0) {
+      const totalLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      totalLabel.setAttribute("x", cx);
+      totalLabel.setAttribute("y", baseY - comfortH - surrH - 8);
+      totalLabel.setAttribute("text-anchor", "middle");
+      totalLabel.setAttribute("font-size", "12");
+      totalLabel.setAttribute("font-family", "Syne, sans-serif");
+      totalLabel.setAttribute("font-weight", "700");
+      totalLabel.setAttribute("fill", "#0f172a");
+      totalLabel.textContent = totalPct.toFixed(0) + "%";
+      svg.appendChild(totalLabel);
+    }
+
+    // X-axis status label
+    const xLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    xLabel.setAttribute("x", cx);
+    xLabel.setAttribute("y", height - 18);
+    xLabel.setAttribute("text-anchor", "middle");
+    xLabel.setAttribute("font-size", "11");
+    xLabel.setAttribute("font-family", "Syne, sans-serif");
+    xLabel.setAttribute("font-weight", "700");
+    xLabel.setAttribute("fill", "#334155");
+    xLabel.textContent = st.label;
+    svg.appendChild(xLabel);
+
+    // Raw count under the status label
+    const countLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    countLabel.setAttribute("x", cx);
+    countLabel.setAttribute("y", height - 6);
+    countLabel.setAttribute("text-anchor", "middle");
+    countLabel.setAttribute("font-size", "10");
+    countLabel.setAttribute("font-family", "DM Sans, sans-serif");
+    countLabel.setAttribute("fill", "#94a3b8");
+    const total = c.comfort + c.surroundings;
+    countLabel.textContent = `${total} eval${total === 1 ? "" : "s"}`;
+    svg.appendChild(countLabel);
+  });
+
+  if (grandTotal === 0) {
+    const empty = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    empty.setAttribute("x", width / 2);
+    empty.setAttribute("y", height / 2);
+    empty.setAttribute("text-anchor", "middle");
+    empty.setAttribute("font-size", "13");
+    empty.setAttribute("font-family", "DM Sans, sans-serif");
+    empty.setAttribute("fill", "#94a3b8");
+    empty.textContent = "No evaluations for this filter";
+    svg.appendChild(empty);
+  }
 }
 
 function renderEvalStatus() {
@@ -1389,9 +1460,9 @@ function renderEvalStatus() {
     return monthMatch && officeMatch;
   });
 
-  // Each status bucket now tracks its Comfort Room / Surroundings split
-  // so the bar itself visually shows the category breakdown, not just
-  // a single total.
+  // Each status bucket tracks its Comfort Room / Surroundings split so
+  // the column itself visually shows the category breakdown, not just a
+  // single total.
   const counts = {
     no_action: { comfort: 0, surroundings: 0 },
     pending: { comfort: 0, surroundings: 0 },
@@ -1405,66 +1476,8 @@ function renderEvalStatus() {
     else if (e.status === "resolved") counts.resolved[catKey]++;
   });
 
-  const totals = {
-    no_action: counts.no_action.comfort + counts.no_action.surroundings,
-    pending: counts.pending.comfort + counts.pending.surroundings,
-    resolved: counts.resolved.comfort + counts.resolved.surroundings
-  };
-  const max = Math.max(1, totals.no_action, totals.pending, totals.resolved);
-
-  setBar("no_action", counts.no_action, max);
-  setBar("pending", counts.pending, max);
-  setBar("resolved", counts.resolved, max);
+  drawStatusChart(counts, filtered.length);
 }
-
-// Attaches hover/touch tooltip handlers once (the status-row markup is
-// static HTML, not rebuilt per render), reading the live comfort/
-// surroundings counts off each bar's dataset at hover time so the
-// tooltip always reflects the latest render without re-binding listeners.
-function initStatusBarTooltips() {
-  const tooltip = document.getElementById("status-tooltip");
-  const wrap = document.getElementById("statusRowsWrap");
-  if (!tooltip || !wrap) return;
-
-  const statusLabels = {
-    no_action: "No Action Required",
-    pending: "Pending",
-    resolved: "Resolved"
-  };
-
-  Object.keys(statusLabels).forEach(status => {
-    const row = wrap.querySelector(`[data-status="${status}"]`);
-    if (!row) return;
-    const barTrack = row.querySelector(".status-bar-track");
-    const fillWrap = document.getElementById(`bar-${status}`);
-    if (!barTrack || !fillWrap) return;
-
-    const showTooltip = (evt) => {
-      const comfort = Number(fillWrap.dataset.comfort || 0);
-      const surroundings = Number(fillWrap.dataset.surroundings || 0);
-      tooltip.classList.add("show");
-      tooltip.innerHTML = `
-        <div class="tt-title">${statusLabels[status]}</div>
-        <div>${comfort + surroundings} evaluation${(comfort + surroundings) === 1 ? "" : "s"}</div>
-        <div class="tt-sub">🔵 Comfort Room: ${comfort} &nbsp; 🟢 Surroundings: ${surroundings}</div>
-      `;
-      moveTooltip(evt);
-    };
-    const moveTooltip = (evt) => {
-      tooltip.style.left = (evt.clientX + 10) + "px";
-      tooltip.style.top  = (evt.clientY - 35) + "px";
-    };
-
-    barTrack.addEventListener("mouseenter", showTooltip);
-    barTrack.addEventListener("mousemove", moveTooltip);
-    barTrack.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
-    barTrack.addEventListener("touchstart", (evt) => {
-      evt.preventDefault();
-      showTooltip(evt.touches[0]);
-    }, { passive: false });
-  });
-}
-initStatusBarTooltips();
 
 document.addEventListener("change", (e) => {
   if (e.target && (e.target.id === "eval-month-select" || e.target.id === "eval-office-select")) {
