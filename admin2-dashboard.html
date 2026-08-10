@@ -639,14 +639,10 @@
       <!-- EVALUATION STATUS -->
       <div class="eval-status-card">
         <div class="eval-status-header">
-          <div class="card-title">Evaluation Status <span class="card-sub">— Submitted, pending &amp; resolved by month</span></div>
+          <div class="card-title">Evaluation Status <span class="card-sub">— Submitted, pending &amp; resolved</span></div>
         </div>
 
         <div class="eval-filters">
-          <div class="eval-filter-group">
-            <label class="eval-filter-label" for="eval-month-select">Month</label>
-            <select id="eval-month-select" class="eval-filter-select"></select>
-          </div>
           <div class="eval-filter-group">
             <label class="eval-filter-label" for="eval-office-select">Office</label>
             <select id="eval-office-select" class="eval-filter-select">
@@ -920,7 +916,6 @@ onSnapshot(evalQuery, (snapshot) => {
   });
 
   renderDashboard();
-  populateMonthSelect();
   populateOfficeSelect();
   renderEvalStatus();
 });
@@ -1212,44 +1207,12 @@ function renderDonut() {
 }
 
 // ======================
-// EVALUATION STATUS — Submitted / Pending / Resolved by month + office
-// Rendered as a vertical (column) bar chart:
+// EVALUATION STATUS — Submitted / Pending / Resolved, filterable by office
+// Rendered as a vertical (grouped column) bar chart:
 //   x-axis  -> the three statuses (No Action Required / Pending / Resolved)
 //   y-axis  -> percentage of the filtered total (0–100%, gridlines every 10%)
-//   each column is stacked: blue = Comfort Room share, green = Surroundings share
+//   each status has two side-by-side columns: blue = Comfort Room, green = Surroundings
 // ======================
-function monthKey(ts) {
-  const d = new Date(ts);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function monthLabel(key) {
-  const [y, m] = key.split("-").map(Number);
-  const d = new Date(y, m - 1, 1);
-  return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-}
-
-function populateMonthSelect() {
-  const select = document.getElementById("eval-month-select");
-  if (!select) return;
-
-  const currentKey = monthKey(Date.now());
-  const keysFromData = evaluations.map(e => monthKey(e.timestamp));
-  const keys = Array.from(new Set([currentKey, ...keysFromData])).sort().reverse();
-
-  const prevValue = select.value;
-
-  select.innerHTML = keys
-    .map(k => `<option value="${k}">${monthLabel(k)}</option>`)
-    .join("");
-
-  if (keys.includes(prevValue)) {
-    select.value = prevValue;
-  } else {
-    select.value = currentKey;
-  }
-}
-
 function populateOfficeSelect() {
   const select = document.getElementById("eval-office-select");
   if (!select) return;
@@ -1317,17 +1280,19 @@ function drawStatusChart(counts, grandTotal) {
   }
 
   const barSlot = chartW / STATUS_DEFS.length;
-  const barWidth = Math.min(70, barSlot * 0.5);
+  const groupWidth = Math.min(100, barSlot * 0.65);
+  const barGap = 6;
+  const barWidth = (groupWidth - barGap) / 2;
 
-  function attachTooltip(el, statusLabel, c) {
-    const total = c.comfort + c.surroundings;
-    const pct = grandTotal > 0 ? ((total / grandTotal) * 100).toFixed(1) : "0.0";
+  function attachTooltip(el, statusLabel, categoryLabel, count) {
+    const pct = grandTotal > 0 ? ((count / grandTotal) * 100).toFixed(1) : "0.0";
+    const dot = categoryLabel === "Comfort Room" ? "🔵" : "🟢";
     const showTooltip = (evt) => {
       tooltip.classList.add("show");
       tooltip.innerHTML = `
         <div class="tt-title">${statusLabel}</div>
-        <div>${total} evaluation${total === 1 ? "" : "s"} (${pct}%)</div>
-        <div class="tt-sub">🔵 Comfort Room: ${c.comfort} &nbsp; 🟢 Surroundings: ${c.surroundings}</div>
+        <div>${dot} ${categoryLabel}: ${count} evaluation${count === 1 ? "" : "s"}</div>
+        <div class="tt-sub">${pct}% of total</div>
       `;
       moveTooltip(evt);
     };
@@ -1344,18 +1309,13 @@ function drawStatusChart(counts, grandTotal) {
     }, { passive: false });
   }
 
-  STATUS_DEFS.forEach((st, i) => {
-    const cx = padding.left + barSlot * i + barSlot / 2;
-    const c = counts[st.key];
-    const comfortPct = grandTotal > 0 ? (c.comfort / grandTotal) * 100 : 0;
-    const surrPct = grandTotal > 0 ? (c.surroundings / grandTotal) * 100 : 0;
-    const totalPct = comfortPct + surrPct;
+  // Draws one bar (either category) at the given center x, with its own
+  // independent height, color, and value label above it.
+  function drawBar(cx, count, color, statusLabel, categoryLabel) {
+    const pct = grandTotal > 0 ? (count / grandTotal) * 100 : 0;
+    const barH = (pct / 100) * chartH;
 
-    const comfortH = (comfortPct / 100) * chartH;
-    const surrH = (surrPct / 100) * chartH;
-
-    // Full-column invisible hit area (drawn first so bar segments sit on top,
-    // still lets the whole column respond to hover even at 0% height)
+    // Invisible full-height hit area so hovering works even at 0%
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     hit.setAttribute("x", cx - barWidth / 2);
     hit.setAttribute("y", padding.top);
@@ -1363,50 +1323,45 @@ function drawStatusChart(counts, grandTotal) {
     hit.setAttribute("height", chartH);
     hit.setAttribute("fill", "transparent");
     hit.style.cursor = "pointer";
-    attachTooltip(hit, st.label, c);
+    attachTooltip(hit, statusLabel, categoryLabel, count);
     svg.appendChild(hit);
 
-    // Comfort Room segment (bottom, blue)
-    if (comfortH > 0) {
+    if (barH > 0) {
       const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
       rect.setAttribute("x", cx - barWidth / 2);
-      rect.setAttribute("y", baseY - comfortH);
+      rect.setAttribute("y", baseY - barH);
       rect.setAttribute("width", barWidth);
-      rect.setAttribute("height", comfortH);
+      rect.setAttribute("height", barH);
       rect.setAttribute("rx", "3");
-      rect.setAttribute("fill", "#2563eb");
+      rect.setAttribute("fill", color);
       rect.style.cursor = "pointer";
-      attachTooltip(rect, st.label, c);
+      attachTooltip(rect, statusLabel, categoryLabel, count);
       svg.appendChild(rect);
     }
 
-    // Surroundings segment (stacked on top, green)
-    if (surrH > 0) {
-      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      rect.setAttribute("x", cx - barWidth / 2);
-      rect.setAttribute("y", baseY - comfortH - surrH);
-      rect.setAttribute("width", barWidth);
-      rect.setAttribute("height", surrH);
-      rect.setAttribute("rx", "3");
-      rect.setAttribute("fill", "#16a34a");
-      rect.style.cursor = "pointer";
-      attachTooltip(rect, st.label, c);
-      svg.appendChild(rect);
+    if (pct > 0) {
+      const pctLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      pctLabel.setAttribute("x", cx);
+      pctLabel.setAttribute("y", baseY - barH - 8);
+      pctLabel.setAttribute("text-anchor", "middle");
+      pctLabel.setAttribute("font-size", "11");
+      pctLabel.setAttribute("font-family", "Syne, sans-serif");
+      pctLabel.setAttribute("font-weight", "700");
+      pctLabel.setAttribute("fill", "#0f172a");
+      pctLabel.textContent = pct.toFixed(0) + "%";
+      svg.appendChild(pctLabel);
     }
+  }
 
-    // Total % label above the column
-    if (totalPct > 0) {
-      const totalLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      totalLabel.setAttribute("x", cx);
-      totalLabel.setAttribute("y", baseY - comfortH - surrH - 8);
-      totalLabel.setAttribute("text-anchor", "middle");
-      totalLabel.setAttribute("font-size", "12");
-      totalLabel.setAttribute("font-family", "Syne, sans-serif");
-      totalLabel.setAttribute("font-weight", "700");
-      totalLabel.setAttribute("fill", "#0f172a");
-      totalLabel.textContent = totalPct.toFixed(0) + "%";
-      svg.appendChild(totalLabel);
-    }
+  STATUS_DEFS.forEach((st, i) => {
+    const cx = padding.left + barSlot * i + barSlot / 2;
+    const c = counts[st.key];
+
+    const comfortCx = cx - barWidth / 2 - barGap / 2;
+    const surrCx = cx + barWidth / 2 + barGap / 2;
+
+    drawBar(comfortCx, c.comfort, "#2563eb", st.label, "Comfort Room");
+    drawBar(surrCx, c.surroundings, "#16a34a", st.label, "Surroundings");
 
     // X-axis status label
     const xLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -1447,17 +1402,13 @@ function drawStatusChart(counts, grandTotal) {
 }
 
 function renderEvalStatus() {
-  const monthSelect = document.getElementById("eval-month-select");
   const officeSelect = document.getElementById("eval-office-select");
-  if (!monthSelect || !officeSelect) return;
+  if (!officeSelect) return;
 
-  const selectedMonth = monthSelect.value || monthKey(Date.now());
   const selectedOffice = officeSelect.value || "all";
 
   const filtered = evaluations.filter(e => {
-    const monthMatch = monthKey(e.timestamp) === selectedMonth;
-    const officeMatch = selectedOffice === "all" || e.officeName === selectedOffice;
-    return monthMatch && officeMatch;
+    return selectedOffice === "all" || e.officeName === selectedOffice;
   });
 
   // Each status bucket tracks its Comfort Room / Surroundings split so
@@ -1480,7 +1431,7 @@ function renderEvalStatus() {
 }
 
 document.addEventListener("change", (e) => {
-  if (e.target && (e.target.id === "eval-month-select" || e.target.id === "eval-office-select")) {
+  if (e.target && e.target.id === "eval-office-select") {
     renderEvalStatus();
   }
 });
