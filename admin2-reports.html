@@ -10,8 +10,70 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   @media print {
-    #sidebar-mount, #topbar-mount, .filter-row, .stat-grid, .saved-reports-section { display: none !important; }
+    #sidebar-mount, #topbar-mount, .filter-row, .stat-grid, .saved-reports-section, .category-tabs { display: none !important; }
     .report-section { break-inside: avoid; }
+  }
+
+  /* ── Category tabs (Comfort Room / Surroundings) — same pattern as
+       Office Management / Evaluation Management ── */
+  .category-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .category-tab {
+    border: 1px solid #bae6fd;
+    background: #ffffff;
+    color: #0369a1;
+    padding: 9px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    transition: background .2s, color .2s, transform .2s, border-color .2s;
+    white-space: nowrap;
+  }
+
+  .category-tab:hover {
+    border-color: #0284c7;
+    transform: translateY(-1px);
+  }
+
+  .category-tab.active {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(2,132,199,.3);
+  }
+
+  .category-tab.active[data-category="Surroundings"] {
+    background: #16a34a;
+    border-color: #16a34a;
+    box-shadow: 0 4px 14px rgba(22,163,74,.3);
+  }
+
+  .category-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .category-pill.comfort-room {
+    background: #e0f2fe;
+    color: #0369a1;
+  }
+
+  .category-pill.surroundings {
+    background: #dcfce7;
+    color: #15803d;
   }
 
   /* Filter Bar */
@@ -746,7 +808,7 @@
         <div class="stat-icon">📝</div>
         <div class="stat-label">Total Feedback</div>
         <div class="stat-value" id="stat-total">0</div>
-        <div class="stat-sub">All Evaluations</div>
+        <div class="stat-sub" id="stat-total-sub">All Evaluations</div>
       </div>
       <div class="stat-card blue">
         <div class="stat-icon">👍</div>
@@ -767,6 +829,17 @@
         <div class="stat-sub">Generated</div>
       </div>
     </div>
+
+    <!-- Category tabs: Comfort Room and Surroundings each keep their own
+         office list and their own 5-question evaluation form (see
+         Office Management / Evaluation Management). The active tab
+         drives the stat cards above and which office list populates the
+         "Select Office" dropdown below. -->
+    <div class="category-tabs" id="category-tabs">
+      <button type="button" class="category-tab active" data-category="Comfort Room">🚻 Comfort Room</button>
+      <button type="button" class="category-tab" data-category="Surroundings">🌳 Surroundings</button>
+    </div>
+
     <div class="filter-row">
       <input type="date" class="filter-date" id="start-date">
       <input type="date" class="filter-date" id="end-date">
@@ -833,54 +906,82 @@ document.getElementById("topbar-mount").innerHTML = buildTopbar("Reports", "admi
 
 // ======================
 // FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
-// (matches Evaluation Management page exactly)
+// (matches Evaluation Management / Office Management exactly)
 // ======================
-const OFFICES_COLLECTION = "office-names";
-const EVALUATIONS_COLLECTION = "cleanliness_evaluations";
+
+// Each cleanliness category keeps its own office list, in a separately
+// named Firestore collection (mirrors
+// CleanOfficeSelectActivity.officeCollectionName() and Office
+// Management's OFFICE_COLLECTIONS). Kept exactly as named in the app,
+// including the differing hyphen vs underscore convention.
+const OFFICE_COLLECTIONS = {
+  "Comfort Room": "office-names-comfort-room",
+  "Surroundings": "office_names_surroundings"
+};
+const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
+const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved before cleanlinessCategory existed
+
+// Read from the flat evaluation_history mirror — the same source
+// Evaluation Management and Office Management read from — instead of
+// the raw nested cleanliness_evaluations tree, so Reports always
+// matches what those pages show (including status edits/deletes made
+// there).
+const EVAL_HISTORY_COLLECTION = "evaluation_history";
 const SAVED_REPORTS_COLLECTION = "savedReports";
 
-// Confirmed from Firestore console (see Evaluation Management page):
-// cleanliness_evaluations documents store rating1 ... rating15, not
-// just rating1-4. Everything that loops over rating questions drives
-// off this constant so there's only one place to change it.
-const TOTAL_RATING_QUESTIONS = 15;
+// ComfortRoomEvalActivity / SurroundingsEvalActivity both set
+// TOTAL_QUESTIONS = 5 and only ever write rating1...rating5 (confirmed
+// directly from the submission code — see Evaluation Management). Every
+// place that loops over the rating questions drives off this constant.
+const TOTAL_RATING_QUESTIONS = 5;
 
 // ======================
 // STATE
 // ======================
 let evaluations = [];
-let offices = {};
+let comfortOffices = {};      // name -> name, from office-names-comfort-room
+let surroundingsOffices = {}; // name -> name, from office_names_surroundings
+let activeCategory = "Comfort Room"; // "Comfort Room" | "Surroundings" — which tab is selected
 let selectedOffice = "";
 let startDate = "";
 let endDate = "";
 let savedReports = [];
 let currentReport = null; // snapshot of the last generated report, ready to save
 
-const KNOWN_DIMENSION_LABELS = {
-  1: "The area surrounding the office is free from litter.",
-  2: "The office entrance is clean and well-maintianed.",
-  3: "The walkways leading to the office are clean.",
-  4: "Outdoor trash bins are available and regularly emptied.",
-  5: "The exterior walls and windows are clean.",
-  6: "The office floor is clean and free from dirt or dust.",
-  7: "Office furniture (chairs, tables, counters) is clean.",
-  8: "Windows and glass surfaces inside the office are clean.",
-  9: "The office is free from unpleasant odors.",
-  10: "The overall appearance of the office reflects proper cleanliness.",
-  11: "The comfort room floor is clean and dry.",
-  12: "The toilets and urinals are clean and sanitary.",
-  13: "The sinks and faucets are clean and functioning properly.",
-  14: "Trash bins inside the comfort room are clean and regularly emptied.",
-  15: "There are no unpleasant odors inside the comfort room."
+// Per-category question labels. The two 5-question Android forms
+// (ComfortRoomEvalActivity / SurroundingsEvalActivity) were split out of
+// the old single 15-question form; these labels are carried over from
+// the matching old dimensions (old Q11-15 -> Comfort Room, old Q1-5 ->
+// Surroundings). Confirm against the actual Android form copy and
+// adjust here if the wording has since changed.
+const DIMENSION_LABELS_BY_CATEGORY = {
+  "Comfort Room": {
+    1: "The comfort room floor is clean and dry.",
+    2: "The toilets and urinals are clean and sanitary.",
+    3: "The sinks and faucets are clean and functioning properly.",
+    4: "Trash bins inside the comfort room are clean and regularly emptied.",
+    5: "There are no unpleasant odors inside the comfort room."
+  },
+  "Surroundings": {
+    1: "The area surrounding the office is free from litter.",
+    2: "The office entrance is clean and well-maintained.",
+    3: "The walkways leading to the office are clean.",
+    4: "Outdoor trash bins are available and regularly emptied.",
+    5: "The exterior walls and windows are clean."
+  }
 };
 
-const DIMENSIONS = [];
-for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-  DIMENSIONS.push({
-    id: i,
-    field: "rating" + i,
-    label: KNOWN_DIMENSION_LABELS[i] || `Evaluation Question ${i}`
-  });
+function dimensionsForCategory(category) {
+  const labels = DIMENSION_LABELS_BY_CATEGORY[category] || {};
+  const dims = [];
+  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
+    dims.push({
+      id: i,
+      field: "rating" + i,
+      label: labels[i] || `Evaluation Question ${i}`
+    });
+  }
+  return dims;
 }
 
 const RATING_SCALE = [
@@ -915,33 +1016,57 @@ function parseDateOnly(value) {
   return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 }
 
-// ======================
-// LOAD OFFICES (Firestore: office-names)
-// ======================
-onSnapshot(collection(db, OFFICES_COLLECTION), (snapshot) => {
-  offices = {};
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    offices[docSnap.id] = data.name || data.officeName || docSnap.id;
-  });
-  populateLocationFilter();
-});
+function categoryPillHtml(category) {
+  const cls = category === "Surroundings" ? "surroundings" : "comfort-room";
+  const icon = category === "Surroundings" ? "🌳" : "🚻";
+  return `<span class="category-pill ${cls}">${icon} ${category}</span>`;
+}
 
 // ======================
-// LOAD EVALUATIONS (Firestore: cleanliness_evaluations)
+// LOAD OFFICES (both category collections, always on — used to build the
+// office dropdown for whichever category tab is active)
 // ======================
-// Schema (matches the actual Firestore documents, same as the
-// Evaluation Management page): comments, officeName,
-// rating1...rating15, status, timestamp (numeric).
-const evalQuery = query(collection(db, EVALUATIONS_COLLECTION), orderBy("timestamp", "desc"));
+onSnapshot(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), (snapshot) => {
+  comfortOffices = {};
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const name = data.name || data.officeName || docSnap.id;
+    comfortOffices[name] = name;
+  });
+  if (activeCategory === "Comfort Room") populateLocationFilter();
+});
+
+onSnapshot(collection(db, OFFICE_COLLECTIONS["Surroundings"]), (snapshot) => {
+  surroundingsOffices = {};
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const name = data.name || data.officeName || docSnap.id;
+    surroundingsOffices[name] = name;
+  });
+  if (activeCategory === "Surroundings") populateLocationFilter();
+});
+
+function currentOffices() {
+  return activeCategory === "Comfort Room" ? comfortOffices : surroundingsOffices;
+}
+
+// ======================
+// LOAD EVALUATIONS (Firestore: evaluation_history)
+// ======================
+const evalQuery = query(collection(db, EVAL_HISTORY_COLLECTION), orderBy("timestamp", "desc"));
 
 onSnapshot(evalQuery, (snapshot) => {
   evaluations = [];
   snapshot.forEach((docSnap) => {
     const ev = docSnap.data();
+
+    const rawCategory = ev.cleanlinessCategory;
+    const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+
     const record = {
       id: docSnap.id,
       officeName: ev.officeName || "Unknown",
+      cleanlinessCategory: category,
       comments: ev.comments || "",
       status: (ev.status || "").toString().toLowerCase() === "resolved" ? "resolved" : "pending",
       timestamp: Number(ev.timestamp) || 0
@@ -952,7 +1077,7 @@ onSnapshot(evalQuery, (snapshot) => {
     evaluations.push(record);
   });
   // Auto-render stats whenever evaluations load
-  renderStats([]);
+  renderStats();
 });
 
 // ======================
@@ -992,33 +1117,41 @@ function evalAvgScore(e) {
 function populateLocationFilter() {
   const select = document.getElementById("location-filter");
   const current = select.value;
-  const names = Object.values(offices).sort((a, b) => a.localeCompare(b));
+  const names = Object.values(currentOffices()).sort((a, b) => a.localeCompare(b));
   select.innerHTML = ['<option value="">Select Office...</option>']
     .concat(names.map(n => `<option value="${n}">${n}</option>`)).join("");
-  select.value = current;
-}
-
-function formatDateShort(dateStr) {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
+  select.value = names.includes(current) ? current : "";
+  selectedOffice = select.value;
 }
 
 // ======================
-// STATS — Calculate from ALL evaluations (like Admin 1)
+// CATEGORY TABS
 // ======================
-function renderStats(filteredEvals) {
-  // Render KPIs from ALL evaluations in the system
-  const total = evaluations.length;
+document.getElementById("category-tabs").addEventListener("click", (ev) => {
+  const btn = ev.target.closest(".category-tab");
+  if (!btn) return;
+
+  activeCategory = btn.getAttribute("data-category");
+  document.querySelectorAll(".category-tab").forEach(t => t.classList.toggle("active", t === btn));
+
+  // Switching category invalidates the previously selected office
+  selectedOffice = "";
+  populateLocationFilter();
+  renderStats();
+});
+
+// ======================
+// STATS — scoped to the active category tab
+// ======================
+function renderStats() {
+  const scoped = evaluations.filter(e => e.cleanlinessCategory === activeCategory);
+  const total = scoped.length;
+
   document.getElementById("stat-total").textContent = total;
+  document.getElementById("stat-total-sub").textContent = activeCategory;
 
-  if (total === 0) {
-    document.getElementById("stat-positive").textContent = "0";
-    document.getElementById("stat-negative").textContent = "0";
-    return;
-  }
-
-  const positive = evaluations.filter(e => evalAvgScore(e) >= 4).length;
-  const negative = evaluations.filter(e => evalAvgScore(e) < 3).length;
+  const positive = scoped.filter(e => evalAvgScore(e) >= 4).length;
+  const negative = scoped.filter(e => evalAvgScore(e) < 3).length;
   document.getElementById("stat-positive").textContent = positive;
   document.getElementById("stat-negative").textContent = negative;
 }
@@ -1051,7 +1184,8 @@ function createOfficialDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const generatedDate = new Date(report.generatedAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  
+  const category = report.category || DEFAULT_CATEGORY;
+
   const narrative = generateNarrative(report.office, report.respondents, parseFloat(report.avgSatisfaction), report.dimensionAverages);
   const officialHTML = `
     <div class="official-report" id="csmPage">
@@ -1078,6 +1212,7 @@ function createOfficialDocument(report) {
 
       <div class="official-meta">
         <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
+        <b>Category:</b> ${category}<br>
         <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
         <b>No. of Respondents:</b> ${report.respondents}
       </div>
@@ -1144,7 +1279,10 @@ function generateReport() {
     return;
   }
 
-  const officeEvals = evaluations.filter(e => e.officeName === selectedOffice);
+  // Scope to the active category tab AND the selected office — a name
+  // could in theory appear in both office lists, so the category match
+  // matters, not just the office name.
+  const officeEvals = evaluations.filter(e => e.cleanlinessCategory === activeCategory && e.officeName === selectedOffice);
 
   // Normalize the picked range to LOCAL start-of-day / end-of-day so
   // evaluations dated on either boundary are always included, without
@@ -1165,11 +1303,11 @@ function generateReport() {
 
   const filteredEvals = officeEvals.filter(e => e.timestamp >= startTs && e.timestamp <= endTs);
 
-  renderStats(filteredEvals);
+  renderStats();
 
   if (filteredEvals.length === 0) {
     document.getElementById("report-container").innerHTML = `
-      <div class="empty-state">No evaluations found for the selected office and date range.</div>
+      <div class="empty-state">No evaluations found for the selected category, office, and date range.</div>
     `;
     currentReport = null;
     document.getElementById("btn-save-report").disabled = true;
@@ -1177,10 +1315,11 @@ function generateReport() {
     return;
   }
 
-  // Calculate averages for each dimension (rating1 -> rating15)
+  // Calculate averages for each dimension (rating1 -> rating5), using
+  // the question labels for whichever category is active.
   const dimensionAverages = [];
 
-  DIMENSIONS.forEach(dim => {
+  dimensionsForCategory(activeCategory).forEach(dim => {
     const values = filteredEvals.map(e => e[dim.field]).filter(v => v > 0);
     if (values.length > 0) {
       const avg = values.reduce((a, b) => a + b, 0) / values.length;
@@ -1200,6 +1339,7 @@ function generateReport() {
   // Snapshot ready to be saved
   currentReport = {
     office: selectedOffice,
+    category: activeCategory,
     startDate,
     endDate,
     respondents: filteredEvals.length,
@@ -1214,7 +1354,7 @@ function generateReport() {
   const officialDoc = createOfficialDocument(currentReport);
   document.getElementById("report-container").innerHTML = officialDoc;
 
-  document.getElementById("previewLabel").textContent = `📄 Report Preview — ${selectedOffice}  (${startDate} → ${endDate})`;
+  document.getElementById("previewLabel").textContent = `📄 Report Preview — ${selectedOffice} (${activeCategory})  (${startDate} → ${endDate})`;
   document.getElementById("reportPreview").style.display = "block";
   document.getElementById("reportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -1306,6 +1446,7 @@ function renderSavedReports() {
         <tr>
           <th>#</th>
           <th>Office</th>
+          <th>Category</th>
           <th>Date Range</th>
           <th>Respondents</th>
           <th>Avg Satisfaction</th>
@@ -1319,6 +1460,7 @@ function renderSavedReports() {
           <tr>
             <td>${idx + 1}</td>
             <td class="saved-office-name">${r.office}</td>
+            <td>${categoryPillHtml(r.category || DEFAULT_CATEGORY)}</td>
             <td>${r.startDate} → ${r.endDate}</td>
             <td>${r.respondents}</td>
             <td class="saved-avg">${r.avgSatisfaction}%</td>
@@ -1348,14 +1490,18 @@ function viewSavedReport(id) {
   const r = savedReports.find(sr => sr.id === id);
   if (!r) return;
 
-  const reportStart = new Date(r.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const reportEnd = new Date(r.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const generatedDate = new Date(r.savedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const category = CLEANLINESS_CATEGORIES.includes(r.category) ? r.category : DEFAULT_CATEGORY;
+
+  // Switch to the saved report's category tab first, so the office
+  // dropdown is rebuilt from the right collection before we set its value.
+  activeCategory = category;
+  document.querySelectorAll(".category-tab").forEach(t => t.classList.toggle("active", t.getAttribute("data-category") === category));
+  populateLocationFilter();
 
   const officialDoc = createOfficialDocument(r);
   document.getElementById("report-container").innerHTML = officialDoc;
 
-  document.getElementById("previewLabel").textContent = `📄 Report Preview — ${r.office}  (${r.startDate} → ${r.endDate})`;
+  document.getElementById("previewLabel").textContent = `📄 Report Preview — ${r.office} (${category})  (${r.startDate} → ${r.endDate})`;
   document.getElementById("reportPreview").style.display = "block";
   document.getElementById("reportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -1368,6 +1514,8 @@ function viewSavedReport(id) {
   endDate = r.endDate;
   currentReport = r;  // Set to enable PDF export
   document.getElementById("btn-save-report").disabled = true;
+
+  renderStats();
 }
 
 function deleteSavedReport(id) {
