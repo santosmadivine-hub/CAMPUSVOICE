@@ -195,13 +195,9 @@
 }
 .donut-wrap svg{
   flex-shrink:1;
-  width:320px;
+  width:230px;
   max-width:100%;
   height:auto;
-  overflow:visible;
-}
-.donut-card{
-  flex:1.15 1 480px;
 }
 .donut-legend{
   display:flex;
@@ -291,44 +287,6 @@
 .category-row.sub .category-count{
   font-weight:600;
   color:#334155;
-}
-
-/* ─── User Category Distribution — info callout + footnote ─── */
-.category-note{
-  display:flex;
-  align-items:flex-start;
-  gap:12px;
-  background:#eff6ff;
-  border:1px solid #bfdbfe;
-  border-radius:10px;
-  padding:12px 16px;
-  margin-top:16px;
-  font-family:'DM Sans',sans-serif;
-  font-size:13px;
-  color:#1e3a5f;
-  line-height:1.5;
-}
-.category-note .note-icon{
-  flex-shrink:0;
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  background:#2563eb;
-  color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-  font-weight:700;
-  margin-top:1px;
-}
-.category-footnote{
-  text-align:center;
-  font-family:'DM Sans',sans-serif;
-  font-style:italic;
-  font-size:11px;
-  color:#94a3b8;
-  margin-top:8px;
 }
 
 /* ─── Evaluation Status card ─── */
@@ -537,7 +495,7 @@
     gap: 20px;
   }
   .donut-wrap svg {
-    width: 280px;
+    width: 260px;
   }
   .dashboard-container {
     padding: 20px 16px 28px;
@@ -610,7 +568,7 @@
   #line-chart-svg { height:160px; }
   #status-chart-svg { height:220px; }
   .donut-wrap svg {
-    width: 240px;
+    width: 220px;
   }
   .quick-access-grid {
     grid-template-columns: 1fr;
@@ -691,23 +649,16 @@
             <div class="pie-tooltip" id="line-tooltip"></div>
           </div>
         </div>
-        <div class="card donut-card">
+        <div class="card">
           <div class="card-title">User Category Distribution</div>
           <div class="card-sub" style="margin-top:-2px;">Students are grouped by course</div>
           <div class="donut-wrap" id="donutWrap">
-            <svg id="donut-svg" viewBox="0 0 400 400" width="340" height="340"></svg>
+            <svg id="donut-svg" viewBox="0 0 200 200" width="240" height="240">
+              <circle cx="100" cy="100" r="82" fill="none" stroke="#eef2f7" stroke-width="14"/>
+              <circle cx="100" cy="100" r="58" fill="none" stroke="#eef2f7" stroke-width="24"/>
+            </svg>
             <div class="pie-tooltip" id="donut-tooltip"></div>
             <div class="donut-legend" id="donut-legend"></div>
-          </div>
-          <div class="category-note" id="donut-note" style="display:none;">
-            <div class="note-icon">i</div>
-            <div>
-              The chart shows the distribution of respondents by user category.<br>
-              Students are further broken down by their courses.
-            </div>
-          </div>
-          <div class="category-footnote" id="donut-footnote" style="display:none;">
-            Note: Percentages may not always total 100% due to rounding.
           </div>
         </div>
       </div>
@@ -1173,26 +1124,22 @@ function renderLineChart() {
 }
 
 // ======================
-// USER CATEGORY DISTRIBUTION — single-ring donut, sunburst style
-//   Faculty/Staff, Guest, Visitor each get their own full-width slice.
-//   Student's share is subdivided into per-course slices (all shades of
-//   purple) so it reads as one grouped "Student" band, with a "Student"
-//   band label placed at the arc's midpoint plus individual on-slice
-//   labels for every segment (name / percent / count), matching the
-//   reference design.
-// Built live from the userCategory/course fields on each
+// USER CATEGORY DISTRIBUTION — nested donut
+//   inner ring  -> userCategory (Student / Faculty-Staff / Guest / Visitor)
+//   outer ring  -> course breakdown, drawn only across the Student arc
+// Both rings are built live from the userCategory/course fields on each
 // evaluation_history record (written by ComfortRoomEvalActivity /
 // SurroundingsEvalActivity), so this always reflects real Firestore data.
 // ======================
-const USER_CATEGORY_ORDER = ["Faculty/Staff", "Guest", "Visitor"];
+const USER_CATEGORY_ORDER = ["Student", "Faculty/Staff", "Guest", "Visitor"];
 const USER_CATEGORY_COLORS = {
+  "Student": "#8b5cf6",
   "Faculty/Staff": "#3b82f6",
   "Guest": "#22c55e",
-  "Visitor": "#f97316",
-  "Student": "#7c3aed"
+  "Visitor": "#f97316"
 };
 const OTHER_CATEGORY_COLOR = "#94a3b8";
-const COURSE_COLOR_PALETTE = ["#7c3aed", "#8b5cf6", "#a78bfa", "#c4b5fd", "#ddd6fe", "#e9d5ff", "#f3e8ff"];
+const COURSE_COLOR_PALETTE = ["#a78bfa", "#c4b5fd", "#ddd6fe", "#e9d5ff", "#f3e8ff", "#ede9fe"];
 
 // Tallies evaluations by userCategory, and separately by course for
 // whichever records are tagged "Student".
@@ -1212,16 +1159,14 @@ function computeUserCategoryBreakdown() {
   return { categoryCounts, courseCounts };
 }
 
-// Non-student categories first (in a fixed order matching the app's
-// user category options), then any other/legacy values sorted by count.
-// "Student" is intentionally excluded here — it's rendered as its course
-// sub-slices instead of a single wedge.
+// Known categories first (in a fixed order, matching the app's user
+// category options), then any other/legacy values sorted by count.
 function buildCategorySegments(categoryCounts) {
   const known = USER_CATEGORY_ORDER.map(name => ({
     key: name, label: name, color: USER_CATEGORY_COLORS[name], count: categoryCounts[name] || 0
   }));
   const extras = Object.keys(categoryCounts)
-    .filter(k => !USER_CATEGORY_ORDER.includes(k) && k !== "Student")
+    .filter(k => !USER_CATEGORY_ORDER.includes(k))
     .sort((a, b) => categoryCounts[b] - categoryCounts[a])
     .map(name => ({ key: name, label: name, color: OTHER_CATEGORY_COLOR, count: categoryCounts[name] }));
   return [...known, ...extras];
@@ -1241,49 +1186,28 @@ function renderUserCategoryDonut() {
   const svg = document.getElementById("donut-svg");
   const legend = document.getElementById("donut-legend");
   const tooltip = document.getElementById("donut-tooltip");
-  const note = document.getElementById("donut-note");
-  const footnote = document.getElementById("donut-footnote");
   if (!svg || !legend || !tooltip) return;
 
-  const cx = 200, cy = 200;
-  const rOuter = 124;   // outer edge of the ring
-  const rInner = 68;    // inner edge of the ring / hole radius
-  const rMid = (rOuter + rInner) / 2;
-  const strokeW = rOuter - rInner;
-  const circMid = 2 * Math.PI * rMid;
-  const SEGMENT_GAP_PX = 3; // small white gap drawn between adjacent wedges
+  const cx = 100, cy = 100;
+  const rOuter = 82, rInner = 58;
+  const wOuter = 14, wInner = 24;
+  const circOuter = 2 * Math.PI * rOuter;
+  const circInner = 2 * Math.PI * rInner;
 
   const total = evaluations.length;
 
-  svg.innerHTML = "";
+  svg.querySelectorAll(".donut-segment").forEach(el => el.remove());
+  svg.querySelectorAll("text").forEach(el => el.remove());
   tooltip.classList.remove("show");
 
   if (total === 0) {
     legend.innerHTML = `<div class="legend-item">No evaluations yet</div>`;
-    if (note) note.style.display = "none";
-    if (footnote) footnote.style.display = "none";
     return;
   }
 
-  if (note) note.style.display = "flex";
-  if (footnote) footnote.style.display = "block";
-
   const { categoryCounts, courseCounts } = computeUserCategoryBreakdown();
-  const nonStudentSegments = buildCategorySegments(categoryCounts);
+  const categorySegments = buildCategorySegments(categoryCounts);
   const courseSegments = buildCourseSegments(courseCounts);
-  const studentCount = categoryCounts["Student"] || 0;
-  const studentPct = total > 0 ? (studentCount / total) * 100 : 0;
-
-  // Build the flat, ordered list of slices actually drawn around the
-  // ring: non-student categories first, then every course sub-slice.
-  // (If there's no course breakdown but there are Student respondents,
-  // fall back to a single "Student" wedge so the count still shows.)
-  const slices = [...nonStudentSegments];
-  if (studentCount > 0 && courseSegments.length > 0) {
-    courseSegments.forEach(cs => slices.push({ ...cs, isCourse: true }));
-  } else if (studentCount > 0) {
-    slices.push({ key: "Student", label: "Student", color: USER_CATEGORY_COLORS["Student"], count: studentCount });
-  }
 
   function attachTooltip(el, label, count, sub) {
     const pct = ((count / total) * 100).toFixed(1);
@@ -1309,138 +1233,110 @@ function renderUserCategoryDonut() {
     }, { passive: false });
   }
 
-  function polar(radius, angleDeg) {
-    const rad = (angleDeg - 90) * (Math.PI / 180);
-    return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
-  }
-
-  function addText(x, y, text, opts = {}) {
-    const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    t.setAttribute("x", x);
-    t.setAttribute("y", y);
-    t.setAttribute("text-anchor", opts.anchor || "middle");
-    t.setAttribute("font-family", opts.family || "DM Sans, sans-serif");
-    t.setAttribute("font-size", opts.size || "11");
-    t.setAttribute("font-weight", opts.weight || "600");
-    t.setAttribute("fill", opts.fill || "#0f172a");
-    t.textContent = text;
-    svg.appendChild(t);
-    return t;
-  }
-
-  // Rough estimate of rendered text width in px, used only to decide
-  // whether a label fits its wedge — doesn't need to be exact.
-  function estTextWidth(text, fontSize, bold) {
-    return text.length * fontSize * (bold ? 0.62 : 0.54);
-  }
-
-  // ---- PASS 1: draw every wedge first, and record each slice's angular
-  // span + text-color choice. Labels are drawn in a later, separate pass
-  // so a later wedge can never paint over an earlier wedge's text. ----
+  // Inner ring — top-level user categories
   let offsetPct = 0;
-  let studentStartPct = null;
-  let studentEndPct = null;
-  const placedSlices = [];
+  let studentStartPct = 0;
+  let studentPct = 0;
 
-  slices.forEach(seg => {
+  categorySegments.forEach(seg => {
     const pct = (seg.count / total) * 100;
+    if (seg.key === "Student") {
+      studentStartPct = offsetPct;
+      studentPct = pct;
+    }
     if (pct <= 0) return;
 
-    if (seg.isCourse) {
-      if (studentStartPct === null) studentStartPct = offsetPct;
-      studentEndPct = offsetPct + pct;
-    }
-
-    const fullDash = (pct / 100) * circMid;
-    const trim = fullDash > SEGMENT_GAP_PX * 3 ? SEGMENT_GAP_PX : 0;
-    const dash = fullDash - trim;
-    const gap = circMid - dash;
-    const dashOffset = -(((offsetPct / 100) * circMid) + trim / 2);
+    const dash = (pct / 100) * circInner;
+    const gap = circInner - dash;
+    const dashOffset = -((offsetPct / 100) * circInner);
 
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("class", "donut-segment");
     circle.setAttribute("cx", String(cx));
     circle.setAttribute("cy", String(cy));
-    circle.setAttribute("r", String(rMid));
+    circle.setAttribute("r", String(rInner));
     circle.setAttribute("fill", "none");
     circle.setAttribute("stroke", seg.color);
-    circle.setAttribute("stroke-width", String(strokeW));
-    circle.setAttribute("stroke-linecap", "round");
+    circle.setAttribute("stroke-width", String(wInner));
     circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
     circle.setAttribute("stroke-dashoffset", String(dashOffset));
     circle.setAttribute("transform", `rotate(-90 ${cx} ${cy})`);
     circle.style.cursor = "pointer";
-    attachTooltip(circle, seg.label, seg.count, seg.isCourse ? "Student" : null);
+    attachTooltip(circle, seg.label, seg.count);
     svg.appendChild(circle);
 
-    placedSlices.push({ seg, pct, startPct: offsetPct });
     offsetPct += pct;
   });
 
-  // ---- PASS 2: labels, drawn after every wedge so nothing covers them. ----
-  placedSlices.forEach(({ seg, pct, startPct }) => {
-    if (pct < 3) return; // too thin to label on-chart; still in tooltip + legend
+  // Outer ring — course breakdown, drawn only across the Student arc
+  if (studentPct > 0 && courseSegments.length > 0) {
+    let courseOffsetPct = studentStartPct;
+    courseSegments.forEach(cs => {
+      const coursePct = studentPct * (cs.count / (categoryCounts["Student"] || 1));
+      if (coursePct <= 0) return;
 
-    const midPct = startPct + pct / 2;
-    const midAngle = (midPct / 100) * 360;
-    const labelR = rMid;
-    const pos = polar(labelR, midAngle);
-    const light = seg.isCourse && seg.color !== "#7c3aed";
-    const textColor = light ? "#3b0764" : "#ffffff";
+      const dash = (coursePct / 100) * circOuter;
+      const gap = circOuter - dash;
+      const dashOffset = -((courseOffsetPct / 100) * circOuter);
 
-    const arcLenPx = (pct / 100) * circMid;
-    const pctStr = pct.toFixed(0) + "%";
-    const nameFits = arcLenPx >= estTextWidth(seg.label, 11, true) + 6;
-    const pctFits = arcLenPx >= estTextWidth(pctStr, 12, true) + 6;
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("class", "donut-segment");
+      circle.setAttribute("cx", String(cx));
+      circle.setAttribute("cy", String(cy));
+      circle.setAttribute("r", String(rOuter));
+      circle.setAttribute("fill", "none");
+      circle.setAttribute("stroke", cs.color);
+      circle.setAttribute("stroke-width", String(wOuter));
+      circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
+      circle.setAttribute("stroke-dashoffset", String(dashOffset));
+      circle.setAttribute("transform", `rotate(-90 ${cx} ${cy})`);
+      circle.style.cursor = "pointer";
+      attachTooltip(circle, cs.label, cs.count, "Student");
+      svg.appendChild(circle);
 
-    if (nameFits) {
-      addText(pos.x, pos.y - 8, seg.label, { size: "11", weight: "700", fill: textColor });
-      addText(pos.x, pos.y + 6, pctStr, { size: "12.5", weight: "800", family: "Syne, sans-serif", fill: textColor });
-      addText(pos.x, pos.y + 19, "(" + seg.count + ")", { size: "9.5", weight: "600", fill: textColor });
-    } else if (pctFits) {
-      addText(pos.x, pos.y - 1, pctStr, { size: "12", weight: "800", family: "Syne, sans-serif", fill: textColor });
-      addText(pos.x, pos.y + 11, "(" + seg.count + ")", { size: "9", weight: "600", fill: textColor });
-    }
-  });
-
-  // "Student" group label — placed OUTSIDE the ring with a short leader
-  // line, at a different radius from every on-ring label, so it never
-  // collides with the individual course labels even when the group only
-  // spans a couple of narrow course wedges.
-  if (studentStartPct !== null && studentCount > 0) {
-    const midPct = (studentStartPct + studentEndPct) / 2;
-    const midAngle = (midPct / 100) * 360;
-    const ringPos = polar(rOuter, midAngle);
-    const leaderR = rOuter + 16;
-    const labelR = rOuter + 26;
-    const leaderPos = polar(leaderR, midAngle);
-    const labelPos = polar(labelR, midAngle);
-
-    const leader = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    leader.setAttribute("x1", ringPos.x);
-    leader.setAttribute("y1", ringPos.y);
-    leader.setAttribute("x2", leaderPos.x);
-    leader.setAttribute("y2", leaderPos.y);
-    leader.setAttribute("stroke", "#c4b5fd");
-    leader.setAttribute("stroke-width", "1.5");
-    svg.appendChild(leader);
-
-    // Anchor left/right depending on which side of the circle the leader
-    // lands on, so the label reads outward rather than back over the ring.
-    const anchor = labelPos.x < cx - 4 ? "end" : labelPos.x > cx + 4 ? "start" : "middle";
-    addText(labelPos.x, labelPos.y - 4, "Student", { size: "12", weight: "700", fill: "#6d28d9", anchor });
-    addText(labelPos.x, labelPos.y + 11, studentPct.toFixed(0) + "% (" + studentCount + ")", { size: "11", weight: "700", fill: "#6d28d9", anchor });
+      courseOffsetPct += coursePct;
+    });
   }
 
   // Center label
-  addText(cx, cy - 16, "TOTAL", { size: "12", weight: "700", fill: "#94a3b8", family: "DM Sans, sans-serif" }).setAttribute("letter-spacing", "0.06em");
-  addText(cx, cy + 16, String(total), { size: "34", weight: "800", fill: "#0f172a", family: "Syne, sans-serif" });
-  const totalSub = addText(cx, cy + 36, "RESPONDENTS", { size: "10", weight: "600", fill: "#94a3b8", family: "DM Sans, sans-serif" });
-  totalSub.setAttribute("letter-spacing", "0.04em");
+  const totalLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  totalLabel.setAttribute("x", String(cx));
+  totalLabel.setAttribute("y", String(cy - 18));
+  totalLabel.setAttribute("text-anchor", "middle");
+  totalLabel.setAttribute("fill", "#94a3b8");
+  totalLabel.setAttribute("font-size", "11");
+  totalLabel.setAttribute("font-family", "DM Sans, sans-serif");
+  totalLabel.setAttribute("font-weight", "700");
+  totalLabel.setAttribute("letter-spacing", "0.06em");
+  totalLabel.textContent = "TOTAL";
+  svg.appendChild(totalLabel);
 
-  // Legend table — non-student category rows, then Student total row with
-  // indented course sub-rows.
+  const totalNumber = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  totalNumber.setAttribute("x", String(cx));
+  totalNumber.setAttribute("y", String(cy + 8));
+  totalNumber.setAttribute("text-anchor", "middle");
+  totalNumber.setAttribute("fill", "#0f172a");
+  totalNumber.setAttribute("font-size", "30");
+  totalNumber.setAttribute("font-family", "Syne, sans-serif");
+  totalNumber.setAttribute("font-weight", "800");
+  totalNumber.textContent = String(total);
+  svg.appendChild(totalNumber);
+
+  const totalSub = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  totalSub.setAttribute("x", String(cx));
+  totalSub.setAttribute("y", String(cy + 24));
+  totalSub.setAttribute("text-anchor", "middle");
+  totalSub.setAttribute("fill", "#94a3b8");
+  totalSub.setAttribute("font-size", "10");
+  totalSub.setAttribute("font-family", "DM Sans, sans-serif");
+  totalSub.setAttribute("font-weight", "600");
+  totalSub.setAttribute("letter-spacing", "0.04em");
+  totalSub.textContent = "RESPONDENTS";
+  svg.appendChild(totalSub);
+
+  // Legend table — category rows, with indented course sub-rows under Student
   let rows = "";
-  nonStudentSegments.forEach(seg => {
+  categorySegments.forEach(seg => {
     if (seg.count <= 0) return;
     const pct = ((seg.count / total) * 100).toFixed(0);
     rows += `
@@ -1448,25 +1344,18 @@ function renderUserCategoryDonut() {
         <div class="cat-name"><div class="category-dot" style="background:${seg.color}"></div>${seg.label}</div>
         <div class="category-count">${seg.count} (${pct}%)</div>
       </div>`;
+
+    if (seg.key === "Student" && courseSegments.length > 0) {
+      courseSegments.forEach(cs => {
+        const cpct = ((cs.count / total) * 100).toFixed(0);
+        rows += `
+          <div class="category-row sub">
+            <div class="cat-name"><div class="category-dot" style="background:${cs.color}"></div>${cs.label}</div>
+            <div class="category-count">${cs.count} (${cpct}%)</div>
+          </div>`;
+      });
+    }
   });
-
-  if (studentCount > 0) {
-    const spct = ((studentCount / total) * 100).toFixed(0);
-    rows += `
-      <div class="category-row">
-        <div class="cat-name"><div class="category-dot" style="background:${USER_CATEGORY_COLORS['Student']}"></div>Student</div>
-        <div class="category-count">${studentCount} (${spct}%)</div>
-      </div>`;
-    courseSegments.forEach(cs => {
-      const cpct = ((cs.count / total) * 100).toFixed(0);
-      rows += `
-        <div class="category-row sub">
-          <div class="cat-name"><div class="category-dot" style="background:${cs.color}"></div>${cs.label}</div>
-          <div class="category-count">${cs.count} (${cpct}%)</div>
-        </div>`;
-    });
-  }
-
   rows += `
     <div class="category-row total">
       <div>TOTAL</div>
