@@ -160,87 +160,10 @@
     }
   }
 
-  /* ===== SUBMISSION STATUS TREND CHART ===== */
-  .status-trend-wrap {
-    margin-top: 12px;
-  }
-
-  .status-chart-svg {
-    width: 100%;
-    height: 200px;
-  }
-
-  .status-axis-labels {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
-    font-size: 0.75rem;
-    color: #94a3b8;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  .status-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    color: #475569;
-  }
-
-  .status-legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .status-legend-swatch {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
-  }
-
-  .trend-chart-wrap {
-    margin-top: 10px;
-  }
-
-  .trend-svg {
-    width: 100%;
-    height: 140px;
-  }
-
-  .trend-axis-row {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 6px;
-    font-size: 0.7rem;
-    color: #94a3b8;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  .trend-legend {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 10px;
-    font-size: 12px;
-    color: #64748b;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  .trend-legend .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #2563eb;
-    display: inline-block;
-  }
-
   .bar-chart {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
 
   .bar-row {
@@ -251,15 +174,18 @@
 
   .bar-label {
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
     color: #334155;
-    min-width: 70px;
+    min-width: 110px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .bar-track {
     flex: 1;
-    height: 24px;
+    height: 20px;
     background: #f1f5f9;
     border-radius: 6px;
     overflow: hidden;
@@ -267,85 +193,42 @@
 
   .bar-fill {
     height: 100%;
-    background: #2563eb;
     border-radius: 6px;
     transition: width 0.3s ease;
   }
 
   .bar-value {
     font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 600;
     color: #334155;
-    min-width: 50px;
+    min-width: 40px;
     text-align: right;
   }
 
-  .leaderboard-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-  }
-
-  .leaderboard-row:last-child {
-    border-bottom: none;
-  }
-
-  .lb-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .lb-rank {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #e2e8f0;
-    color: #475569;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 13px;
-  }
-
-  .lb-rank.rank-1 {
-    background: #d1fae5;
-    color: #059669;
-  }
-
-  .lb-office-name {
+  .group-header {
     font-family: 'Syne', sans-serif;
     font-weight: 700;
-    color: #0f1b32;
-    font-size: 14px;
+    font-size: 13px;
+    color: #0f172a;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
-  .lb-office-meta {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    color: #94a3b8;
+  .group-header .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    display: inline-block;
   }
 
-  .lb-right {
-    text-align: right;
+  .group-block {
+    margin-bottom: 16px;
   }
-
-  .lb-score {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    color: #0f1b32;
-    font-size: 15px;
-  }
-
-  .lb-pct {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    color: #94a3b8;
+  .group-block:last-child {
+    margin-bottom: 0;
   }
 
   .lb-empty {
@@ -421,7 +304,7 @@
   }
 
   .ot-dropdown-list {
-    max-height: 220px;
+    max-height: 240px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -453,7 +336,6 @@
     margin-top: 8px;
   }
 
-  /* Chart body: fixed y-axis column + horizontally scrollable bar area */
   .ot-chart-row {
     display: flex;
     align-items: stretch;
@@ -520,7 +402,7 @@
     justify-content: flex-end;
     font-family: 'DM Sans', sans-serif;
     font-size: 10.5px;
-    color: #64748b;
+    font-weight: 700;
     white-space: nowrap;
   }
 
@@ -530,7 +412,7 @@
     transform-origin: top right;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 90px;
+    max-width: 100px;
   }
 
   .ot-line-legend {
@@ -541,6 +423,7 @@
     font-family: 'DM Sans', sans-serif;
     font-size: 12px;
     color: #475569;
+    align-items: center;
   }
 
   .ot-line-legend-item {
@@ -563,12 +446,33 @@
     font-size: 14px;
   }
 
-  /* Dimension Performance — per-question bar chart */
+  .ot-cat-group-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 8px 2px;
+  }
+
+  /* Dimension Performance — per-question bar chart, split by category */
+  .dim-section-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 14px 0 8px;
+  }
+
+  .dim-section-title:first-child {
+    margin-top: 4px;
+  }
+
   .dim-bar-list {
     display: flex;
     flex-direction: column;
     gap: 9px;
-    margin-top: 10px;
   }
 
   .dim-bar-row {
@@ -619,12 +523,20 @@
     transition: width 0.3s ease;
   }
 
+  .dim-bar-value {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #334155;
+    text-align: right;
+  }
+
   .dim-bar-fill.rating-outstanding-fill { background: #10b981; }
   .dim-bar-fill.rating-very-satisfactory-fill { background: #2563eb; }
   .dim-bar-fill.rating-satisfactory-fill { background: #f59e0b; }
   .dim-bar-fill.rating-poor-fill { background: #ef4444; }
 
-  /* Respondent Breakdown — pie charts */
+  /* Category / evidence pie charts */
   .pie-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -652,6 +564,11 @@
     border-radius: 50%;
     flex-shrink: 0;
     background: #f1f5f9;
+  }
+
+  .pie-circle.mini {
+    width: 110px;
+    height: 110px;
   }
 
   .pie-legend {
@@ -689,7 +606,27 @@
     font-size: 12.5px;
   }
 
-  /* Tooltip Styling */
+  .mini-pie-block {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .mini-pie-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .mini-pie-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
   [title] {
     position: relative;
   }
@@ -703,14 +640,6 @@
   .dim-bar-row[title],
   .pie-legend-row[title] {
     cursor: help;
-  }
-
-  /* Enhanced tooltip appearance for better visibility */
-  @supports (selector(:has(*))) {
-    /* Modern browsers with :has support will get animated tooltips */
-    *:hover {
-      outline: none;
-    }
   }
 </style>
 </head>
@@ -726,64 +655,76 @@
         <div class="stat-icon">🗳️</div>
         <div class="stat-label">Total Evaluations</div>
         <div class="stat-value" id="stat-total">0</div>
-        <div class="stat-sub">All time</div>
+        <div class="stat-sub" id="stat-total-sub">🚻 0 · 🌳 0</div>
       </div>
       <div class="stat-card blue">
         <div class="stat-icon">📈</div>
         <div class="stat-label">Avg Satisfaction</div>
         <div class="stat-value" id="stat-avg-satisfaction">0%</div>
-        <div class="stat-sub">Across all ratings</div>
+        <div class="stat-sub" id="stat-avg-satisfaction-sub">🚻 0% · 🌳 0%</div>
       </div>
       <div class="stat-card blue">
         <div class="stat-icon">🗂️</div>
         <div class="stat-label">Total Evidence</div>
         <div class="stat-value" id="stat-total-evidence">0</div>
-        <div class="stat-sub" id="stat-total-evidence-sub">0 images · 0 videos</div>
+        <div class="stat-sub" id="stat-total-evidence-sub">🚻 0 · 🌳 0</div>
       </div>
       <div class="stat-card green">
         <div class="stat-icon">🏢</div>
         <div class="stat-label">Active Offices</div>
         <div class="stat-value" id="stat-active-offices">0</div>
-        <div class="stat-sub" id="stat-active-offices-sub">of 0 total offices</div>
+        <div class="stat-sub" id="stat-active-offices-sub">🚻 0/0 · 🌳 0/0</div>
       </div>
     </div>
 
     <!-- ROW: SUBMISSION STATUS + RATING DISTRIBUTION -->
     <div class="analytics-grid">
       <div class="card">
-        <div class="card-title">Submission Status <span class="card-sub">— % of total evaluations</span></div>
-        <div class="status-trend-wrap" id="status-breakdown-chart"></div>
+        <div class="card-title">Submission Status <span class="card-sub">— by category</span></div>
+        <div id="status-breakdown-chart" style="margin-top: 14px;"></div>
       </div>
 
       <div class="card">
-        <div class="card-title">Rating Distribution <span class="card-sub">— all offices</span></div>
-        <div class="bar-chart" id="rating-distribution-chart" style="margin-top: 12px;"></div>
+        <div class="card-title">Rating Distribution <span class="card-sub">— by category</span></div>
+        <div id="rating-distribution-chart" style="margin-top: 14px;"></div>
       </div>
     </div>
 
-    <!-- RESPONDENT BREAKDOWN — sex + user category pie charts -->
+    <!-- CATEGORY BREAKDOWN — evaluation split + evidence coverage -->
     <div class="pie-row">
       <div class="card">
-        <div class="card-title">Respondents by Sex</div>
+        <div class="card-title">Evaluations by Category</div>
         <div class="pie-wrap">
-          <div class="pie-circle" id="pie-sex-circle"></div>
-          <div class="pie-legend" id="pie-sex-legend"></div>
+          <div class="pie-circle" id="pie-category-circle"></div>
+          <div class="pie-legend" id="pie-category-legend"></div>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">Respondents by Category</div>
-        <div class="pie-wrap">
-          <div class="pie-circle" id="pie-usercat-circle"></div>
-          <div class="pie-legend" id="pie-usercat-legend"></div>
+        <div class="card-title">Evidence Coverage <span class="card-sub">— by category</span></div>
+        <div class="mini-pie-row">
+          <div class="mini-pie-block">
+            <div class="mini-pie-title">🚻 Comfort Room</div>
+            <div class="pie-wrap">
+              <div class="pie-circle mini" id="pie-evidence-cr-circle"></div>
+              <div class="pie-legend" id="pie-evidence-cr-legend"></div>
+            </div>
+          </div>
+          <div class="mini-pie-block">
+            <div class="mini-pie-title">🌳 Surroundings</div>
+            <div class="pie-wrap">
+              <div class="pie-circle mini" id="pie-evidence-surr-circle"></div>
+              <div class="pie-legend" id="pie-evidence-surr-legend"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- OFFICE TREND — full width -->
     <div class="card office-trend-card">
-      <div class="card-title" id="office-trend-title">Office Trend Over Time <span class="card-sub">— monthly average score</span></div>
+      <div class="card-title" id="office-trend-title">Office Trend Over Time <span class="card-sub">— monthly average score, both categories</span></div>
       <div class="ot-controls">
-        <button class="ot-dropdown-btn" id="ot-dropdown-btn" type="button">🏢 <span id="ot-dropdown-btn-label">Top 5 offices</span> ▾</button>
+        <button class="ot-dropdown-btn" id="ot-dropdown-btn" type="button">🏢 <span id="ot-dropdown-btn-label">Top offices</span> ▾</button>
         <div class="ot-dropdown-panel" id="ot-dropdown-panel">
           <div class="ot-dropdown-hint">Select offices to compare</div>
           <div class="ot-dropdown-list" id="ot-dropdown-list"></div>
@@ -801,10 +742,15 @@
       </div>
     </div>
 
-    <!-- DIMENSION PERFORMANCE — all 15 evaluation questions -->
+    <!-- DIMENSION PERFORMANCE — 5 questions per category -->
     <div class="card">
-      <div class="card-title">Dimension Performance <span class="card-sub">— all offices, all 15 questions</span></div>
-      <div id="dimension-performance-chart" class="dim-bar-list"></div>
+      <div class="card-title">Dimension Performance <span class="card-sub">— per category, 5 questions each</span></div>
+
+      <div class="dim-section-title"><span style="color:#0284c7;">🚻 Comfort Room</span></div>
+      <div id="dimension-performance-cr" class="dim-bar-list"></div>
+
+      <div class="dim-section-title"><span style="color:#16a34a;">🌳 Surroundings</span></div>
+      <div id="dimension-performance-surr" class="dim-bar-list"></div>
     </div>
   </main>
 </div>
@@ -821,7 +767,7 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase Configuration
+// Firebase Configuration — identical to Evaluation Management / Office Management
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
@@ -855,18 +801,55 @@ document.addEventListener("click", (e) => {
   }
 });
 
-const OFFICES_COLLECTION = "office-names";
-const EVALUATIONS_COLLECTION = "cleanliness_evaluations";
-const TOTAL_RATING_QUESTIONS = 15;
+// ======================
+// FIRESTORE STRUCTURE — matches Evaluation Management / Office Management exactly.
+// No separate/legacy structure is created here; this page just reads the same
+// collections and fields those pages already read and write.
+// ======================
+
+// Each cleanliness category keeps its own office list (mirrors
+// CleanOfficeSelectActivity.officeCollectionName() in the Android app).
+const OFFICE_COLLECTIONS = {
+  "Comfort Room": "office-names-comfort-room",
+  "Surroundings": "office_names_surroundings"
+};
+const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
+const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved before cleanlinessCategory existed
+
+// Flat mirror written by ComfortRoomEvalActivity / SurroundingsEvalActivity
+// right after the nested cleanliness_evaluations doc succeeds — this is
+// what Evaluation Management reads from, and what we read from here too,
+// so figures always match across both pages (including status edits/deletes
+// made in Evaluation Management).
+const EVAL_HISTORY_COLLECTION = "evaluation_history";
+
+// Both eval activities set TOTAL_QUESTIONS = 5 and only ever write
+// rating1...rating5 — confirmed from the submission code (see
+// admin2-eval-mgmt.html), not rating1-15.
+const TOTAL_RATING_QUESTIONS = 5;
+
 const LOW_RATING_THRESHOLD = 3;
+
 const STATUS_META = {
   pending: { label: "Pending", color: "#f59e0b" },
   no_action: { label: "No Action Required", color: "#6366f1" },
   resolved: { label: "Resolved", color: "#10b981" }
 };
 
-let evaluations = [];   
-let offices = {};       
+// Visual identity used to differentiate Comfort Room vs Surroundings inside
+// every card below (no separate filter/tab is added on this page).
+const CATEGORY_META = {
+  "Comfort Room": { label: "Comfort Room", icon: "🚻", color: "#0284c7" },
+  "Surroundings": { label: "Surroundings", icon: "🌳", color: "#16a34a" }
+};
+
+let evaluations = [];
+let comfortOffices = {};      // id -> name, from office-names-comfort-room
+let surroundingsOffices = {}; // id -> name, from office_names_surroundings
+
+function officesForCategory(category) {
+  return category === "Surroundings" ? surroundingsOffices : comfortOffices;
+}
 
 function avgOf(e) {
   let sum = 0;
@@ -910,32 +893,36 @@ function parseEvidence(data) {
   return items;
 }
 
-const KNOWN_DIMENSION_LABELS = {
+// NOTE: the Android app only writes rating1..rating5 per category and does
+// not store question text, so these labels are inferred from the old
+// 15-question set: items 1–5 map onto the Surroundings screen's 5
+// questions, and items 11–15 map onto the Comfort Room screen's 5
+// questions. Double check these against the actual app copy and adjust if
+// needed — they don't affect any calculation, only display text.
+const CR_DIMENSION_LABELS = {
+  1: "The comfort room floor is clean and dry.",
+  2: "The toilets and urinals are clean and sanitary.",
+  3: "The sinks and faucets are clean and functioning properly.",
+  4: "Trash bins inside the comfort room are clean and regularly emptied.",
+  5: "There are no unpleasant odors inside the comfort room."
+};
+const SURROUNDINGS_DIMENSION_LABELS = {
   1: "The area surrounding the office is free from litter.",
   2: "The office entrance is clean and well-maintained.",
   3: "The walkways leading to the office are clean.",
   4: "Outdoor trash bins are available and regularly emptied.",
-  5: "The exterior walls and windows are clean.",
-  6: "The office floor is clean and free from dirt or dust.",
-  7: "Office furniture (chairs, tables, counters) is clean.",
-  8: "Windows and glass surfaces inside the office are clean.",
-  9: "The office is free from unpleasant odors.",
-  10: "The overall appearance of the office reflects proper cleanliness.",
-  11: "The comfort room floor is clean and dry.",
-  12: "The toilets and urinals are clean and sanitary.",
-  13: "The sinks and faucets are clean and functioning properly.",
-  14: "Trash bins inside the comfort room are clean and regularly emptied.",
-  15: "There are no unpleasant odors inside the comfort room."
+  5: "The exterior walls and windows are clean."
 };
 
-const DIMENSIONS = [];
-for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-  DIMENSIONS.push({
-    id: i,
-    field: "rating" + i,
-    label: KNOWN_DIMENSION_LABELS[i] || `Evaluation Question ${i}`
-  });
+function buildDimensions(labels) {
+  const arr = [];
+  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
+    arr.push({ id: i, field: "rating" + i, label: labels[i] || `Evaluation Question ${i}` });
+  }
+  return arr;
 }
+const CR_DIMENSIONS = buildDimensions(CR_DIMENSION_LABELS);
+const SURR_DIMENSIONS = buildDimensions(SURROUNDINGS_DIMENSION_LABELS);
 
 const RATING_SCALE = [
   { min: 90, label: "Outstanding", cssClass: "rating-outstanding-fill" },
@@ -951,39 +938,49 @@ function ratingFillClass(pct) {
   return "rating-poor-fill";
 }
 
-onSnapshot(collection(db, OFFICES_COLLECTION), (snapshot) => {
-  offices = {};
+// ======================
+// LISTENERS — same collections Office Management / Evaluation Management use
+// ======================
+onSnapshot(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), (snapshot) => {
+  comfortOffices = {};
   snapshot.forEach((docSnap) => {
     const data = docSnap.data();
-    offices[docSnap.id] = data.name || data.officeName || docSnap.id;
+    comfortOffices[docSnap.id] = data.name || data.officeName || docSnap.id;
   });
   renderAll();
 });
 
-const evalQuery = query(collection(db, EVALUATIONS_COLLECTION), orderBy("timestamp", "desc"));
+onSnapshot(collection(db, OFFICE_COLLECTIONS["Surroundings"]), (snapshot) => {
+  surroundingsOffices = {};
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    surroundingsOffices[docSnap.id] = data.name || data.officeName || docSnap.id;
+  });
+  renderAll();
+});
+
+const evalQuery = query(collection(db, EVAL_HISTORY_COLLECTION), orderBy("timestamp", "desc"));
 
 onSnapshot(evalQuery, (snapshot) => {
   evaluations = [];
   snapshot.forEach((docSnap) => {
-    const ev = docSnap.data();
+    const data = docSnap.data();
+
+    const rawCategory = data.cleanlinessCategory;
+    const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+
     const record = {
       id: docSnap.id,
-      officeName: ev.officeName || "Unknown",
-      comments: ev.comments || "",
-      course: ev.course || "",
-      date: ev.date || "",
-      evaluationId: ev.evaluationId || docSnap.id,
-      sex: ev.sex || "",
-      userCategory: ev.userCategory || "",
-      userId: ev.userId || "",
-      year: ev.year || "",
-      timestamp: Number(ev.timestamp) || 0,
-      evidence: parseEvidence(ev)
+      officeName: data.officeName || "Unknown",
+      cleanlinessCategory: category,
+      comments: data.comments || "",
+      timestamp: Number(data.timestamp) || 0,
+      evidence: parseEvidence(data)
     };
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-      record["rating" + i] = Number(ev["rating" + i]) || 0;
+      record["rating" + i] = Number(data["rating" + i]) || 0;
     }
-    record.status = parseEvalStatus(ev, avgOf(record));
+    record.status = parseEvalStatus(data, avgOf(record));
     evaluations.push(record);
   });
   renderAll();
@@ -992,37 +989,46 @@ onSnapshot(evalQuery, (snapshot) => {
 function renderAll() {
   renderStatCards();
   renderStatusBreakdown();
-  renderOfficeTrend();
   renderRatingDistribution();
+  renderCategoryPies();
+  renderOfficeTrend();
   renderDimensionPerformance();
-  renderRespondentPies();
 }
 
+// ======================
+// STAT CARDS
+// ======================
 function renderStatCards() {
+  const crEvals = evaluations.filter(e => e.cleanlinessCategory === "Comfort Room");
+  const surrEvals = evaluations.filter(e => e.cleanlinessCategory === "Surroundings");
+
   document.getElementById("stat-total").textContent = evaluations.length;
+  document.getElementById("stat-total-sub").innerHTML = `🚻 ${crEvals.length} · 🌳 ${surrEvals.length}`;
 
-  const avgSatisfaction = evaluations.length
-    ? Math.round((evaluations.reduce((sum, e) => sum + avgOf(e), 0) / evaluations.length / 5) * 100)
+  const pctOf = (list) => list.length
+    ? Math.round((list.reduce((sum, e) => sum + avgOf(e), 0) / list.length / 5) * 100)
     : 0;
-  document.getElementById("stat-avg-satisfaction").textContent = `${avgSatisfaction}%`;
+  document.getElementById("stat-avg-satisfaction").textContent = `${pctOf(evaluations)}%`;
+  document.getElementById("stat-avg-satisfaction-sub").innerHTML =
+    `🚻 ${pctOf(crEvals)}% · 🌳 ${pctOf(surrEvals)}%`;
 
-  const totalImages = evaluations.reduce(
-    (sum, e) => sum + e.evidence.filter(item => item.type === "image").length,
-    0
-  );
-  const totalVideos = evaluations.reduce(
-    (sum, e) => sum + e.evidence.filter(item => item.type === "video").length,
-    0
-  );
+  const evidenceCount = (list) => list.reduce((sum, e) => sum + e.evidence.length, 0);
+  const totalImages = evaluations.reduce((sum, e) => sum + e.evidence.filter(i => i.type === "image").length, 0);
+  const totalVideos = evaluations.reduce((sum, e) => sum + e.evidence.filter(i => i.type === "video").length, 0);
   document.getElementById("stat-total-evidence").textContent = totalImages + totalVideos;
-  document.getElementById("stat-total-evidence-sub").textContent = `${totalImages} images · ${totalVideos} videos`;
+  const evidenceSubEl = document.getElementById("stat-total-evidence-sub");
+  evidenceSubEl.innerHTML = `🚻 ${evidenceCount(crEvals)} · 🌳 ${evidenceCount(surrEvals)}`;
+  evidenceSubEl.title = `${totalImages} images · ${totalVideos} videos overall`;
 
-  const activeOffices = new Set(evaluations.map(e => e.officeName)).size;
-  const totalOffices = Object.keys(offices).length;
-  document.getElementById("stat-active-offices").textContent = activeOffices;
-  document.getElementById("stat-active-offices-sub").textContent = `of ${totalOffices} total offices`;
+  const activeOfficesFor = (list) => new Set(list.map(e => e.officeName)).size;
+  document.getElementById("stat-active-offices").textContent = new Set(evaluations.map(e => e.officeName)).size;
+  document.getElementById("stat-active-offices-sub").innerHTML =
+    `🚻 ${activeOfficesFor(crEvals)}/${Object.keys(comfortOffices).length} · 🌳 ${activeOfficesFor(surrEvals)}/${Object.keys(surroundingsOffices).length}`;
 }
 
+// ======================
+// SUBMISSION STATUS — grouped by status, split Comfort Room vs Surroundings
+// ======================
 function renderStatusBreakdown() {
   const el = document.getElementById("status-breakdown-chart");
 
@@ -1031,83 +1037,144 @@ function renderStatusBreakdown() {
     return;
   }
 
-  const total = evaluations.length;
-  const counts = { pending: 0, no_action: 0, resolved: 0 };
-  evaluations.forEach(e => { counts[e.status]++; });
-
   const statusOrder = ["pending", "no_action", "resolved"];
-  const bars = statusOrder.map(key => ({
-    key,
-    count: counts[key],
-    pct: (counts[key] / total) * 100,
-    meta: STATUS_META[key]
-  }));
+  const cats = ["Comfort Room", "Surroundings"];
+  const totals = {};
+  cats.forEach(c => { totals[c] = evaluations.filter(e => e.cleanlinessCategory === c).length; });
 
-  const CHART_WIDTH = 400;
-  const CHART_HEIGHT = 220;
-  const PAD_LEFT = 46;
-  const PAD_RIGHT = 16;
-  const PAD_TOP = 20;
-  const PAD_BOTTOM = 16;
+  el.innerHTML = statusOrder.map(statusKey => {
+    const meta = STATUS_META[statusKey];
+    const rows = cats.map(c => {
+      const catMeta = CATEGORY_META[c];
+      const count = evaluations.filter(e => e.cleanlinessCategory === c && e.status === statusKey).length;
+      const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
+      return `
+        <div class="bar-row" title="${catMeta.label} — ${meta.label}: ${count} of ${totals[c]} evaluations (${pct}%)">
+          <div class="bar-label">${catMeta.icon} ${catMeta.label}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${catMeta.color};"></div></div>
+          <div class="bar-value">${pct}%</div>
+        </div>
+      `;
+    }).join("");
 
-  const plotW = CHART_WIDTH - PAD_LEFT - PAD_RIGHT;
-  const plotH = CHART_HEIGHT - PAD_TOP - PAD_BOTTOM;
-
-  const colWidth = plotW / bars.length;
-  const barWidth = Math.min(70, colWidth * 0.5);
-
-  const yTicks = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-  const yFor = (pct) => PAD_TOP + plotH - (Math.min(pct, 100) / 100) * plotH;
-  const baselineY = yFor(0);
-
-  const gridLines = yTicks.map(t => {
-    const y = yFor(t);
-    return `<line x1="${PAD_LEFT}" y1="${y.toFixed(1)}" x2="${CHART_WIDTH - PAD_RIGHT}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1" vector-effect="non-scaling-stroke"></line>`;
-  }).join("");
-
-  const yLabels = yTicks.map(t => {
-    const y = yFor(t);
-    return `<text x="${PAD_LEFT - 8}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-family="DM Sans, sans-serif" font-size="9.5" fill="#94a3b8">${t}%</text>`;
-  }).join("");
-
-  const barsSvg = bars.map((b, i) => {
-    const colX0 = PAD_LEFT + i * colWidth;
-    const barX = colX0 + (colWidth - barWidth) / 2;
-    const barH = (b.pct / 100) * plotH;
-    const barY = baselineY - barH;
     return `
-      <rect x="${barX.toFixed(1)}" y="${barY.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" rx="6" fill="${b.meta.color}">
-        <title>${b.meta.label}: ${b.count} of ${total} evaluations (${b.pct.toFixed(1)}%)</title>
-      </rect>
-      <text x="${(barX + barWidth / 2).toFixed(1)}" y="${(barY - 8).toFixed(1)}" text-anchor="middle" font-family="Syne, sans-serif" font-weight="700" font-size="12" fill="#0f1b32">${b.pct.toFixed(1)}%</text>
+      <div class="group-block">
+        <div class="group-header"><span class="dot" style="background:${meta.color};"></span>${meta.label}</div>
+        <div class="bar-chart">${rows}</div>
+      </div>
     `;
   }).join("");
-
-  const axisLine = `<line x1="${PAD_LEFT}" y1="${baselineY.toFixed(1)}" x2="${CHART_WIDTH - PAD_RIGHT}" y2="${baselineY.toFixed(1)}" stroke="#cbd5e1" stroke-width="1"></line>`;
-  const yAxisLine = `<line x1="${PAD_LEFT}" y1="${PAD_TOP}" x2="${PAD_LEFT}" y2="${baselineY.toFixed(1)}" stroke="#cbd5e1" stroke-width="1"></line>`;
-
-  const svgContent = `
-    <svg width="100%" viewBox="0 0 ${CHART_WIDTH} ${CHART_HEIGHT}" class="status-chart-svg" style="min-height: 220px;">
-      ${gridLines}
-      ${yLabels}
-      ${barsSvg}
-      ${yAxisLine}
-      ${axisLine}
-    </svg>
-  `;
-
-  const axisLabels = `
-    <div class="status-axis-labels" style="padding: 0 16px 0 46px;">
-      ${bars.map(b => `<div style="text-align: center; flex: 1;">${b.meta.label}</div>`).join("")}
-    </div>
-  `;
-
-  el.innerHTML = svgContent + axisLabels;
 }
 
+// ======================
+// RATING DISTRIBUTION — grouped by star, split Comfort Room vs Surroundings
+// ======================
+function renderRatingDistribution() {
+  const el = document.getElementById("rating-distribution-chart");
+
+  if (evaluations.length === 0) {
+    el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
+    return;
+  }
+
+  const cats = ["Comfort Room", "Surroundings"];
+  const totals = {};
+  cats.forEach(c => { totals[c] = evaluations.filter(e => e.cleanlinessCategory === c).length; });
+
+  el.innerHTML = [5, 4, 3, 2, 1].map(star => {
+    const rows = cats.map(c => {
+      const catMeta = CATEGORY_META[c];
+      const count = evaluations.filter(e => {
+        if (e.cleanlinessCategory !== c) return false;
+        const rounded = Math.max(1, Math.min(5, Math.round(avgOf(e))));
+        return rounded === star;
+      }).length;
+      const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
+      return `
+        <div class="bar-row" title="${catMeta.label} — ${star}-star: ${count} evaluations (${pct}%)">
+          <div class="bar-label">${catMeta.icon} ${catMeta.label}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${catMeta.color};"></div></div>
+          <div class="bar-value">${pct}%</div>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div class="group-block">
+        <div class="group-header">${star} Star${star === 1 ? '' : 's'}</div>
+        <div class="bar-chart">${rows}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+// ======================
+// CATEGORY / EVIDENCE PIES
+// ======================
+const PIE_COLORS = ["#2563eb", "#FB923C", "#F87171", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
+
+function renderSinglePie(circleId, legendId, entries) {
+  const circle = document.getElementById(circleId);
+  const legend = document.getElementById(legendId);
+  const total = entries.reduce((sum, e) => sum + e.count, 0);
+
+  if (total === 0) {
+    circle.style.background = "#f1f5f9";
+    legend.innerHTML = `<div class="lb-empty">No data yet.</div>`;
+    return;
+  }
+
+  let cumulative = 0;
+  const gradientParts = entries.map(e => {
+    const start = (cumulative / total) * 360;
+    cumulative += e.count;
+    const end = (cumulative / total) * 360;
+    return `${e.color} ${start.toFixed(2)}deg ${end.toFixed(2)}deg`;
+  });
+  circle.style.background = `conic-gradient(${gradientParts.join(", ")})`;
+
+  legend.innerHTML = entries.map(e => {
+    const pct = Math.round((e.count / total) * 100);
+    return `
+      <div class="pie-legend-row" title="${e.label}: ${e.count} (${pct}% of ${total})">
+        <span class="pie-legend-dot" style="background:${e.color};"></span>
+        <span class="pie-legend-label">${e.label}</span>
+        <span class="pie-legend-value">${pct}% (${e.count})</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderCategoryPies() {
+  renderSinglePie("pie-category-circle", "pie-category-legend",
+    ["Comfort Room", "Surroundings"].map(c => ({
+      label: `${CATEGORY_META[c].icon} ${CATEGORY_META[c].label}`,
+      count: evaluations.filter(e => e.cleanlinessCategory === c).length,
+      color: CATEGORY_META[c].color
+    }))
+  );
+
+  [{ cat: "Comfort Room", key: "cr" }, { cat: "Surroundings", key: "surr" }].forEach(({ cat, key }) => {
+    const list = evaluations.filter(e => e.cleanlinessCategory === cat);
+    const withEvidence = list.filter(e => e.evidence.length > 0).length;
+    const withoutEvidence = list.length - withEvidence;
+    renderSinglePie(`pie-evidence-${key}-circle`, `pie-evidence-${key}-legend`, [
+      { label: "With Evidence", count: withEvidence, color: CATEGORY_META[cat].color },
+      { label: "No Evidence", count: withoutEvidence, color: "#e2e8f0" }
+    ]);
+  });
+}
+
+// ======================
+// OFFICE TREND — offices from both category collections, tagged by category
+// ======================
 const OT_MONTHS_WINDOW = 6;
 const OT_MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-let otSelectedOffices = null;
+const OT_GROUP_WIDTH = 110;
+const OT_BAR_WIDTH = 14;
+const OT_BAR_GAP = 2;
+const OT_CHART_HEIGHT = 190;
+let otSelectedKeys = null;
 
 function otBuildMonths() {
   const now = new Date();
@@ -1119,9 +1186,20 @@ function otBuildMonths() {
   return months;
 }
 
-function otMonthlyAvgPct(officeName, month, year) {
+function otAllOfficeEntries() {
+  const entries = [];
+  Object.values(comfortOffices).forEach(name => entries.push({ name, category: "Comfort Room" }));
+  Object.values(surroundingsOffices).forEach(name => entries.push({ name, category: "Surroundings" }));
+  return entries;
+}
+
+function otKey(entry) {
+  return `${entry.category}|${entry.name}`;
+}
+
+function otMonthlyAvgPct(entry, month, year) {
   const evals = evaluations.filter(e => {
-    if (e.officeName !== officeName || !e.timestamp) return false;
+    if (e.officeName !== entry.name || e.cleanlinessCategory !== entry.category || !e.timestamp) return false;
     const d = new Date(e.timestamp);
     return d.getMonth() === month && d.getFullYear() === year;
   });
@@ -1130,22 +1208,20 @@ function otMonthlyAvgPct(officeName, month, year) {
   return (avg / 5) * 100;
 }
 
-function otTopOffices(n) {
-  const officeNames = Object.values(offices);
-  const counts = officeNames.map(name => ({
-    name,
-    count: evaluations.filter(e => e.officeName === name).length
+function otTopEntries(perCategory) {
+  const entries = otAllOfficeEntries().map(e => ({
+    ...e,
+    count: evaluations.filter(ev => ev.officeName === e.name && ev.cleanlinessCategory === e.category).length
   }));
-  return counts.sort((a, b) => b.count - a.count).slice(0, n).map(c => c.name);
+  const result = [];
+  ["Comfort Room", "Surroundings"].forEach(cat => {
+    result.push(...entries.filter(e => e.category === cat).sort((a, b) => b.count - a.count).slice(0, perCategory));
+  });
+  return result;
 }
 
-const OT_GROUP_WIDTH = 110; 
-const OT_BAR_WIDTH = 14;      
-const OT_BAR_GAP = 2;         
-const OT_CHART_HEIGHT = 190;
-
 function renderOfficeTrend() {
-  const officeNames = Object.values(offices);
+  const allEntries = otAllOfficeEntries();
   const svg = document.getElementById("ot-line-svg");
   const groupLabelsEl = document.getElementById("ot-group-labels");
   const yAxisEl = document.getElementById("ot-yaxis");
@@ -1153,7 +1229,7 @@ function renderOfficeTrend() {
   const dropdownList = document.getElementById("ot-dropdown-list");
   const dropdownBtnLabel = document.getElementById("ot-dropdown-btn-label");
 
-  if (officeNames.length === 0) {
+  if (allEntries.length === 0) {
     svg.innerHTML = "";
     svg.removeAttribute("width");
     groupLabelsEl.innerHTML = "";
@@ -1163,36 +1239,39 @@ function renderOfficeTrend() {
     return;
   }
 
-  const top5 = otTopOffices(5);
-  const usingDefault = otSelectedOffices === null;
-  const activeNames = usingDefault ? top5 : officeNames.filter(n => otSelectedOffices.has(n));
+  const defaultTop = otTopEntries(3); // up to 3 per category by default
+  const usingDefault = otSelectedKeys === null;
+  const activeEntries = usingDefault ? defaultTop : allEntries.filter(e => otSelectedKeys.has(otKey(e)));
 
   dropdownBtnLabel.textContent = usingDefault
-    ? "Top 5 offices"
-    : `${activeNames.length} office${activeNames.length === 1 ? "" : "s"} selected`;
+    ? "Top offices"
+    : `${activeEntries.length} office${activeEntries.length === 1 ? "" : "s"} selected`;
 
-  // Build the scrollable checkbox list (alphabetical for easy scanning)
-  const sortedForList = [...officeNames].sort((a, b) => a.localeCompare(b));
-  dropdownList.innerHTML = sortedForList.map(name => {
-    const checked = activeNames.includes(name) ? "checked" : "";
-    return `
-      <label class="ot-checkbox-row">
-        <input type="checkbox" data-office="${name}" ${checked}>
-        <span>${name}</span>
-      </label>
-    `;
+  dropdownList.innerHTML = ["Comfort Room", "Surroundings"].map(cat => {
+    const meta = CATEGORY_META[cat];
+    const catEntries = allEntries.filter(e => e.category === cat).sort((a, b) => a.name.localeCompare(b.name));
+    if (!catEntries.length) return "";
+    const rows = catEntries.map(e => {
+      const checked = activeEntries.some(a => otKey(a) === otKey(e)) ? "checked" : "";
+      return `
+        <label class="ot-checkbox-row">
+          <input type="checkbox" data-key="${otKey(e)}" ${checked}>
+          <span>${e.name}</span>
+        </label>
+      `;
+    }).join("");
+    return `<div class="ot-cat-group-label" style="color:${meta.color};">${meta.icon} ${meta.label}</div>${rows}`;
   }).join("");
 
   dropdownList.querySelectorAll("input[type=checkbox]").forEach(cb => {
     cb.addEventListener("change", () => {
-      if (otSelectedOffices === null) {
-        otSelectedOffices = new Set(top5); // switch from auto top-5 into an explicit selection
+      if (otSelectedKeys === null) {
+        otSelectedKeys = new Set(defaultTop.map(otKey));
       }
-      const name = cb.dataset.office;
       if (cb.checked) {
-        otSelectedOffices.add(name);
+        otSelectedKeys.add(cb.dataset.key);
       } else {
-        otSelectedOffices.delete(name);
+        otSelectedKeys.delete(cb.dataset.key);
       }
       renderOfficeTrend();
     });
@@ -1201,13 +1280,12 @@ function renderOfficeTrend() {
   const months = otBuildMonths();
   const monthColors = PIE_COLORS.slice(0, months.length);
 
-  // Y-axis (fixed, non-scrolling) ticks
   yAxisEl.innerHTML = [100, 75, 50, 25, 0].map(pct => {
     const top = OT_CHART_HEIGHT - (pct / 100) * OT_CHART_HEIGHT;
     return `<span style="top:${top}px;">${pct}%</span>`;
   }).join("");
 
-  if (activeNames.length === 0) {
+  if (activeEntries.length === 0) {
     svg.innerHTML = "";
     svg.removeAttribute("width");
     groupLabelsEl.innerHTML = "";
@@ -1215,7 +1293,7 @@ function renderOfficeTrend() {
     return;
   }
 
-  const totalWidth = activeNames.length * OT_GROUP_WIDTH;
+  const totalWidth = activeEntries.length * OT_GROUP_WIDTH;
   svg.setAttribute("width", totalWidth);
   svg.setAttribute("height", OT_CHART_HEIGHT);
   svg.setAttribute("viewBox", `0 0 ${totalWidth} ${OT_CHART_HEIGHT}`);
@@ -1231,65 +1309,49 @@ function renderOfficeTrend() {
 
   const barsGroupWidth = months.length * OT_BAR_WIDTH + (months.length - 1) * OT_BAR_GAP;
 
-  const barsSvg = activeNames.map((officeName, i) => {
+  const barsSvg = activeEntries.map((entry, i) => {
     const groupX0 = i * OT_GROUP_WIDTH + (OT_GROUP_WIDTH - barsGroupWidth) / 2;
     return months.map((m, j) => {
-      const pct = otMonthlyAvgPct(officeName, m.month, m.year);
+      const pct = otMonthlyAvgPct(entry, m.month, m.year);
       if (pct === null) return "";
       const barX = groupX0 + j * (OT_BAR_WIDTH + OT_BAR_GAP);
       const barH = (pct / 100) * OT_CHART_HEIGHT;
       const barY = OT_CHART_HEIGHT - barH;
-      return `<rect x="${barX.toFixed(1)}" y="${barY.toFixed(1)}" width="${OT_BAR_WIDTH}" height="${barH.toFixed(1)}" rx="2" fill="${monthColors[j]}"><title>${officeName} — ${m.label}: ${pct.toFixed(1)}%</title></rect>`;
+      const catMeta = CATEGORY_META[entry.category];
+      return `<rect x="${barX.toFixed(1)}" y="${barY.toFixed(1)}" width="${OT_BAR_WIDTH}" height="${barH.toFixed(1)}" rx="2" fill="${monthColors[j]}"><title>${catMeta.icon} ${entry.name} (${catMeta.label}) — ${m.label}: ${pct.toFixed(1)}%</title></rect>`;
     }).join("");
   }).join("");
 
   svg.innerHTML = gridLines + barsSvg;
 
-  groupLabelsEl.innerHTML = activeNames.map(name => `
-    <div class="ot-group-label" style="width:${OT_GROUP_WIDTH}px;" title="${name}"><span>${name}</span></div>
-  `).join("");
+  groupLabelsEl.innerHTML = activeEntries.map(entry => {
+    const meta = CATEGORY_META[entry.category];
+    return `<div class="ot-group-label" style="width:${OT_GROUP_WIDTH}px;color:${meta.color};" title="${meta.label}: ${entry.name}"><span>${meta.icon} ${entry.name}</span></div>`;
+  }).join("");
 
   legendEl.innerHTML = months.map((m, j) => `
     <div class="ot-line-legend-item">
       <span class="ot-line-legend-swatch" style="background:${monthColors[j]};"></span>
       <span>${m.label}</span>
     </div>
-  `).join("");
+  `).join("") + `
+    <div class="ot-line-legend-item" style="margin-left:8px; font-weight:700; color:${CATEGORY_META["Comfort Room"].color};">${CATEGORY_META["Comfort Room"].icon} Comfort Room</div>
+    <div class="ot-line-legend-item" style="font-weight:700; color:${CATEGORY_META["Surroundings"].color};">${CATEGORY_META["Surroundings"].icon} Surroundings</div>
+  `;
 }
 
-function renderRatingDistribution() {
-  const el = document.getElementById("rating-distribution-chart");
-  const total = evaluations.length;
-
-  const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  evaluations.forEach(e => {
-    const rounded = Math.max(1, Math.min(5, Math.round(avgOf(e))));
-    counts[rounded]++;
-  });
-
-  el.innerHTML = [5, 4, 3, 2, 1].map(star => {
-    const pct = total ? Math.round((counts[star] / total) * 100) : 0;
-    const count = counts[star];
-    return `
-      <div class="bar-row" title="${count} evaluation${count !== 1 ? 's' : ''} with ${star}-star rating (${pct}%)">
-        <div class="bar-label">${star} Star${star === 1 ? '' : 's'}</div>
-        <div class="bar-track"><div class="bar-fill" data-width="${pct}%" style="width: ${pct}%; background: #2563eb;" title="${count} evaluations (${pct}%)"></div></div>
-        <div class="bar-value">${pct}%</div>
-      </div>
-    `;
-  }).join("");
-}
-
-function renderDimensionPerformance() {
-  const el = document.getElementById("dimension-performance-chart");
-
-  if (evaluations.length === 0) {
+// ======================
+// DIMENSION PERFORMANCE — split into two 5-question sections, one per category
+// ======================
+function renderDimensionSection(containerId, dims, evalsList) {
+  const el = document.getElementById(containerId);
+  if (evalsList.length === 0) {
     el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
     return;
   }
 
-  el.innerHTML = DIMENSIONS.map(dim => {
-    const values = evaluations.map(e => e[dim.field]).filter(v => v > 0);
+  el.innerHTML = dims.map(dim => {
+    const values = evalsList.map(e => e[dim.field]).filter(v => v > 0);
     const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
     const pct = values.length ? (avg / 5) * 100 : 0;
     const fillClass = ratingFillClass(pct);
@@ -1309,53 +1371,9 @@ function renderDimensionPerformance() {
   }).join("");
 }
 
-const PIE_COLORS = ["#2563eb", "#FB923C", "#F87171", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
-
-function renderPieChart(circleId, legendId, values) {
-  const circle = document.getElementById(circleId);
-  const legend = document.getElementById(legendId);
-
-  const counts = {};
-  values.forEach(v => {
-    const key = (v && String(v).trim()) ? String(v).trim() : "Unspecified";
-    counts[key] = (counts[key] || 0) + 1;
-  });
-
-  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const total = values.length;
-
-  if (total === 0) {
-    circle.style.background = "#f1f5f9";
-    legend.innerHTML = `<div class="lb-empty">No data yet.</div>`;
-    return;
-  }
-
-  let cumulative = 0;
-  const gradientParts = entries.map(([label, count], i) => {
-    const color = PIE_COLORS[i % PIE_COLORS.length];
-    const start = (cumulative / total) * 360;
-    cumulative += count;
-    const end = (cumulative / total) * 360;
-    return `${color} ${start.toFixed(2)}deg ${end.toFixed(2)}deg`;
-  });
-  circle.style.background = `conic-gradient(${gradientParts.join(", ")})`;
-
-  legend.innerHTML = entries.map(([label, count], i) => {
-    const color = PIE_COLORS[i % PIE_COLORS.length];
-    const pct = Math.round((count / total) * 100);
-    return `
-      <div class="pie-legend-row" title="${label}: ${count} respondent${count !== 1 ? 's' : ''} (${pct}% of ${total} total)">
-        <span class="pie-legend-dot" style="background:${color};" title="${label}"></span>
-        <span class="pie-legend-label" title="${label}: ${count} count">${label}</span>
-        <span class="pie-legend-value" title="${count} respondents, ${pct}% of total">${pct}% (${count})</span>
-      </div>
-    `;
-  }).join("");
-}
-
-function renderRespondentPies() {
-  renderPieChart("pie-sex-circle", "pie-sex-legend", evaluations.map(e => e.sex));
-  renderPieChart("pie-usercat-circle", "pie-usercat-legend", evaluations.map(e => e.userCategory));
+function renderDimensionPerformance() {
+  renderDimensionSection("dimension-performance-cr", CR_DIMENSIONS, evaluations.filter(e => e.cleanlinessCategory === "Comfort Room"));
+  renderDimensionSection("dimension-performance-surr", SURR_DIMENSIONS, evaluations.filter(e => e.cleanlinessCategory === "Surroundings"));
 }
 
 </script>
