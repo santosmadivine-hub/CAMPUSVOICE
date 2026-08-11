@@ -785,8 +785,8 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Rating Distribution <span class="card-sub">— by category</span></div>
-        <div id="rating-distribution-chart" style="margin-top: 14px;"></div>
+        <div class="card-title">Sex Distribution <span class="card-sub">— by category</span></div>
+        <div id="sex-distribution-chart" style="margin-top: 14px;"></div>
       </div>
     </div>
 
@@ -1039,6 +1039,30 @@ function ratingFillClass(pct) {
 }
 
 // ======================
+// SEX NORMALIZATION
+// ======================
+function normalizeSex(value) {
+  const raw = (value ?? "").toString().trim();
+
+  if (!raw) return "Not Specified";
+
+  const normalized = raw.toLowerCase().replace(/[_-]+/g, " ").replace(/\\s+/g, " ").trim();
+
+  if (normalized === "male" || normalized === "m") return "Male";
+  if (normalized === "female" || normalized === "f") return "Female";
+  if (normalized === "other") return "Other";
+  if (
+    normalized === "prefer not to say" ||
+    normalized === "prefer not say" ||
+    normalized === "rather not say"
+  ) {
+    return "Prefer not to say";
+  }
+
+  return raw;
+}
+
+// ======================
 // LISTENERS — same collections Office Management / Evaluation Management use
 // ======================
 onSnapshot(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), (snapshot) => {
@@ -1074,6 +1098,7 @@ onSnapshot(evalQuery, (snapshot) => {
       officeName: data.officeName || "Unknown",
       cleanlinessCategory: category,
       comments: data.comments || "",
+      sex: normalizeSex(data.sex ?? data.gender ?? data.sexGender),
       timestamp: Number(data.timestamp) || 0,
       evidence: parseEvidence(data)
     };
@@ -1089,7 +1114,7 @@ onSnapshot(evalQuery, (snapshot) => {
 function renderAll() {
   renderStatCards();
   renderStatusBreakdown();
-  renderRatingDistribution();
+  renderSexDistribution();
   renderCategoryPies();
   renderOfficeTrend();
   renderDimensionPerformance();
@@ -1186,10 +1211,10 @@ function renderStatusBreakdown() {
 }
 
 // ======================
-// RATING DISTRIBUTION — grouped by star, split Comfort Room vs Surroundings
+// SEX DISTRIBUTION — split Comfort Room vs Surroundings
 // ======================
-function renderRatingDistribution() {
-  const el = document.getElementById("rating-distribution-chart");
+function renderSexDistribution() {
+  const el = document.getElementById("sex-distribution-chart");
 
   if (evaluations.length === 0) {
     el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
@@ -1198,33 +1223,81 @@ function renderRatingDistribution() {
 
   const cats = ["Comfort Room", "Surroundings"];
   const totals = {};
-  cats.forEach(c => { totals[c] = evaluations.filter(e => e.cleanlinessCategory === c).length; });
+  cats.forEach(c => {
+    totals[c] = evaluations.filter(e => e.cleanlinessCategory === c).length;
+  });
 
-  el.innerHTML = [5, 4, 3, 2, 1].map(star => {
-    const rows = cats.map(c => {
+  // Preserve a consistent order while also supporting any additional
+  // sex values found in Firestore.
+  const preferredOrder = [
+    "Male",
+    "Female",
+    "Other",
+    "Prefer not to say",
+    "Not Specified"
+  ];
+
+  const discovered = [];
+  evaluations.forEach(e => {
+    const sex = normalizeSex(e.sex);
+    if (!discovered.includes(sex)) discovered.push(sex);
+  });
+
+  const sexes = [
+    ...preferredOrder.filter(s => discovered.includes(s)),
+    ...discovered.filter(s => !preferredOrder.includes(s))
+  ];
+
+  if (sexes.length === 0) {
+    el.innerHTML = `<div class="lb-empty">No sex data available.</div>`;
+    return;
+  }
+
+  const rows = sexes.map(sex => {
+    const categoryRows = cats.map(c => {
       const catMeta = CATEGORY_META[c];
-      const count = evaluations.filter(e => {
-        if (e.cleanlinessCategory !== c) return false;
-        const rounded = Math.max(1, Math.min(5, Math.round(avgOf(e))));
-        return rounded === star;
-      }).length;
+      const count = evaluations.filter(e =>
+        e.cleanlinessCategory === c &&
+        normalizeSex(e.sex) === sex
+      ).length;
+
       const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
+
       return `
-        <div class="bar-row" title="${catMeta.label} — ${star}-star: ${count} evaluations (${pct}%)">
+        <div class="bar-row"
+             title="${catMeta.label} — ${sex}: ${count} evaluations (${pct}%)">
           <div class="bar-label">${catMeta.icon} ${catMeta.label}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${catMeta.color};"></div></div>
-          <div class="bar-value">${pct}%</div>
+          <div class="bar-track">
+            <div class="bar-fill"
+                 style="width:${pct}%;background:${catMeta.color};"></div>
+          </div>
+          <div class="bar-value">${pct}% (${count})</div>
         </div>
       `;
     }).join("");
 
     return `
       <div class="group-block">
-        <div class="group-header">${star} Star${star === 1 ? '' : 's'}</div>
-        <div class="bar-chart">${rows}</div>
+        <div class="group-header">${sex}</div>
+        <div class="bar-chart">${categoryRows}</div>
       </div>
     `;
   }).join("");
+
+  const legend = cats.map(c => `
+    <div class="status-vbar-legend-item">
+      <span class="status-vbar-legend-swatch"
+            style="background:${CATEGORY_META[c].color};"></span>
+      <span>${CATEGORY_META[c].icon} ${CATEGORY_META[c].label}</span>
+    </div>
+  `).join("");
+
+  el.innerHTML = `
+    ${rows}
+    <div class="status-vbar-legend" style="margin-top:12px;">
+      ${legend}
+    </div>
+  `;
 }
 
 // ======================
