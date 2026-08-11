@@ -1336,7 +1336,8 @@ function renderStatusBreakdown() {
 }
 
 // ======================
-// SEX DISTRIBUTION — PIE CHARTS BY CATEGORY
+// SEX DISTRIBUTION — ONE DOUBLE-RING PIE
+// Inner ring = Comfort Room | Outer ring = Surroundings
 // ======================
 function renderSexDistribution() {
   const el = document.getElementById("sex-distribution-chart");
@@ -1346,10 +1347,8 @@ function renderSexDistribution() {
     return;
   }
 
-  const cats = ["Comfort Room", "Surroundings"];
+  const categories = ["Comfort Room", "Surroundings"];
 
-  // Keep common values first, then include any additional values
-  // found in the actual Firestore records.
   const preferredOrder = [
     "Male",
     "Female",
@@ -1374,147 +1373,226 @@ function renderSexDistribution() {
     return;
   }
 
-  const totalOverall = evaluations.length;
+  const colors = [
+    "#0284c7",
+    "#ec4899",
+    "#8b5cf6",
+    "#f59e0b",
+    "#64748b",
+    "#10b981",
+    "#ef4444"
+  ];
 
-  // Build a pie for each category. Each pie represents the sex
-  // composition of that category, so every category remains separate.
-  const pieBlocks = cats.map(category => {
-    const categoryEvaluations = evaluations.filter(
+  const sexColors = {};
+  sexes.forEach((sex, index) => {
+    sexColors[sex] = colors[index % colors.length];
+  });
+
+  const cx = 160;
+  const cy = 160;
+  const innerRadius = 72;
+  const outerInnerRadius = 92;
+  const outerRadius = 126;
+
+  function polar(cx, cy, radius, angle) {
+    const radians = (angle - 90) * Math.PI / 180;
+    return {
+      x: cx + radius * Math.cos(radians),
+      y: cy + radius * Math.sin(radians)
+    };
+  }
+
+  function ringPath(startAngle, endAngle, innerRadius, outerRadius) {
+    const startOuter = polar(cx, cy, outerRadius, endAngle);
+    const endOuter = polar(cx, cy, outerRadius, startAngle);
+    const startInner = polar(cx, cy, innerRadius, startAngle);
+    const endInner = polar(cx, cy, innerRadius, endAngle);
+
+    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+
+    return [
+      `M ${startOuter.x} ${startOuter.y}`,
+      `A ${outerRadius} ${outerRadius} 0 ${largeArc} 0 ${endOuter.x} ${endOuter.y}`,
+      `L ${endInner.x} ${endInner.y}`,
+      `A ${innerRadius} ${innerRadius} 0 ${largeArc} 1 ${startInner.x} ${startInner.y}`,
+      "Z"
+    ].join(" ");
+  }
+
+  function buildRing(category, innerR, outerR) {
+    const rows = evaluations.filter(
       e => e.cleanlinessCategory === category
     );
 
-    if (categoryEvaluations.length === 0) {
-      return `
-        <div class="sex-pie-card">
-          <div class="sex-pie-title">
-            ${CATEGORY_META[category].icon} ${CATEGORY_META[category].label}
-          </div>
-          <div class="lb-empty">No evaluations for this category.</div>
-        </div>
-      `;
+    const total = rows.length;
+
+    if (total === 0) {
+      return {
+        paths: "",
+        legendRows: [],
+        total: 0
+      };
     }
 
-    const counts = {};
+    let angle = 0;
+    const paths = [];
+    const legendRows = [];
+
     sexes.forEach(sex => {
-      counts[sex] = categoryEvaluations.filter(
+      const count = rows.filter(
         e => normalizeSex(e.sex) === sex
       ).length;
-    });
 
-    const total = categoryEvaluations.length;
-
-    // Use SVG so the chart does not require another external library.
-    let currentAngle = -90;
-    const radius = 76;
-    const center = 100;
-
-    const pieColors = [
-      "#0284c7",
-      "#ec4899",
-      "#8b5cf6",
-      "#f59e0b",
-      "#64748b",
-      "#10b981",
-      "#ef4444"
-    ];
-
-    const slices = [];
-    const legend = [];
-
-    sexes.forEach((sex, index) => {
-      const count = counts[sex] || 0;
       if (count === 0) return;
 
       const percentage = (count / total) * 100;
-      const angle = percentage * 3.6;
-      const endAngle = currentAngle + angle;
+      const sliceAngle = percentage * 3.6;
+      const endAngle = angle + sliceAngle;
+      const color = sexColors[sex];
 
-      const polarToCartesian = (cx, cy, r, angleDeg) => {
-        const angleRad = (angleDeg * Math.PI) / 180;
-        return {
-          x: cx + r * Math.cos(angleRad),
-          y: cy + r * Math.sin(angleRad)
-        };
-      };
-
-      const startPoint = polarToCartesian(center, center, radius, currentAngle);
-      const endPoint = polarToCartesian(center, center, radius, endAngle);
-      const largeArcFlag = angle > 180 ? 1 : 0;
-
-      let path;
-
-      if (percentage >= 99.999) {
-        path = `
-          M ${center} ${center - radius}
-          A ${radius} ${radius} 0 1 1 ${center - 0.01} ${center - radius}
-          Z
-        `;
-      } else {
-        path = `
-          M ${center} ${center}
-          L ${startPoint.x} ${startPoint.y}
-          A ${radius} ${radius} 0 ${largeArcFlag} 1
-            ${endPoint.x} ${endPoint.y}
-          Z
-        `;
-      }
-
-      const color = pieColors[index % pieColors.length];
-
-      slices.push(`
+      paths.push(`
         <path
-          d="${path}"
+          d="${ringPath(angle, endAngle, innerR, outerR)}"
           fill="${color}"
           stroke="#ffffff"
           stroke-width="2"
-          title="${sex}: ${count} (${Math.round(percentage)}%)">
+          data-category="${category}"
+          data-sex="${sex}"
+          title="${category} — ${sex}: ${count} (${Math.round(percentage)}%)">
         </path>
       `);
 
-      legend.push(`
-        <div class="sex-pie-legend-item">
-          <span class="sex-pie-swatch" style="background:${color};"></span>
-          <span class="sex-pie-legend-name">${sex}</span>
-          <strong>${count}</strong>
-          <span class="sex-pie-percent">${Math.round(percentage)}%</span>
-        </div>
-      `);
+      legendRows.push({
+        sex,
+        count,
+        percentage,
+        color
+      });
 
-      currentAngle = endAngle;
+      angle = endAngle;
     });
 
-    return `
-      <div class="sex-pie-card">
-        <div class="sex-pie-title">
-          ${CATEGORY_META[category].icon} ${CATEGORY_META[category].label}
-        </div>
+    return {
+      paths: paths.join(""),
+      legendRows,
+      total
+    };
+  }
 
-        <div class="sex-pie-content">
-          <div class="sex-pie-visual">
-            <svg viewBox="0 0 200 200"
-                 class="sex-pie-svg"
-                 role="img"
-                 aria-label="Sex distribution for ${CATEGORY_META[category].label}">
-              ${slices.join("")}
-            </svg>
+  const inner = buildRing("Comfort Room", 0, innerRadius);
+  const outer = buildRing("Surroundings", outerInnerRadius, outerRadius);
 
-            <div class="sex-pie-total">
-              <strong>${total}</strong>
-              <span>evaluations</span>
-            </div>
-          </div>
+  // Center hole makes the inner Comfort Room ring visually distinct
+  // from the outer Surroundings ring.
+  const centerHole = `
+    <circle cx="${cx}" cy="${cy}" r="${innerRadius + 2}" fill="white"></circle>
+  `;
 
-          <div class="sex-pie-legend">
-            ${legend.join("")}
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
+  // Rebuild the inner ring as a ring instead of a full pie so the
+  // center remains open and the two categories are clearly visible.
+  function buildCategoryRing(category, innerR, outerR) {
+    const rows = evaluations.filter(
+      e => e.cleanlinessCategory === category
+    );
+
+    const total = rows.length;
+    if (!total) return "";
+
+    let angle = 0;
+    const paths = [];
+
+    sexes.forEach(sex => {
+      const count = rows.filter(
+        e => normalizeSex(e.sex) === sex
+      ).length;
+
+      if (!count) return;
+
+      const sliceAngle = (count / total) * 360;
+      const endAngle = angle + sliceAngle;
+
+      paths.push(`
+        <path
+          d="${ringPath(angle, endAngle, innerR, outerR)}"
+          fill="${sexColors[sex]}"
+          stroke="#ffffff"
+          stroke-width="2"
+          title="${category} — ${sex}: ${count} (${Math.round((count / total) * 100)}%)">
+        </path>
+      `);
+
+      angle = endAngle;
+    });
+
+    return paths.join("");
+  }
+
+  const innerRing = buildCategoryRing(
+    "Comfort Room",
+    0,
+    innerRadius
+  );
+
+  const outerRing = buildCategoryRing(
+    "Surroundings",
+    outerInnerRadius,
+    outerRadius
+  );
+
+  const centerText = `
+    <div class="double-pie-center">
+      <strong>${inner.total + outer.total}</strong>
+      <span>evaluations</span>
+    </div>
+  `;
+
+  const legend = sexes.map(sex => `
+    <div class="double-pie-sex-item">
+      <span class="double-pie-swatch"
+            style="background:${sexColors[sex]};"></span>
+      <span>${sex}</span>
+    </div>
+  `).join("");
 
   el.innerHTML = `
-    <div class="sex-pie-grid">
-      ${pieBlocks}
+    <div class="double-pie-layout">
+      <div class="double-pie-chart-wrap">
+        <svg viewBox="0 0 320 320"
+             class="double-pie-svg"
+             role="img"
+             aria-label="Sex distribution with Comfort Room as the inner ring and Surroundings as the outer ring">
+          ${innerRing}
+          ${outerRing}
+          ${centerText}
+        </svg>
+
+        <div class="double-pie-center-overlay">
+          <strong>${inner.total + outer.total}</strong>
+          <span>evaluations</span>
+        </div>
+      </div>
+
+      <div class="double-pie-info">
+        <div class="double-pie-category">
+          <span class="double-pie-category-dot inner-dot"></span>
+          <div>
+            <strong>Comfort Room</strong>
+            <span>Inner circle · ${inner.total} evaluations</span>
+          </div>
+        </div>
+
+        <div class="double-pie-category">
+          <span class="double-pie-category-dot outer-dot"></span>
+          <div>
+            <strong>Surroundings</strong>
+            <span>Outer circle · ${outer.total} evaluations</span>
+          </div>
+        </div>
+
+        <div class="double-pie-sex-legend">
+          ${legend}
+        </div>
+      </div>
     </div>
   `;
 }
