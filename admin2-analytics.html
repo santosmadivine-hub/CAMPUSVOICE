@@ -239,6 +239,106 @@
     font-size: 14px;
   }
 
+  /* ===== Submission Status — vertical grouped bar chart ===== */
+  .status-vbar-wrap {
+    display: flex;
+    gap: 8px;
+  }
+
+  .status-vbar-yaxis {
+    flex: 0 0 32px;
+    width: 32px;
+    position: relative;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    color: #94a3b8;
+  }
+
+  .status-vbar-yaxis span {
+    position: absolute;
+    right: 6px;
+    transform: translateY(-50%);
+  }
+
+  .status-vbar-chart {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    border-left: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0 12px;
+  }
+
+  .status-vbar-group {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 100%;
+  }
+
+  .status-vbar-col {
+    width: 34px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    cursor: help;
+  }
+
+  .status-vbar-fill {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.3s ease;
+    min-height: 1px;
+  }
+
+  .status-vbar-value {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 4px;
+  }
+
+  .status-vbar-labels {
+    display: flex;
+    justify-content: space-around;
+    margin: 8px 0 0;
+    padding: 0 12px;
+    margin-left: 32px;
+  }
+
+  .status-vbar-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    text-align: center;
+  }
+
+  .status-vbar-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: #475569;
+  }
+
+  .status-vbar-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-vbar-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
   /* Office Trend card spans full width */
   .office-trend-card {
     margin-bottom: 16px;
@@ -1027,8 +1127,10 @@ function renderStatCards() {
 }
 
 // ======================
-// SUBMISSION STATUS — grouped by status, split Comfort Room vs Surroundings
+// SUBMISSION STATUS — vertical grouped bar chart (x: status, y: % of category total)
 // ======================
+const STATUS_VBAR_MAX_H = 200;
+
 function renderStatusBreakdown() {
   const el = document.getElementById("status-breakdown-chart");
 
@@ -1042,28 +1144,45 @@ function renderStatusBreakdown() {
   const totals = {};
   cats.forEach(c => { totals[c] = evaluations.filter(e => e.cleanlinessCategory === c).length; });
 
-  el.innerHTML = statusOrder.map(statusKey => {
+  const groupsHtml = statusOrder.map(statusKey => {
     const meta = STATUS_META[statusKey];
-    const rows = cats.map(c => {
+    const cols = cats.map(c => {
       const catMeta = CATEGORY_META[c];
       const count = evaluations.filter(e => e.cleanlinessCategory === c && e.status === statusKey).length;
       const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
+      const h = Math.max(1, Math.round((pct / 100) * STATUS_VBAR_MAX_H));
       return `
-        <div class="bar-row" title="${catMeta.label} — ${meta.label}: ${count} of ${totals[c]} evaluations (${pct}%)">
-          <div class="bar-label">${catMeta.icon} ${catMeta.label}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${catMeta.color};"></div></div>
-          <div class="bar-value">${pct}%</div>
+        <div class="status-vbar-col" title="${catMeta.label} — ${meta.label}: ${count} of ${totals[c]} evaluations (${pct}%)">
+          <div class="status-vbar-value">${pct}%</div>
+          <div class="status-vbar-fill" style="height:${h}px;background:${catMeta.color};"></div>
         </div>
       `;
     }).join("");
-
-    return `
-      <div class="group-block">
-        <div class="group-header"><span class="dot" style="background:${meta.color};"></span>${meta.label}</div>
-        <div class="bar-chart">${rows}</div>
-      </div>
-    `;
+    return `<div class="status-vbar-group">${cols}</div>`;
   }).join("");
+
+  const yAxis = [100, 75, 50, 25, 0].map(pct => {
+    const top = STATUS_VBAR_MAX_H - (pct / 100) * STATUS_VBAR_MAX_H;
+    return `<span style="top:${top}px;">${pct}%</span>`;
+  }).join("");
+
+  const xLabels = statusOrder.map(s => `<div class="status-vbar-label">${STATUS_META[s].label}</div>`).join("");
+
+  const legend = cats.map(c => `
+    <div class="status-vbar-legend-item">
+      <span class="status-vbar-legend-swatch" style="background:${CATEGORY_META[c].color};"></span>
+      <span>${CATEGORY_META[c].icon} ${CATEGORY_META[c].label}</span>
+    </div>
+  `).join("");
+
+  el.innerHTML = `
+    <div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;">
+      <div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div>
+      <div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div>
+    </div>
+    <div class="status-vbar-labels">${xLabels}</div>
+    <div class="status-vbar-legend">${legend}</div>
+  `;
 }
 
 // ======================
