@@ -854,6 +854,131 @@
     </div>
   </main>
 </div>
+<style>
+/* ======================
+   SEX DISTRIBUTION PIE CHARTS
+   ====================== */
+.sex-pie-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.sex-pie-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  background: #fff;
+  min-width: 0;
+}
+
+.sex-pie-title {
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.sex-pie-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.sex-pie-visual {
+  position: relative;
+  width: 190px;
+  min-width: 190px;
+  height: 190px;
+}
+
+.sex-pie-svg {
+  width: 190px;
+  height: 190px;
+  display: block;
+}
+
+.sex-pie-svg path {
+  cursor: default;
+  transition: opacity .15s ease, transform .15s ease;
+  transform-origin: 50% 50%;
+}
+
+.sex-pie-svg path:hover {
+  opacity: .82;
+}
+
+.sex-pie-total {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.sex-pie-total strong {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.sex-pie-total span {
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sex-pie-legend {
+  flex: 1;
+  min-width: 150px;
+}
+
+.sex-pie-legend-item {
+  display: grid;
+  grid-template-columns: 12px 1fr auto auto;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 0;
+  font-size: 12px;
+}
+
+.sex-pie-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.sex-pie-legend-name {
+  color: var(--text);
+  min-width: 0;
+}
+
+.sex-pie-percent {
+  color: var(--muted);
+  min-width: 38px;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .sex-pie-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .sex-pie-content {
+    flex-direction: column;
+  }
+
+  .sex-pie-legend {
+    width: 100%;
+  }
+}
+
+</style>
 <script src="shared.js"></script>
 
 <script type="module">
@@ -1211,7 +1336,7 @@ function renderStatusBreakdown() {
 }
 
 // ======================
-// SEX DISTRIBUTION — split Comfort Room vs Surroundings
+// SEX DISTRIBUTION — PIE CHARTS BY CATEGORY
 // ======================
 function renderSexDistribution() {
   const el = document.getElementById("sex-distribution-chart");
@@ -1222,13 +1347,9 @@ function renderSexDistribution() {
   }
 
   const cats = ["Comfort Room", "Surroundings"];
-  const totals = {};
-  cats.forEach(c => {
-    totals[c] = evaluations.filter(e => e.cleanlinessCategory === c).length;
-  });
 
-  // Preserve a consistent order while also supporting any additional
-  // sex values found in Firestore.
+  // Keep common values first, then include any additional values
+  // found in the actual Firestore records.
   const preferredOrder = [
     "Male",
     "Female",
@@ -1253,49 +1374,147 @@ function renderSexDistribution() {
     return;
   }
 
-  const rows = sexes.map(sex => {
-    const categoryRows = cats.map(c => {
-      const catMeta = CATEGORY_META[c];
-      const count = evaluations.filter(e =>
-        e.cleanlinessCategory === c &&
-        normalizeSex(e.sex) === sex
-      ).length;
+  const totalOverall = evaluations.length;
 
-      const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
+  // Build a pie for each category. Each pie represents the sex
+  // composition of that category, so every category remains separate.
+  const pieBlocks = cats.map(category => {
+    const categoryEvaluations = evaluations.filter(
+      e => e.cleanlinessCategory === category
+    );
 
+    if (categoryEvaluations.length === 0) {
       return `
-        <div class="bar-row"
-             title="${catMeta.label} — ${sex}: ${count} evaluations (${pct}%)">
-          <div class="bar-label">${catMeta.icon} ${catMeta.label}</div>
-          <div class="bar-track">
-            <div class="bar-fill"
-                 style="width:${pct}%;background:${catMeta.color};"></div>
+        <div class="sex-pie-card">
+          <div class="sex-pie-title">
+            ${CATEGORY_META[category].icon} ${CATEGORY_META[category].label}
           </div>
-          <div class="bar-value">${pct}% (${count})</div>
+          <div class="lb-empty">No evaluations for this category.</div>
         </div>
       `;
-    }).join("");
+    }
+
+    const counts = {};
+    sexes.forEach(sex => {
+      counts[sex] = categoryEvaluations.filter(
+        e => normalizeSex(e.sex) === sex
+      ).length;
+    });
+
+    const total = categoryEvaluations.length;
+
+    // Use SVG so the chart does not require another external library.
+    let currentAngle = -90;
+    const radius = 76;
+    const center = 100;
+
+    const pieColors = [
+      "#0284c7",
+      "#ec4899",
+      "#8b5cf6",
+      "#f59e0b",
+      "#64748b",
+      "#10b981",
+      "#ef4444"
+    ];
+
+    const slices = [];
+    const legend = [];
+
+    sexes.forEach((sex, index) => {
+      const count = counts[sex] || 0;
+      if (count === 0) return;
+
+      const percentage = (count / total) * 100;
+      const angle = percentage * 3.6;
+      const endAngle = currentAngle + angle;
+
+      const polarToCartesian = (cx, cy, r, angleDeg) => {
+        const angleRad = (angleDeg * Math.PI) / 180;
+        return {
+          x: cx + r * Math.cos(angleRad),
+          y: cy + r * Math.sin(angleRad)
+        };
+      };
+
+      const startPoint = polarToCartesian(center, center, radius, currentAngle);
+      const endPoint = polarToCartesian(center, center, radius, endAngle);
+      const largeArcFlag = angle > 180 ? 1 : 0;
+
+      let path;
+
+      if (percentage >= 99.999) {
+        path = `
+          M ${center} ${center - radius}
+          A ${radius} ${radius} 0 1 1 ${center - 0.01} ${center - radius}
+          Z
+        `;
+      } else {
+        path = `
+          M ${center} ${center}
+          L ${startPoint.x} ${startPoint.y}
+          A ${radius} ${radius} 0 ${largeArcFlag} 1
+            ${endPoint.x} ${endPoint.y}
+          Z
+        `;
+      }
+
+      const color = pieColors[index % pieColors.length];
+
+      slices.push(`
+        <path
+          d="${path}"
+          fill="${color}"
+          stroke="#ffffff"
+          stroke-width="2"
+          title="${sex}: ${count} (${Math.round(percentage)}%)">
+        </path>
+      `);
+
+      legend.push(`
+        <div class="sex-pie-legend-item">
+          <span class="sex-pie-swatch" style="background:${color};"></span>
+          <span class="sex-pie-legend-name">${sex}</span>
+          <strong>${count}</strong>
+          <span class="sex-pie-percent">${Math.round(percentage)}%</span>
+        </div>
+      `);
+
+      currentAngle = endAngle;
+    });
 
     return `
-      <div class="group-block">
-        <div class="group-header">${sex}</div>
-        <div class="bar-chart">${categoryRows}</div>
+      <div class="sex-pie-card">
+        <div class="sex-pie-title">
+          ${CATEGORY_META[category].icon} ${CATEGORY_META[category].label}
+        </div>
+
+        <div class="sex-pie-content">
+          <div class="sex-pie-visual">
+            <svg viewBox="0 0 200 200"
+                 class="sex-pie-svg"
+                 role="img"
+                 aria-label="Sex distribution for ${CATEGORY_META[category].label}">
+              ${slices.join("")}
+            </svg>
+
+            <div class="sex-pie-total">
+              <strong>${total}</strong>
+              <span>evaluations</span>
+            </div>
+          </div>
+
+          <div class="sex-pie-legend">
+            ${legend.join("")}
+          </div>
+        </div>
       </div>
     `;
   }).join("");
 
-  const legend = cats.map(c => `
-    <div class="status-vbar-legend-item">
-      <span class="status-vbar-legend-swatch"
-            style="background:${CATEGORY_META[c].color};"></span>
-      <span>${CATEGORY_META[c].icon} ${CATEGORY_META[c].label}</span>
-    </div>
-  `).join("");
-
   el.innerHTML = `
-    ${rows}
-    <div class="status-vbar-legend" style="margin-top:12px;">
-      ${legend}
+    <div class="sex-pie-grid">
+      ${pieBlocks}
     </div>
   `;
 }
