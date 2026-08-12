@@ -1,772 +1,1162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CampusVoice – Reports | Admin 1</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared.css">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CampusVoice – Dashboard | Admin 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
 <style>
-/* ── BASE ── */
-body { margin:0; font-family:'DM Sans',sans-serif; background:#87cefa; color:#0f172a; }
-.layout { display:flex; min-height:100vh; }
-.main   { flex:1; padding:24px; }
-
-.page-title { font-size:2rem; font-weight:800; }
-.page-sub   { font-size:13px; color:#64748b; margin-bottom:18px; }
-
-/* ── FILTER CARD ── */
-.config-card {
-  background:#fff; border:1px solid #e2e8f0;
-  border-radius:14px; padding:16px; margin-bottom:18px;
-}
-.config-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-
-.input, select {
-  padding:10px 12px; border:1px solid #dbe4ee;
-  border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px;
-  background:#f8fafc; color:#0f172a; outline:none;
-}
-select { min-width:180px; }
-
-.btn { padding:10px 16px; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-family:'DM Sans',sans-serif; font-size:14px; }
-.btn-primary { background:#2563eb; color:#fff; }
-.btn-blue    { background:#1d4ed8; color:#fff; }
-.btn-green   { background:#16a34a; color:#fff; }
-.btn-gray    { background:#e2e8f0; color:#475569; }
-
-/* ── KPI GRID ── */
-.kpi-grid {
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:12px; margin-bottom:18px;
-}
-.kpi-card {
-  background:#fff; border:1px solid #e2e8f0;
-  border-radius:14px; padding:16px;
-}
-.kpi-title { font-size:12px; color:#64748b; margin-bottom:4px; }
-.kpi-value { font-size:24px; font-weight:800; color:#0f172a; }
-
-/* ── SAVED REPORTS CARD ── */
-.card {
-  background:#fff; border:1px solid #e2e8f0;
-  border-radius:14px; padding:18px; margin-bottom:18px;
-}
-.card-header {
-  display:flex; justify-content:space-between; align-items:center;
-  margin-bottom:10px; flex-wrap:wrap; gap:10px;
-}
-.card-title { font-size:16px; font-weight:700; color:#0f172a; }
-.count-pill {
-  font-size:12px; font-weight:700; color:#2563eb;
-  background:#dbeafe; padding:4px 12px; border-radius:999px;
+/* ─── Main Content Container ─── */
+.dashboard-container {
+  flex: 1;
+  padding: 25px 30px 12px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-/* ── REPORTS TABLE ── */
-.reports-table { width:100%; border-collapse:collapse; }
-.reports-table th {
-  text-align:left; padding:12px 14px; font-size:11px;
-  color:#64748b; border-bottom:1px solid #e2e8f0;
-  font-weight:700; text-transform:uppercase; letter-spacing:.4px; white-space:nowrap;
-}
-.reports-table td {
-  padding:14px; border-bottom:1px solid #f1f5f9;
-  font-size:13px; vertical-align:middle;
-}
-.reports-table tr:last-child td { border-bottom:none; }
-.reports-table tr:hover td { background:#f8fafc; transition:.1s; }
-.table-wrap { overflow-x:auto; }
+/* Chart visualizations — sizing/colors below hook into the admin1 theme
+   tokens defined in shared.css (--accent3, --green, --amber, --red, etc.) */
 
-/* ── BADGE ── */
-.badge {
-  display:inline-block; padding:4px 11px;
-  border-radius:999px; font-size:11px; font-weight:700;
+/* Each chart gets its own standalone card container — pie and bar sit
+   side by side, the trend line sits full-width beneath. */
+.charts-grid {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 0; /* spacing now handled by .dashboard-container gap */
 }
-.badge-green  { background:#dcfce7; color:#15803d; }
-.badge-blue   { background:#dbeafe; color:#1d4ed8; }
-.badge-amber  { background:#fef9c3; color:#a16207; }
-.badge-red    { background:#fee2e2; color:#dc2626; }
 
-/* ── ACTION BTNS ── */
-.act-btn {
-  border:none; padding:6px 12px; border-radius:8px;
-  cursor:pointer; font-size:12px; font-weight:600;
+.chart-card {
+  background: #ffffff;
+  border: 1px solid #bae6fd;
+  border-radius: 18px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  padding: 22px 24px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+}
+
+.charts-grid > .chart-card {
+  flex: 1 1 420px;
+  min-width: 0;
+}
+
+.card-title{
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:16px;
+  color:#0f172a;
+}
+
+.card-sub{
   font-family:'DM Sans',sans-serif;
-}
-.act-view   { background:#0f172a; color:#fff; }
-.act-delete { background:#fee2e2; color:#dc2626; }
-
-/* ── EMPTY STATE ── */
-.empty-state {
-  text-align:center; padding:44px 20px; color:#94a3b8;
-}
-.empty-state .icon { font-size:36px; margin-bottom:8px; }
-.empty-state p { font-size:14px; margin:0; }
-
-/* ══════════════════════════════════════
-   REPORT PREVIEW (Official CSM Doc)
-══════════════════════════════════════ */
-#reportPreview {
-  display:none; background:#fff; margin-top:0;
-  border:1px solid #e2e8f0; border-radius:14px;
-  overflow:hidden; margin-bottom:18px;
+  font-weight:400;
+  font-size:13px;
+  color:#94a3b8;
 }
 
-/* Preview top action bar */
-.preview-bar {
-  display:flex; align-items:center; gap:10px;
-  padding:12px 18px; background:#f8fafc;
-  border-bottom:1px solid #e2e8f0; flex-wrap:wrap;
-}
-.preview-bar .preview-label {
-  flex:1; font-size:13px; font-weight:700; color:#334155;
+.card-header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
 }
 
-/* A4-style document */
-.csm-page {
-  padding:32px 40px 40px;
-  font-family:'Times New Roman',Times,serif;
-  font-size:11pt; color:#000;
-  max-width:780px; margin:0 auto;
+.badge-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(37,99,235,0.12);
+  color:#3b82f6;
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:13px;
+  padding:6px 14px;
+  border-radius:999px;
+  border:1px solid rgba(59,130,246,0.35);
+  white-space:nowrap;
 }
 
-/* LETTERHEAD */
-.lh-row { display:flex; align-items:center; gap:9px; margin-bottom:1px; }
-.lh-logo-box, .lh-seal-box {
-  width:100px; height:100px; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-}
-.lh-logo-box img, .lh-seal-box img {
-  width:100%; height:100%; object-fit:contain;
-}
-.lh-text { flex:1; text-align:center; line-height:1.4; }
-.lh-text .rep  { font-size:8.5pt; }
-.lh-text .uni  { font-size:10.5pt; font-weight:bold; text-transform:uppercase; letter-spacing:.1px; }
-.lh-text .dept { font-size:10pt; font-weight:bold; text-transform:uppercase; }
-.lh-text .addr { font-size:7.5pt; color:#444; }
-.lh-divider { border:none; border-top:2.5px solid #1a3a6b; margin:4px 0 10px; }
-
-.csm-doc-title {
-  text-align:center; font-size:11.5pt; font-weight:bold;
-  text-transform:uppercase; letter-spacing:.8px; margin-bottom:12px;
+/* ─── Stat cards (matches reference: colored top border, icon chip, bold value) ─── */
+.stat-grid{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:20px;
 }
 
-.csm-meta { font-size:10.5pt; line-height:1.8; margin-bottom:10px; }
-.csm-meta b { font-weight:bold; }
-
-/* SQD TABLE */
-.csm-table { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:10pt; }
-.csm-table th {
-  background:#1a3a6b; color:#fff; padding:6px 8px;
-  border:1px solid #1a3a6b; text-align:center; font-weight:bold;
+.stat-card{
+  position:relative;
+  background:#ffffff;
+  border:1px solid #bae6fd;
+  border-top:4px solid var(--accent3, #2563eb);
+  border-radius:16px;
+  padding:20px 20px 22px;
+  box-shadow:0 4px 14px rgba(15,23,42,0.05);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
 }
-.csm-table td { border:1px solid #aaa; padding:5px 8px; }
-.csm-table tr:nth-child(even) td { background:#eef2f9; }
 
-/* NARRATIVE */
-.csm-narrative { font-size:10.5pt; line-height:1.7; text-align:justify; margin-bottom:16px; }
-.csm-narrative p { margin-bottom:10px; }
+.stat-card.blue{ border-top-color:#2563eb; }
+.stat-card.green{ border-top-color:#2563eb; }
 
-/* SIGNATURES */
-.csm-sigs { display:flex; gap:40px; margin-top:24px; font-size:10.5pt; }
-.csm-sig-block { flex:1; }
-.csm-sig-label { color:#555; font-size:9.5pt; margin-bottom:30px; }
-.csm-sig-name  { font-weight:bold; text-transform:uppercase; border-top:1px solid #000; padding-top:4px; display:inline-block; }
-.csm-sig-title { font-size:9.5pt; font-style:italic; color:#333; margin-top:2px; }
+.stat-icon{
+  position:absolute;
+  top:18px;
+  right:18px;
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  background:#f1f5f9;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+}
 
-/* FOOTER (official accreditation banner from ISUFST letterhead) */
-.csm-footer {
-  margin-top:20px;
-  padding-top:8px;
-  display:block;
+.stat-label{
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  font-weight:500;
+  color:#64748b;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+
+.stat-value{
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:34px;
+  color:#0f172a;
+  line-height:1.1;
+}
+
+.stat-sub{
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  color:#94a3b8;
+}
+
+/* Line chart styling */
+.line-chart-wrap{
+  margin-top:12px;
+}
+#line-chart-svg{
   width:100%;
-}
-.csm-footer img {
+  height:220px;
   display:block;
+}
+
+/* Bar chart styling */
+.bar-chart-wrap{
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap:32px;
+  flex-wrap:wrap;
+  padding:1px 0;
+  min-height:auto;
+  position:relative;
+}
+.bar-chart-wrap svg{
+  flex-shrink:0;
   width:100%;
+  height:260px;
+}
+.bar-legend{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  color:#1e293b;
+}
+.legend-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  flex-shrink:0;
+}
+
+/* Donut chart styling */
+.donut-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:32px;
+  flex-wrap:nowrap;
+  padding:12px 0;
+  flex:1;
+}
+.donut-wrap svg{
+  flex-shrink:0;
+  width: 200px;
+  max-width:100%;
   height:auto;
-  object-fit:contain;
+}
+.donut-legend{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* Code Utilization legend positioned on right */
+#codeUtilWrap {
+  order: 1;
+}
+#code-pie-legend {
+  order: 2;
+}
+
+/* Code Utilization pie chart */
+.pie-wrap{
+  position:relative;
+}
+.pie-slice{
+  cursor:pointer;
+  transition:opacity .15s ease, transform .15s ease;
+  transform-origin:60px 60px;
+}
+.pie-slice:hover{
+  opacity:0.88;
+}
+
+.pie-tooltip{
+  position:absolute;
+  pointer-events:none;
+  background:#0f172a;
+  color:#fff;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  line-height:1.4;
+  padding:9px 13px;
+  border-radius:10px;
+  box-shadow:0 10px 24px rgba(15,23,42,0.28);
+  opacity:0;
+  transform:translate(-50%,-125%);
+  transition:opacity .12s ease;
+  z-index:20;
+  white-space:nowrap;
+}
+.pie-tooltip.show{
+  opacity:1;
+}
+.pie-tooltip .tt-title{
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:13px;
+  margin-bottom:3px;
+}
+.pie-tooltip .tt-sub{
+  color:#cbd5e1;
+  font-size:11px;
+}
+
+/* ─── Quick Access Section ─── */
+.quick-access-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.quick-access-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  text-decoration: none;
+  color: #0f172a;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  font-family: 'Syne', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-access-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.04) 100%);
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.quick-access-btn:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
+}
+
+.quick-access-btn:hover::before {
+  left: 0;
+}
+
+.quick-access-btn:active {
+  transform: translateY(0);
+}
+
+.qa-icon {
+  font-size: 28px;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.qa-label {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #0f172a;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  line-height: 1.3;
+}
+
+/* ─── Responsive breakpoints ───────────────────────────────── */
+
+/* Large tablets / small laptops */
+@media (max-width: 1200px) {
+  .dashboard-container {
+    max-width: 100%;
+  }
+  .stat-value {
+    font-size: 30px;
+  }
+  .quick-access-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Tablets */
+@media (max-width: 1024px) {
+  .stat-grid{
+    grid-template-columns:repeat(2, 1fr);
+  }
+  .charts-grid > .chart-card {
+    flex-basis: 300px;
+  }
+  .bar-chart-wrap {
+    gap: 28px;
+  }
+  .donut-wrap {
+    gap: 20px;
+  }
+  .donut-wrap svg {
+    width: 170px;
+  }
+  .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Small tablets / large phones — stack charts, tighten spacing */
+@media (max-width: 900px) {
+  .charts-grid {
+    flex-direction: column;
+  }
+  .charts-grid > .chart-card {
+    flex-basis: auto;
+    width: 100%;
+  }
+  .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  #line-chart-svg { height:180px; }
+  .bar-chart-wrap {
+    flex-direction:column;
+    gap:20px;
+    min-height:380px;
+    padding: 16px 0;
+  }
+  .bar-chart-wrap svg {
+    height:320px;
+  }
+  .donut-wrap {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .donut-wrap svg {
+    width: 180px;
+  }
+  .dashboard-container {
+    padding: 20px 16px 28px;
+    border-radius: 16px;
+    gap: 18px;
+  }
+  .stat-grid{
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .chart-card {
+    padding: 18px 18px 22px;
+  }
+  .card-title {
+    font-size: 15px;
+  }
+  .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .quick-access-btn {
+    padding: 16px 12px;
+    gap: 10px;
+  }
+  .qa-icon {
+    font-size: 24px;
+  }
+  .qa-label {
+    font-size: 12px;
+  }
+}
+
+/* Phones */
+@media (max-width: 600px) {
+  .stat-card {
+    padding: 16px 16px 18px;
+  }
+  .stat-value {
+    font-size: 26px;
+  }
+  .stat-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    top: 14px;
+    right: 14px;
+  }
+  .badge-pill {
+    font-size: 12px;
+    padding: 5px 12px;
+  }
+  .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 16px 12px 24px;
+  }
+  .stat-grid{
+    grid-template-columns:1fr;
+  }
+  .stat-value {
+    font-size: 28px;
+  }
+  #line-chart-svg { height:160px; }
+  .bar-chart-wrap svg {
+    height: 280px;
+  }
+  .donut-wrap {
+    flex-direction: column;
+  }
+  .donut-wrap svg {
+    width: 200px;
+  }
+  .quick-access-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .quick-access-btn {
+    padding: 14px 12px;
+  }
+  .qa-icon {
+    font-size: 22px;
+  }
+  .qa-label {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  .stat-grid{
+    gap: 10px;
+  }
+  .chart-card {
+    padding: 14px 14px 18px;
+  }
+  .quick-access-grid {
+    gap: 8px;
+  }
 }
 </style>
 </head>
 <body>
-
 <div class="layout">
   <div id="sidebar-mount"></div>
 
-  <main class="main">
+  <main class="main fade-in">
     <div id="topbar-mount"></div>
-  
 
-    <!-- ══ FILTER / GENERATE ══ -->
-    <div class="config-card">
-      <div class="config-row">
-        <input type="date" id="startDate" class="input">
-        <input type="date" id="endDate"   class="input">
-
-        <!-- Offices pulled from services/offices – same source as Evaluation Mgmt -->
-        <select id="officeFilter">
-          <option value="">Select Office…</option>
-        </select>
-
-        <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
-        <button class="btn btn-green"   onclick="saveReport()">💾 Save Report</button>
-      </div>
-    </div>
-
-    <!-- ══ KPI CARDS ══ -->
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-title">Total Feedback</div>
-        <div class="kpi-value" id="totalFeedback">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Avg Satisfaction</div>
-        <div class="kpi-value" id="avgSat">0%</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Positive (&ge;4★)</div>
-        <div class="kpi-value" id="positive">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Negative (&lt;3★)</div>
-        <div class="kpi-value" id="negative">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Saved Reports</div>
-        <div class="kpi-value" id="kpiSavedCount">0</div>
-      </div>
-    </div>
-
-    <!-- ══ REPORT PREVIEW (shown after Generate) ══ -->
-    <div id="reportPreview">
-      <div class="preview-bar">
-        <span class="preview-label" id="previewLabel">📄 CSM Report Preview</span>
-        <button class="btn btn-green"  onclick="saveReport()">💾 Save to DB</button>
-        <button class="btn btn-blue"   onclick="exportPDF()">⬇ PDF</button>
-        <button class="btn btn-gray"   onclick="closePreview()">✕ Close</button>
+    <div class="dashboard-container">
+      <!-- STAT CARDS -->
+      <div class="stat-grid">
+        <div class="stat-card blue">
+          <div class="stat-icon">📝</div>
+          <div class="stat-label">Daily Submissions</div>
+          <div class="stat-value" id="dailySubmissions">0</div>
+          <div class="stat-sub">Today</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">📅</div>
+          <div class="stat-label">Weekly Submissions</div>
+          <div class="stat-value" id="weeklySubmissions">0</div>
+          <div class="stat-sub">This Week</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">📊</div>
+          <div class="stat-label">Monthly Submissions</div>
+          <div class="stat-value" id="monthlySubmissions">0</div>
+          <div class="stat-sub">This Month</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-label">Offices Covered</div>
+          <div class="stat-value" id="officeCount" style="color:var(--green)">0</div>
+          <div class="stat-sub">All Departments</div>
+        </div>
       </div>
 
-      <div class="csm-page" id="csmPage">
+      <!-- CHARTS -->
+      <div class="charts-grid">
 
-        <!-- LETTERHEAD (official ISUFST letterhead assets) -->
-        <div class="lh-row">
-  <div class="lh-logo-box" style="width:150px; height:90px;">
-    <img src="2.png"
-         alt="ISUFST Logo"
-         crossorigin="anonymous"
-         style="width:100%; height:100%; object-fit:contain;">
-  </div>
-          <div class="lh-text">
-            <div class="rep">Republic of the Philippines</div>
-            <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
-            <div class="dept">Research &amp; Development Office</div>
-            <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
-            <div class="addr">Website: www.isufst.edu.ph</div>
+        <!-- CODE UTILIZATION CHART -->
+        <div class="chart-card">
+          <div class="card-header-row">
+            <div class="card-title">Code Utilization <span class="card-sub">— Used vs Unused</span></div>
+            <div class="badge-pill">Total Codes: <span id="codeCountBadge">0</span></div>
           </div>
-          <div class="lh-seal-box">
-            <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous">
+          <div class="donut-wrap">
+            <div class="pie-wrap" id="codeUtilWrap">
+              <svg id="code-pie-svg" viewBox="0 0 120 120" width="200" height="200"></svg>
+              <div class="pie-tooltip" id="code-pie-tooltip"></div>
+            </div>
+            <div class="donut-legend" id="code-pie-legend"></div>
           </div>
         </div>
 
-        <hr class="lh-divider">
-        <div class="csm-doc-title">Client Satisfaction Measurement (CSM) Report</div>
-        <div class="csm-meta"      id="csmMeta"></div>
-
-        <table class="csm-table">
-          <thead>
-            <tr>
-              <th style="width:50%;text-align:left;padding-left:10px;">Service Quality Dimensions</th>
-              <th style="width:20%;">Percentage (%)</th>
-              <th style="width:30%;">Rating</th>
-            </tr>
-          </thead>
-          <tbody id="csmTableBody"></tbody>
-        </table>
-
-        <div class="csm-narrative" id="csmNarrative"></div>
-
-        <div class="csm-sigs">
-          <div class="csm-sig-block">
-            <div class="csm-sig-label">Prepared by:</div>
-            <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-            <div class="csm-sig-name">EMELYN A. LIGASAN, PhD</div>
-            <div class="csm-sig-title">Chair, Research and Development</div>
-          </div>
-          <div class="csm-sig-block">
-            <div class="csm-sig-label">Noted by:</div>
-            <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-            <div class="csm-sig-name">MICHAEL B. DIZON, EdD, PhD</div>
-            <div class="csm-sig-title">Campus Administrator</div>
+        <!-- SUBMISSION BREAKDOWN BAR CHART -->
+        <div class="chart-card">
+          <div class="card-title">Submission Breakdown</div>
+          <div class="bar-chart-wrap" id="barChartWrap">
+            <svg id="bar-chart-svg" viewBox="0 0 500 320"></svg>
+            <div class="bar-legend" id="bar-legend"></div>
+            <div class="pie-tooltip" id="bar-tooltip"></div>
           </div>
         </div>
-
-        <!-- FOOTER (official accreditation banner: THE / UI GreenMetric / WURI / Ambisyon Natin / SDG / GCL / tagline) -->
-        <div class="csm-footer">
-          <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
-        </div>
-      </div><!-- /csm-page -->
-    </div><!-- /reportPreview -->
-
-    <!-- ══ SAVED REPORTS TABLE ══ -->
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">📋 Saved Reports</div>
-        <span class="count-pill" id="savedCountPill">0 reports</span>
       </div>
-      <div class="table-wrap">
-        <table class="reports-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Office</th>
-              <th>Date Range</th>
-              <th>Respondents</th>
-              <th>Avg Satisfaction</th>
-              <th>Rating</th>
-              <th>Saved On</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="reportsTableBody">
-            <tr>
-              <td colspan="8">
-                <div class="empty-state">
-                  <div class="icon">📄</div>
-                  <p>No saved reports yet. Generate a report above, then click <strong>Save Report</strong>.</p>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+
+      <!-- SUBMISSION TREND -->
+      <div class="chart-card">
+        <div class="card-header-row">
+          <div class="card-title">Submission Trend <span class="card-sub">— Last 7 days</span></div>
+        </div>
+        <div class="line-chart-wrap">
+          <div class="pie-wrap" id="lineWrap">
+            <svg id="line-chart-svg" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
+            <div class="pie-tooltip" id="line-tooltip"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK ACCESS -->
+      <div class="chart-card">
+        <div class="card-title">Quick Access</div>
+        <div class="quick-access-grid">
+          <a href="admin1-analytics.html" class="quick-access-btn">
+            <div class="qa-icon">📈</div>
+            <div class="qa-label">Analytics</div>
+          </a>
+          <a href="admin1-office-mgmt.html" class="quick-access-btn">
+            <div class="qa-icon">🏛</div>
+            <div class="qa-label">Office Management</div>
+          </a>
+          <a href="admin1-gen-code.html" class="quick-access-btn">
+            <div class="qa-icon">📋</div>
+            <div class="qa-label">Generate Code</div>
+          </a>
+          <a href="admin1-eval-mgmt.html" class="quick-access-btn">
+            <div class="qa-icon">📑</div>
+            <div class="qa-label">Evaluation Management</div>
+          </a>
+          <a href="admin1-reports.html" class="quick-access-btn">
+            <div class="qa-icon">📁</div>
+            <div class="qa-label">Reports</div>
+          </a>
+          <a href="admin1-settings.html" class="quick-access-btn">
+            <div class="qa-icon">⚙️</div>
+            <div class="qa-label">Settings</div>
+          </a>
+        </div>
       </div>
     </div>
-
   </main>
-</div><!-- /layout -->
+</div>
 
 <script src="shared.js"></script>
-
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 import {
-  getDatabase, ref, onValue, push, set, remove
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  getFirestore,
+  collection,
+  collectionGroup,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ── Firebase config ── */
 const firebaseConfig = {
-  apiKey:            "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
-  authDomain:        "kristal-adb78.firebaseapp.com",
-  databaseURL:       "https://kristal-adb78-default-rtdb.firebaseio.com",
-  projectId:         "kristal-adb78",
-  storageBucket:     "kristal-adb78.firebasestorage.app",
-  messagingSenderId: "1016283938031",
-  appId:             "1:1016283938031:web:54c4d13409d9784ad7af1a",
-  measurementId:     "G-LK8D1CBQ2J"
+  apiKey:"AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",authDomain:"kristal-adb78.firebaseapp.com",
+  databaseURL:"https://kristal-adb78-default-rtdb.firebaseio.com",projectId:"kristal-adb78",
+  storageBucket:"kristal-adb78.firebasestorage.app",messagingSenderId:"1016283938031",
+  appId:"1:1016283938031:web:54c4d13409d9784ad7af1a",measurementId:"G-LK8D1CBQ2J"
 };
+const app      = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db        = getFirestore(app);
 
-const app = initializeApp(firebaseConfig);
-getAnalytics(app);
-const db = getDatabase(app);
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','dashboard');
+document.getElementById('topbar-mount').innerHTML  = buildTopbar('Dashboard','admin1');
 
-/* ─────────────────────────────────────────────
-   DB PATHS  — all mirror services/ structure
-   services/offices      ← same as eval-mgmt
-   services/evaluations  ← same as eval-mgmt
-   services/reports      ← NEW node for saved reports
-───────────────────────────────────────────── */
-const officeRef     = ref(db, "services/offices");
-const evaluationRef = ref(db, "services/evaluations");
-const reportsRef    = ref(db, "services/reports");
+const evaluationsCol = collection(db, "services", "evaluations", "records");
+const officesCol      = collection(db, "services", "offices", "records");
+const codesGroup      = collectionGroup(db, "codes");
 
-/* ── Shared UI ── */
-document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','reports');
-document.getElementById('topbar-mount').innerHTML  = buildTopbar('Reports','admin1');
+let offices   = {};
+let allCodes  = {};
+let allEvaluations = [];
 
-/* ── SQD dimension labels ── */
-const SQD_LABELS = [
-  { key:"sq0", label:"SQD0 – Overall Satisfaction"  },
-  { key:"sq1", label:"SQD1 – Responsiveness"        },
-  { key:"sq2", label:"SQD2 – Reliability"           },
-  { key:"sq3", label:"SQD3 – Access and Facilities" },
-  { key:"sq4", label:"SQD4 – Communication"         },
-  { key:"sq5", label:"SQD5 – Cost"                  },
-  { key:"sq6", label:"SQD6 – Integrity"             },
-  { key:"sq7", label:"SQD7 – Assurance"             },
-  { key:"sq8", label:"SQD8 – Outcome"               }
-];
-
-function getRating(pct) {
-  if (pct >= 90) return "Outstanding";
-  if (pct >= 80) return "Very Satisfactory";
-  if (pct >= 70) return "Satisfactory";
-  if (pct >= 60) return "Fair";
-  return "Poor";
-}
-function badgeClass(rating) {
-  return rating === "Outstanding"       ? "badge-green"
-       : rating === "Very Satisfactory" ? "badge-blue"
-       : rating === "Satisfactory"      ? "badge-blue"
-       : rating === "Fair"              ? "badge-amber"
-       : "badge-red";
-}
-function fmtDate(v) {
-  return new Date(v).toLocaleDateString("en-PH",{ month:"long", day:"numeric", year:"numeric" });
-}
-function fmtShort(v) {
-  return new Date(v).toLocaleDateString("en-PH",{ month:"short", day:"numeric", year:"numeric" });
-}
-
-/* ── State ── */
-let allEvals     = {};   // services/evaluations
-let currentReport = null; // last generated — held for saving / PDF
-
-/* ══════════════════════════════════════════════════════
-   1. OFFICES → populate dropdown
-      Path: services/offices  (same as eval-mgmt.html)
-══════════════════════════════════════════════════════ */
-onValue(officeRef, snap => {
-  const data   = snap.val() || {};
-  const select = document.getElementById("officeFilter");
-  const prev   = select.value;
-
-  select.innerHTML = `<option value="">Select Office…</option>`;
-
-  Object.values(data)
-    .map(o => o.name)
-    .filter(Boolean)
-    .sort((a,b) => a.localeCompare(b))
-    .forEach(name => {
-      const opt = document.createElement("option");
-      opt.value       = name;
-      opt.textContent = name;
-      if (name === prev) opt.selected = true;
-      select.appendChild(opt);
-    });
-});
-
-/* ══════════════════════════════════════════════════════
-   2. EVALUATIONS → KPI cards
-      Path: services/evaluations
-══════════════════════════════════════════════════════ */
-onValue(evaluationRef, snap => {
-  allEvals = snap.val() || {};
-  renderKPIs();
-});
+const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function avgScore(item) {
-  let s = 0, c = 0;
-  for (let x = 1; x <= 8; x++) {
-    /* support both sq{n} and sqd{n} field names */
-    const v = parseFloat(item["sq"+x] ?? item["sqd"+x]);
-    if (!isNaN(v)) { s += v; c++; }
+  let s=0,c=0;
+  for(let x=1;x<=8;x++){
+    const v=parseFloat(item["sq"+x]??item["sqd"+x]);
+    if(!isNaN(v)){s+=v;c++;}
   }
-  return c ? s / c : 0;
+  return c?s/c:0;
 }
 
-function renderKPIs() {
-  let total=0, pos=0, neg=0, sum=0;
-  Object.values(allEvals).forEach(i => {
-    const a = avgScore(i);
-    sum += a; total++;
-    if (a >= 4) pos++;
-    if (a < 3)  neg++;
+onSnapshot(codesGroup, (snapshot) => {
+  allCodes = {};
+  snapshot.forEach(docSnap => {
+    const officeName = docSnap.ref.parent.parent?.id || "";
+    allCodes[docSnap.id] = { ...docSnap.data(), office: officeName };
   });
-  document.getElementById("totalFeedback").textContent = total;
-  document.getElementById("avgSat").textContent        = total ? ((sum/total)*20).toFixed(0)+"%" : "0%";
-  document.getElementById("positive").textContent      = pos;
-  document.getElementById("negative").textContent      = neg;
-}
-
-/* ══════════════════════════════════════════════════════
-   3. SAVED REPORTS → table
-      Path: services/reports  (NEW)
-      Structure stored per record:
-      {
-        office, startDate, endDate, respondents,
-        overallPct, generatedAt,
-        dims: [{ key, label, pct, rating }]
-      }
-══════════════════════════════════════════════════════ */
-onValue(reportsRef, snap => {
-  const data = snap.val() || {};
-  const keys  = Object.keys(data);
-
-  /* update KPI pill */
-  document.getElementById("kpiSavedCount").textContent = keys.length;
-  document.getElementById("savedCountPill").textContent = keys.length + " report" + (keys.length !== 1 ? "s" : "");
-
-  const tbody = document.getElementById("reportsTableBody");
-
-  if (!keys.length) {
-    tbody.innerHTML = `
-      <tr><td colspan="8">
-        <div class="empty-state">
-          <div class="icon">📄</div>
-          <p>No saved reports yet. Generate a report above, then click <strong>Save Report</strong>.</p>
-        </div>
-      </td></tr>`;
-    return;
-  }
-
-  /* sort newest first */
-  keys.sort((a,b) => new Date(data[b].generatedAt) - new Date(data[a].generatedAt));
-
-  tbody.innerHTML = keys.map((key, idx) => {
-    const r      = data[key];
-    const rating = getRating(r.overallPct || 0);
-    const saved  = r.generatedAt ? fmtShort(r.generatedAt) : "—";
-    return `
-      <tr>
-        <td style="color:#94a3b8;font-size:12px;">${idx+1}</td>
-        <td><strong>${r.office || "—"}</strong></td>
-        <td style="font-size:12px;color:#64748b;white-space:nowrap;">
-          ${r.startDate || ""} → ${r.endDate || ""}
-        </td>
-        <td style="text-align:center;">${r.respondents || 0}</td>
-        <td style="text-align:center;font-weight:800;">${(r.overallPct||0).toFixed(1)}%</td>
-        <td><span class="badge ${badgeClass(rating)}">${rating}</span></td>
-        <td style="font-size:12px;color:#64748b;">${saved}</td>
-        <td>
-          <div style="display:flex;gap:6px;">
-            <button class="act-btn act-view"   onclick="viewSavedReport('${key}')">👁 View</button>
-            <button class="act-btn act-delete" onclick="deleteSavedReport('${key}')">🗑</button>
-          </div>
-        </td>
-      </tr>`;
-  }).join("");
+  renderCodeUtilization();
 });
 
-/* ══════════════════════════════════════════════════════
-   4. GENERATE REPORT
-══════════════════════════════════════════════════════ */
-window.generateReport = () => {
-  const office   = document.getElementById("officeFilter").value;
-  const startVal = document.getElementById("startDate").value;
-  const endVal   = document.getElementById("endDate").value;
-
-  if (!office || !startVal || !endVal) {
-    alert("Please select an office and a date range first.");
+onSnapshot(officesCol, (snapshot) => {
+  offices = {};
+  if (snapshot.empty) {
+    document.getElementById("officeCount").textContent = 0;
+    renderCodeUtilization();
     return;
   }
+  snapshot.forEach(docSnap => {
+    const name = docSnap.data().name || docSnap.id;
+    if (name) offices[name] = { total: 0, count: 0 };
+  });
+  document.getElementById("officeCount").textContent = Object.keys(offices).length;
+  renderCodeUtilization();
+});
 
-  const start = new Date(startVal);
-  const end   = new Date(endVal);
-  end.setHours(23,59,59,999);
+onSnapshot(evaluationsCol, (snapshot) => {
+  const today = new Date();
+  let daily=0, weekly=0, monthly=0;
+  Object.keys(offices).forEach(o=>{offices[o].total=0;offices[o].count=0;});
+  let total=0, pos=0, neu=0, neg=0;
+  allEvaluations = [];
 
-  /* normalize for tolerant matching (trim + case-insensitive) */
-  const officeNorm = office.trim().toLowerCase();
-
-  /* filter evaluations for chosen office + date range */
-  const rows = Object.values(allEvals).filter(i => {
-    const rowOffice = (i.office || "").trim().toLowerCase();
-    if (rowOffice !== officeNorm) return false;
-
-    const d = new Date(i.date);
-    if (isNaN(d.getTime())) return false; // skip records with missing/bad dates
-
-    return d >= start && d <= end;
+  snapshot.forEach(docSnap => {
+    const item = docSnap.data();
+    allEvaluations.push(item);
+    total++;
+    const diff = (today - new Date(item.date)) / (1000*60*60*24);
+    if (diff<=1) daily++;
+    if (diff<=7) weekly++;
+    if (diff<=30) monthly++;
+    const avg = avgScore(item);
+    if (avg>=4) pos++; else if (avg>=3) neu++; else neg++;
+    if (offices[item.office]) { offices[item.office].total += avg; offices[item.office].count++; }
   });
 
-  if (!rows.length) {
-    console.warn("[generateReport] No matches.", {
-      selectedOffice: office,
-      totalEvalRecords: Object.keys(allEvals).length,
-      officesFoundInData: [...new Set(Object.values(allEvals).map(e => e.office))]
-    });
-    alert("No feedback records found for the selected office and date range.\n\nOpen the browser console (F12) — it now logs the exact office names stored in your evaluation records, so you can check they match the dropdown (spelling/case/whitespace) and that dates are in range.");
-    return;
-  }
+  document.getElementById("dailySubmissions").textContent = daily;
+  document.getElementById("weeklySubmissions").textContent = weekly;
+  document.getElementById("monthlySubmissions").textContent = monthly;
 
-  /* per-dimension totals */
-  const totals = {}, counts = {};
-  SQD_LABELS.forEach(s => { totals[s.key]=0; counts[s.key]=0; });
+  renderCodeUtilization();
+  renderBarChart(total, pos, neu, neg);
+  renderLineChart();
+});
 
-  rows.forEach(r => {
-    let sq0Found = false;
-    SQD_LABELS.forEach(s => {
-      /* accept sq{n} or sqd{n} */
-      const v = parseFloat(r[s.key] ?? r["sqd"+s.key.replace("sq","")]);
-      if (!isNaN(v)) {
-        totals[s.key]+=v; counts[s.key]++;
-        if (s.key === "sq0") sq0Found = true;
-      }
-    });
-    /* sq0 fallback per-row: derive overall from sq1-sq8 only when THIS row has no sq0 */
-    if (!sq0Found) {
-      const fallback = avgScore(r);
-      if (fallback) { totals["sq0"] += fallback; counts["sq0"]++; }
-    }
-  });
-
-  const dims = SQD_LABELS.map(s => {
-    const cnt = counts[s.key];
-    const raw = cnt ? totals[s.key]/cnt : null;
-    const pct = raw !== null ? (raw/5)*100 : null;
-    return { key:s.key, label:s.label, pct, rating: pct!==null ? getRating(pct) : "N/A" };
-  });
-
-  const valid      = dims.filter(d => d.pct !== null);
-  const overallPct = valid.length ? valid.reduce((s,d)=>s+d.pct,0)/valid.length : 0;
-
-  /* cache for save / PDF */
-  currentReport = {
-    office, startDate:startVal, endDate:endVal,
-    respondents:rows.length, overallPct,
-    dims: dims.map(d=>({ key:d.key, label:d.label, pct:d.pct, rating:d.rating })),
-    generatedAt: new Date().toISOString()
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const rad = (angleDeg) * Math.PI / 180;
+  return {
+    x: cx + r * Math.sin(rad),
+    y: cy - r * Math.cos(rad)
   };
-
-  renderPreview(currentReport);
-};
-
-/* ── Render the A4 preview ── */
-function renderPreview(r) {
-  document.getElementById("csmMeta").innerHTML = `
-    <b>Office:</b> ${r.office}, ISUFST – San Enrique Campus<br>
-    <b>Covered Period:</b> ${fmtDate(r.startDate)} – ${fmtDate(r.endDate)}<br>
-    <b>No. of Respondents:</b> ${r.respondents}
-  `;
-
-  document.getElementById("csmTableBody").innerHTML = (r.dims||[]).map(d=>`
-    <tr>
-      <td style="padding-left:10px;">${d.label}</td>
-      <td style="text-align:center;">${d.pct!==null ? Number(d.pct).toFixed(1) : "—"}</td>
-      <td style="text-align:center;">${d.rating}</td>
-    </tr>`).join("");
-
-  const overallPct = r.overallPct || 0;
-  const perfWord   = overallPct>=90?"outstanding":overallPct>=80?"very satisfactory":overallPct>=70?"satisfactory":"fair";
-  const topDims    = (r.dims||[]).filter(d=>d.pct!==null&&d.pct>=90).map(d=>d.label);
-  const lowDims    = (r.dims||[]).filter(d=>d.pct!==null&&d.pct<75).map(d=>d.label);
-  const highDims   = (r.dims||[]).filter(d=>d.pct!==null&&d.pct>=80).slice(0,3).map(d=>d.label);
-
-  const p1 = `The <strong>results</strong> of the Client Satisfaction Measurement (CSM) Report for the
-    <strong>${r.office}</strong>, ISUFST – San Enrique Campus, covering ${fmtDate(r.startDate)} to
-    ${fmtDate(r.endDate)} with <strong>${r.respondents}</strong> respondent(s), show an overall
-    <strong>${perfWord} performance</strong> across the Service Quality Dimensions (SQDs) with an
-    average satisfaction rate of <strong>${overallPct.toFixed(2)}%</strong>.
-    ${topDims.length ? `This indicates that clients are highly satisfied with the
-    ${topDims.join(", ")} dimensions, reflecting the office's effectiveness in meeting client needs.` : ""}`;
-
-  const p2 = `<strong>Regarding specific service dimensions</strong>,
-    ${highDims.length ? highDims.join(", ")+" received perfect or near-perfect scores, demonstrating that staff provide timely, accurate, and dependable support." : "most dimensions performed at a satisfactory level or above."}
-    ${lowDims.length ? `Additionally, ${lowDims.join(", ")} scored slightly lower, indicating
-    opportunities for improvement in transparency of fees, ethical practices, and service outcome
-    effectiveness. Focusing on these areas could strengthen client trust and ensure more consistent
-    service quality.` : "All dimensions performed at a satisfactory level or above."}`;
-
-  const p3 = `<strong>Overall</strong>, the findings suggest that the <strong>${r.office}</strong>
-    delivers strong and reliable services. In summary, while the office already maintains high client
-    satisfaction, continued attention to all service quality dimensions will help enhance the overall
-    service experience. Addressing any identified gaps will support continuous improvement and help the
-    office achieve even higher levels of client satisfaction in future assessments.`;
-
-  document.getElementById("csmNarrative").innerHTML = `<p>${p1}</p><p>${p2}</p><p>${p3}</p>`;
-  document.getElementById("previewLabel").textContent = `📄 Preview — ${r.office}  (${r.startDate} → ${r.endDate})`;
-
-  const preview = document.getElementById("reportPreview");
-  preview.style.display = "block";
-  preview.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
-window.closePreview = () => {
-  document.getElementById("reportPreview").style.display = "none";
-};
+function describeSlice(cx, cy, r, startAngle, endAngle) {
+  const startPt = polarToCartesian(cx, cy, r, startAngle);
+  const endPt   = polarToCartesian(cx, cy, r, endAngle);
+  const largeArcFlag = (endAngle - startAngle) > 180 ? 1 : 0;
+  return [
+    "M", cx, cy,
+    "L", startPt.x, startPt.y,
+    "A", r, r, 0, largeArcFlag, 1, endPt.x, endPt.y,
+    "Z"
+  ].join(" ");
+}
 
-/* ══════════════════════════════════════════════════════
-   5. SAVE REPORT → services/reports
-══════════════════════════════════════════════════════ */
-window.saveReport = async () => {
-  if (!currentReport) {
-    alert("Please generate a report first before saving.");
+function renderCodeUtilization(){
+  const svg     = document.getElementById("code-pie-svg");
+  const legend  = document.getElementById("code-pie-legend");
+  const tooltip = document.getElementById("code-pie-tooltip");
+  const wrap    = document.getElementById("codeUtilWrap");
+
+  svg.innerHTML = "";
+  tooltip.classList.remove("show");
+
+  const totalCodes  = Object.values(allCodes).length;
+  const usedCodes   = Object.values(allCodes).filter(c => c.status === "used").length;
+  const unusedCodes = totalCodes - usedCodes;
+
+  document.getElementById("codeCountBadge").textContent = totalCodes;
+
+  if (totalCodes === 0) {
+    legend.innerHTML = `<div class="legend-item">No codes generated yet</div>`;
     return;
   }
-  try {
-    const newRef = push(reportsRef);
-    await set(newRef, currentReport);
-    alert("✅ Report saved successfully under services/reports!");
-  } catch (err) {
-    console.error(err);
-    alert("❌ Failed to save report: " + err.message);
-  }
-};
 
-/* ══════════════════════════════════════════════════════
-   6. VIEW SAVED REPORT
-══════════════════════════════════════════════════════ */
-window.viewSavedReport = key => {
-  onValue(ref(db, `services/reports/${key}`), snap => {
-    const r = snap.val();
-    if (!r) return;
-    currentReport = r;          // enable PDF export of viewed report
-    renderPreview(r);
-  }, { onlyOnce:true });
-};
+  const segments = [
+    { key: "used",   label: "Used",   color: "orange", count: usedCodes },
+    { key: "unused", label: "Unused", color: "blue", count: unusedCodes }
+  ].filter(seg => seg.count > 0);
 
-/* ══════════════════════════════════════════════════════
-   7. DELETE SAVED REPORT
-══════════════════════════════════════════════════════ */
-window.deleteSavedReport = async key => {
-  if (!confirm("Delete this saved report? This cannot be undone.")) return;
-  try {
-    await remove(ref(db, `services/reports/${key}`));
-  } catch (err) {
-    alert("Failed to delete: " + err.message);
-  }
-};
+  const cx = 60, cy = 60, r = 50;
+  let startAngle = 0;
 
-/* ══════════════════════════════════════════════════════
-   8. EXPORT PDF
-══════════════════════════════════════════════════════ */
-window.exportPDF = async () => {
-  if (document.getElementById("reportPreview").style.display === "none") {
-    alert("Please generate or view a report first.");
-    return;
-  }
-  let canvas;
-  try {
-    canvas = await html2canvas(document.getElementById("csmPage"),{
-      scale:2, useCORS:true, backgroundColor:"#ffffff"
-    });
-    var img = canvas.toDataURL("image/png"); // throws here if canvas is tainted
-  } catch (err) {
-    console.error(err);
-    alert("⚠ PDF export blocked by the browser.\n\nThis page is being opened directly from disk (file://...), and Chrome blocks exporting images of canvases in that mode for security reasons.\n\nFix: serve this folder over local HTTP instead of double-clicking the file, e.g. run:\n  python -m http.server 5500\nthen open http://localhost:5500/admin1-reports.html");
-    return;
-  }
-  const { jsPDF } = window.jspdf;
-  const pdf     = new jsPDF({ unit:"mm", format:"a4" });
-  const margin  = 10;
-  const usableW = pdf.internal.pageSize.getWidth()  - margin*2;
-  const usableH = pdf.internal.pageSize.getHeight() - margin*2;
-  const scale   = usableW / canvas.width;
-  const pdfH    = canvas.height * scale;
+  segments.forEach(seg => {
+    const pct = (seg.count / totalCodes) * 100;
+    const angle = (seg.count / totalCodes) * 360;
+    const endAngle = startAngle + angle;
 
-  if (pdfH <= usableH) {
-    pdf.addImage(img,"PNG",margin,margin,usableW,pdfH);
-  } else {
-    const slicePx = Math.floor(usableH / scale);
-    let offset = 0;
-    while (offset < canvas.height) {
-      const sc = document.createElement("canvas");
-      sc.width  = canvas.width;
-      sc.height = Math.min(slicePx, canvas.height - offset);
-      sc.getContext("2d").drawImage(canvas,0,-offset);
-      pdf.addImage(sc.toDataURL("image/png"),"PNG",margin,margin,usableW,sc.height*scale);
-      offset += slicePx;
-      if (offset < canvas.height) pdf.addPage();
+    let slice;
+    if (segments.length === 1) {
+      slice = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      slice.setAttribute("cx", cx);
+      slice.setAttribute("cy", cy);
+      slice.setAttribute("r", r);
+    } else {
+      slice = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      slice.setAttribute("d", describeSlice(cx, cy, r, startAngle, endAngle));
     }
+
+    slice.setAttribute("fill", seg.color);
+    slice.setAttribute("class", "pie-slice");
+    slice.setAttribute("stroke", "#ffffff");
+    slice.setAttribute("stroke-width", "1.5");
+
+    const showTooltip = (evt) => {
+      tooltip.classList.add("show");
+      tooltip.innerHTML = `
+        <div class="tt-title">${seg.label} Codes</div>
+        <div>${seg.count} of ${totalCodes} codes</div>
+        <div class="tt-sub">${pct.toFixed(1)}% coverage</div>
+      `;
+      moveTooltip(evt);
+    };
+
+    const moveTooltip = (evt) => {
+      const rect = wrap.getBoundingClientRect();
+      tooltip.style.left = (evt.clientX - rect.left) + "px";
+      tooltip.style.top  = (evt.clientY - rect.top) + "px";
+    };
+
+    slice.addEventListener("mouseenter", showTooltip);
+    slice.addEventListener("mousemove", moveTooltip);
+    slice.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
+
+    slice.addEventListener("touchstart", (evt) => {
+      evt.preventDefault();
+      showTooltip(evt.touches[0]);
+    }, { passive: false });
+
+    svg.appendChild(slice);
+    startAngle = endAngle;
+  });
+
+  legend.innerHTML = segments.map(seg => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${seg.color}"></div>
+      <span>${seg.label} (${seg.count} — ${((seg.count/totalCodes)*100).toFixed(0)}%)</span>
+    </div>
+  `).join("");
+}
+
+function renderBarChart(total, pos, neu, neg) {
+  const svg = document.getElementById("bar-chart-svg");
+  const legend = document.getElementById("bar-legend");
+  const tooltip = document.getElementById("bar-tooltip");
+  const wrap = document.getElementById("barChartWrap");
+  
+  svg.innerHTML = "";
+  tooltip.classList.remove("show");
+
+  if (total === 0) {
+    legend.innerHTML = `<div class="legend-item">No evaluations yet</div>`;
+    return;
+  } else {
+    legend.innerHTML = "";
   }
-  const name = (currentReport?.office || "report").replace(/\s+/g,"_");
-  pdf.save(`CSM_Report_${name}.pdf`);
-};
+
+  const categories = [
+    { key: "positive", label: "Positive", color: "var(--green)", count: pos },
+    { key: "neutral", label: "Neutral", color: "var(--amber)", count: neu },
+    { key: "negative", label: "Negative", color: "var(--red)", count: neg }
+  ];
+
+  const posPercent = (pos / total) * 100;
+  const neuPercent = (neu / total) * 100;
+  const negPercent = (neg / total) * 100;
+
+  const width = 500;
+  const height = 320;
+  const padding = { top: 20, right: 30, bottom: 60, left: 50 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  const yMin = 0;
+  const yMax = 100;
+  const yRange = yMax - yMin;
+
+  for (let i = 0; i <= 5; i++) {
+    const yVal = (i / 5) * yMax;
+    const y = padding.top + chartH - (yVal / yRange) * chartH;
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", padding.left);
+    line.setAttribute("x2", width - padding.right);
+    line.setAttribute("y1", y);
+    line.setAttribute("y2", y);
+    line.setAttribute("stroke", "rgba(148,163,184,0.15)");
+    line.setAttribute("stroke-width", "1");
+    line.setAttribute("stroke-dasharray", "4,2");
+    svg.appendChild(line);
+
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", padding.left - 10);
+    label.setAttribute("y", y + 4);
+    label.setAttribute("text-anchor", "end");
+    label.setAttribute("font-size", "11");
+    label.setAttribute("font-family", "DM Sans, sans-serif");
+    label.setAttribute("fill", "#94a3b8");
+    label.textContent = yVal.toFixed(0) + "%";
+    svg.appendChild(label);
+  }
+
+  const xAxisY = padding.top + chartH;
+  const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  xAxis.setAttribute("x1", padding.left);
+  xAxis.setAttribute("x2", width - padding.right);
+  xAxis.setAttribute("y1", xAxisY);
+  xAxis.setAttribute("y2", xAxisY);
+  xAxis.setAttribute("stroke", "#cbd5e1");
+  xAxis.setAttribute("stroke-width", "1.5");
+  svg.appendChild(xAxis);
+
+  const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  yAxis.setAttribute("x1", padding.left);
+  yAxis.setAttribute("x2", padding.left);
+  yAxis.setAttribute("y1", padding.top);
+  yAxis.setAttribute("y2", padding.top + chartH);
+  yAxis.setAttribute("stroke", "#cbd5e1");
+  yAxis.setAttribute("stroke-width", "1.5");
+  svg.appendChild(yAxis);
+
+  const barWidth = chartW / (categories.length * 1.5);
+  const barSpacing = chartW / categories.length;
+  const baseX = padding.left + barSpacing / 2;
+
+  const percentages = [posPercent, neuPercent, negPercent];
+
+  categories.forEach((cat, idx) => {
+    const percentage = percentages[idx];
+    const barHeight = (percentage / yRange) * chartH;
+    const x = baseX + idx * barSpacing - barWidth / 2;
+    const y = xAxisY - barHeight;
+
+    const bar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    bar.setAttribute("x", x);
+    bar.setAttribute("y", y);
+    bar.setAttribute("width", barWidth);
+    bar.setAttribute("height", barHeight);
+    bar.setAttribute("fill", cat.color);
+    bar.setAttribute("rx", "4");
+    bar.setAttribute("class", "bar-rect");
+    bar.style.cursor = "pointer";
+    bar.style.transition = "opacity 0.2s ease";
+
+    const showTooltip = (evt) => {
+      tooltip.classList.add("show");
+      tooltip.innerHTML = `
+        <div class="tt-title">${cat.label}</div>
+        <div>${cat.count} submissions</div>
+        <div class="tt-sub">${percentage.toFixed(1)}% of total</div>
+      `;
+      moveTooltip(evt);
+    };
+
+    const moveTooltip = (evt) => {
+      const rect = wrap.getBoundingClientRect();
+      tooltip.style.left = (evt.clientX - rect.left) + "px";
+      tooltip.style.top = (evt.clientY - rect.top) + "px";
+    };
+
+    bar.addEventListener("mouseenter", (evt) => {
+      bar.style.opacity = "0.8";
+      showTooltip(evt);
+    });
+    bar.addEventListener("mousemove", moveTooltip);
+    bar.addEventListener("mouseleave", () => {
+      bar.style.opacity = "1";
+      tooltip.classList.remove("show");
+    });
+
+    bar.addEventListener("touchstart", (evt) => {
+      evt.preventDefault();
+      showTooltip(evt.touches[0]);
+    }, { passive: false });
+
+    svg.appendChild(bar);
+
+    const percentLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    percentLabel.setAttribute("x", x + barWidth / 2);
+    percentLabel.setAttribute("y", y - 8);
+    percentLabel.setAttribute("text-anchor", "middle");
+    percentLabel.setAttribute("font-size", "12");
+    percentLabel.setAttribute("font-family", "Syne, sans-serif");
+    percentLabel.setAttribute("font-weight", "700");
+    percentLabel.setAttribute("fill", cat.color);
+    percentLabel.textContent = percentage.toFixed(1) + "%";
+    svg.appendChild(percentLabel);
+
+    const xLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    xLabel.setAttribute("x", x + barWidth / 2);
+    xLabel.setAttribute("y", xAxisY + 25);
+    xLabel.setAttribute("text-anchor", "middle");
+    xLabel.setAttribute("font-size", "12");
+    xLabel.setAttribute("font-family", "Syne, sans-serif");
+    xLabel.setAttribute("font-weight", "700");
+    xLabel.setAttribute("fill", "var(--label)");
+    xLabel.textContent = cat.label;
+    svg.appendChild(xLabel);
+  });
+
+  const yAxisLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  yAxisLabel.setAttribute("x", 10);
+  yAxisLabel.setAttribute("y", padding.top + chartH / 2);
+  yAxisLabel.setAttribute("text-anchor", "middle");
+  yAxisLabel.setAttribute("font-size", "11");
+  yAxisLabel.setAttribute("font-family", "DM Sans, sans-serif");
+  yAxisLabel.setAttribute("fill", "#94a3b8");
+  yAxisLabel.setAttribute("transform", `rotate(-90, 10, ${padding.top + chartH / 2})`);
+  yAxisLabel.textContent = "Percentage (%)";
+  svg.appendChild(yAxisLabel);
+
+}
+
+function renderLineChart(){
+  const svg = document.getElementById("line-chart-svg");
+  const tooltip = document.getElementById("line-tooltip");
+  const wrap = document.getElementById("lineWrap");
+  svg.innerHTML = "";
+  tooltip.classList.remove("show");
+
+  const width = 600, height = 220;
+  const padding = { top: 24, right: 20, bottom: 34, left: 28 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  const days_data = [];
+  const fullDayNames = [];
+  const dateLabels = [];
+  const counts = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dayName = days[date.getDay()];
+    const dayShort = dayName.slice(0, 3);
+    
+    let dayCount = 0;
+    allEvaluations.forEach(item => {
+      const evalDate = new Date(item.date);
+      if(evalDate.getDay() === date.getDay()){
+        dayCount++;
+      }
+    });
+    
+    days_data.push(dayShort);
+    fullDayNames.push(dayName);
+    dateLabels.push(date.toLocaleDateString(undefined, { month: "short", day: "numeric" }));
+    counts.push(dayCount);
+  }
+
+  const maxCount = Math.max(1, ...counts);
+  const xStep = counts.length > 1 ? chartW / (counts.length - 1) : 0;
+
+  const points = counts.map((c, i) => ({
+    x: padding.left + i * xStep,
+    y: padding.top + chartH - (c / maxCount) * chartH,
+    c
+  }));
+
+  const gridLines = 4;
+  for (let g = 0; g <= gridLines; g++) {
+    const y = padding.top + (chartH / gridLines) * g;
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", padding.left);
+    line.setAttribute("x2", width - padding.right);
+    line.setAttribute("y1", y);
+    line.setAttribute("y2", y);
+    line.setAttribute("stroke", "rgba(148,163,184,0.15)");
+    line.setAttribute("stroke-width", "1");
+    svg.appendChild(line);
+  }
+
+  if (points.length > 1) {
+    const areaPath =
+      `M${points[0].x},${padding.top + chartH} ` +
+      points.map(p => `L${p.x},${p.y}`).join(" ") +
+      ` L${points[points.length - 1].x},${padding.top + chartH} Z`;
+    const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    area.setAttribute("d", areaPath);
+    area.setAttribute("fill", "rgba(37,99,235,0.12)");
+    area.setAttribute("stroke", "none");
+    svg.appendChild(area);
+
+    const linePath = points.map((p, i) => (i === 0 ? "M" : "L") + `${p.x},${p.y}`).join(" ");
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    line.setAttribute("d", linePath);
+    line.setAttribute("fill", "none");
+    line.setAttribute("stroke", "var(--accent3)");
+    line.setAttribute("stroke-width", "2.5");
+    line.setAttribute("stroke-linecap", "round");
+    line.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(line);
+  }
+
+  points.forEach((p, i) => {
+    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    dot.setAttribute("cx", p.x);
+    dot.setAttribute("cy", p.y);
+    dot.setAttribute("r", "4");
+    dot.setAttribute("fill", "var(--accent3)");
+    dot.setAttribute("stroke", "#ffffff");
+    dot.setAttribute("stroke-width", "1.5");
+    svg.appendChild(dot);
+
+    const val = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    val.setAttribute("x", p.x);
+    val.setAttribute("y", p.y - 10);
+    val.setAttribute("text-anchor", "middle");
+    val.setAttribute("font-size", "10");
+    val.setAttribute("font-family", "DM Sans, sans-serif");
+    val.setAttribute("fill", "#64748b");
+    val.textContent = p.c;
+    svg.appendChild(val);
+
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", p.x);
+    label.setAttribute("y", height - 10);
+    label.setAttribute("text-anchor", "middle");
+    label.setAttribute("font-size", "11");
+    label.setAttribute("font-family", "DM Sans, sans-serif");
+    label.setAttribute("fill", "#94a3b8");
+    label.textContent = days_data[i];
+    svg.appendChild(label);
+
+    const hitArea = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    hitArea.setAttribute("cx", p.x);
+    hitArea.setAttribute("cy", p.y);
+    hitArea.setAttribute("r", "14");
+    hitArea.setAttribute("fill", "transparent");
+    hitArea.style.cursor = "pointer";
+
+    const showTooltip = (evt) => {
+      dot.setAttribute("r", "5.5");
+      tooltip.classList.add("show");
+      tooltip.innerHTML = `
+        <div class="tt-title">${fullDayNames[i]}</div>
+        <div>${p.c} submission${p.c === 1 ? "" : "s"}</div>
+        <div class="tt-sub">${dateLabels[i]}</div>
+      `;
+      moveTooltip(evt);
+    };
+    const moveTooltip = (evt) => {
+      const rect = wrap.getBoundingClientRect();
+      tooltip.style.left = (evt.clientX - rect.left) + "px";
+      tooltip.style.top  = (evt.clientY - rect.top) + "px";
+    };
+
+    hitArea.addEventListener("mouseenter", showTooltip);
+    hitArea.addEventListener("mousemove", moveTooltip);
+    hitArea.addEventListener("mouseleave", () => {
+      dot.setAttribute("r", "4");
+      tooltip.classList.remove("show");
+    });
+    hitArea.addEventListener("touchstart", (evt) => {
+      evt.preventDefault();
+      showTooltip(evt.touches[0]);
+    }, { passive: false });
+
+    svg.appendChild(hitArea);
+  });
+
+  if (allEvaluations.length === 0) {
+    const empty = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    empty.setAttribute("x", width / 2);
+    empty.setAttribute("y", height / 2);
+    empty.setAttribute("text-anchor", "middle");
+    empty.setAttribute("font-size", "13");
+    empty.setAttribute("font-family", "DM Sans, sans-serif");
+    empty.setAttribute("fill", "#94a3b8");
+    empty.textContent = "No evaluations yet";
+    svg.appendChild(empty);
+  }
+}
 </script>
 </body>
 </html>
