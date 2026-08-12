@@ -135,8 +135,8 @@
 
 .stat-value{
   font-family:'Syne',sans-serif;
-  font-weight:800;
-  font-size:34px;
+  font-weight:700;
+  font-size:30px;
   color:#0f172a;
   line-height:1.1;
 }
@@ -416,6 +416,9 @@
     grid-template-columns:1fr 1fr;
     gap:14px;
   }
+  .stat-value {
+    font-size: 26px;
+  }
   .chart-card {
     padding: 18px 18px 22px;
   }
@@ -658,13 +661,19 @@ let allEvaluations = [];
 
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+/* Aligned with Evaluation Management: each evaluation record stores its
+   satisfaction ratings in fields sqd0 through sqd8 (9 fields, 0-indexed) —
+   see admin1-eval-mgmt.html's renderTable()/openModal() which read
+   item[`sqd${n}`] for n = 0..8. Previously this dashboard read a mismatched
+   sq1..sq8 / sqd1..sqd8 (8 fields, 1-indexed) shape, which silently dropped
+   sqd0 and could undercount/miscount averages against real Firestore data. */
 function avgScore(item) {
-  let s=0,c=0;
-  for(let x=1;x<=8;x++){
-    const v=parseFloat(item["sq"+x]??item["sqd"+x]);
-    if(!isNaN(v)){s+=v;c++;}
+  let s = 0, c = 0;
+  for (let x = 0; x <= 8; x++) {
+    const v = parseFloat(item["sqd" + x]);
+    if (!isNaN(v)) { s += v; c++; }
   }
-  return c?s/c:0;
+  return c ? s / c : 0;
 }
 
 onSnapshot(codesGroup, (snapshot) => {
