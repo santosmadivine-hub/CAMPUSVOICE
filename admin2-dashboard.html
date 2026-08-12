@@ -630,9 +630,6 @@
   gap:16px;
   align-items:stretch;
 }
-.charts-grid.status-row{
-  grid-template-columns:1fr;
-}
 .card,
 .eval-status-card{
   background:#fff;
@@ -682,7 +679,10 @@
 .status-chart-wrap{margin-top:5px;flex:1;display:flex;}
 #status-chart-svg{height:100%;min-height:400px;width:100%;display:block;}
 
-.quick-access-card{min-width:0;}
+.quick-access-card{
+  min-width:0;
+  align-self:start;
+}
 .quick-access-grid{gap:10px;margin-top:10px;}
 .quick-access-btn{
   padding:12px 8px;
@@ -789,8 +789,8 @@
         </div>
       </div>
 
-      <!-- EVALUATION STATUS -->
-      <div class="charts-grid status-row">
+      <!-- EVALUATION STATUS + QUICK ACCESS -->
+      <div class="charts-grid">
         <div class="card eval-status-card">
           <div class="eval-status-header">
             <div class="card-title">Status by Area</div>
@@ -805,6 +805,36 @@
           <div class="status-chart-wrap" id="statusChartWrap">
             <svg id="status-chart-svg" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet"></svg>
             <div class="pie-tooltip" id="status-tooltip"></div>
+          </div>
+        </div>
+
+        <div class="card quick-access-card">
+          <div class="card-title">Quick Tools</div>
+          <div class="quick-access-grid">
+            <a href="admin2-analytics.html" class="quick-access-btn">
+              <div class="qa-icon">📈</div>
+              <div class="qa-label">Analytics</div>
+            </a>
+            <a href="admin2-office-mgmt.html" class="quick-access-btn">
+              <div class="qa-icon">📑</div>
+              <div class="qa-label">Office Management</div>
+            </a>
+            <a href="admin2-eval-mgmt.html" class="quick-access-btn">
+              <div class="qa-icon">📑</div>
+              <div class="qa-label">Evaluation Mgmt</div>
+            </a>
+            <a href="admin2-multimedia.html" class="quick-access-btn">
+              <div class="qa-icon">🎞️</div>
+              <div class="qa-label">Multimedia Feedback</div>
+            </a>
+            <a href="admin2-reports.html" class="quick-access-btn">
+              <div class="qa-icon">📁</div>
+              <div class="qa-label">Reports</div>
+            </a>
+            <a href="admin2-settings.html" class="quick-access-btn">
+              <div class="qa-icon">⚙️</div>
+              <div class="qa-label">Settings</div>
+            </a>
           </div>
         </div>
       </div>
