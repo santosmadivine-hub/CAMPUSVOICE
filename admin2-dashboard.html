@@ -735,7 +735,7 @@
       <div class="stat-grid">
         <div class="stat-card purple">
           <div class="stat-icon">📅</div>
-          <div class="stat-label">D</div>
+          <div class="stat-label">Daily</div>
           <div class="stat-value" data-stat="daily">0</div>
           <div class="stat-sub">Evaluations today</div>
         </div>
@@ -1503,10 +1503,12 @@ const STATUS_DEFS = [
   { key: "resolved", label: "Resolved" }
 ];
 
-// Draws the stacked column chart for the given per-status comfort/
-// surroundings counts, scaling each column's height to that status's
-// share of grandTotal (0–100%).
-function drawStatusChart(counts, grandTotal) {
+// Draws the stacked column chart. Each bar's percentage is calculated
+// against its own category's total (comfortTotal / surroundingsTotal)
+// rather than the combined total, so a bar showing 100% means "all of
+// that category's evaluations", and both bars scale correctly on the
+// same 0–100% axis.
+function drawStatusChart(counts, comfortTotal, surroundingsTotal) {
   const svg = document.getElementById("status-chart-svg");
   const tooltip = document.getElementById("status-tooltip");
   if (!svg || !tooltip) return;
@@ -1520,8 +1522,7 @@ function drawStatusChart(counts, grandTotal) {
   const chartH = height - padding.top - padding.bottom;
   const baseY = padding.top + chartH;
 
-  // Preserve the existing percentage calculation: every bar remains a
-  // share of the grand total loaded from Firestore.
+  // Gridlines/labels always span the fixed 0–100% axis.
   for (let p = 0; p <= 100; p += 10) {
     const y = padding.top + chartH - (p / 100) * chartH;
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -1533,17 +1534,15 @@ function drawStatusChart(counts, grandTotal) {
     line.setAttribute("stroke-width", "1");
     svg.appendChild(line);
 
-    if (p < 100) {
-      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      label.setAttribute("x", padding.left - 7);
-      label.setAttribute("y", y + 3);
-      label.setAttribute("text-anchor", "end");
-      label.setAttribute("font-size", "8");
-      label.setAttribute("font-family", "DM Sans, sans-serif");
-      label.setAttribute("fill", "#94a3b8");
-      label.textContent = p + "%";
-      svg.appendChild(label);
-    }
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", padding.left - 7);
+    label.setAttribute("y", y + 3);
+    label.setAttribute("text-anchor", "end");
+    label.setAttribute("font-size", "8");
+    label.setAttribute("font-family", "DM Sans, sans-serif");
+    label.setAttribute("fill", "#94a3b8");
+    label.textContent = p + "%";
+    svg.appendChild(label);
   }
 
   const slot = chartW / STATUS_DEFS.length;
@@ -1551,14 +1550,14 @@ function drawStatusChart(counts, grandTotal) {
   const barGap = 9;
   const barWidth = Math.max(18, (groupWidth - barGap) / 2);
 
-  function attachTooltip(el, statusLabel, categoryLabel, count) {
-    const pct = grandTotal > 0 ? ((count / grandTotal) * 100).toFixed(1) : "0.0";
+  function attachTooltip(el, statusLabel, categoryLabel, count, total) {
+    const pct = total > 0 ? ((count / total) * 100).toFixed(1) : "0.0";
     const showTooltip = evt => {
       tooltip.classList.add("show");
       tooltip.innerHTML = `
         <div class="tt-title">${statusLabel}</div>
         <div>${categoryLabel}: ${count} evaluation${count === 1 ? "" : "s"}</div>
-        <div class="tt-sub">${pct}% of total</div>`;
+        <div class="tt-sub">${pct}% of ${categoryLabel} total</div>`;
       tooltip.style.left = (evt.clientX + 10) + "px";
       tooltip.style.top = (evt.clientY - 45) + "px";
     };
@@ -1567,8 +1566,10 @@ function drawStatusChart(counts, grandTotal) {
     el.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
   }
 
-  function drawBar(cx, count, color, statusLabel, categoryLabel) {
-    const pct = grandTotal > 0 ? (count / grandTotal) * 100 : 0;
+  function drawBar(cx, count, total, color, statusLabel, categoryLabel) {
+    // Clamp defensively — count should never exceed its own category
+    // total, but this guarantees the bar can never overrun the 100% line.
+    const pct = total > 0 ? Math.max(0, Math.min(100, (count / total) * 100)) : 0;
     const barH = (pct / 100) * chartH;
 
     const hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -1578,7 +1579,7 @@ function drawStatusChart(counts, grandTotal) {
     hit.setAttribute("height", chartH);
     hit.setAttribute("fill", "transparent");
     hit.style.cursor = "pointer";
-    attachTooltip(hit, statusLabel, categoryLabel, count);
+    attachTooltip(hit, statusLabel, categoryLabel, count, total);
     svg.appendChild(hit);
 
     if (barH > 0) {
@@ -1590,21 +1591,19 @@ function drawStatusChart(counts, grandTotal) {
       rect.setAttribute("rx", "2");
       rect.setAttribute("fill", color);
       rect.style.cursor = "pointer";
-      attachTooltip(rect, statusLabel, categoryLabel, count);
+      attachTooltip(rect, statusLabel, categoryLabel, count, total);
       svg.appendChild(rect);
 
-      if (pct > 0) {
-        const valueLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        valueLabel.setAttribute("x", cx);
-        valueLabel.setAttribute("y", baseY - barH - 6);
-        valueLabel.setAttribute("text-anchor", "middle");
-        valueLabel.setAttribute("font-size", "9.5");
-        valueLabel.setAttribute("font-family", "Syne, sans-serif");
-        valueLabel.setAttribute("font-weight", "700");
-        valueLabel.setAttribute("fill", "#0f172a");
-        valueLabel.textContent = Math.round(pct) + "%";
-        svg.appendChild(valueLabel);
-      }
+      const valueLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      valueLabel.setAttribute("x", cx);
+      valueLabel.setAttribute("y", baseY - barH - 6);
+      valueLabel.setAttribute("text-anchor", "middle");
+      valueLabel.setAttribute("font-size", "9.5");
+      valueLabel.setAttribute("font-family", "Syne, sans-serif");
+      valueLabel.setAttribute("font-weight", "700");
+      valueLabel.setAttribute("fill", "#0f172a");
+      valueLabel.textContent = Math.round(pct) + "%";
+      svg.appendChild(valueLabel);
     }
   }
 
@@ -1621,10 +1620,10 @@ function drawStatusChart(counts, grandTotal) {
     const comfortCx = cx - barWidth / 2 - barGap / 2;
     const surrCx = cx + barWidth / 2 + barGap / 2;
 
-    // Keep the two Firestore-derived category values as separate bars.
-    // Both use the status color so the chart visually resembles the reference.
-    drawBar(comfortCx, c.comfort, statusColors[st.key], st.label, "Comfort Room");
-    drawBar(surrCx, c.surroundings, statusColors[st.key], st.label, "Surroundings");
+    // Comfort Room bar is a % of comfortTotal, Surroundings bar is a %
+    // of surroundingsTotal — each category is scaled against itself.
+    drawBar(comfortCx, c.comfort, comfortTotal, statusColors[st.key], st.label, "Comfort Room");
+    drawBar(surrCx, c.surroundings, surroundingsTotal, statusColors[st.key], st.label, "Surroundings");
 
     const xLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
     xLabel.setAttribute("x", cx);
@@ -1638,7 +1637,7 @@ function drawStatusChart(counts, grandTotal) {
     svg.appendChild(xLabel);
   });
 
-  if (grandTotal === 0) {
+  if (comfortTotal === 0 && surroundingsTotal === 0) {
     const empty = document.createElementNS("http://www.w3.org/2000/svg", "text");
     empty.setAttribute("x", width / 2);
     empty.setAttribute("y", height / 2);
@@ -1661,14 +1660,18 @@ function renderEvalStatus() {
     resolved: { comfort: 0, surroundings: 0 }
   };
 
+  let comfortTotal = 0;
+  let surroundingsTotal = 0;
+
   evaluations.forEach(e => {
     const catKey = e.cleanlinessCategory === "Surroundings" ? "surroundings" : "comfort";
+    if (catKey === "surroundings") surroundingsTotal++; else comfortTotal++;
     if (e.status === "no_action") counts.no_action[catKey]++;
     else if (e.status === "pending") counts.pending[catKey]++;
     else if (e.status === "resolved") counts.resolved[catKey]++;
   });
 
-  drawStatusChart(counts, evaluations.length);
+  drawStatusChart(counts, comfortTotal, surroundingsTotal);
 }
 
 </script>
