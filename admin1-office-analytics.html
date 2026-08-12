@@ -3,583 +3,863 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CampusVoice – Summary Analytics</title>
+<title>CampusVoice – Dashboard | Admin 2</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-
-/* ════════════════════════════════════════════════════════
-   DESIGN TOKENS — BLUE & ORANGE ONLY
-════════════════════════════════════════════════════════ */
-
-:root {
-  --ink:        #0b1220;
-  --ink-soft:   #334155;
-  --brand:      #2563eb;
-  --brand-deep: #1d4ed8;
-  --brand-light: #3b82f6;
-  --orange:     #f97316;
-  --orange-deep: #ea580c;
-  --orange-soft: #fed7aa;
-  --paper:      #f2f4f9;
-  --card:       #ffffff;
-  --line:       #bae6fd;
-  --muted:      #6b7385;
-  --blue-success:    #2563eb;
-  --orange-accent:   #f97316;
+/* ─── Tooltip styling (matches admin1) ─── */
+.pie-tooltip{
+  position:fixed;
+  pointer-events:none;
+  background:#0f172a;
+  color:#fff;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  line-height:1.4;
+  padding:9px 13px;
+  border-radius:10px;
+  box-shadow:0 10px 24px rgba(15,23,42,0.28);
+  opacity:0;
+  transform:translate(0, 0);
+  transition:opacity .12s ease;
+  z-index:9999;
+  white-space:nowrap;
+}
+.pie-tooltip.show{
+  opacity:1;
+}
+.pie-tooltip .tt-title{
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:13px;
+  margin-bottom:3px;
+}
+.pie-tooltip .tt-sub{
+  color:#cbd5e1;
+  font-size:11px;
 }
 
-/* ── Office Analytics Page Styles ── */
-.analytics-page {
-  max-width: 1200px;
+/* ─── Main Content Container ─── */
+.dashboard-container {
+  flex: 1;
+  padding: 25px 30px 12px;
+  max-width: 1400px;
   margin: 0 auto;
-}
-
-.back-link {
-  display: inline-block;
-  margin-bottom: 20px;
-  color: var(--brand);
-  text-decoration: none;
-  font-weight: 900;
-  font-size: 18px;
-}
-.back-link:hover { text-decoration: underline; }
-
-/* ── HEADER CONTAINER ── */
-.analytics-header {
-  background: var(--card);
-  padding: 28px;
-  border-radius: 18px;
-  margin-bottom: 24px;
-  border: 1px solid var(--line);
-  border-bottom: 3px solid var(--orange);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
-}
-
-.analytics-header .header-row {
+  width: 100%;
+  overflow-y: auto;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ─── Stat cards ─── */
+.stat-grid{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:20px;
+}
+
+.stat-card{
+  position:relative;
+  background:#ffffff;
+  border:1px solid #bae6fd;
+  border-top:4px solid var(--accent3, #0284c7);
+  border-radius:12px;
+  padding:18px 18px 20px;
+  box-shadow:0 2px 8px rgba(2, 132, 199, 0.08);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.stat-card.blue{ border-top-color:#0284c7; }
+.stat-card.cyan{ border-top-color:#0ea5e9; }
+.stat-card.purple{ border-top-color:#0284c7; }
+.stat-card.green{ border-top-color:#0284c7; }
+
+.stat-icon{
+  position:absolute;
+  top:18px;
+  right:18px;
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  background:#f1f5f9;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+}
+
+.stat-label{
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  font-weight:500;
+  color:#64748b;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+
+.stat-value{
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:30px;
+  color:#0f172a;
+  line-height:1.1;
+}
+
+.stat-sub{
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  color:#94a3b8;
+}
+
+/* ─── Chart cards grid ─── */
+.charts-grid {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
   flex-wrap: wrap;
-  gap: 16px;
   margin-bottom: 0;
 }
 
-.header-titles { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 8px; 
-}
-
-.eyebrow {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-  color: var(--orange);
-}
-
-.header-titles h1 {
-  margin: 0;
-  font-family: 'Syne', sans-serif;
-  font-size: 32px;
-  color: var(--ink);
-  font-weight: 800;
-}
-
-.header-meta {
-  font-size: 13px;
-  color: var(--muted);
-  font-weight: 500;
-}
-.header-meta .dot { margin: 0 8px; }
-
-/* ── BANNERS ── */
-.state-banner {
-  padding: 48px 24px;
-  text-align: center;
-  color: var(--muted);
-  font-size: 14px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
-}
-.state-empty { 
-  color: #92400e; 
-  background: #fffbeb; 
-  border-color: #fde68a; 
-}
-
-/* ── STAT CARDS CONTAINER ── */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 18px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  position: relative;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-top: 4px solid var(--accent, var(--brand));
-  border-radius: 16px;
-  padding: 20px 20px 22px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+.card {
+  background: #ffffff;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: box-shadow .2s ease, transform .2s ease;
+  flex: 1 1 420px;
+  min-width: 0;
 }
 
-.stat-card:hover {
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
-  transform: translateY(-1px);
+.card-title{
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:16px;
+  color:#0f172a;
 }
 
-.stat-icon { 
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  background: #f1f5f9;
+.card-sub{
+  font-family:'DM Sans',sans-serif;
+  font-weight:400;
+  font-size:13px;
+  color:#94a3b8;
 }
 
-.stat-label {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: #64748b;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.card-header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
 }
 
-.stat-value {
-  font-family: 'Syne', sans-serif;
-  font-size: 34px;
-  font-weight: 800;
-  color: var(--ink);
-  line-height: 1.1;
+.badge-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(37,99,235,0.12);
+  color:#3b82f6;
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:13px;
+  padding:6px 14px;
+  border-radius:999px;
+  border:1px solid rgba(59,130,246,0.35);
+  white-space:nowrap;
 }
 
-.stat-sub { 
-  font-family: 'DM Sans', sans-serif;
-  font-size: 12px; 
-  color: #94a3b8; 
+/* ─── Line chart styling ─── */
+.line-chart-wrap{
+  margin-top:12px;
+}
+#line-chart-svg{
+  width:100%;
+  height:220px;
+  display:block;
 }
 
-.stat-primary { 
-  --accent: var(--brand);
+/* ─── Donut chart styling ─── */
+.donut-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:28px;
+  flex-wrap:wrap;
+  padding:12px 0;
+  flex:1;
 }
-.stat-warning { 
-  --accent: var(--orange);
+.donut-wrap svg{
+  flex-shrink:1;
+  width:230px;
+  max-width:100%;
+  height:auto;
 }
-.stat-success { 
-  --accent: #10b981;
+.donut-legend{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
 }
-
-/* ── CHARTS CONTAINER ── */
-.charts-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-  margin-bottom: 24px;
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  color:#1e293b;
 }
-
-@media (max-width: 900px) {
-  .charts-grid { grid-template-columns: 1fr; }
-}
-
-.chart-card { 
-  background: var(--card);
-  padding: 22px 24px;
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
-}
-
-.card-title {
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--ink);
-  margin-bottom: 16px;
-}
-.card-sub { 
-  font-weight: 500; 
-  font-size: 12px; 
-  color: var(--muted);
-  margin-left: 8px;
+.legend-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  flex-shrink:0;
 }
 
-.chart-wrap { 
-  position: relative; 
-  height: 280px; 
-  background: var(--paper);
-  border-radius: 10px;
-  padding: 16px;
-  margin-top: 12px;
+/* ─── User Category Distribution — legend table ─── */
+.category-table{
+  display:flex;
+  flex-direction:column;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  color:#1e293b;
+  min-width:200px;
 }
-.chart-wrap canvas { 
-  display: block; 
-  width: 100% !important; 
-  height: 100% !important; 
+.category-table-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:#94a3b8;
+  padding-bottom:8px;
+  border-bottom:1px solid #e2e8f0;
+  margin-bottom:4px;
 }
-.chart-wrap-wide { 
-  height: 260px;
+.category-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:5px 0;
+  cursor:default;
 }
-.chart-wrap-donut {
-  height: 220px;
-  position: relative;
-  background: var(--paper);
-  border-radius: 10px;
-  margin-top: 12px;
+.category-row .cat-name{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:600;
 }
-.chart-wrap-donut canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
+.category-row.sub{
+  padding:3px 0 3px 17px;
+  font-size:12px;
+  color:#64748b;
 }
-
-.donut-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 32px;
-  font-weight: 800;
-  font-family: 'Syne', sans-serif;
-  color: var(--ink);
-  pointer-events: none;
-  text-align: center;
-  line-height: 1.1;
+.category-row.sub .cat-name{
+  font-weight:400;
+  gap:6px;
 }
-.donut-center .donut-sub {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  font-family: 'DM Sans', sans-serif;
-  margin-top: 4px;
+.category-row.total{
+  border-top:1px solid #e2e8f0;
+  margin-top:6px;
+  padding-top:8px;
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  color:#0f172a;
 }
-
-.code-usage-legend {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 16px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-soft);
-  flex-wrap: wrap;
+.category-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  flex-shrink:0;
 }
-.code-usage-legend .legend-item { 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
+.category-count{
+  font-weight:700;
+  color:#0f172a;
+  white-space:nowrap;
 }
-.code-usage-legend .legend-dot { 
-  width: 10px; 
-  height: 10px; 
-  border-radius: 50%; 
-  display: inline-block; 
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.code-usage-empty { 
-  text-align: center; 
-  font-size: 13px; 
-  color: var(--muted); 
-  padding: 12px 0 0; 
+.category-row.sub .category-count{
+  font-weight:600;
+  color:#334155;
 }
 
-.chart-error {
-  padding: 32px 16px;
-  text-align: center;
-  color: #92400e;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 10px;
-  font-size: 14px;
-}
-
-/* ── BREAKDOWN TABLE CONTAINER ── */
-.breakdown-table-wrap { 
-  overflow-x: auto;
+/* ─── Evaluation Status card ─── */
+.eval-status-card{
+  background: #ffffff;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
   padding: 20px;
+  flex: 1.7 1 500px;
+}
+.eval-status-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:16px;
 }
 
-.breakdown-table {
-  width: 100%;
-  border-collapse: collapse;
+/* ─── Evaluation Status — vertical bar chart ─── */
+.status-chart-wrap{
+  position:relative;
+  margin-top:20px;
+}
+#status-chart-svg{
+  width:100%;
+  height:340px;
+  display:block;
 }
 
-.breakdown-table th {
-  text-align: left;
-  padding: 14px;
-  font-size: 11px;
-  color: var(--ink-soft);
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  border-bottom: 2px solid var(--line);
-  background: var(--paper);
-  font-weight: 700;
+/* ─── Category legend (Comfort Room vs Surroundings) — reused above the
+     line chart and the evaluation status chart ─── */
+.chart-legend{
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+  margin-top:2px;
+}
+.chart-legend .legend-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  font-weight:600;
+  color:#475569;
+}
+.chart-legend .legend-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  flex-shrink:0;
 }
 
-.breakdown-table td {
-  padding: 16px 14px;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 14px;
-  color: var(--ink);
+/* ─── Quick Access Section ─── */
+.quick-access-card{
+  flex: 1 1 300px;
 }
 
-.col-score, .col-pct { width: 200px; }
-
-.dim-score { 
-  font-weight: 700; 
-  color: var(--brand); 
+.quick-access-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 12px;
 }
 
-.dim-pct-cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.dim-pct-track {
-  flex: 1;
-  height: 8px;
-  background: var(--line);
-  border-radius: 999px;
-  overflow: hidden;
-  min-width: 100px;
-}
-
-.dim-pct-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--brand), var(--brand-light));
-  transition: width .6s ease;
-  box-shadow: 0 0 4px rgba(37, 99, 235, 0.3);
-}
-
-.dim-pct-num { 
-  font-weight: 700; 
-  color: var(--brand); 
-  width: 50px; 
-  text-align: right; 
-}
-
-/* ── COMMENTS CONTAINER ── */
-.comments-list {
+.quick-access-btn {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 12px;
-  padding: 20px;
-}
-
-.comment-item {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 16px;
-  font-size: 14px;
-  color: var(--ink);
-  font-style: italic;
-  line-height: 1.6;
-  transition: all .3s ease;
-}
-
-.comment-item:hover {
-  border-color: var(--orange);
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
-}
-
-.comment-meta {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--muted);
-  font-style: normal;
-  font-weight: 600;
-}
-
-.comment-empty { 
-  color: var(--muted); 
-  font-size: 14px; 
-  padding: 20px; 
-  text-align: center;
-  background: var(--paper);
-  border-radius: 10px;
-  border: 1px dashed #cbd5e1;
-}
-
-/* ── GENERIC CARD CONTAINER ── */
-.card {
-  background: var(--card);
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
-  margin-bottom: 20px;
+  padding: 20px 16px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1.5px solid #bae6fd;
+  border-radius: 14px;
+  text-decoration: none;
+  color: #0f172a;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  font-family: 'Syne', sans-serif;
+  position: relative;
   overflow: hidden;
-  padding: 22px 24px;
+}
+
+.quick-access-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.04) 100%);
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.quick-access-btn:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12);
+  transform: translateY(-2px);
+}
+
+.quick-access-btn:hover::before {
+  left: 0;
+}
+
+.quick-access-btn:active {
+  transform: translateY(0);
+}
+
+.qa-icon {
+  font-size: 28px;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.qa-label {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #0f172a;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  line-height: 1.3;
+}
+
+/* ─── Stat Mini Cards (from Office Management) ─── */
+.stat-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stat-mini-card {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+  text-align: center;
+}
+
+.stat-mini-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.stat-mini-value {
+  font-size: 28px;
+  font-weight: 800;
+  font-family: 'Syne', sans-serif;
+  color: #0c4a6e;
+}
+
+/* ─── Responsive breakpoints ─── */
+
+/* Large tablets / small laptops */
+@media (max-width: 1200px) {
+  .dashboard-container {
+    max-width: 100%;
+  }
+  .stat-value {
+    font-size: 30px;
+  }
+}
+
+/* Tablets */
+@media (max-width: 1024px) {
+  .stat-grid{
+    grid-template-columns:repeat(2, 1fr);
+  }
+  .charts-grid > .card {
+    flex-basis: 300px;
+  }
+  .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Small tablets / large phones — stack charts, tighten spacing */
+@media (max-width: 900px) {
+  .charts-grid {
+    flex-direction: column;
+  }
+  .charts-grid > .card {
+    flex-basis: auto;
+    width: 100%;
+  }
+  .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
-  .analytics-header .header-row {
+  #line-chart-svg { height:180px; }
+  #status-chart-svg { height:260px; }
+  .donut-wrap {
     flex-direction: column;
+    gap: 20px;
   }
-  .stat-grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  .donut-wrap svg {
+    width: 260px;
+  }
+  .dashboard-container {
+    padding: 20px 16px 28px;
+    border-radius: 16px;
+    gap: 18px;
+  }
+  .stat-grid{
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .card {
+    padding: 18px 18px 22px;
+  }
+  .card-title {
+    font-size: 15px;
+  }
+  .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .quick-access-btn {
+    padding: 16px 12px;
+    gap: 10px;
+  }
+  .qa-icon {
+    font-size: 24px;
+  }
+  .qa-label {
+    font-size: 12px;
+  }
+}
+
+/* Phones */
+@media (max-width: 600px) {
+  .stat-card {
+    padding: 16px 16px 18px;
+  }
+  .stat-value {
+    font-size: 26px;
+  }
+  .stat-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    top: 14px;
+    right: 14px;
+  }
+  .badge-pill {
+    font-size: 12px;
+    padding: 5px 12px;
+  }
+  #status-chart-svg { height:230px; }
+  .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 16px 12px 24px;
+  }
+  .stat-grid{
+    grid-template-columns:1fr;
   }
   .stat-value {
     font-size: 28px;
   }
-  .header-titles h1 {
-    font-size: 24px;
+  #line-chart-svg { height:160px; }
+  #status-chart-svg { height:220px; }
+  .donut-wrap svg {
+    width: 220px;
+  }
+  .quick-access-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .quick-access-btn {
+    padding: 14px 12px;
+  }
+  .qa-icon {
+    font-size: 22px;
+  }
+  .qa-label {
+    font-size: 11px;
   }
 }
+
+@media (max-width: 360px) {
+  .stat-grid{
+    gap: 10px;
+  }
+  .card {
+    padding: 14px 14px 18px;
+  }
+  .quick-access-grid {
+    gap: 8px;
+  }
+}
+
+
+/* =========================================================
+   REFERENCE-DASHBOARD VISUAL OVERRIDES
+   DATA / FIRESTORE / QUERIES ARE NOT CHANGED.
+   ========================================================= */
+.dashboard-container{
+  max-width: 1320px;
+  padding: 22px 22px 16px;
+  gap: 16px;
+  background: transparent;
+}
+.stat-grid{gap:14px;}
+.stat-card{
+  border:1px solid #e5e7eb;
+  border-top:3px solid #2563eb;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(15,23,42,.05);
+  padding:16px 16px 17px;
+}
+.stat-card.cyan{border-top-color:#16a34a;}
+.stat-card.purple{border-top-color:#2563eb;}
+.stat-card.green{border-top-color:#16a34a;}
+.stat-icon{width:34px;height:34px;top:14px;right:14px;border-radius:9px;font-size:15px;}
+.stat-label{font-size:11px;}
+.stat-value{font-size:27px;}
+.stat-sub{font-size:11px;}
+
+.charts-grid{
+  display:grid;
+  grid-template-columns:minmax(0,2.15fr) minmax(260px,1fr);
+  gap:16px;
+  align-items:stretch;
+}
+.card,
+.eval-status-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(15,23,42,.05);
+  padding:16px;
+  min-width:0;
+}
+.card-title{
+  font-size:14px;
+  line-height:1.25;
+}
+.card-sub{font-size:10px;}
+.card-header-row{gap:8px;}
+.badge-pill{font-size:10px;padding:4px 9px;border-radius:999px;}
+.chart-legend{gap:12px;margin-top:0;}
+.chart-legend .legend-item{font-size:10px;gap:5px;}
+.chart-legend .legend-dot{width:8px;height:8px;}
+
+.line-chart-wrap{margin-top:4px;position:relative;overflow:visible;}
+#line-chart-svg{height:235px;width:100%;display:block;overflow:visible;}
+
+/* Compact donut card like the reference image. */
+.donut-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+  padding:2px 0 0;
+  flex:1;
+}
+.donut-wrap svg{width:190px;height:190px;max-width:100%;}
+.donut-legend{width:100%;max-height:128px;overflow:auto;gap:0;}
+.category-table{min-width:0;width:100%;font-size:10px;}
+.category-table-head{font-size:8px;padding-bottom:5px;margin-bottom:2px;}
+.category-row{padding:3px 0;gap:8px;}
+.category-row .cat-name{gap:6px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.category-dot{width:7px;height:7px;}
+.category-count{font-size:10px;}
+.category-row.sub{font-size:9px;padding:2px 0 2px 13px;}
+.category-row.total{padding-top:5px;margin-top:3px;}
+
+.eval-status-card{padding:16px;display:flex;flex-direction:column;}
+.eval-status-header{gap:8px;}
+.status-chart-wrap{margin-top:5px;flex:1;display:flex;}
+#status-chart-svg{height:100%;min-height:340px;width:100%;display:block;}
+
+.quick-access-card{
+  min-width:0;
+  align-self:start;
+}
+.quick-access-grid{gap:10px;margin-top:10px;}
+.quick-access-btn{
+  padding:12px 8px;
+  gap:7px;
+  border:1px solid #dbe2ea;
+  border-radius:9px;
+  background:#f8fafc;
+}
+.quick-access-btn:first-child{background:linear-gradient(135deg,#0788d1,#1b9ad8);color:#fff;border-color:#0788d1;}
+.quick-access-btn:first-child .qa-label{color:#fff;}
+.qa-icon{font-size:22px;}
+.qa-label{font-size:9px;}
+
+/* Make the status legend resemble the reference while preserving the
+   existing two-category data series and tooltips. */
+.status-reference-legend{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:12px;
+  margin:0 0 2px;
+  font:600 9px 'DM Sans',sans-serif;
+  color:#64748b;
+}
+.status-reference-legend span{display:inline-flex;align-items:center;gap:4px;}
+.status-reference-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;}
+
+@media (max-width:900px){
+  .charts-grid{grid-template-columns:1fr;}
+  .donut-wrap svg{width:205px;height:205px;}
+}
+@media (max-width:600px){
+  .dashboard-container{padding:16px 12px 24px;}
+  .charts-grid{gap:12px;}
+  #line-chart-svg{height:200px;}
+  #status-chart-svg{min-height:280px;}
+  .donut-wrap svg{width:190px;height:190px;}
+}
+
 </style>
 </head>
 <body>
-
 <div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
 
-    <!-- Sidebar -->
-    <div id="sidebar-mount"></div>
+    <div class="dashboard-container">
+      <!-- STAT CARDS -->
+      <div class="stat-grid">
+        <div class="stat-card purple">
+          <div class="stat-icon">📅</div>
+          <div class="stat-label">Daily</div>
+          <div class="stat-value" data-stat="daily">0</div>
+          <div class="stat-sub">Evaluations today</div>
+        </div>
+        <div class="stat-card cyan">
+          <div class="stat-icon">🗓️</div>
+          <div class="stat-label">Weekly</div>
+          <div class="stat-value" data-stat="weekly">0</div>
+          <div class="stat-sub">Evaluations this week</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">📆</div>
+          <div class="stat-label">Monthly</div>
+          <div class="stat-value" data-stat="monthly">0</div>
+          <div class="stat-sub">Evaluations this month</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-label">Total Office</div>
+          <div class="stat-value" data-stat="totalOffice">0</div>
+          <div class="stat-sub">Offices tracked</div>
+        </div>
+      </div>
 
-    <!-- Main Content -->
-    <main class="main fade-in">
-
-        <!-- Topbar -->
-        <div id="topbar-mount"></div>
-
-        <div class="analytics-page">
-
-    <!-- Header -->
-    <header class="analytics-header">
-      <a href="admin1-office-mgmt.html" class="back-link">← Back</a>
-      <div class="header-row">
-        <div class="header-titles">
-          <h1 id="office-name">Loading office…</h1>
-          <div class="header-meta">
-            <span id="office-date-range">—</span>
-            <span class="dot">•</span>
-            <span id="office-respondents">—</span>
+      <!-- CHARTS -->
+      <div class="charts-grid">
+        <div class="card">
+          <div class="card-header-row">
+            <div class="card-title">Weekly Reports Trend</div>
+            <div class="badge-pill" id="office-count-badge">Total Offices: 0</div>
           </div>
-    </header>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Comfort Room</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Surroundings</div>
+          </div>
+          <div class="line-chart-wrap" id="lineWrap">
+            <svg id="line-chart-svg" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
+            <div class="pie-tooltip" id="line-tooltip"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Evaluator Demographics</div>
+          <div class="card-sub" style="margin-top:-2px;">Respondents by category</div>
+          <div class="donut-wrap" id="donutWrap">
+            <svg id="donut-svg" viewBox="0 0 200 200" width="240" height="240">
+              <circle cx="100" cy="100" r="82" fill="none" stroke="#eef2f7" stroke-width="14"/>
+              <circle cx="100" cy="100" r="58" fill="none" stroke="#eef2f7" stroke-width="24"/>
+            </svg>
+            <div class="pie-tooltip" id="donut-tooltip"></div>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+      </div>
 
-    <!-- Loading / Empty states -->
-    <div class="state-banner" id="loading-banner">Loading evaluation data…</div>
-    <div class="state-banner state-empty" id="empty-banner" style="display:none;">
-      No evaluations have been submitted for this office yet.
+      <!-- EVALUATION STATUS + QUICK ACCESS -->
+      <div class="charts-grid">
+        <div class="card eval-status-card">
+          <div class="eval-status-header">
+            <div class="card-title">Status by Area</div>
+          </div>
+
+          <div class="status-reference-legend">
+            <span><i style="background:#7b7f89"></i>No Action</span>
+            <span><i style="background:#f59e0b"></i>Pending</span>
+            <span><i style="background:#087f3e"></i>Resolved</span>
+          </div>
+
+          <div class="status-chart-wrap" id="statusChartWrap">
+            <svg id="status-chart-svg" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="pie-tooltip" id="status-tooltip"></div>
+          </div>
+        </div>
+
+        <div class="card quick-access-card">
+          <div class="card-title">Quick Tools</div>
+          <div class="quick-access-grid">
+            <a href="admin2-analytics.html" class="quick-access-btn">
+              <div class="qa-icon">📈</div>
+              <div class="qa-label">Analytics</div>
+            </a>
+            <a href="admin2-office-mgmt.html" class="quick-access-btn">
+              <div class="qa-icon">📑</div>
+              <div class="qa-label">Office Management</div>
+            </a>
+            <a href="admin2-eval-mgmt.html" class="quick-access-btn">
+              <div class="qa-icon">📑</div>
+              <div class="qa-label">Evaluation Mgmt</div>
+            </a>
+            <a href="admin2-multimedia.html" class="quick-access-btn">
+              <div class="qa-icon">🎞️</div>
+              <div class="qa-label">Multimedia Feedback</div>
+            </a>
+            <a href="admin2-reports.html" class="quick-access-btn">
+              <div class="qa-icon">📁</div>
+              <div class="qa-label">Reports</div>
+            </a>
+            <a href="admin2-settings.html" class="quick-access-btn">
+              <div class="qa-icon">⚙️</div>
+              <div class="qa-label">Settings</div>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div id="report-content" style="display:none;">
-
-      <!-- Top stat cards -->
-      <section class="stat-grid">
-        <div class="stat-card stat-primary">
-          <div class="stat-icon">📋</div>
-          <div class="stat-label">Total Evaluations</div>
-          <div class="stat-value" id="stat-total-evals">0</div>
-        </div>
-        <div class="stat-card stat-primary">
-          <div class="stat-icon">😊</div>
-          <div class="stat-label">Avg Satisfaction</div>
-          <div class="stat-value" id="stat-satisfaction">0%</div>
-        </div>
-        <div class="stat-card stat-warning">
-          <div class="stat-icon">⭐</div>
-          <div class="stat-label">Overall Rating</div>
-          <div class="stat-value" id="stat-overall-rating">0.0 / 5</div>
-          <div class="stat-sub" id="stat-overall-label">—</div>
-        </div>
-        <div class="stat-card stat-success">
-          <div class="stat-icon">🧑‍🤝‍🧑</div>
-          <div class="stat-label">Respondents</div>
-          <div class="stat-value" id="stat-respondents">0</div>
-        </div>
-      </section>
-
-      <!-- Charts -->
-      <section class="charts-grid">
-        <div class="chart-card">
-          <div class="card-title">Evaluation Dimensions<span class="card-sub">— average score per criterion</span></div>
-          <div class="chart-wrap" id="chart-dimensions-wrap">
-            <canvas id="chart-dimensions"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div class="card-title">Code Usage<span class="card-sub">— transaction codes for this office</span></div>
-          <div class="chart-wrap chart-wrap-donut" id="chart-codes-wrap">
-            <canvas id="chart-codes"></canvas>
-            <div class="donut-center" id="donut-center-label">0</div>
-          </div>
-          <div class="code-usage-legend" id="code-usage-legend"></div>
-        </div>
-      </section>
-
-      <div class="card">
-        <div class="card-title">Evaluations Over Time<span class="card-sub">— average rating per submission date</span></div>
-        <div class="chart-wrap chart-wrap-wide" id="chart-trend-wrap">
-          <canvas id="chart-trend"></canvas>
-        </div>
-      </div>
-
-      <!-- Dimension breakdown table -->
-      <div class="card">
-        <div class="card-title">Dimension Breakdown<span class="card-sub">— detailed scores</span></div>
-        <div class="breakdown-table-wrap">
-          <table class="breakdown-table">
-            <thead>
-              <tr>
-                <th>Evaluation Dimension</th>
-                <th class="col-score">Avg. Rating</th>
-                <th class="col-pct">Satisfaction %</th>
-              </tr>
-            </thead>
-            <tbody id="breakdown-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Recent comments -->
-      <div class="card">
-        <div class="card-title">Recent Feedback<span class="card-sub">— latest comments from respondents</span></div>
-        <div class="comments-list" id="comments-list"></div>
-      </div>
-
-    </div>
-
-  </div>
-</main>
+  </main>
 </div>
 
-  <!-- Chart.js — pinned to a version that actually exists on jsDelivr -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="shared.js"></script>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore,
-  doc,
-  getDoc,
   collection,
-  collectionGroup,
-  getDocs
+  onSnapshot,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Same project as the rest of the CampusVoice admin dashboards.
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
-  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
   projectId: "kristal-adb78",
   storageBucket: "kristal-adb78.firebasestorage.app",
   messagingSenderId: "1016283938031",
@@ -587,371 +867,820 @@ const firebaseConfig = {
   measurementId: "G-LK8D1CBQ2J"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Build shared Admin 1 layout
+// Build UI
 document.getElementById("sidebar-mount").innerHTML =
-    buildSidebar("admin1", "office-mgmt");
+buildSidebar("admin2", "dashboard");
 
 document.getElementById("topbar-mount").innerHTML =
-    buildTopbar("Summary Analytics", "admin1");
+buildTopbar("Dashboard", "admin2");
 
-// Labels for sq1..sq8 / sqd1..sqd8
-const DIMENSION_LABELS = [
-  "Responsiveness",
-  "Reliability",
-  "Access & Facilities",
-  "Communication",
-  "Costs",
-  "Integrity",
-  "Assurance",
-  "Outcome"
-];
+// ======================
+// FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
+// ======================
+// ComfortRoomEvalActivity / SurroundingsEvalActivity write each
+// evaluation to a nested per-office doc AND to a flat mirror at
+// evaluation_history/{id} (see admin2-eval-mgmt.html). This dashboard
+// reads from the flat mirror, same as Eval Mgmt, so counts/status here
+// always match what admins see and edit there.
+const EVAL_HISTORY_COLLECTION = "evaluation_history";
 
+// Each cleanliness category keeps its own office list, in a separately
+// named Firestore collection (mirrors CleanOfficeSelectActivity /
+// admin2-office-mgmt.html). Kept exactly as named in the app, including
+// the differing hyphen vs underscore convention.
+const OFFICE_COLLECTIONS = {
+  "Comfort Room": "office-names-comfort-room",
+  "Surroundings": "office_names_surroundings"
+};
+const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
+const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved before cleanlinessCategory existed
+
+// ComfortRoomEvalActivity / SurroundingsEvalActivity both set
+// TOTAL_QUESTIONS = 5 and only ever write rating1...rating5 — confirmed
+// directly from the submission code (see admin2-eval-mgmt.html), not
+// rating1-15.
+const TOTAL_RATING_QUESTIONS = 5;
+
+// Evaluations with an average rating at or above this threshold (out of
+// 5, matching the Evaluation Management page) are treated as positive
+// feedback and auto-classified as "No Action Required" instead of
+// "Pending", so this dashboard's status breakdown matches Eval Mgmt.
+// Adjust this single constant to tune the cutoff.
+const LOW_RATING_THRESHOLD = 3;
+
+// ======================
+// STATE
+// ======================
+let evaluations = [];
+let officeCount = 0;
+let officeNames = [];
+let comfortOffices = {};      // id -> {id, name}, from office-names-comfort-room
+let surroundingsOffices = {}; // id -> {id, name}, from office_names_surroundings
+let offices = {};             // combined view of both categories, keyed by doc id
+
+// Normalizes office names for consistent comparison
 function normalizeName(name) {
   return (name || "").toString().trim().toLowerCase();
 }
 
-function getQueryParam(key) {
-  return new URLSearchParams(window.location.search).get(key);
-}
+// Average of rating1 through rating5 for a single evaluation record.
+function avgOf(ev) {
+  let sum = 0;
+  let count = 0;
 
-function ratingLabel(avg) {
-  if (avg >= 4.5) return "Excellent";
-  if (avg >= 3.5) return "Very Good";
-  if (avg >= 2.5) return "Good";
-  if (avg >= 1.5) return "Fair";
-  if (avg > 0) return "Poor";
-  return "No data";
-}
-
-function formatDate(ts) {
-  if (!ts) return "—";
-  return new Date(ts).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric"
-  });
-}
-
-function safeRenderChart(wrapId, canvasId, buildFn) {
-  if (typeof Chart === "undefined") {
-    const wrap = document.getElementById(wrapId);
-    if (wrap) wrap.innerHTML = `<div class="chart-error">Chart library failed to load. Check your internet connection and reload.</div>`;
-    console.error(`Chart.js is not loaded — skipped "${canvasId}"`);
-    return null;
-  }
-  try {
-    const canvas = document.getElementById(canvasId);
-    return buildFn(canvas);
-  } catch (err) {
-    console.error(`Failed to render chart "${canvasId}":`, err);
-    const wrap = document.getElementById(wrapId);
-    if (wrap) wrap.innerHTML = `<div class="chart-error">Couldn't render this chart.</div>`;
-    return null;
-  }
-}
-
-function renderCodeUsage(codes) {
-  const total = codes.length;
-  const used = codes.filter(c => c.status === "used").length;
-  const unused = codes.filter(c => c.status === "unused").length;
-  const other = total - used - unused;
-
-  const label = document.getElementById("donut-center-label");
-  const legend = document.getElementById("code-usage-legend");
-
-  if (total === 0) {
-    label.innerHTML = `0<span class="donut-sub">codes</span>`;
-    legend.innerHTML = `<div class="code-usage-empty">No codes generated for this office yet.</div>`;
-    return;
-  }
-
-  label.innerHTML = `${total}<span class="donut-sub">codes</span>`;
-
-  const segments = [
-    { name: "Unused", value: unused, color: "#16a34a" },
-    { name: "Used", value: used, color: "#ef4444" }
-  ];
-  if (other > 0) segments.push({ name: "Other", value: other, color: "#94a3b8" });
-
-  legend.innerHTML = segments.map(s => `
-    <div class="legend-item">
-      <span class="legend-dot" style="background:${s.color}"></span>
-      ${s.name} (${s.value})
-    </div>
-  `).join("");
-
-  safeRenderChart("chart-codes-wrap", "chart-codes", (canvas) => {
-    return new Chart(canvas, {
-      type: "doughnut",
-      data: {
-        labels: segments.map(s => s.name),
-        datasets: [{
-          data: segments.map(s => s.value),
-          backgroundColor: segments.map(s => s.color),
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: "72%",
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: true }
-        }
-      }
-    });
-  });
-}
-
-async function main() {
-  const officeKey = getQueryParam("office");
-  const officeNameParam = getQueryParam("name") || "";
-
-  const loadingBanner = document.getElementById("loading-banner");
-  const emptyBanner = document.getElementById("empty-banner");
-  const reportContent = document.getElementById("report-content");
-  const officeNameEl = document.getElementById("office-name");
-
-  officeNameEl.textContent = officeNameParam || "Office";
-
-  let officeName = officeNameParam;
-
-  try {
-    if (officeKey) {
-      const snap = await getDoc(doc(db, "services", "offices", "records", officeKey));
-      if (snap.exists()) {
-        const val = snap.data();
-        if (val && val.name) officeName = val.name;
-      }
+  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
+    const val = ev["rating" + i];
+    if (typeof val === "number" && !isNaN(val)) {
+      sum += val;
+      count++;
     }
-  } catch (err) {
-    console.error("Couldn't load office record:", err);
   }
 
-  officeName = officeName || "Unknown Office";
-  officeNameEl.textContent = officeName;
-  document.title = `CampusVoice – Summary Analytics | ${officeName}`;
+  return count > 0 ? sum / count : 0;
+}
 
-  let officeCodes = [];
+// Build statistics per office with normalized name matching
+function buildOfficeStats() {
+  const statsByKey = {};
 
-  try {
-    // FIX: previously this listed documents directly under
-    // "transaction_code/office_name" and matched one by ID. That fails
-    // for any office whose parent doc was never explicitly written
-    // (only its "codes" subcollection was) — Firestore treats such a
-    // doc as existing only implicitly, and it will NOT show up in a
-    // query against its parent collection, even though its
-    // subcollection is fully readable. That's exactly what was
-    // happening for Cashier.
-    //
-    // Querying the "codes" collectionGroup directly sidesteps this
-    // entirely — it reads the subcollection docs themselves, regardless
-    // of whether their parent office_name/{office} document has any
-    // data of its own. This is unfiltered (no where()), so it does not
-    // require a Firestore index, same as the plain collectionGroup
-    // listing already used successfully on the Generate Code page.
-    const targetKey = normalizeName(officeName);
-    const allCodesSnap = await getDocs(collectionGroup(db, "codes"));
+  Object.entries(offices).forEach(([key, office]) => {
+    statsByKey[key] = { displayName: office.name, total: 0, sum: 0 };
+  });
 
-    officeCodes = allCodesSnap.docs
-      .filter(d => normalizeName(d.ref.parent.parent?.id) === targetKey)
-      .map(d => d.data());
-  } catch (err) {
-    console.error("Couldn't load transaction codes:", err);
+  evaluations.forEach(e => {
+    const matchingOfficeKey = Object.entries(offices).find(([_, office]) => 
+      normalizeName(office.name) === normalizeName(e.officeName)
+    )?.[0];
+    
+    if (matchingOfficeKey) {
+      statsByKey[matchingOfficeKey].total += 1;
+      statsByKey[matchingOfficeKey].sum += avgOf(e);
+    }
+  });
+
+  return statsByKey;
+}
+
+// Normalizes whatever is stored under a record's status into "pending",
+// "no_action", or "resolved" (mirrors the Evaluation Management page).
+//
+// Records with no status field at all — which today is every record the
+// app writes, since it never sets a status field on submit — are
+// auto-classified from their average rating instead of defaulting to
+// "pending":
+//   - avgRating < LOW_RATING_THRESHOLD  -> "pending"    (needs attention)
+//   - avgRating >= LOW_RATING_THRESHOLD -> "no_action"   (positive feedback)
+// Once an admin explicitly sets a status via the Eval Mgmt Edit modal,
+// that saved value is always respected and skips the auto-classification.
+function parseEvalStatus(data, avgRating) {
+  const stored = (data.status || "").toString().toLowerCase();
+  if (stored === "resolved" || stored === "pending" || stored === "no_action") {
+    return stored;
+  }
+  return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
+}
+
+// ======================
+// LOAD OFFICE LISTS -> one listener per category, then combined
+// ======================
+// Recomputes the combined `offices` map (used for the Total Office stat,
+// the office <select>, and buildOfficeStats) whenever either category's
+// office list changes.
+function rebuildOffices() {
+  offices = { ...comfortOffices, ...surroundingsOffices };
+
+  officeCount = Object.keys(offices).length;
+  officeNames = Object.values(offices).map(o => o.name);
+
+  document.querySelector('[data-stat="totalOffice"]').textContent = officeCount;
+
+  const badge = document.getElementById("office-count-badge");
+  if (badge) badge.textContent = `Total Offices: ${officeCount}`;
+
+  renderDashboard();
+  renderEvalStatus();
+}
+
+onSnapshot(query(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), orderBy("name", "asc")), (snapshot) => {
+  comfortOffices = {};
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    comfortOffices[doc.id] = { id: doc.id, name: data.name || data.officeName || doc.id };
+  });
+  rebuildOffices();
+});
+
+onSnapshot(query(collection(db, OFFICE_COLLECTIONS["Surroundings"]), orderBy("name", "asc")), (snapshot) => {
+  surroundingsOffices = {};
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    surroundingsOffices[doc.id] = { id: doc.id, name: data.name || data.officeName || doc.id };
+  });
+  rebuildOffices();
+});
+
+// ======================
+// LOAD EVALUATIONS -> flat evaluation_history mirror (same source Eval
+// Mgmt reads from, so this dashboard's counts/status always agree with
+// it — real-time across both categories and every office in one listener)
+// ======================
+const evalCollectionRef = collection(db, EVAL_HISTORY_COLLECTION);
+const evalQuery = query(evalCollectionRef, orderBy("timestamp", "desc"));
+
+onSnapshot(evalQuery, (snapshot) => {
+  evaluations = [];
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+
+    const rawCategory = data.cleanlinessCategory;
+    const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+
+    const record = {
+      id: doc.id,
+      officeName: data.officeName || "Unknown",
+      cleanlinessCategory: category,
+      comments: data.comments || "",
+      timestamp: Number(data.timestamp) || 0,
+      userCategory: (data.userCategory || "").toString().trim() || "Unspecified",
+      course: (data.course || "").toString().trim()
+    };
+
+    // Pull rating1 ... rating5 (matches what ComfortRoomEvalActivity /
+    // SurroundingsEvalActivity actually write — TOTAL_QUESTIONS = 5).
+    for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
+      record["rating" + i] = Number(data["rating" + i]) || 0;
+    }
+
+    // Status depends on the average rating, so it's computed after the
+    // rating fields are populated above.
+    record.status = parseEvalStatus(data, avgOf(record));
+
+    evaluations.push(record);
+  });
+
+  renderDashboard();
+  renderEvalStatus();
+});
+
+// ======================
+// RENDER
+// ======================
+
+function renderDashboard() {
+  renderStatCards();
+  renderLineChart();
+  renderUserCategoryDonut();
+}
+
+function renderStatCards() {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const startOfWeek = new Date(startOfDay);
+  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+
+  const startOfMonth = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), 1);
+
+  const daily = evaluations.filter(e => e.timestamp >= startOfDay.getTime()).length;
+  const weekly = evaluations.filter(e => e.timestamp >= startOfWeek.getTime()).length;
+  const monthly = evaluations.filter(e => e.timestamp >= startOfMonth.getTime()).length;
+
+  document.querySelector('[data-stat="daily"]').textContent = daily;
+  document.querySelector('[data-stat="weekly"]').textContent = weekly;
+  document.querySelector('[data-stat="monthly"]').textContent = monthly;
+  document.querySelector('[data-stat="totalOffice"]').textContent = officeCount;
+}
+
+// ======================
+// WEEKLY REPORTS — LINE CHART (last 7 days)
+// ======================
+function renderLineChart() {
+  const svg = document.getElementById("line-chart-svg");
+  const tooltip = document.getElementById("line-tooltip");
+  if (!svg || !tooltip) return;
+
+  svg.innerHTML = "";
+  tooltip.classList.remove("show");
+
+  const width = 600, height = 235;
+  const padding = { top: 18, right: 16, bottom: 28, left: 34 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  const days = [];
+  const fullDayNames = [];
+  const comfortCounts = [];
+  const surroundingsCounts = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    dayStart.setDate(dayStart.getDate() - i);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayStart.getDate() + 1);
+
+    const dayEvals = evaluations.filter(
+      e => e.timestamp >= dayStart.getTime() && e.timestamp < dayEnd.getTime()
+    );
+
+    days.push(dayStart.toLocaleDateString(undefined, { weekday: "short" }));
+    fullDayNames.push(dayStart.toLocaleDateString(undefined, { weekday: "long" }));
+    comfortCounts.push(dayEvals.filter(e => e.cleanlinessCategory === "Comfort Room").length);
+    surroundingsCounts.push(dayEvals.filter(e => e.cleanlinessCategory === "Surroundings").length);
   }
 
-  renderCodeUsage(officeCodes);
+  // Keep the same Firestore-derived values. The scale is visual only.
+  const maxCount = Math.max(1, ...comfortCounts, ...surroundingsCounts);
+  const yMax = Math.max(10, Math.ceil(maxCount / 10) * 10);
+  const xStep = chartW / Math.max(1, days.length - 1);
 
-  let evaluations = [];
-
-  try {
-    const snap = await getDocs(collection(db, "services", "evaluations", "records"));
-    const targetKey = normalizeName(officeName);
-
-    evaluations = snap.docs
-      .map(docSnap => {
-        const ev = docSnap.data();
-        const dims = [];
-        for (let x = 1; x <= 8; x++) {
-          const v = parseFloat(ev["sq" + x] ?? ev["sqd" + x]);
-          dims.push(isNaN(v) ? 0 : v);
-        }
-        return {
-          id: docSnap.id,
-          office: ev.office || "Unknown",
-          comment: ev.suggestions || "",
-          dims,
-          timestamp: Number(ev.timestamp) || 0
-        };
-      })
-      .filter(ev => normalizeName(ev.office) === targetKey);
-  } catch (err) {
-    console.error("Couldn't load evaluations:", err);
+  function toPoints(counts) {
+    return counts.map((c, i) => ({
+      x: padding.left + i * xStep,
+      y: padding.top + chartH - (c / yMax) * chartH,
+      c
+    }));
   }
 
-  loadingBanner.style.display = "none";
+  const comfortPoints = toPoints(comfortCounts);
+  const surroundingsPoints = toPoints(surroundingsCounts);
+
+  // Soft horizontal gridlines.
+  const gridCount = 4;
+  for (let g = 0; g <= gridCount; g++) {
+    const y = padding.top + (chartH / gridCount) * g;
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", padding.left);
+    line.setAttribute("x2", width - padding.right);
+    line.setAttribute("y1", y);
+    line.setAttribute("y2", y);
+    line.setAttribute("stroke", "#eef1f5");
+    line.setAttribute("stroke-width", "1");
+    svg.appendChild(line);
+  }
+
+  // Small y-axis labels, matching the clean reference style.
+  for (let g = 0; g <= gridCount; g++) {
+    const value = Math.round(yMax - (yMax / gridCount) * g);
+    const y = padding.top + (chartH / gridCount) * g + 3;
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", padding.left - 7);
+    label.setAttribute("y", y);
+    label.setAttribute("text-anchor", "end");
+    label.setAttribute("font-size", "9");
+    label.setAttribute("font-family", "DM Sans, sans-serif");
+    label.setAttribute("fill", "#94a3b8");
+    label.textContent = value;
+    svg.appendChild(label);
+  }
+
+  function smoothPath(points) {
+    if (!points.length) return "";
+    if (points.length === 1) return `M ${points[0].x},${points[0].y}`;
+    let d = `M ${points[0].x},${points[0].y}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i - 1] || points[i];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[i + 2] || p2;
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+    }
+    return d;
+  }
+
+  // Blue area under the main Comfort Room line, as in the reference image.
+  if (comfortPoints.length > 1) {
+    const linePath = smoothPath(comfortPoints);
+    const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    area.setAttribute(
+      "d",
+      `${linePath} L ${comfortPoints[comfortPoints.length - 1].x},${padding.top + chartH} L ${comfortPoints[0].x},${padding.top + chartH} Z`
+    );
+    area.setAttribute("fill", "#2563eb");
+    area.setAttribute("fill-opacity", "0.10");
+    svg.appendChild(area);
+  }
+
+  function drawSeries(points, color) {
+    if (points.length > 1) {
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", smoothPath(points));
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", color);
+      path.setAttribute("stroke-width", "2.5");
+      path.setAttribute("stroke-linecap", "round");
+      path.setAttribute("stroke-linejoin", "round");
+      svg.appendChild(path);
+    }
+    points.forEach(p => {
+      const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      dot.setAttribute("cx", p.x);
+      dot.setAttribute("cy", p.y);
+      dot.setAttribute("r", "3.5");
+      dot.setAttribute("fill", "#fff");
+      dot.setAttribute("stroke", color);
+      dot.setAttribute("stroke-width", "2");
+      svg.appendChild(dot);
+    });
+  }
+
+  drawSeries(comfortPoints, "#2563eb");
+  drawSeries(surroundingsPoints, "#178b5b");
+
+  comfortPoints.forEach((p, i) => {
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", p.x);
+    label.setAttribute("y", height - 8);
+    label.setAttribute("text-anchor", "middle");
+    label.setAttribute("font-size", "9");
+    label.setAttribute("font-family", "DM Sans, sans-serif");
+    label.setAttribute("fill", "#64748b");
+    label.textContent = days[i];
+    svg.appendChild(label);
+
+    const hitWidth = i === 0 || i === comfortPoints.length - 1 ? xStep / 2 : xStep;
+    const hitArea = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    hitArea.setAttribute("x", p.x - hitWidth / 2);
+    hitArea.setAttribute("y", padding.top);
+    hitArea.setAttribute("width", hitWidth);
+    hitArea.setAttribute("height", chartH);
+    hitArea.setAttribute("fill", "transparent");
+    hitArea.style.cursor = "pointer";
+
+    const showTooltip = (evt) => {
+      tooltip.classList.add("show");
+      tooltip.innerHTML = `
+        <div class="tt-title">${fullDayNames[i]}</div>
+        <div>🔵 Comfort Room: ${comfortCounts[i]}</div>
+        <div>🟢 Surroundings: ${surroundingsCounts[i]}</div>`;
+      tooltip.style.left = (evt.clientX + 10) + "px";
+      tooltip.style.top = (evt.clientY - 45) + "px";
+    };
+    hitArea.addEventListener("mouseenter", showTooltip);
+    hitArea.addEventListener("mousemove", showTooltip);
+    hitArea.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
+    svg.appendChild(hitArea);
+  });
 
   if (evaluations.length === 0) {
-    emptyBanner.style.display = "block";
+    const empty = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    empty.setAttribute("x", width / 2);
+    empty.setAttribute("y", height / 2);
+    empty.setAttribute("text-anchor", "middle");
+    empty.setAttribute("font-size", "12");
+    empty.setAttribute("font-family", "DM Sans, sans-serif");
+    empty.setAttribute("fill", "#94a3b8");
+    empty.textContent = "No evaluations yet";
+    svg.appendChild(empty);
+  }
+}
+
+// ======================
+// USER CATEGORY DISTRIBUTION — nested donut
+//   inner ring  -> userCategory (Student / Faculty-Staff / Guest / Visitor)
+//   outer ring  -> course breakdown, drawn only across the Student arc
+// Both rings are built live from the userCategory/course fields on each
+// evaluation_history record (written by ComfortRoomEvalActivity /
+// SurroundingsEvalActivity), so this always reflects real Firestore data.
+// ======================
+const USER_CATEGORY_ORDER = ["Student", "Faculty/Staff", "Guest", "Visitor"];
+const USER_CATEGORY_COLORS = {
+  "Student": "#8b5cf6",
+  "Faculty/Staff": "#3b82f6",
+  "Guest": "#22c55e",
+  "Visitor": "#f97316"
+};
+const OTHER_CATEGORY_COLOR = "#94a3b8";
+const COURSE_COLOR_PALETTE = ["#a78bfa", "#c4b5fd", "#ddd6fe", "#e9d5ff", "#f3e8ff", "#ede9fe"];
+
+// Tallies evaluations by userCategory, and separately by course for
+// whichever records are tagged "Student".
+function computeUserCategoryBreakdown() {
+  const categoryCounts = {};
+  const courseCounts = {};
+
+  evaluations.forEach(e => {
+    const cat = e.userCategory || "Unspecified";
+    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    if (cat === "Student") {
+      const course = e.course || "Unspecified";
+      courseCounts[course] = (courseCounts[course] || 0) + 1;
+    }
+  });
+
+  return { categoryCounts, courseCounts };
+}
+
+// Known categories first (in a fixed order, matching the app's user
+// category options), then any other/legacy values sorted by count.
+function buildCategorySegments(categoryCounts) {
+  const known = USER_CATEGORY_ORDER.map(name => ({
+    key: name, label: name, color: USER_CATEGORY_COLORS[name], count: categoryCounts[name] || 0
+  }));
+  const extras = Object.keys(categoryCounts)
+    .filter(k => !USER_CATEGORY_ORDER.includes(k))
+    .sort((a, b) => categoryCounts[b] - categoryCounts[a])
+    .map(name => ({ key: name, label: name, color: OTHER_CATEGORY_COLOR, count: categoryCounts[name] }));
+  return [...known, ...extras];
+}
+
+// Courses sorted by count (most common first), colored from a lightening
+// purple palette so they read as sub-shades of the Student segment.
+function buildCourseSegments(courseCounts) {
+  return Object.entries(courseCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([course, count], i) => ({
+      key: course, label: course, color: COURSE_COLOR_PALETTE[i % COURSE_COLOR_PALETTE.length], count
+    }));
+}
+
+function renderUserCategoryDonut() {
+  const svg = document.getElementById("donut-svg");
+  const legend = document.getElementById("donut-legend");
+  const tooltip = document.getElementById("donut-tooltip");
+  if (!svg || !legend || !tooltip) return;
+
+  const cx = 100, cy = 100;
+  const rOuter = 78, rInner = 57;
+  const wOuter = 13, wInner = 21;
+  const circOuter = 2 * Math.PI * rOuter;
+  const circInner = 2 * Math.PI * rInner;
+  const total = evaluations.length;
+
+  svg.querySelectorAll(".donut-segment").forEach(el => el.remove());
+  svg.querySelectorAll("text").forEach(el => el.remove());
+  tooltip.classList.remove("show");
+
+  if (total === 0) {
+    legend.innerHTML = `<div class="legend-item">No evaluations yet</div>`;
     return;
   }
 
-  reportContent.style.display = "block";
+  const { categoryCounts, courseCounts } = computeUserCategoryBreakdown();
+  const categorySegments = buildCategorySegments(categoryCounts);
+  const courseSegments = buildCourseSegments(courseCounts);
 
-  const total = evaluations.length;
+  function attachTooltip(el, label, count, sub) {
+    const pct = ((count / total) * 100).toFixed(1);
+    const showTooltip = (evt) => {
+      tooltip.classList.add("show");
+      tooltip.innerHTML = `
+        <div class="tt-title">${label}</div>
+        <div>${count} respondent${count === 1 ? "" : "s"}</div>
+        <div class="tt-sub">${pct}% of total${sub ? " · " + sub : ""}</div>`;
+      tooltip.style.left = (evt.clientX + 10) + "px";
+      tooltip.style.top = (evt.clientY - 35) + "px";
+    };
+    el.addEventListener("mouseenter", showTooltip);
+    el.addEventListener("mousemove", showTooltip);
+    el.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
+  }
 
-  const dimAverages = DIMENSION_LABELS.map((_, i) => {
-    const sum = evaluations.reduce((acc, ev) => acc + (ev.dims[i] || 0), 0);
-    return sum / total;
-  });
+  let offsetPct = 0;
+  let studentStartPct = 0;
+  let studentPct = 0;
 
-  const overallAvg = dimAverages.reduce((a, b) => a + b, 0) / dimAverages.length;
-  const satisfactionPct = (overallAvg / 5) * 100;
-  const respondents = total;
-
-  const timestamps = evaluations.map(ev => ev.timestamp).filter(Boolean);
-  const minTs = timestamps.length ? Math.min(...timestamps) : null;
-  const maxTs = timestamps.length ? Math.max(...timestamps) : null;
-
-  document.getElementById("office-date-range").textContent =
-    minTs && maxTs
-      ? `${formatDate(minTs)} – ${formatDate(maxTs)}`
-      : "Date range unavailable";
-
-  document.getElementById("office-respondents").textContent =
-    `${respondents} respondent${respondents === 1 ? "" : "s"}`;
-
-  document.getElementById("stat-total-evals").textContent = total;
-  document.getElementById("stat-satisfaction").textContent = `${satisfactionPct.toFixed(1)}%`;
-  document.getElementById("stat-overall-rating").textContent = `${overallAvg.toFixed(1)} / 5`;
-  document.getElementById("stat-overall-label").textContent = ratingLabel(overallAvg);
-  document.getElementById("stat-respondents").textContent = respondents;
-
-  const tbody = document.getElementById("breakdown-table-body");
-
-  tbody.innerHTML = DIMENSION_LABELS.map((label, i) => {
-    const avg = dimAverages[i];
-    const pct = (avg / 5) * 100;
-
-    return `
-      <tr>
-        <td class="dim-name">${label}</td>
-        <td class="dim-score">${avg.toFixed(1)} / 5</td>
-        <td>
-          <div class="dim-pct-cell">
-            <div class="dim-pct-track">
-              <div class="dim-pct-fill" style="width:${pct}%"></div>
-            </div>
-            <span class="dim-pct-num">${pct.toFixed(0)}%</span>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join("");
-
-  const commentsList = document.getElementById("comments-list");
-
-  const withComments = evaluations
-    .filter(ev => ev.comment && ev.comment.trim())
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, 6);
-
-  commentsList.innerHTML = withComments.length
-    ? withComments.map(ev => `
-        <div class="comment-item">
-          "${ev.comment.trim()}"
-          <div class="comment-meta">${formatDate(ev.timestamp)}</div>
-        </div>
-      `).join("")
-    : `<div class="comment-empty">No written comments were submitted.</div>`;
-
-  const palette = ["#2563eb", "#06b6d4", "#8b5cf6", "#0ea5e9", "#f59e0b", "#10b981", "#ef4444", "#6366f1"];
-
-  safeRenderChart("chart-dimensions-wrap", "chart-dimensions", (canvas) => {
-    return new Chart(canvas, {
-      type: "bar",
-      data: {
-        labels: DIMENSION_LABELS,
-        datasets: [{
-          data: dimAverages,
-          backgroundColor: palette,
-          borderRadius: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 5
-          }
-        }
-      }
-    });
-  });
-
-  const byDay = {};
-
-  evaluations.forEach(ev => {
-    if (!ev.timestamp) return;
-
-    const day = new Date(ev.timestamp).toISOString().slice(0, 10);
-    const dayAvg = ev.dims.reduce((a, b) => a + b, 0) / ev.dims.length;
-
-    if (!byDay[day]) {
-      byDay[day] = { sum: 0, count: 0 };
+  categorySegments.forEach(seg => {
+    const pct = (seg.count / total) * 100;
+    if (seg.key === "Student") {
+      studentStartPct = offsetPct;
+      studentPct = pct;
     }
+    if (pct <= 0) return;
 
-    byDay[day].sum += dayAvg;
-    byDay[day].count++;
+    const dash = (pct / 100) * circInner;
+    const gap = circInner - dash;
+    const dashOffset = -((offsetPct / 100) * circInner);
+
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("class", "donut-segment");
+    circle.setAttribute("cx", cx);
+    circle.setAttribute("cy", cy);
+    circle.setAttribute("r", rInner);
+    circle.setAttribute("fill", "none");
+    circle.setAttribute("stroke", seg.color);
+    circle.setAttribute("stroke-width", wInner);
+    circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
+    circle.setAttribute("stroke-dashoffset", dashOffset);
+    circle.setAttribute("transform", `rotate(-90 ${cx} ${cy})`);
+    circle.style.cursor = "pointer";
+    attachTooltip(circle, seg.label, seg.count);
+    svg.appendChild(circle);
+    offsetPct += pct;
   });
 
-  const sortedDays = Object.keys(byDay).sort();
+  if (studentPct > 0 && courseSegments.length > 0) {
+    let courseOffsetPct = studentStartPct;
+    courseSegments.forEach(cs => {
+      const coursePct = studentPct * (cs.count / (categoryCounts["Student"] || 1));
+      if (coursePct <= 0) return;
+      const dash = (coursePct / 100) * circOuter;
+      const gap = circOuter - dash;
+      const dashOffset = -((courseOffsetPct / 100) * circOuter);
 
-  safeRenderChart("chart-trend-wrap", "chart-trend", (canvas) => {
-    return new Chart(canvas, {
-      type: "line",
-      data: {
-        labels: sortedDays.map(d =>
-          formatDate(new Date(d).getTime())
-        ),
-        datasets: [{
-          data: sortedDays.map(d =>
-            byDay[d].sum / byDay[d].count
-          ),
-          borderColor: "#2563eb",
-          backgroundColor: "rgba(37,99,235,0.12)",
-          fill: true,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 5
-          }
-        }
-      }
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("class", "donut-segment");
+      circle.setAttribute("cx", cx);
+      circle.setAttribute("cy", cy);
+      circle.setAttribute("r", rOuter);
+      circle.setAttribute("fill", "none");
+      circle.setAttribute("stroke", cs.color);
+      circle.setAttribute("stroke-width", wOuter);
+      circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
+      circle.setAttribute("stroke-dashoffset", dashOffset);
+      circle.setAttribute("transform", `rotate(-90 ${cx} ${cy})`);
+      circle.style.cursor = "pointer";
+      attachTooltip(circle, cs.label, cs.count, "Student");
+      svg.appendChild(circle);
+      courseOffsetPct += coursePct;
     });
+  }
+
+  const totalLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  totalLabel.setAttribute("x", cx);
+  totalLabel.setAttribute("y", cy - 5);
+  totalLabel.setAttribute("text-anchor", "middle");
+  totalLabel.setAttribute("fill", "#0f172a");
+  totalLabel.setAttribute("font-size", "12");
+  totalLabel.setAttribute("font-family", "Syne, sans-serif");
+  totalLabel.setAttribute("font-weight", "800");
+  totalLabel.textContent = "Total";
+  svg.appendChild(totalLabel);
+
+  const totalNumber = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  totalNumber.setAttribute("x", cx);
+  totalNumber.setAttribute("y", cy + 15);
+  totalNumber.setAttribute("text-anchor", "middle");
+  totalNumber.setAttribute("fill", "#0f172a");
+  totalNumber.setAttribute("font-size", "16");
+  totalNumber.setAttribute("font-family", "Syne, sans-serif");
+  totalNumber.setAttribute("font-weight", "800");
+  totalNumber.textContent = total.toLocaleString();
+  svg.appendChild(totalNumber);
+
+  let rows = "";
+  categorySegments.forEach(seg => {
+    if (seg.count <= 0) return;
+    const pct = ((seg.count / total) * 100).toFixed(0);
+    rows += `
+      <div class="category-row">
+        <div class="cat-name"><div class="category-dot" style="background:${seg.color}"></div>${seg.label}</div>
+        <div class="category-count">${pct}%</div>
+      </div>`;
   });
+
+  rows += `
+    <div class="category-row total">
+      <div>Total</div>
+      <div>100%</div>
+    </div>`;
+
+  legend.innerHTML = `
+    <div class="category-table">
+      <div class="category-table-head"><span>Category</span><span>%</span></div>
+      ${rows}
+    </div>`;
 }
 
-main();
-</script>
+// ======================
+// EVALUATION STATUS — Submitted / Pending / Resolved across all offices
+// Rendered as a vertical (grouped column) bar chart:
+//   x-axis  -> the three statuses (No Action Required / Pending / Resolved)
+//   y-axis  -> percentage of the total (0–100%, gridlines every 10%)
+//   each status has two side-by-side columns: blue = Comfort Room, green = Surroundings
+// ======================
+const STATUS_DEFS = [
+  { key: "no_action", label: "No Action Required" },
+  { key: "pending", label: "Pending" },
+  { key: "resolved", label: "Resolved" }
+];
 
+// Draws the stacked column chart. Each bar's percentage is calculated
+// against its own category's total (comfortTotal / surroundingsTotal)
+// rather than the combined total, so a bar showing 100% means "all of
+// that category's evaluations", and both bars scale correctly on the
+// same 0–100% axis.
+function drawStatusChart(counts, comfortTotal, surroundingsTotal) {
+  const svg = document.getElementById("status-chart-svg");
+  const tooltip = document.getElementById("status-tooltip");
+  if (!svg || !tooltip) return;
+
+  svg.innerHTML = "";
+  tooltip.classList.remove("show");
+
+  const width = 500, height = 300;
+  const padding = { top: 20, right: 16, bottom: 46, left: 42 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+  const baseY = padding.top + chartH;
+
+  // Gridlines/labels always span the fixed 0–100% axis.
+  for (let p = 0; p <= 100; p += 10) {
+    const y = padding.top + chartH - (p / 100) * chartH;
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", padding.left);
+    line.setAttribute("x2", width - padding.right);
+    line.setAttribute("y1", y);
+    line.setAttribute("y2", y);
+    line.setAttribute("stroke", "#eef1f5");
+    line.setAttribute("stroke-width", "1");
+    svg.appendChild(line);
+
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", padding.left - 7);
+    label.setAttribute("y", y + 3);
+    label.setAttribute("text-anchor", "end");
+    label.setAttribute("font-size", "8");
+    label.setAttribute("font-family", "DM Sans, sans-serif");
+    label.setAttribute("fill", "#94a3b8");
+    label.textContent = p + "%";
+    svg.appendChild(label);
+  }
+
+  const slot = chartW / STATUS_DEFS.length;
+  const groupWidth = Math.min(120, slot * .72);
+  const barGap = 9;
+  const barWidth = Math.max(18, (groupWidth - barGap) / 2);
+
+  // Same shape as the Dimension Breakdown's percentage calc on the
+  // Analytics page: pct = (value / total) * 100, clamped to 0–100 so a
+  // bar's length (or a tooltip's stated percentage) can never exceed
+  // the axis.
+  function computePct(count, total) {
+    if (total <= 0) return 0;
+    return Math.max(0, Math.min(100, (count / total) * 100));
+  }
+
+  function attachTooltip(el, statusLabel, categoryLabel, count, total) {
+    const pct = computePct(count, total).toFixed(1);
+    const showTooltip = evt => {
+      tooltip.classList.add("show");
+      tooltip.innerHTML = `
+        <div class="tt-title">${statusLabel}</div>
+        <div>${categoryLabel}: ${count} evaluation${count === 1 ? "" : "s"}</div>
+        <div class="tt-sub">${pct}% of ${categoryLabel} total</div>`;
+      tooltip.style.left = (evt.clientX + 10) + "px";
+      tooltip.style.top = (evt.clientY - 45) + "px";
+    };
+    el.addEventListener("mouseenter", showTooltip);
+    el.addEventListener("mousemove", showTooltip);
+    el.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
+  }
+
+  function drawBar(cx, count, total, color, statusLabel, categoryLabel) {
+    const pct = computePct(count, total);
+    const barH = (pct / 100) * chartH;
+
+    const hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    hit.setAttribute("x", cx - barWidth / 2);
+    hit.setAttribute("y", padding.top);
+    hit.setAttribute("width", barWidth);
+    hit.setAttribute("height", chartH);
+    hit.setAttribute("fill", "transparent");
+    hit.style.cursor = "pointer";
+    attachTooltip(hit, statusLabel, categoryLabel, count, total);
+    svg.appendChild(hit);
+
+    if (barH > 0) {
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", cx - barWidth / 2);
+      rect.setAttribute("y", baseY - barH);
+      rect.setAttribute("width", barWidth);
+      rect.setAttribute("height", barH);
+      rect.setAttribute("rx", "2");
+      rect.setAttribute("fill", color);
+      rect.style.cursor = "pointer";
+      attachTooltip(rect, statusLabel, categoryLabel, count, total);
+      svg.appendChild(rect);
+
+      const valueLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      valueLabel.setAttribute("x", cx);
+      valueLabel.setAttribute("y", baseY - barH - 6);
+      valueLabel.setAttribute("text-anchor", "middle");
+      valueLabel.setAttribute("font-size", "9.5");
+      valueLabel.setAttribute("font-family", "Syne, sans-serif");
+      valueLabel.setAttribute("font-weight", "700");
+      valueLabel.setAttribute("fill", "#0f172a");
+      valueLabel.textContent = Math.round(pct) + "%";
+      svg.appendChild(valueLabel);
+    }
+  }
+
+  // Status colors are visual only. The underlying counts remain the same.
+  const statusColors = {
+    no_action: "#7b7f89",
+    pending: "#f59e0b",
+    resolved: "#087f3e"
+  };
+
+  STATUS_DEFS.forEach((st, i) => {
+    const cx = padding.left + slot * i + slot / 2;
+    const c = counts[st.key];
+    const comfortCx = cx - barWidth / 2 - barGap / 2;
+    const surrCx = cx + barWidth / 2 + barGap / 2;
+
+    // Comfort Room bar is a % of comfortTotal, Surroundings bar is a %
+    // of surroundingsTotal — each category is scaled against itself.
+    drawBar(comfortCx, c.comfort, comfortTotal, statusColors[st.key], st.label, "Comfort Room");
+    drawBar(surrCx, c.surroundings, surroundingsTotal, statusColors[st.key], st.label, "Surroundings");
+
+    const xLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    xLabel.setAttribute("x", cx);
+    xLabel.setAttribute("y", height - 18);
+    xLabel.setAttribute("text-anchor", "middle");
+    xLabel.setAttribute("font-size", "8.5");
+    xLabel.setAttribute("font-family", "DM Sans, sans-serif");
+    xLabel.setAttribute("font-weight", "600");
+    xLabel.setAttribute("fill", "#475569");
+    xLabel.textContent = st.label;
+    svg.appendChild(xLabel);
+  });
+
+  if (comfortTotal === 0 && surroundingsTotal === 0) {
+    const empty = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    empty.setAttribute("x", width / 2);
+    empty.setAttribute("y", height / 2);
+    empty.setAttribute("text-anchor", "middle");
+    empty.setAttribute("font-size", "12");
+    empty.setAttribute("font-family", "DM Sans, sans-serif");
+    empty.setAttribute("fill", "#94a3b8");
+    empty.textContent = "No evaluations for this filter";
+    svg.appendChild(empty);
+  }
+}
+
+function renderEvalStatus() {
+  // Each status bucket tracks its Comfort Room / Surroundings split so
+  // the column itself visually shows the category breakdown, not just a
+  // single total. No office filtering — this always reflects all offices.
+  const counts = {
+    no_action: { comfort: 0, surroundings: 0 },
+    pending: { comfort: 0, surroundings: 0 },
+    resolved: { comfort: 0, surroundings: 0 }
+  };
+
+  let comfortTotal = 0;
+  let surroundingsTotal = 0;
+
+  evaluations.forEach(e => {
+    const catKey = e.cleanlinessCategory === "Surroundings" ? "surroundings" : "comfort";
+    if (catKey === "surroundings") surroundingsTotal++; else comfortTotal++;
+    if (e.status === "no_action") counts.no_action[catKey]++;
+    else if (e.status === "pending") counts.pending[catKey]++;
+    else if (e.status === "resolved") counts.resolved[catKey]++;
+  });
+
+  drawStatusChart(counts, comfortTotal, surroundingsTotal);
+}
+
+</script>
 </body>
 </html>
