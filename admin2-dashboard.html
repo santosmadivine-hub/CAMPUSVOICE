@@ -630,6 +630,9 @@
   gap:16px;
   align-items:stretch;
 }
+.charts-grid.status-row{
+  grid-template-columns:1fr;
+}
 .card,
 .eval-status-card{
   background:#fff;
@@ -786,8 +789,8 @@
         </div>
       </div>
 
-      <!-- EVALUATION STATUS + QUICK ACCESS -->
-      <div class="charts-grid">
+      <!-- EVALUATION STATUS -->
+      <div class="charts-grid status-row">
         <div class="card eval-status-card">
           <div class="eval-status-header">
             <div class="card-title">Status by Area</div>
@@ -802,36 +805,6 @@
           <div class="status-chart-wrap" id="statusChartWrap">
             <svg id="status-chart-svg" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet"></svg>
             <div class="pie-tooltip" id="status-tooltip"></div>
-          </div>
-        </div>
-
-        <div class="card quick-access-card">
-          <div class="card-title">Quick Tools</div>
-          <div class="quick-access-grid">
-            <a href="admin2-analytics.html" class="quick-access-btn">
-              <div class="qa-icon">📈</div>
-              <div class="qa-label">Analytics</div>
-            </a>
-            <a href="admin2-office-mgmt.html" class="quick-access-btn">
-              <div class="qa-icon">📑</div>
-              <div class="qa-label">Office Management</div>
-            </a>
-            <a href="admin2-eval-mgmt.html" class="quick-access-btn">
-              <div class="qa-icon">📑</div>
-              <div class="qa-label">Evaluation Mgmt</div>
-            </a>
-            <a href="admin2-multimedia.html" class="quick-access-btn">
-              <div class="qa-icon">🎞️</div>
-              <div class="qa-label">Multimedia Feedback</div>
-            </a>
-            <a href="admin2-reports.html" class="quick-access-btn">
-              <div class="qa-icon">📁</div>
-              <div class="qa-label">Reports</div>
-            </a>
-            <a href="admin2-settings.html" class="quick-access-btn">
-              <div class="qa-icon">⚙️</div>
-              <div class="qa-label">Settings</div>
-            </a>
           </div>
         </div>
       </div>
