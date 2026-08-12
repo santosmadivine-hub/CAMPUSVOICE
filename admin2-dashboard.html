@@ -306,19 +306,8 @@
   gap:16px;
 }
 
-/* ─── Evaluation Status — vertical bar chart ─── */
-.status-chart-wrap{
-  position:relative;
-  margin-top:20px;
-}
-#status-chart-svg{
-  width:100%;
-  height:340px;
-  display:block;
-}
-
 /* ─── Category legend (Comfort Room vs Surroundings) — reused above the
-     line chart and the evaluation status chart ─── */
+     line chart ─── */
 .chart-legend{
   display:flex;
   gap:16px;
@@ -339,6 +328,115 @@
   height:9px;
   border-radius:50%;
   flex-shrink:0;
+}
+
+/* ─── Submission Status — vertical grouped bar chart (ported from
+     admin2-analytics.html so Status by Area now matches Analytics) ─── */
+.status-vbar-wrap {
+  display: flex;
+  gap: 8px;
+}
+
+.status-vbar-yaxis {
+  flex: 0 0 32px;
+  width: 32px;
+  position: relative;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.status-vbar-yaxis span {
+  position: absolute;
+  right: 6px;
+  transform: translateY(-50%);
+}
+
+.status-vbar-chart {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  border-left: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 12px;
+}
+
+.status-vbar-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 100%;
+}
+
+.status-vbar-col {
+  width: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  cursor: help;
+}
+
+.status-vbar-fill {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+  min-height: 1px;
+}
+
+.status-vbar-value {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.status-vbar-labels {
+  display: flex;
+  justify-content: space-around;
+  margin: 8px 0 0;
+  padding: 0 12px;
+  margin-left: 32px;
+}
+
+.status-vbar-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  text-align: center;
+}
+
+.status-vbar-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: #475569;
+}
+
+.status-vbar-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-vbar-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.lb-empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 20px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
 }
 
 /* ─── Quick Access Section ─── */
@@ -489,7 +587,6 @@
 
 @media (max-width: 768px) {
   #line-chart-svg { height:180px; }
-  #status-chart-svg { height:260px; }
   .donut-wrap {
     flex-direction: column;
     gap: 20px;
@@ -547,7 +644,6 @@
     font-size: 12px;
     padding: 5px 12px;
   }
-  #status-chart-svg { height:230px; }
   .quick-access-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
@@ -566,7 +662,6 @@
     font-size: 28px;
   }
   #line-chart-svg { height:160px; }
-  #status-chart-svg { height:220px; }
   .donut-wrap svg {
     width: 220px;
   }
@@ -676,8 +771,6 @@
 
 .eval-status-card{padding:16px;display:flex;flex-direction:column;}
 .eval-status-header{gap:8px;}
-.status-chart-wrap{margin-top:5px;flex:1;display:flex;}
-#status-chart-svg{height:100%;min-height:340px;width:100%;display:block;}
 
 .quick-access-card{
   min-width:0;
@@ -696,20 +789,6 @@
 .qa-icon{font-size:22px;}
 .qa-label{font-size:9px;}
 
-/* Make the status legend resemble the reference while preserving the
-   existing two-category data series and tooltips. */
-.status-reference-legend{
-  display:flex;
-  justify-content:flex-end;
-  align-items:center;
-  gap:12px;
-  margin:0 0 2px;
-  font:600 9px 'DM Sans',sans-serif;
-  color:#64748b;
-}
-.status-reference-legend span{display:inline-flex;align-items:center;gap:4px;}
-.status-reference-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;}
-
 @media (max-width:900px){
   .charts-grid{grid-template-columns:1fr;}
   .donut-wrap svg{width:205px;height:205px;}
@@ -718,7 +797,6 @@
   .dashboard-container{padding:16px 12px 24px;}
   .charts-grid{gap:12px;}
   #line-chart-svg{height:200px;}
-  #status-chart-svg{min-height:280px;}
   .donut-wrap svg{width:190px;height:190px;}
 }
 
@@ -789,23 +867,14 @@
         </div>
       </div>
 
-      <!-- EVALUATION STATUS + QUICK ACCESS -->
+      <!-- SUBMISSION STATUS + QUICK ACCESS -->
       <div class="charts-grid">
         <div class="card eval-status-card">
           <div class="eval-status-header">
-            <div class="card-title">Status by Area</div>
+            <div class="card-title">Submission Status <span class="card-sub" style="font-weight:400;">— by category</span></div>
           </div>
 
-          <div class="status-reference-legend">
-            <span><i style="background:#7b7f89"></i>No Action</span>
-            <span><i style="background:#f59e0b"></i>Pending</span>
-            <span><i style="background:#087f3e"></i>Resolved</span>
-          </div>
-
-          <div class="status-chart-wrap" id="statusChartWrap">
-            <svg id="status-chart-svg" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid meet"></svg>
-            <div class="pie-tooltip" id="status-tooltip"></div>
-          </div>
+          <div id="status-breakdown-chart" style="margin-top: 14px;"></div>
         </div>
 
         <div class="card quick-access-card">
@@ -911,6 +980,23 @@ const TOTAL_RATING_QUESTIONS = 5;
 // "Pending", so this dashboard's status breakdown matches Eval Mgmt.
 // Adjust this single constant to tune the cutoff.
 const LOW_RATING_THRESHOLD = 3;
+
+// Status labels/colors used by the Submission Status chart — kept
+// identical to admin2-analytics.html so both pages agree visually.
+const STATUS_META = {
+  pending:   { label: "Pending",             color: "#f59e0b" },
+  no_action: { label: "No Action Required",  color: "#6366f1" },
+  resolved:  { label: "Resolved",            color: "#10b981" }
+};
+
+// Visual identity for Comfort Room vs Surroundings inside the
+// Submission Status chart (matches admin2-analytics.html CATEGORY_META).
+const STATUS_CATEGORY_META = {
+  "Comfort Room": { label: "Comfort Room", icon: "🚻", color: "#2563eb" },
+  "Surroundings": { label: "Surroundings", icon: "🌳", color: "#16a34a" }
+};
+
+const STATUS_VBAR_MAX_H = 200;
 
 // ======================
 // STATE
@@ -1491,187 +1577,76 @@ function renderUserCategoryDonut() {
 }
 
 // ======================
-// EVALUATION STATUS — Submitted / Pending / Resolved across all offices
-// Rendered as a vertical (grouped column) bar chart:
-//   x-axis  -> the three statuses (No Action Required / Pending / Resolved)
-//   y-axis  -> percentage of the total (0–100%, gridlines every 10%)
-//   each status has two side-by-side columns: blue = Comfort Room, green = Surroundings
+// SUBMISSION STATUS — vertical grouped bar chart
+// (ported from admin2-analytics.html so this dashboard now shows the
+// same "Submission Status — by category" chart instead of the old
+// "Status by Area" SVG chart. Same underlying `evaluations`/`status`
+// data as before, just rendered as HTML/CSS bars instead of SVG.)
+//
+//   x-axis  -> the three statuses (Pending / No Action Required / Resolved)
+//   y-axis  -> percentage of that status's own category total (0–100%)
+//   each status has two side-by-side bars: blue = Comfort Room, green = Surroundings
 // ======================
-const STATUS_DEFS = [
-  { key: "no_action", label: "No Action Required" },
-  { key: "pending", label: "Pending" },
-  { key: "resolved", label: "Resolved" }
-];
+function renderStatusBreakdown() {
+  const el = document.getElementById("status-breakdown-chart");
+  if (!el) return;
 
-// Draws the stacked column chart. Each bar's percentage is calculated
-// against its own category's total (comfortTotal / surroundingsTotal)
-// rather than the combined total, so a bar showing 100% means "all of
-// that category's evaluations", and both bars scale correctly on the
-// same 0–100% axis.
-function drawStatusChart(counts, comfortTotal, surroundingsTotal) {
-  const svg = document.getElementById("status-chart-svg");
-  const tooltip = document.getElementById("status-tooltip");
-  if (!svg || !tooltip) return;
-
-  svg.innerHTML = "";
-  tooltip.classList.remove("show");
-
-  const width = 500, height = 300;
-  const padding = { top: 20, right: 16, bottom: 46, left: 42 };
-  const chartW = width - padding.left - padding.right;
-  const chartH = height - padding.top - padding.bottom;
-  const baseY = padding.top + chartH;
-
-  // Gridlines/labels always span the fixed 0–100% axis.
-  for (let p = 0; p <= 100; p += 10) {
-    const y = padding.top + chartH - (p / 100) * chartH;
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", padding.left);
-    line.setAttribute("x2", width - padding.right);
-    line.setAttribute("y1", y);
-    line.setAttribute("y2", y);
-    line.setAttribute("stroke", "#eef1f5");
-    line.setAttribute("stroke-width", "1");
-    svg.appendChild(line);
-
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    label.setAttribute("x", padding.left - 7);
-    label.setAttribute("y", y + 3);
-    label.setAttribute("text-anchor", "end");
-    label.setAttribute("font-size", "8");
-    label.setAttribute("font-family", "DM Sans, sans-serif");
-    label.setAttribute("fill", "#94a3b8");
-    label.textContent = p + "%";
-    svg.appendChild(label);
+  if (evaluations.length === 0) {
+    el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
+    return;
   }
 
-  const slot = chartW / STATUS_DEFS.length;
-  const groupWidth = Math.min(120, slot * .72);
-  const barGap = 9;
-  const barWidth = Math.max(18, (groupWidth - barGap) / 2);
+  const statusOrder = ["pending", "no_action", "resolved"];
+  const cats = CLEANLINESS_CATEGORIES; // ["Comfort Room", "Surroundings"]
+  const totals = {};
+  cats.forEach(c => { totals[c] = evaluations.filter(e => e.cleanlinessCategory === c).length; });
 
-  function attachTooltip(el, statusLabel, categoryLabel, count, total) {
-    const pct = total > 0 ? ((count / total) * 100).toFixed(1) : "0.0";
-    const showTooltip = evt => {
-      tooltip.classList.add("show");
-      tooltip.innerHTML = `
-        <div class="tt-title">${statusLabel}</div>
-        <div>${categoryLabel}: ${count} evaluation${count === 1 ? "" : "s"}</div>
-        <div class="tt-sub">${pct}% of ${categoryLabel} total</div>`;
-      tooltip.style.left = (evt.clientX + 10) + "px";
-      tooltip.style.top = (evt.clientY - 45) + "px";
-    };
-    el.addEventListener("mouseenter", showTooltip);
-    el.addEventListener("mousemove", showTooltip);
-    el.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
-  }
+  const groupsHtml = statusOrder.map(statusKey => {
+    const meta = STATUS_META[statusKey];
+    const cols = cats.map(c => {
+      const catMeta = STATUS_CATEGORY_META[c];
+      const count = evaluations.filter(e => e.cleanlinessCategory === c && e.status === statusKey).length;
+      const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
+      const h = Math.max(1, Math.round((pct / 100) * STATUS_VBAR_MAX_H));
+      return `
+        <div class="status-vbar-col" title="${catMeta.label} — ${meta.label}: ${count} of ${totals[c]} evaluations (${pct}%)">
+          <div class="status-vbar-value">${pct}%</div>
+          <div class="status-vbar-fill" style="height:${h}px;background:${catMeta.color};"></div>
+        </div>
+      `;
+    }).join("");
+    return `<div class="status-vbar-group">${cols}</div>`;
+  }).join("");
 
-  function drawBar(cx, count, total, color, statusLabel, categoryLabel) {
-    // Clamp defensively — count should never exceed its own category
-    // total, but this guarantees the bar can never overrun the 100% line.
-    const pct = total > 0 ? Math.max(0, Math.min(100, (count / total) * 100)) : 0;
-    const barH = (pct / 100) * chartH;
+  const yAxis = [100, 75, 50, 25, 0].map(pct => {
+    const top = STATUS_VBAR_MAX_H - (pct / 100) * STATUS_VBAR_MAX_H;
+    return `<span style="top:${top}px;">${pct}%</span>`;
+  }).join("");
 
-    const hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    hit.setAttribute("x", cx - barWidth / 2);
-    hit.setAttribute("y", padding.top);
-    hit.setAttribute("width", barWidth);
-    hit.setAttribute("height", chartH);
-    hit.setAttribute("fill", "transparent");
-    hit.style.cursor = "pointer";
-    attachTooltip(hit, statusLabel, categoryLabel, count, total);
-    svg.appendChild(hit);
+  const xLabels = statusOrder.map(s => `<div class="status-vbar-label">${STATUS_META[s].label}</div>`).join("");
 
-    if (barH > 0) {
-      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      rect.setAttribute("x", cx - barWidth / 2);
-      rect.setAttribute("y", baseY - barH);
-      rect.setAttribute("width", barWidth);
-      rect.setAttribute("height", barH);
-      rect.setAttribute("rx", "2");
-      rect.setAttribute("fill", color);
-      rect.style.cursor = "pointer";
-      attachTooltip(rect, statusLabel, categoryLabel, count, total);
-      svg.appendChild(rect);
+  const legend = cats.map(c => `
+    <div class="status-vbar-legend-item">
+      <span class="status-vbar-legend-swatch" style="background:${STATUS_CATEGORY_META[c].color};"></span>
+      <span>${STATUS_CATEGORY_META[c].icon} ${STATUS_CATEGORY_META[c].label}</span>
+    </div>
+  `).join("");
 
-      const valueLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      valueLabel.setAttribute("x", cx);
-      valueLabel.setAttribute("y", baseY - barH - 6);
-      valueLabel.setAttribute("text-anchor", "middle");
-      valueLabel.setAttribute("font-size", "9.5");
-      valueLabel.setAttribute("font-family", "Syne, sans-serif");
-      valueLabel.setAttribute("font-weight", "700");
-      valueLabel.setAttribute("fill", "#0f172a");
-      valueLabel.textContent = Math.round(pct) + "%";
-      svg.appendChild(valueLabel);
-    }
-  }
-
-  // Status colors are visual only. The underlying counts remain the same.
-  const statusColors = {
-    no_action: "#7b7f89",
-    pending: "#f59e0b",
-    resolved: "#087f3e"
-  };
-
-  STATUS_DEFS.forEach((st, i) => {
-    const cx = padding.left + slot * i + slot / 2;
-    const c = counts[st.key];
-    const comfortCx = cx - barWidth / 2 - barGap / 2;
-    const surrCx = cx + barWidth / 2 + barGap / 2;
-
-    // Comfort Room bar is a % of comfortTotal, Surroundings bar is a %
-    // of surroundingsTotal — each category is scaled against itself.
-    drawBar(comfortCx, c.comfort, comfortTotal, statusColors[st.key], st.label, "Comfort Room");
-    drawBar(surrCx, c.surroundings, surroundingsTotal, statusColors[st.key], st.label, "Surroundings");
-
-    const xLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    xLabel.setAttribute("x", cx);
-    xLabel.setAttribute("y", height - 18);
-    xLabel.setAttribute("text-anchor", "middle");
-    xLabel.setAttribute("font-size", "8.5");
-    xLabel.setAttribute("font-family", "DM Sans, sans-serif");
-    xLabel.setAttribute("font-weight", "600");
-    xLabel.setAttribute("fill", "#475569");
-    xLabel.textContent = st.label;
-    svg.appendChild(xLabel);
-  });
-
-  if (comfortTotal === 0 && surroundingsTotal === 0) {
-    const empty = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    empty.setAttribute("x", width / 2);
-    empty.setAttribute("y", height / 2);
-    empty.setAttribute("text-anchor", "middle");
-    empty.setAttribute("font-size", "12");
-    empty.setAttribute("font-family", "DM Sans, sans-serif");
-    empty.setAttribute("fill", "#94a3b8");
-    empty.textContent = "No evaluations for this filter";
-    svg.appendChild(empty);
-  }
+  el.innerHTML = `
+    <div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;">
+      <div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div>
+      <div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div>
+    </div>
+    <div class="status-vbar-labels">${xLabels}</div>
+    <div class="status-vbar-legend">${legend}</div>
+  `;
 }
 
+// Existing call sites (rebuildOffices(), evaluation_history onSnapshot)
+// call renderEvalStatus() — kept as a thin wrapper so nothing else needs
+// to change.
 function renderEvalStatus() {
-  // Each status bucket tracks its Comfort Room / Surroundings split so
-  // the column itself visually shows the category breakdown, not just a
-  // single total. No office filtering — this always reflects all offices.
-  const counts = {
-    no_action: { comfort: 0, surroundings: 0 },
-    pending: { comfort: 0, surroundings: 0 },
-    resolved: { comfort: 0, surroundings: 0 }
-  };
-
-  let comfortTotal = 0;
-  let surroundingsTotal = 0;
-
-  evaluations.forEach(e => {
-    const catKey = e.cleanlinessCategory === "Surroundings" ? "surroundings" : "comfort";
-    if (catKey === "surroundings") surroundingsTotal++; else comfortTotal++;
-    if (e.status === "no_action") counts.no_action[catKey]++;
-    else if (e.status === "pending") counts.pending[catKey]++;
-    else if (e.status === "resolved") counts.resolved[catKey]++;
-  });
-
-  drawStatusChart(counts, comfortTotal, surroundingsTotal);
+  renderStatusBreakdown();
 }
 
 </script>
