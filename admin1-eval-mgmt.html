@@ -20,7 +20,6 @@
    EVALUATION MANAGEMENT
    ========================================================= */
 
-/* Page subtitle */
 .page-sub {
   color: #64748b;
   font-size: 14px;
@@ -264,10 +263,6 @@
   box-sizing: border-box;
 }
 
-/*
-   Increased width because the View modal now contains
-   all evaluation fields.
-*/
 .modal-content {
   background: #fff;
   padding: 28px;
@@ -322,22 +317,6 @@
 }
 
 /* =========================================================
-   MODAL SECTION HEADERS
-   ========================================================= */
-
-.modal-section {
-  margin-top: 18px;
-  margin-bottom: 4px;
-  padding-bottom: 7px;
-  border-bottom: 2px solid #e0f2fe;
-  color: #2563eb;
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-}
-
-/* =========================================================
    MODAL FOOTER
    ========================================================= */
 
@@ -359,7 +338,7 @@
 }
 
 /* =========================================================
-   SCROLLBAR
+   MODAL SCROLLBAR
    ========================================================= */
 
 .modal-content::-webkit-scrollbar {
@@ -866,22 +845,12 @@ let allData = {};
 
 
 /* =========================================================
-   FIRESTORE COLLECTION REFERENCES
+   FIRESTORE COLLECTIONS
    =========================================================
 
-   Current Firestore structure:
+   services/evaluations/records
 
-   services
-      └── evaluations
-            └── records
-                 └── evaluation documents
-
-   Offices:
-
-   services
-      └── offices
-            └── records
-                 └── office documents
+   services/offices/records
    ========================================================= */
 
 const evaluationsCol =
@@ -903,7 +872,7 @@ const officesCol =
 
 
 /* =========================================================
-   OFFICES
+   LOAD OFFICES
    ========================================================= */
 
 onSnapshot(
@@ -985,7 +954,7 @@ onSnapshot(
 
 
 /* =========================================================
-   EVALUATIONS
+   LOAD EVALUATIONS
    ========================================================= */
 
 onSnapshot(
@@ -1100,7 +1069,8 @@ function renderTable() {
 
 
   /* =======================================================
-     SORT BY DATE
+     SORT BY SUBMITTED AT FIRST
+     FALLBACK TO DATE ONLY FOR TABLE SORTING
      ======================================================= */
 
   filtered.sort(
@@ -1108,11 +1078,13 @@ function renderTable() {
 
       const dateA =
         getDateValue(
+          a[1].submittedAt ||
           a[1].date
         );
 
       const dateB =
         getDateValue(
+          b[1].submittedAt ||
           b[1].date
         );
 
@@ -1163,9 +1135,15 @@ function renderTable() {
             );
 
 
+          /*
+             The table DATE column now uses
+             submittedAt because submittedAt
+             is the official submission date/time.
+          */
+
           const dateDisplay =
             formatFirestoreValue(
-              item.date
+              item.submittedAt
             );
 
 
@@ -1299,7 +1277,7 @@ function renderTable() {
 
 
 /* =========================================================
-   FORMAT FIRESTORE VALUES
+   FORMAT FIRESTORE VALUE
    ========================================================= */
 
 function formatFirestoreValue(value) {
@@ -1388,9 +1366,7 @@ function formatFirestoreValue(value) {
 
 function getDateValue(value) {
 
-  if (
-    !value
-  ) {
+  if (!value) {
     return 0;
   }
 
@@ -1510,10 +1486,11 @@ window.openModal =
 
 
     /* =====================================================
-       EVALUATION DETAILS
-       =====================================================
-
-       All values are taken directly from Firestore.
+       ALL VIEW FIELDS
+       
+       NOTE:
+       date and timestamp are intentionally NOT included.
+       submittedAt is used instead.
        ===================================================== */
 
     const rows = [
@@ -1560,12 +1537,6 @@ window.openModal =
       [
         "Service Availed",
         item.serviceAvailed
-      ],
-
-      [
-        "Transaction Code",
-        item.transactionCode ||
-        item.code
       ],
 
 
@@ -1644,14 +1615,14 @@ window.openModal =
          ----------------------------------------------- */
 
       [
-        "Date",
-        item.date
-      ],
-
-      [
         "Evaluation ID",
         item.evaluationId ||
         key
+      ],
+
+      [
+        "Submitted At",
+        item.submittedAt
       ],
 
       [
@@ -1665,13 +1636,9 @@ window.openModal =
          ----------------------------------------------- */
 
       [
-        "Submitted At",
-        item.submittedAt
-      ],
-
-      [
-        "Timestamp",
-        item.timestamp
+        "Transaction Code",
+        item.transactionCode ||
+        item.code
       ],
 
       [
@@ -1683,7 +1650,7 @@ window.openModal =
 
 
     /* =====================================================
-       CREATE MODAL HTML
+       CREATE MODAL
        ===================================================== */
 
     document.getElementById(
@@ -1745,7 +1712,7 @@ window.closeModal =
 
 
 /* =========================================================
-   CLOSE MODAL WHEN CLICKING OUTSIDE
+   CLOSE MODAL OUTSIDE
    ========================================================= */
 
 document
@@ -1771,7 +1738,8 @@ document
    EXPORT CSV
    =========================================================
 
-   Export now includes ALL requested fields.
+   Date and Timestamp are intentionally removed.
+   Submitted At is retained.
    ========================================================= */
 
 document.getElementById(
@@ -1792,8 +1760,6 @@ document.getElementById(
     "CC3",
 
     "Client Type",
-
-    "Date",
 
     "Evaluation ID",
 
@@ -1818,8 +1784,6 @@ document.getElementById(
     "Submitted At",
 
     "Suggestions",
-
-    "Timestamp",
 
     "Transaction Code",
 
@@ -1866,10 +1830,6 @@ document.getElementById(
           item.clientType ??
             "",
 
-          formatFirestoreValue(
-            item.date
-          ),
-
           item.evaluationId ??
             "",
 
@@ -1893,10 +1853,6 @@ document.getElementById(
 
           item.suggestions ??
             "",
-
-          formatFirestoreValue(
-            item.timestamp
-          ),
 
           item.transactionCode ??
             item.code ??
