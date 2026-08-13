@@ -553,7 +553,7 @@
     padding: 6px 8px 2px;
   }
 
-  /* Dimension Performance — per-question bar chart, split by category */
+  /* Dimension Performance — per-question Chart.js bar chart, split by category */
   .dim-section-title {
     font-family: 'DM Sans', sans-serif;
     font-size: 12.5px;
@@ -567,6 +567,31 @@
 
   .dim-section-title:first-child {
     margin-top: 4px;
+  }
+
+  .chart-wrap {
+    position: relative;
+    height: 260px;
+    background: #f2f4f9;
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 8px;
+  }
+
+  .chart-wrap canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .chart-error {
+    padding: 32px 16px;
+    text-align: center;
+    color: #92400e;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    font-size: 14px;
   }
 
   .dim-bar-list {
@@ -842,15 +867,24 @@
       </div>
     </div>
 
-    <!-- DIMENSION PERFORMANCE — 5 questions per category -->
+    <!-- DIMENSION PERFORMANCE — 5 questions per category, Chart.js bar charts (matches Admin 1's office analytics) -->
     <div class="card">
       <div class="card-title">Dimension Performance <span class="card-sub">— per category, 5 questions each</span></div>
 
-      <div class="dim-section-title"><span style="color:#0284c7;">🚻 Comfort Room</span></div>
-      <div id="dimension-performance-cr" class="dim-bar-list"></div>
-
-      <div class="dim-section-title"><span style="color:#16a34a;">🌳 Surroundings</span></div>
-      <div id="dimension-performance-surr" class="dim-bar-list"></div>
+      <div class="analytics-grid">
+        <div>
+          <div class="dim-section-title"><span style="color:#0284c7;">🚻 Comfort Room</span></div>
+          <div class="chart-wrap" id="chart-dimensions-cr-wrap">
+            <canvas id="chart-dimensions-cr"></canvas>
+          </div>
+        </div>
+        <div>
+          <div class="dim-section-title"><span style="color:#16a34a;">🌳 Surroundings</span></div>
+          <div class="chart-wrap" id="chart-dimensions-surr-wrap">
+            <canvas id="chart-dimensions-surr"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -987,6 +1021,8 @@
 }
 
 </style>
+<!-- Chart.js — pinned to a version that actually exists on jsDelivr (matches Admin 1's office analytics) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="shared.js"></script>
 
 <script type="module">
@@ -1158,10 +1194,10 @@ const CR_DIMENSIONS = buildDimensions(CR_DIMENSION_LABELS);
 const SURR_DIMENSIONS = buildDimensions(SURROUNDINGS_DIMENSION_LABELS);
 
 const RATING_SCALE = [
-  { min: 90, label: "Outstanding", cssClass: "rating-outstanding-fill" },
-  { min: 75, label: "Very Satisfactory", cssClass: "rating-very-satisfactory-fill" },
-  { min: 60, label: "Satisfactory", cssClass: "rating-satisfactory-fill" },
-  { min: 0, label: "Needs Improvement", cssClass: "rating-poor-fill" }
+  { min: 90, label: "Outstanding", cssClass: "rating-outstanding-fill", color: "#10b981" },
+  { min: 75, label: "Very Satisfactory", cssClass: "rating-very-satisfactory-fill", color: "#2563eb" },
+  { min: 60, label: "Satisfactory", cssClass: "rating-satisfactory-fill", color: "#f59e0b" },
+  { min: 0, label: "Needs Improvement", cssClass: "rating-poor-fill", color: "#ef4444" }
 ];
 
 function ratingFillClass(pct) {
@@ -1169,6 +1205,13 @@ function ratingFillClass(pct) {
     if (pct >= r.min) return r.cssClass;
   }
   return "rating-poor-fill";
+}
+
+function ratingFillColor(pct) {
+  for (const r of RATING_SCALE) {
+    if (pct >= r.min) return r.color;
+  }
+  return "#ef4444";
 }
 
 // ======================
@@ -1875,39 +1918,103 @@ function renderOfficeTrend() {
 }
 
 // ======================
-// DIMENSION PERFORMANCE — split into two 5-question sections, one per category
+// DIMENSION PERFORMANCE — two Chart.js bar charts (one per category),
+// matching Admin 1's office-analytics.html "Evaluation Dimensions" chart.
 // ======================
-function renderDimensionSection(containerId, dims, evalsList) {
-  const el = document.getElementById(containerId);
+let dimChartCR = null;
+let dimChartSurr = null;
+
+function safeRenderChart(wrapId, canvasId, buildFn) {
+  if (typeof Chart === "undefined") {
+    const wrap = document.getElementById(wrapId);
+    if (wrap) wrap.innerHTML = `<div class="chart-error">Chart library failed to load. Check your internet connection and reload.</div>`;
+    console.error(`Chart.js is not loaded — skipped "${canvasId}"`);
+    return null;
+  }
+  try {
+    const canvas = document.getElementById(canvasId);
+    return buildFn(canvas);
+  } catch (err) {
+    console.error(`Failed to render chart "${canvasId}":`, err);
+    const wrap = document.getElementById(wrapId);
+    if (wrap) wrap.innerHTML = `<div class="chart-error">Couldn't render this chart.</div>`;
+    return null;
+  }
+}
+
+function renderDimensionSection(wrapId, canvasId, dims, evalsList, getChart, setChart) {
+  const wrap = document.getElementById(wrapId);
+
+  // Data changed underneath a live chart — destroy before rebuilding or clearing.
+  if (getChart()) {
+    getChart().destroy();
+    setChart(null);
+  }
+
   if (evalsList.length === 0) {
-    el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
+    wrap.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
     return;
   }
 
-  el.innerHTML = dims.map(dim => {
+  // The empty-state branch above replaces the canvas with a message; put it back.
+  if (!document.getElementById(canvasId)) {
+    wrap.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+  }
+
+  const computed = dims.map(dim => {
     const values = evalsList.map(e => e[dim.field]).filter(v => v > 0);
     const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
     const pct = values.length ? (avg / 5) * 100 : 0;
-    const fillClass = ratingFillClass(pct);
+    return { ...dim, avg, pct, count: values.length };
+  });
 
-    return `
-      <div class="dim-bar-row" title="Q${dim.id}: Average ${avg.toFixed(2)}/5.0 (${pct.toFixed(1)}%) from ${values.length} responses">
-        <div class="dim-bar-num">${dim.id}</div>
-        <div class="dim-bar-main">
-          <div class="dim-bar-label" title="${dim.label}">${dim.label}</div>
-          <div class="dim-bar-track" title="Average: ${avg.toFixed(2)}/5">
-            <div class="dim-bar-fill ${fillClass}" style="width: ${pct.toFixed(1)}%;" title="${pct.toFixed(1)}% satisfaction"></div>
-          </div>
-        </div>
-        <div class="dim-bar-value" title="${avg.toFixed(2)} avg rating">${pct.toFixed(1)}%</div>
-      </div>
-    `;
-  }).join("");
+  const newChart = safeRenderChart(wrapId, canvasId, (canvas) => {
+    return new Chart(canvas, {
+      type: "bar",
+      data: {
+        labels: computed.map(d => `Q${d.id}`),
+        datasets: [{
+          data: computed.map(d => Number(d.avg.toFixed(2))),
+          backgroundColor: computed.map(d => ratingFillColor(d.pct)),
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => computed[items[0].dataIndex].label,
+              label: (item) => {
+                const d = computed[item.dataIndex];
+                return `Avg ${d.avg.toFixed(2)}/5 (${d.pct.toFixed(1)}%) — ${d.count} response${d.count === 1 ? "" : "s"}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: { beginAtZero: true, max: 5 }
+        }
+      }
+    });
+  });
+
+  setChart(newChart);
 }
 
 function renderDimensionPerformance() {
-  renderDimensionSection("dimension-performance-cr", CR_DIMENSIONS, evaluations.filter(e => e.cleanlinessCategory === "Comfort Room"));
-  renderDimensionSection("dimension-performance-surr", SURR_DIMENSIONS, evaluations.filter(e => e.cleanlinessCategory === "Surroundings"));
+  renderDimensionSection(
+    "chart-dimensions-cr-wrap", "chart-dimensions-cr",
+    CR_DIMENSIONS, evaluations.filter(e => e.cleanlinessCategory === "Comfort Room"),
+    () => dimChartCR, (c) => { dimChartCR = c; }
+  );
+  renderDimensionSection(
+    "chart-dimensions-surr-wrap", "chart-dimensions-surr",
+    SURR_DIMENSIONS, evaluations.filter(e => e.cleanlinessCategory === "Surroundings"),
+    () => dimChartSurr, (c) => { dimChartSurr = c; }
+  );
 }
 
 </script>
