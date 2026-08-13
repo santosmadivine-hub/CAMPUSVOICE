@@ -1114,7 +1114,16 @@ onSnapshot(evalQuery, (snapshot) => {
       cleanlinessCategory: category,
       comments: data.comments || "",
       timestamp: Number(data.timestamp) || 0,
-      evidence: parseEvidence(data)
+      evidence: parseEvidence(data),
+      // Extra respondent/record metadata — captured so the View detail
+      // modal can display the full submission, not just the ratings.
+      sex: data.sex || "-",
+      userCategory: data.userCategory || "-",
+      userId: data.userId || "-",
+      // evaluationId is normally identical to the Firestore doc id
+      // (doc.id), but we still read the stored field with a fallback
+      // in case an older record predates this field being written.
+      evaluationId: data.evaluationId || doc.id
     };
 
     // Pull rating1 ... rating5 (matches what ComfortRoomEvalActivity /
@@ -1357,7 +1366,7 @@ document.getElementById("btn-export").addEventListener("click", () => {
     questionHeaders.push("Q" + i);
   }
 
-  const header = ["#", "Office", "Category", ...questionHeaders, "Avg", "Comments", "Image URLs", "Video URLs", "Status", "Date"];
+  const header = ["#", "Office", "Category", ...questionHeaders, "Avg", "Comments", "Sex", "Respondent Type", "User ID", "Evaluation ID", "Image URLs", "Video URLs", "Status", "Date"];
 
   const rows = filtered.map((e, i) => {
     const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString() : "-";
@@ -1372,7 +1381,22 @@ document.getElementById("btn-export").addEventListener("click", () => {
     const imageUrls = `"${e.evidence.filter(item => item.type === "image").map(item => item.url).join(" | ")}"`;
     const videoUrls = `"${e.evidence.filter(item => item.type === "video").map(item => item.url).join(" | ")}"`;
 
-    return [i + 1, e.officeName, e.cleanlinessCategory, ...ratingValues, e.avgRating.toFixed(1), comments, imageUrls, videoUrls, status, date].join(",");
+    return [
+      i + 1,
+      e.officeName,
+      e.cleanlinessCategory,
+      ...ratingValues,
+      e.avgRating.toFixed(1),
+      comments,
+      e.sex,
+      e.userCategory,
+      e.userId,
+      e.evaluationId,
+      imageUrls,
+      videoUrls,
+      status,
+      date
+    ].join(",");
   });
 
   const csvContent = [header.join(","), ...rows].join("\n");
@@ -1412,6 +1436,10 @@ function openDetailModal(evalId) {
     <div class="modal-row"><span>Avg Rating</span><span>${e.avgRating.toFixed(1)} / 5</span></div>
     ${questionRows}
     <div class="modal-row"><span>Comments</span><span>${e.comments || "-"}</span></div>
+    <div class="modal-row"><span>Sex</span><span>${e.sex}</span></div>
+    <div class="modal-row"><span>Respondent Type</span><span>${e.userCategory}</span></div>
+    <div class="modal-row"><span>User ID</span><span>${e.userId}</span></div>
+    <div class="modal-row"><span>Evaluation ID</span><span>${e.evaluationId}</span></div>
     <div class="modal-row"><span>Status</span><span>${statusLabel}</span></div>
     <div class="modal-row"><span>Submitted</span><span>${date}</span></div>
     <div class="modal-row" style="display:block;">
