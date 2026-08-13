@@ -810,7 +810,7 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Sex Distribution <span class="card-sub">— by category</span></div>
+        <div class="card-title">Sex Distribution <span class="card-sub">— outer ring: Surroundings · inner ring: Comfort Room</span></div>
         <div id="sex-distribution-chart" style="margin-top: 14px;"></div>
       </div>
     </div>
@@ -891,8 +891,9 @@
 <style>
 /* ======================
    SEX DISTRIBUTION — CIRCLE DATA ANALYSIS
-   These classes match what renderSexDistribution() actually renders
-   (previously this file had an unused .sex-pie-* block instead).
+   These classes match what renderSexDistribution() actually renders.
+   Outer ring = Surroundings, Inner ring = Comfort Room.
+   Each ring is split into Male / Female (+ Other, only if present).
    ====================== */
 .circle-analysis-card {
   display: flex;
@@ -1387,10 +1388,10 @@ function renderStatusBreakdown() {
 }
 
 // ======================
-// SEX DISTRIBUTION — CIRCLE DATA ANALYSIS STYLE
-// Visual design follows the supplied reference image.
-// All values are calculated from Firebase evaluation data.
-// Inner rings = Comfort Room | Outer rings = Surroundings.
+// SEX DISTRIBUTION — TWO-RING DONUT
+// Outer ring = Surroundings, split into Male / Female (+ Other if present).
+// Inner ring = Comfort Room, split into Male / Female (+ Other if present).
+// All values are calculated live from Firebase evaluation data.
 // ======================
 function renderSexDistribution() {
   const el = document.getElementById("sex-distribution-chart");
@@ -1400,287 +1401,133 @@ function renderSexDistribution() {
     return;
   }
 
-  const categories = ["Comfort Room", "Surroundings"];
-
-  const preferredOrder = [
-    "Male",
-    "Female",
-    "Other",
-    "Prefer not to say",
-    "Not Specified"
-  ];
-
-  const discovered = [];
-  evaluations.forEach(e => {
-    const sex = normalizeSex(e.sex);
-    if (!discovered.includes(sex)) discovered.push(sex);
-  });
-
-  const sexes = [
-    ...preferredOrder.filter(s => discovered.includes(s)),
-    ...discovered.filter(s => !preferredOrder.includes(s))
-  ];
-
-  if (sexes.length === 0) {
-    el.innerHTML = `<div class="lb-empty">No sex data available.</div>`;
-    return;
-  }
-
-  /*
-   * IMPORTANT:
-   * These values are NOT taken from the reference image.
-   * They are calculated from the Firebase evaluations array.
-   *
-   * For each sex:
-   *   Comfort Room percentage = CR respondents of that sex / total CR respondents
-   *   Surroundings percentage = Surroundings respondents of that sex / total Surroundings respondents
-   *
-   * The visual uses concentric progress rings to reproduce the look
-   * of the supplied "Circle Data Analysis" image.
-   */
-
-  const totals = {
-    "Comfort Room": evaluations.filter(
-      e => e.cleanlinessCategory === "Comfort Room"
-    ).length,
-    "Surroundings": evaluations.filter(
-      e => e.cleanlinessCategory === "Surroundings"
-    ).length
+  const SEX_COLORS = {
+    Male: "#2563eb",
+    Female: "#ec4899",
+    Other: "#94a3b8" // bucket for Other / Prefer not to say / Not Specified
   };
 
-  const data = sexes.map(sex => {
-    const crCount = evaluations.filter(
-      e =>
-        e.cleanlinessCategory === "Comfort Room" &&
-        normalizeSex(e.sex) === sex
-    ).length;
+  function bucketSex(sex) {
+    if (sex === "Male") return "Male";
+    if (sex === "Female") return "Female";
+    return "Other";
+  }
 
-    const surroundingsCount = evaluations.filter(
-      e =>
-        e.cleanlinessCategory === "Surroundings" &&
-        normalizeSex(e.sex) === sex
-    ).length;
+  function breakdownFor(category) {
+    const list = evaluations.filter(e => e.cleanlinessCategory === category);
+    const total = list.length;
+    const counts = { Male: 0, Female: 0, Other: 0 };
+    list.forEach(e => { counts[bucketSex(normalizeSex(e.sex))]++; });
+    return ["Male", "Female", "Other"].map(key => ({
+      key,
+      color: SEX_COLORS[key],
+      count: counts[key],
+      pct: total ? Math.round((counts[key] / total) * 100) : 0
+    })).filter(seg => seg.count > 0); // skip empty segments (e.g. no "Other" respondents)
+  }
 
-    const crPercent = totals["Comfort Room"]
-      ? Math.round((crCount / totals["Comfort Room"]) * 100)
-      : 0;
-
-    const surroundingsPercent = totals["Surroundings"]
-      ? Math.round((surroundingsCount / totals["Surroundings"]) * 100)
-      : 0;
-
-    return {
-      sex,
-      crCount,
-      surroundingsCount,
-      crPercent,
-      surroundingsPercent
-    };
-  });
-
-  /*
-   * The reference uses multiple concentric rings.
-   * Each sex gets one visual ring. The ring value is based on the
-   * combined category result, while the tooltip/legend shows the
-   * actual Comfort Room and Surroundings Firebase values.
-   *
-   * This keeps the visual compact and avoids adding a category
-   * selector above the container.
-   */
-  const ringColors = [
-    "#2f5964",
-    "#329b91",
-    "#8faf7d",
-    "#e2bf69",
-    "#7d89a8",
-    "#c47c70"
-  ];
+  const surroundingsBreakdown = breakdownFor("Surroundings");
+  const crBreakdown = breakdownFor("Comfort Room");
 
   const size = 220;
-  const cx = 110;
-  const cy = 110;
+  const cx = 110, cy = 110;
+  const outerRadius = 82;   // Surroundings
+  const innerRadius = 50;   // Comfort Room
+  const strokeWidth = 18;
 
-  // Three to five visible rings depending on how many sex groups exist.
-  const ringCount = Math.min(Math.max(data.length, 3), 5);
-  const displayData = data.slice(0, ringCount);
+  function segmentPath(radius, startPct, endPct) {
+    const span = endPct - startPct;
+    if (span <= 0) return "";
+    const startAngle = -90 + (startPct / 100) * 360;
+    const endAngle = -90 + (endPct / 100) * 360;
 
-  const maxRadius = 84;
-  const minRadius = 40;
-  const gap = ringCount > 1
-    ? (maxRadius - minRadius) / (ringCount - 1)
-    : 0;
-
-  function ringPath(radius, percentage) {
-    const clamped = Math.max(0, Math.min(100, percentage));
-    const startAngle = -90;
-    const endAngle = startAngle + (clamped / 100) * 360;
+    if (span >= 99.99) {
+      // a single sex accounts for 100% — needs two half-arcs to draw a full circle
+      const startRad = startAngle * Math.PI / 180;
+      const midRad = (startAngle + 180) * Math.PI / 180;
+      const x1 = cx + radius * Math.cos(startRad);
+      const y1 = cy + radius * Math.sin(startRad);
+      const xm = cx + radius * Math.cos(midRad);
+      const ym = cy + radius * Math.sin(midRad);
+      return `M ${x1} ${y1} A ${radius} ${radius} 0 1 1 ${xm} ${ym} A ${radius} ${radius} 0 1 1 ${x1} ${y1}`;
+    }
 
     const startRad = startAngle * Math.PI / 180;
     const endRad = endAngle * Math.PI / 180;
-
     const x1 = cx + radius * Math.cos(startRad);
     const y1 = cy + radius * Math.sin(startRad);
     const x2 = cx + radius * Math.cos(endRad);
     const y2 = cy + radius * Math.sin(endRad);
-
-    const largeArc = clamped > 50 ? 1 : 0;
-
-    if (clamped >= 100) {
-      return `
-        M ${cx} ${cy - radius}
-        A ${radius} ${radius} 0 1 1 ${cx - 0.01} ${cy - radius}
-      `;
-    }
-
-    if (clamped <= 0) return "";
-
-    return `
-      M ${x1} ${y1}
-      A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}
-    `;
+    const largeArc = span > 50 ? 1 : 0;
+    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
   }
 
-  const backgroundRings = displayData.map((item, index) => {
-    const radius = maxRadius - (index * gap);
+  function ringSegmentsSvg(radius, breakdown, categoryLabel) {
+    let cumulative = 0;
+    return breakdown.map(seg => {
+      const startPct = cumulative;
+      cumulative += seg.pct;
+      const d = segmentPath(radius, startPct, Math.min(cumulative, 100));
+      if (!d) return "";
+      return `<path d="${d}" fill="none" stroke="${seg.color}" stroke-width="${strokeWidth}" title="${categoryLabel} — ${seg.key}: ${seg.count} (${seg.pct}%)"></path>`;
+    }).join("");
+  }
 
-    return `
-      <circle
-        cx="${cx}"
-        cy="${cy}"
-        r="${radius}"
-        fill="none"
-        stroke="#eeeeee"
-        stroke-width="7">
-      </circle>
-    `;
-  }).join("");
+  const backgroundRings = `
+    <circle cx="${cx}" cy="${cy}" r="${outerRadius}" fill="none" stroke="#eeeeee" stroke-width="${strokeWidth}"></circle>
+    <circle cx="${cx}" cy="${cy}" r="${innerRadius}" fill="none" stroke="#eeeeee" stroke-width="${strokeWidth}"></circle>
+  `;
 
-  /*
-   * Use the larger of the two category percentages for the ring length.
-   * The exact CR and Surroundings percentages remain visible in the
-   * legend, so Firebase data is not altered or invented.
-   */
-  const progressRings = displayData.map((item, index) => {
-    const radius = maxRadius - (index * gap);
-    const value = Math.max(item.crPercent, item.surroundingsPercent);
-    const path = ringPath(radius, value);
-    const color = ringColors[index % ringColors.length];
+  const outerRingSvg = ringSegmentsSvg(outerRadius, surroundingsBreakdown, "Surroundings");
+  const innerRingSvg = ringSegmentsSvg(innerRadius, crBreakdown, "Comfort Room");
 
-    return `
-      <path
-        d="${path}"
-        fill="none"
-        stroke="${color}"
-        stroke-width="7"
-        stroke-linecap="round"
-        class="circle-analysis-progress"
-        title="${item.sex}: Comfort Room ${item.crPercent}% | Surroundings ${item.surroundingsPercent}%">
-      </path>
-    `;
-  }).join("");
+  const total = evaluations.length;
 
-  const overallCR = totals["Comfort Room"];
-  const overallSurroundings = totals["Surroundings"];
-
-  const overallCRPercent = overallCR
-    ? Math.round(
-        evaluations.filter(
-          e => e.cleanlinessCategory === "Comfort Room"
-        ).length / overallCR * 100
-      )
-    : 0;
-
-  /*
-   * Center number is intentionally data-driven.
-   * It shows the average of the two category totals' sex coverage,
-   * not the hard-coded 74% from the reference image.
-   */
-  const combinedSexCounts = {};
-  data.forEach(item => {
-    combinedSexCounts[item.sex] = item.crCount + item.surroundingsCount;
-  });
-
-  const combinedTotal = Object.values(combinedSexCounts)
-    .reduce((sum, count) => sum + count, 0);
-
-  const dominantSexCount = combinedTotal
-    ? Math.max(...Object.values(combinedSexCounts))
-    : 0;
-
-  const centerPercentage = combinedTotal
-    ? Math.round((dominantSexCount / combinedTotal) * 100)
-    : 0;
-
-  const legend = displayData.map((item, index) => {
-    const color = ringColors[index % ringColors.length];
-
-    return `
+  function legendRows(breakdown) {
+    if (breakdown.length === 0) {
+      return `<div class="circle-analysis-legend-row"><div class="circle-analysis-label"><span>No data yet.</span></div></div>`;
+    }
+    return breakdown.map(seg => `
       <div class="circle-analysis-legend-row">
-        <span
-          class="circle-analysis-dot"
-          style="background:${color};">
-        </span>
-
+        <span class="circle-analysis-dot" style="background:${seg.color};"></span>
         <div class="circle-analysis-label">
-          <strong>${item.sex}</strong>
-          <span>
-            🚻 ${item.crCount} (${item.crPercent}%)
-            &nbsp; · &nbsp;
-            🌳 ${item.surroundingsCount} (${item.surroundingsPercent}%)
-          </span>
+          <strong>${seg.key}</strong>
+          <span>${seg.count} (${seg.pct}%)</span>
         </div>
       </div>
-    `;
-  }).join("");
+    `).join("");
+  }
 
   el.innerHTML = `
     <div class="circle-analysis-card">
-
       <div class="circle-analysis-visual">
-
-        <svg
-          viewBox="0 0 220 220"
-          class="circle-analysis-svg"
-          role="img"
-          aria-label="Sex distribution circle analysis">
-
+        <svg viewBox="0 0 ${size} ${size}" class="circle-analysis-svg" role="img" aria-label="Sex distribution by category">
           ${backgroundRings}
-          ${progressRings}
-
-          <circle
-            cx="${cx}"
-            cy="${cy}"
-            r="31"
-            fill="#ffffff">
-          </circle>
+          ${outerRingSvg}
+          ${innerRingSvg}
+          <circle cx="${cx}" cy="${cy}" r="${innerRadius - strokeWidth / 2 - 4}" fill="#ffffff"></circle>
         </svg>
-
-        <div class="circle-analysis-center">
-          <strong>${centerPercentage}%</strong>
-        </div>
-
+        <div class="circle-analysis-center"><strong>${total}</strong></div>
       </div>
 
       <div class="circle-analysis-details">
-
         <div class="circle-analysis-category-key">
-          <div>
-            <span class="circle-key-dot circle-key-cr"></span>
-            <strong>Comfort Room</strong>
-          </div>
-
-          <div>
-            <span class="circle-key-dot circle-key-surroundings"></span>
-            <strong>Surroundings</strong>
-          </div>
+          <div><span class="circle-key-dot" style="background:${SEX_COLORS.Male};"></span><strong>Male</strong></div>
+          <div><span class="circle-key-dot" style="background:${SEX_COLORS.Female};"></span><strong>Female</strong></div>
         </div>
 
         <div class="circle-analysis-legend">
-          ${legend}
+          <div style="font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; color:${CATEGORY_META["Surroundings"].color}; margin-top:2px;">
+            🌳 Surroundings <span style="font-weight:400; color:#94a3b8;">(outer ring)</span>
+          </div>
+          ${legendRows(surroundingsBreakdown)}
+
+          <div style="font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; color:${CATEGORY_META["Comfort Room"].color}; margin-top:8px;">
+            🚻 Comfort Room <span style="font-weight:400; color:#94a3b8;">(inner ring)</span>
+          </div>
+          ${legendRows(crBreakdown)}
         </div>
-
       </div>
-
     </div>
   `;
 }
