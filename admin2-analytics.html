@@ -239,13 +239,19 @@
     font-size: 14px;
   }
 
-  /* ===== Submission Status — vertical grouped bar chart ===== */
-  .status-vbar-wrap {
+  /* ===== Submission Status — LINE CHART STYLES ===== */
+  .status-line-wrap {
+    display: flex;
+    gap: 8px;
+    flex-direction: column;
+  }
+
+  .status-line-chart-row {
     display: flex;
     gap: 8px;
   }
 
-  .status-vbar-yaxis {
+  .status-line-yaxis {
     flex: 0 0 32px;
     width: 32px;
     position: relative;
@@ -254,63 +260,32 @@
     color: #94a3b8;
   }
 
-  .status-vbar-yaxis span {
+  .status-line-yaxis span {
     position: absolute;
     right: 6px;
     transform: translateY(-50%);
   }
 
-  .status-vbar-chart {
+  .status-line-svg-wrap {
     flex: 1;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-around;
     border-left: 1px solid #e2e8f0;
     border-bottom: 1px solid #e2e8f0;
-    padding: 0 12px;
   }
 
-  .status-vbar-group {
-    display: flex;
-    align-items: flex-end;
-    gap: 8px;
-    height: 100%;
-  }
-
-  .status-vbar-col {
-    width: 34px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    height: 100%;
-    cursor: help;
-  }
-
-  .status-vbar-fill {
+  .status-line-svg {
+    display: block;
     width: 100%;
-    border-radius: 4px 4px 0 0;
-    transition: height 0.3s ease;
-    min-height: 1px;
+    height: 200px;
   }
 
-  .status-vbar-value {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10.5px;
-    font-weight: 700;
-    color: #334155;
-    margin-bottom: 4px;
-  }
-
-  .status-vbar-labels {
+  .status-line-labels {
     display: flex;
-    justify-content: space-around;
-    margin: 8px 0 0;
-    padding: 0 12px;
-    margin-left: 32px;
+    margin-top: 8px;
+    padding-left: 40px;
   }
 
-  .status-vbar-label {
+  .status-line-label {
+    flex: 1;
     font-family: 'DM Sans', sans-serif;
     font-size: 12px;
     font-weight: 600;
@@ -318,7 +293,7 @@
     text-align: center;
   }
 
-  .status-vbar-legend {
+  .status-line-legend {
     display: flex;
     gap: 16px;
     margin-top: 14px;
@@ -327,21 +302,122 @@
     color: #475569;
   }
 
-  .status-vbar-legend-item {
+  .status-line-legend-item {
     display: flex;
     align-items: center;
     gap: 6px;
   }
 
-  .status-vbar-legend-swatch {
+  .status-line-legend-swatch {
     width: 10px;
     height: 10px;
     border-radius: 3px;
   }
 
-  /* Office Trend card spans full width */
-  .office-trend-card {
+  /* Category / evidence pie charts */
+  .pie-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
     margin-bottom: 16px;
+  }
+
+  @media (max-width: 900px) {
+    .pie-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .pie-wrap {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .pie-circle {
+    width: 190px;
+    height: 190px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #f1f5f9;
+  }
+
+  .pie-circle.mini {
+    width: 110px;
+    height: 110px;
+  }
+
+  .pie-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .pie-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    color: #334155;
+  }
+
+  .pie-legend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .pie-legend-label {
+    flex: 1;
+  }
+
+  .pie-legend-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: #0f1b32;
+    font-size: 12.5px;
+  }
+
+  .mini-pie-block {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .mini-pie-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .mini-pie-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  [title] {
+    position: relative;
+  }
+
+  svg circle[title],
+  svg rect[title] {
+    cursor: pointer;
+  }
+
+  .bar-row[title],
+  .dim-bar-row[title],
+  .pie-legend-row[title] {
+    cursor: help;
   }
 
   .ot-controls {
@@ -661,110 +737,131 @@
   .dim-bar-fill.rating-satisfactory-fill { background: #f59e0b; }
   .dim-bar-fill.rating-poor-fill { background: #ef4444; }
 
-  /* Category / evidence pie charts */
-  .pie-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-
-  @media (max-width: 900px) {
-    .pie-row {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .pie-wrap {
+  /* Circle / evidence pie charts */
+  .circle-analysis-card {
     display: flex;
     align-items: center;
-    gap: 20px;
-    margin-top: 12px;
+    gap: 24px;
     flex-wrap: wrap;
   }
 
-  .pie-circle {
-    width: 190px;
-    height: 190px;
-    border-radius: 50%;
+  .circle-analysis-visual {
+    position: relative;
+    width: 220px;
+    height: 220px;
     flex-shrink: 0;
-    background: #f1f5f9;
   }
 
-  .pie-circle.mini {
-    width: 110px;
-    height: 110px;
+  .circle-analysis-svg {
+    width: 220px;
+    height: 220px;
+    display: block;
   }
 
-  .pie-legend {
+  .circle-analysis-progress {
+    transition: opacity .15s ease;
+  }
+
+  .circle-analysis-progress:hover {
+    opacity: .8;
+  }
+
+  .circle-analysis-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .circle-analysis-center strong {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0f172a;
+  }
+
+  .circle-analysis-details {
+    flex: 1;
+    min-width: 220px;
     display: flex;
     flex-direction: column;
-    gap: 7px;
-    flex: 1;
-    min-width: 140px;
-  }
-
-  .pie-legend-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12.5px;
-    color: #334155;
-  }
-
-  .pie-legend-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .pie-legend-label {
-    flex: 1;
-  }
-
-  .pie-legend-value {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    color: #0f1b32;
-    font-size: 12.5px;
-  }
-
-  .mini-pie-block {
-    flex: 1;
-    min-width: 200px;
-  }
-
-  .mini-pie-title {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12.5px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 4px;
-  }
-
-  .mini-pie-row {
-    display: flex;
-    align-items: center;
     gap: 14px;
   }
 
-  [title] {
-    position: relative;
+  .circle-analysis-category-key {
+    display: flex;
+    gap: 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #334155;
   }
 
-  svg circle[title],
-  svg rect[title] {
-    cursor: pointer;
+  .circle-analysis-category-key > div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
-  .bar-row[title],
-  .dim-bar-row[title],
-  .pie-legend-row[title] {
+  .circle-key-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .circle-key-cr { background: #0284c7; }
+  .circle-key-surroundings { background: #16a34a; }
+
+  .circle-analysis-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .circle-analysis-legend-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
     cursor: help;
+  }
+
+  .circle-analysis-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+
+  .circle-analysis-label {
+    display: flex;
+    flex-direction: column;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    color: #334155;
+    gap: 2px;
+  }
+
+  .circle-analysis-label strong {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #0f172a;
+  }
+
+  .circle-analysis-label span {
+    color: #64748b;
+    font-size: 12px;
+  }
+
+  @media (max-width: 520px) {
+    .circle-analysis-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 </style>
 </head>
@@ -888,140 +985,7 @@
     </div>
   </main>
 </div>
-<style>
-/* ======================
-   SEX DISTRIBUTION — CIRCLE DATA ANALYSIS
-   These classes match what renderSexDistribution() actually renders.
-   Outer ring = Surroundings, Inner ring = Comfort Room.
-   Each ring is split into Male / Female (+ Other, only if present).
-   ====================== */
-.circle-analysis-card {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
 
-.circle-analysis-visual {
-  position: relative;
-  width: 220px;
-  height: 220px;
-  flex-shrink: 0;
-}
-
-.circle-analysis-svg {
-  width: 220px;
-  height: 220px;
-  display: block;
-}
-
-.circle-analysis-progress {
-  transition: opacity .15s ease;
-}
-
-.circle-analysis-progress:hover {
-  opacity: .8;
-}
-
-.circle-analysis-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.circle-analysis-center strong {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 22px;
-  color: #0f172a;
-}
-
-.circle-analysis-details {
-  flex: 1;
-  min-width: 220px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.circle-analysis-category-key {
-  display: flex;
-  gap: 18px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #334155;
-}
-
-.circle-analysis-category-key > div {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.circle-key-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.circle-key-cr { background: #0284c7; }
-.circle-key-surroundings { background: #16a34a; }
-
-.circle-analysis-legend {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.circle-analysis-legend-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  cursor: help;
-}
-
-.circle-analysis-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-top: 4px;
-  flex-shrink: 0;
-}
-
-.circle-analysis-label {
-  display: flex;
-  flex-direction: column;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 12.5px;
-  color: #334155;
-  gap: 2px;
-}
-
-.circle-analysis-label strong {
-  font-family: 'Syne', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  color: #0f172a;
-}
-
-.circle-analysis-label span {
-  color: #64748b;
-  font-size: 12px;
-}
-
-@media (max-width: 520px) {
-  .circle-analysis-card {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-</style>
 <!-- Chart.js — pinned to a version that actually exists on jsDelivr (matches Admin 1's office analytics) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="shared.js"></script>
@@ -1329,9 +1293,10 @@ function renderStatCards() {
 }
 
 // ======================
-// SUBMISSION STATUS — vertical grouped bar chart (x: status, y: % of category total)
+// SUBMISSION STATUS — LINE CHART (x: status, y: count by category)
 // ======================
-const STATUS_VBAR_MAX_H = 200;
+const STATUS_LINE_HEIGHT = 200;
+const STATUS_LINE_WIDTH = 500; // approximate, will vary based on content
 
 function renderStatusBreakdown() {
   const el = document.getElementById("status-breakdown-chart");
@@ -1343,47 +1308,150 @@ function renderStatusBreakdown() {
 
   const statusOrder = ["pending", "no_action", "resolved"];
   const cats = ["Comfort Room", "Surroundings"];
-  const totals = {};
-  cats.forEach(c => { totals[c] = evaluations.filter(e => e.cleanlinessCategory === c).length; });
 
-  const groupsHtml = statusOrder.map(statusKey => {
-    const meta = STATUS_META[statusKey];
-    const cols = cats.map(c => {
-      const catMeta = CATEGORY_META[c];
-      const count = evaluations.filter(e => e.cleanlinessCategory === c && e.status === statusKey).length;
-      const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
-      const h = Math.max(1, Math.round((pct / 100) * STATUS_VBAR_MAX_H));
-      return `
-        <div class="status-vbar-col" title="${catMeta.label} — ${meta.label}: ${count} of ${totals[c]} evaluations (${pct}%)">
-          <div class="status-vbar-value">${pct}%</div>
-          <div class="status-vbar-fill" style="height:${h}px;background:${catMeta.color};"></div>
-        </div>
-      `;
+  // Build data for both lines
+  const crData = statusOrder.map(status => {
+    return evaluations.filter(e => e.cleanlinessCategory === "Comfort Room" && e.status === status).length;
+  });
+  const surrData = statusOrder.map(status => {
+    return evaluations.filter(e => e.cleanlinessCategory === "Surroundings" && e.status === status).length;
+  });
+
+  // Get max value for scaling
+  const maxValue = Math.max(...crData, ...surrData, 1);
+  const yAxisMax = Math.ceil(maxValue * 1.1); // 10% padding
+
+  // SVG dimensions
+  const chartHeight = STATUS_LINE_HEIGHT;
+  const chartWidth = Math.max(300, statusOrder.length * 120);
+  const padding = { left: 40, right: 20, top: 20, bottom: 20 };
+  const plotAreaHeight = chartHeight - padding.top - padding.bottom;
+  const plotAreaWidth = chartWidth - padding.left - padding.right;
+
+  // Helper to convert data value to Y coordinate
+  function yCoord(value) {
+    const ratio = yAxisMax > 0 ? value / yAxisMax : 0;
+    return padding.top + (1 - ratio) * plotAreaHeight;
+  }
+
+  // Helper to convert status index to X coordinate
+  function xCoord(index) {
+    return padding.left + (index + 0.5) * (plotAreaWidth / statusOrder.length);
+  }
+
+  // Generate SVG
+  function generateLinePath(data, color) {
+    const points = data.map((val, i) => `${xCoord(i)},${yCoord(val)}`);
+    return points.join(" L ");
+  }
+
+  // Build Y-axis labels
+  const yAxisSteps = 5;
+  const yAxisTicks = [];
+  for (let i = 0; i <= yAxisSteps; i++) {
+    const value = (yAxisMax / yAxisSteps) * i;
+    yAxisTicks.push(value);
+  }
+
+  const gridLines = yAxisTicks.map(val => {
+    const y = yCoord(val);
+    return `<line x1="${padding.left}" y1="${y}" x2="${chartWidth - padding.right}" y2="${y}" stroke="#e2e8f0" stroke-width="1"></line>`;
+  }).join("");
+
+  const yAxisLabels = yAxisTicks.map(val => {
+    const y = yCoord(val);
+    return `<text x="${padding.left - 8}" y="${y + 4}" font-family="DM Sans, sans-serif" font-size="10px" color="#94a3b8" text-anchor="end">${Math.round(val)}</text>`;
+  }).join("");
+
+  // Create line paths
+  const crColor = CATEGORY_META["Comfort Room"].color;
+  const surrColor = CATEGORY_META["Surroundings"].color;
+  
+  const crLinePath = generateLinePath(crData, crColor);
+  const surrLinePath = generateLinePath(surrData, surrColor);
+
+  // Create area fills (subtle background)
+  function generateAreaPath(data, color) {
+    const linePoints = data.map((val, i) => `${xCoord(i)},${yCoord(val)}`);
+    const closePoints = [
+      `${xCoord(data.length - 1)},${chartHeight - padding.bottom}`,
+      `${xCoord(0)},${chartHeight - padding.bottom}`
+    ];
+    return `M ${linePoints.join(" L ")} L ${closePoints.join(" L ")} Z`;
+  }
+
+  const crAreaPath = generateAreaPath(crData, crColor);
+  const surrAreaPath = generateAreaPath(surrData, surrColor);
+
+  // Create data point circles and tooltips
+  function generateDataPoints(data, color, label) {
+    return data.map((val, i) => {
+      const x = xCoord(i);
+      const y = yCoord(val);
+      const meta = CATEGORY_META[label];
+      return `<circle cx="${x}" cy="${y}" r="4" fill="${color}" stroke="white" stroke-width="2" title="${meta.icon} ${label}: ${val}" style="cursor:help;"></circle>`;
     }).join("");
-    return `<div class="status-vbar-group">${cols}</div>`;
+  }
+
+  const crPoints = generateDataPoints(crData, crColor, "Comfort Room");
+  const surrPoints = generateDataPoints(surrData, surrColor, "Surroundings");
+
+  // Create X-axis labels
+  const xAxisLabels = statusOrder.map((status, i) => {
+    const x = xCoord(i);
+    const meta = STATUS_META[status];
+    return `<text x="${x}" y="${chartHeight - 4}" font-family="DM Sans, sans-serif" font-size="12px" font-weight="600" color="#334155" text-anchor="middle">${meta.label}</text>`;
   }).join("");
 
-  const yAxis = [100, 75, 50, 25, 0].map(pct => {
-    const top = STATUS_VBAR_MAX_H - (pct / 100) * STATUS_VBAR_MAX_H;
-    return `<span style="top:${top}px;">${pct}%</span>`;
-  }).join("");
+  // Combine all SVG elements
+  const svgContent = `
+    <svg width="${chartWidth}" height="${chartHeight}" viewBox="0 0 ${chartWidth} ${chartHeight}" xmlns="http://www.w3.org/2000/svg">
+      <!-- Grid lines -->
+      ${gridLines}
+      
+      <!-- Axes -->
+      <line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${chartHeight - padding.bottom}" stroke="#e2e8f0" stroke-width="1"></line>
+      <line x1="${padding.left}" y1="${chartHeight - padding.bottom}" x2="${chartWidth - padding.right}" y2="${chartHeight - padding.bottom}" stroke="#e2e8f0" stroke-width="1"></line>
+      
+      <!-- Y-axis labels -->
+      ${yAxisLabels}
+      
+      <!-- Area fills -->
+      <path d="${crAreaPath}" fill="${crColor}" opacity="0.1"></path>
+      <path d="${surrAreaPath}" fill="${surrColor}" opacity="0.1"></path>
+      
+      <!-- Lines -->
+      <polyline points="${crLinePath}" fill="none" stroke="${crColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      <polyline points="${surrLinePath}" fill="none" stroke="${surrColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      
+      <!-- Data points -->
+      ${crPoints}
+      ${surrPoints}
+      
+      <!-- X-axis labels -->
+      ${xAxisLabels}
+    </svg>
+  `;
 
-  const xLabels = statusOrder.map(s => `<div class="status-vbar-label">${STATUS_META[s].label}</div>`).join("");
-
-  const legend = cats.map(c => `
-    <div class="status-vbar-legend-item">
-      <span class="status-vbar-legend-swatch" style="background:${CATEGORY_META[c].color};"></span>
-      <span>${CATEGORY_META[c].icon} ${CATEGORY_META[c].label}</span>
+  // Create legend
+  const legend = `
+    <div class="status-line-legend">
+      <div class="status-line-legend-item">
+        <span class="status-line-legend-swatch" style="background:${crColor};"></span>
+        <span>🚻 Comfort Room</span>
+      </div>
+      <div class="status-line-legend-item">
+        <span class="status-line-legend-swatch" style="background:${surrColor};"></span>
+        <span>🌳 Surroundings</span>
+      </div>
     </div>
-  `).join("");
+  `;
 
   el.innerHTML = `
-    <div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;">
-      <div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div>
-      <div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div>
+    <div class="status-line-wrap">
+      ${svgContent}
+      ${legend}
     </div>
-    <div class="status-vbar-labels">${xLabels}</div>
-    <div class="status-vbar-legend">${legend}</div>
   `;
 }
 
