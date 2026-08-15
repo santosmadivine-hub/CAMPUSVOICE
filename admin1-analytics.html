@@ -10,9 +10,6 @@
 
 <style>
 
-/* ════════════════════════════════════════════════════════
-   DESIGN TOKENS — BLUE & ORANGE ONLY
-════════════════════════════════════════════════════════ */
 
 :root {
   --ink:        #0b1220;
@@ -34,9 +31,6 @@
 * { box-sizing: border-box; }
 
 
-/* ════════════════════════════════
-   MASTHEAD — signature element
-════════════════════════════════ */
 
 .masthead {
   display: flex;
@@ -136,9 +130,7 @@
   .live-dot { animation: none; }
 }
 
-/* ════════════════════════════════
-   SECTION EYEBROWS
-════════════════════════════════ */
+
 
 .section-eyebrow {
   display: flex;
@@ -171,9 +163,7 @@
   flex-shrink: 0;
 }
 
-/* ════════════════════════════════
-   LOCAL LAYOUT
-════════════════════════════════ */
+
 
 .an-grid {
   display: grid;
@@ -182,7 +172,7 @@
   margin-bottom: 24px;
 }
 
-/* ── KPI cards — identical stat-card system to Dashboard ── */
+
 .an-kpi {
   position: relative;
   background: #ffffff;
@@ -284,10 +274,7 @@
   margin-bottom: 12px;
 }
 
-/* Respondent Profile row: unlike an-row2 (1.3fr/1fr, used for the
-   trend/leaderboard-style pairings), Sex Distribution and Code Status
-   should sit in two equal-width columns, and the cards themselves
-   should match height regardless of content. */
+
 .rp-row {
   grid-template-columns: 1fr 1fr;
 }
@@ -298,8 +285,7 @@
   min-height: 340px;
 }
 
-/* Distribution Overview row: Client Type and Rating Distribution
-   should be equal-width and equal-height regardless of content. */
+
 .dist-row {
   grid-template-columns: 1fr 1fr;
 }
@@ -334,9 +320,7 @@
   .rp-card { min-height: 0; }
 }
 
-/* Performance Trends row: same equal-column, equal-height treatment
-   as the Respondent Profile row above, sized for the trend chart +
-   rating bars. */
+
 .pt-row {
   grid-template-columns: 1fr 1fr;
 }
@@ -397,7 +381,7 @@
   white-space: nowrap;
 }
 
-/* ── Trend chart ── */
+
 .trend-svg-wrap { margin-top: 16px; }
 .trend-svg polyline { transition: all .3s ease; }
 .trend-area { opacity: .10; }
@@ -411,7 +395,7 @@
 }
 .trend-legend-dot { width: 9px; height: 9px; border-radius: 50%; }
 
-/* ── SQD bars ── */
+
 .sqd-list { display: flex; flex-direction: column; gap: 15px; margin-top: 14px; }
 .sqd-row { display: grid; grid-template-columns: 170px 1fr 56px; align-items: center; gap: 12px; }
 .sqd-label { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
@@ -425,14 +409,14 @@
   padding: 6px 12px; border-radius: 999px; margin-top: 14px;
 }
 
-/* ── Star distribution ── */
+
 .star-row { display: grid; grid-template-columns: 74px 1fr 54px; align-items: center; gap: 12px; }
 .star-row-label { font-size: 13.5px; font-weight: 600; color: var(--ink-soft); }
 .star-track { height: 11px; background: #eef1f7; border-radius: 999px; overflow: hidden; }
 .star-fill { height: 100%; border-radius: 999px; background: var(--orange); transition: width .5s ease; }
 .star-val { text-align: right; font-weight: 700; color: var(--ink); font-family: 'Syne', sans-serif; font-size: 14px; }
 
-/* ── empty state ── */
+
 .an-empty { text-align: center; color: var(--muted); padding: 34px 10px; font-size: 13px; }
 .an-empty .icon {
   width: 44px; height: 44px; margin: 0 auto 10px;
@@ -441,13 +425,7 @@
   font-size: 20px;
 }
 
-/* ── Pie chart (Sex Distribution)
-   FIX: the SVG previously had fixed width="180" height="180" HTML
-   attributes, which don't shrink with the container — on a narrow
-   phone or a shrunk browser window it could force the card (and the
-   whole page) to scroll horizontally. It now scales with its wrapper
-   like the rest of the charts on this page, capped at its original
-   180px design size. ── */
+
 .pie-wrap {
   display: flex; align-items: center; gap: 34px; margin-top: 16px;
   flex-wrap: wrap;
@@ -465,16 +443,10 @@
 .pie-legend-label { font-size: 14px; font-weight: 700; color: var(--ink-soft); }
 .pie-legend-val { font-size: 12.5px; color: var(--muted); margin-top: 1px; font-family: 'Syne', sans-serif; }
 
-/* ── Bar graph (Code Status) ── */
+
 .bar-wrap { margin-top: 20px; width: 100%; }
 
-/* ── Office Trend Over Time ──────────────────────────────────────
-   Mirrors admin2's analytics.html "Office Trend Over Time" chart
-   (grouped monthly-average bars per office), restyled to the
-   blue/orange + Syne/DM Sans design system used on this page.
-   Data source is unchanged: it reads from the same `rows`
-   (services/evaluations/records) and `allOffices` that already
-   drive the rest of this dashboard — no new Firestore paths. ── */
+
 .ot-card { position: relative; }
 
 .ot-controls {
@@ -627,7 +599,7 @@
   .ot-controls { margin-top: 10px; justify-content: flex-start; }
 }
 
-/* ── Hover tooltip (dark card, shown on hover over chart elements) ── */
+
 .cv-hover { cursor: pointer; }
 .cv-hover:hover { filter: brightness(1.06); }
 
@@ -659,7 +631,7 @@
 .cv-tooltip-line { color: #cbd5e1; }
 .cv-tooltip-line strong { color: #fff; font-weight: 700; }
 
-/* ── Footer ── */
+
 .an-footer {
   text-align: center;
   padding: 22px 10px 6px;
@@ -676,7 +648,6 @@
   .masthead { flex-direction: column; align-items: flex-start; gap: 14px; }
 }
 
-/* Optimized padding + touch-friendly labels on small screens */
 @media (max-width: 560px) {
   .card { padding: 16px 16px; }
   .sqd-row { grid-template-columns: 110px 1fr 42px; }
@@ -697,9 +668,6 @@
 
     <div id="topbar-mount"></div>
 
-    <!-- ═══════════════════════════════ -->
-    <!-- KPI STRIP                       -->
-    <!-- ═══════════════════════════════ -->
 
     <div class="an-grid">
 
@@ -733,16 +701,12 @@
 
     </div>
 
-    <!-- ═══════════════════════════════ -->
-    <!-- CLIENT TYPE + RATING BREAKDOWN  -->
-    <!-- ═══════════════════════════════ -->
 
     <div class="an-section">
       <div class="section-eyebrow"><span>Distribution Overview</span></div>
 
       <div class="an-row2 dist-row">
 
-        <!-- CLIENT TYPE DISTRIBUTION -->
         <div class="card dist-card">
           <div class="card-head">
             <div class="card-title">Client Type Distribution</div>
@@ -751,7 +715,6 @@
           <div id="clientTypeWrap" class="pie-wrap"></div>
         </div>
 
-        <!-- RATING BREAKDOWN (5-1) -->
         <div class="card dist-card">
           <div class="card-head">
             <div class="card-title">Rating Distribution</div>
@@ -763,16 +726,12 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════ -->
-    <!-- SEX DISTRIBUTION + CODE STATUS  -->
-    <!-- ═══════════════════════════════ -->
 
     <div class="an-section">
       <div class="section-eyebrow"><span>Respondent Profile</span></div>
 
       <div class="an-row2 rp-row">
 
-        <!-- SEX DISTRIBUTION PIE -->
         <div class="card rp-card">
           <div class="card-head">
             <div class="card-title">Sex Distribution</div>
@@ -781,7 +740,6 @@
           <div id="sexPieWrap" class="pie-wrap"></div>
         </div>
 
-        <!-- CODE STATUS BAR -->
         <div class="card rp-card">
           <div class="card-head">
             <div class="card-title">Code Status</div>
@@ -793,9 +751,6 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════ -->
-    <!-- OFFICE TREND OVER TIME          -->
-    <!-- ═══════════════════════════════ -->
 
     <div class="an-section">
       <div class="section-eyebrow"><span>Office Trend Over Time</span></div>
@@ -827,9 +782,6 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════ -->
-    <!-- SERVICE QUALITY BREAKDOWN       -->
-    <!-- ═══════════════════════════════ -->
 
     <div class="an-section">
       <div class="section-eyebrow"><span>Service Quality Breakdown</span></div>
@@ -861,7 +813,7 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ── Firebase config (same project as the rest of CampusVoice) ── */
+
 const firebaseConfig = {
   apiKey:            "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain:        "kristal-adb78.firebaseapp.com",
@@ -877,11 +829,9 @@ const app = initializeApp(firebaseConfig);
 getAnalytics(app);
 const db = getFirestore(app);
 
-/* ── Shared UI ── */
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1', 'analytics');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Analytics', 'admin1');
 
-/* ── Office Trend dropdown open/close (elements are static, so wire once) ── */
 document.getElementById("otDropdownBtn").addEventListener("click", (e) => {
   e.stopPropagation();
   document.getElementById("otDropdownPanel").classList.toggle("open");
@@ -894,24 +844,11 @@ document.addEventListener("click", (e) => {
   }
 });
 
-/* ── Hover tooltip (dark card, matches the "Used Codes — 3 of 6
-   codes — 50.0% coverage" style reference) ──────────────────────
-   Works via event delegation on `document`, so it keeps working
-   after any chart re-renders and replaces its own DOM (innerHTML
-   swaps, which would otherwise kill directly-attached listeners).
-   Any element that should show a tooltip just needs:
-     class="cv-hover"
-     data-tt-title="Used Codes"
-     data-tt-lines='["3 of 6 codes","50.0% coverage"]'
-──────────────────────────────────────────────────────────────── */
 const cvTooltip = document.createElement("div");
 cvTooltip.className = "cv-tooltip";
 cvTooltip.id = "cvTooltip";
 document.body.appendChild(cvTooltip);
 
-// Office names (and any other dynamic Firestore strings) can contain
-// quotes/HTML-special characters, which would otherwise break the
-// data-tt-title="..." / data-tt-lines='...' attributes below.
 function cvAttrSafe(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -953,48 +890,19 @@ document.addEventListener("mousemove", (e) => {
 document.addEventListener("mouseout", (e) => {
   const el = e.target.closest(".cv-hover");
   if (!el) return;
-  // Don't hide if we're just moving between children of the same hover target
+ 
   if (el.contains(e.relatedTarget)) return;
   cvTooltip.classList.remove("visible");
 });
 
-/* ─────────────────────────────────────────────
-   FIRESTORE COLLECTIONS
-   ─────────────────────────────────────────────
-   This page previously read from the Realtime
-   Database (getDatabase/ref/onValue), but the
-   rest of CampusVoice (Android side) writes to
-   Firestore. ServiceEvalActivity.kt confirms the
-   evaluations path exactly:
 
-     db.collection("services")
-       .document("evaluations")
-       .collection("records")
-       .document(id).set(data)
-
-     -> services/evaluations/records/{id}
-
-   That path is used as-is below.
-
-   ASSUMPTION: offices and transaction codes are
-   assumed to follow the same "…/records" /
-   "…/codes" subcollection pattern for consistency.
-   If your actual Firestore schema names these
-   subcollections differently, update the
-   collection()/collectionGroup() calls below to
-   match your real structure.
-───────────────────────────────────────────── */
 const evaluationsCol = collection(db, "services", "evaluations", "records");
 const officesCol     = collection(db, "services", "offices", "records");
 
-/* Transaction codes are nested per-office:
-     services/transaction_code/offices_name/{officeName}/codes/{codeId}
-   collectionGroup("codes") pulls every code doc across every office
-   in a single listener; the office name is recovered from each doc's
-   parent document id (the {officeName} segment in the path above). */
+
 const codesGroup = collectionGroup(db, "codes");
 
-/* ── SQD labels (mirrors reports.html) ── */
+
 const SQD_LABELS = [
   { key: "sq1", label: "SQD1 – Responsiveness"        },
   { key: "sq2", label: "SQD2 – Reliability"           },
@@ -1006,12 +914,11 @@ const SQD_LABELS = [
   { key: "sq8", label: "SQD8 – Outcome"               }
 ];
 
-/* ── State ── */
-let allEvals  = {};
-let allOffices = {};   // { name: true }
-let allCodes  = {};    // { office: { key: {status, ...} } }
 
-/* ── Shared scoring helper (mirrors dashboard.html / reports.html) ── */
+let allEvals  = {};
+let allOffices = {};   
+let allCodes  = {};   
+
 function avgScore(item) {
   let s = 0, c = 0;
   for (let x = 1; x <= 8; x++) {
@@ -1038,7 +945,6 @@ function monthLabel(key) {
   return new Date(y, m - 1, 1).toLocaleString("en-US", { month: "short", year: "numeric" });
 }
 
-/* ── Normalize a respondent's sex field to "Male" / "Female" / null ── */
 function normalizeSex(item) {
   const raw = (item.sex ?? item.gender ?? item.Sex ?? item.Gender ?? "").toString().trim().toLowerCase();
   if (!raw) return null;
@@ -1047,7 +953,6 @@ function normalizeSex(item) {
   return null;
 }
 
-/* ── Normalize client type field ── */
 function normalizeClientType(item) {
   const raw = (item.clientType ?? item.client_type ?? item.ClientType ?? "").toString().trim().toLowerCase();
   if (!raw) return null;
@@ -1057,9 +962,6 @@ function normalizeClientType(item) {
   return null;
 }
 
-/* ════════════════════════════════
-   LOAD: OFFICES
-════════════════════════════════ */
 onSnapshot(officesCol, (snap) => {
   allOffices = {};
   snap.forEach((docSnap) => {
@@ -1069,9 +971,6 @@ onSnapshot(officesCol, (snap) => {
   render();
 });
 
-/* ════════════════════════════════
-   LOAD: EVALUATIONS
-════════════════════════════════ */
 onSnapshot(evaluationsCol, (snap) => {
   allEvals = {};
   snap.forEach((docSnap) => {
@@ -1080,14 +979,10 @@ onSnapshot(evaluationsCol, (snap) => {
   render();
 });
 
-/* ════════════════════════════════
-   LOAD: TRANSACTION CODES
-════════════════════════════════ */
 onSnapshot(codesGroup, (snap) => {
   allCodes = {};
   snap.forEach((docSnap) => {
-    // parent.parent is the {officeName} document that owns this
-    // "codes" subcollection, per the path documented above.
+
     const officeName =
       (docSnap.ref.parent && docSnap.ref.parent.parent)
         ? docSnap.ref.parent.parent.id
@@ -1100,9 +995,6 @@ onSnapshot(codesGroup, (snap) => {
   renderCodeStatusBar();
 });
 
-/* ════════════════════════════════
-   MAIN RENDER
-════════════════════════════════ */
 function render() {
   const rows = Object.values(allEvals);
 
@@ -1114,7 +1006,6 @@ function render() {
   renderRatingBreakdown(rows);
 }
 
-/* ── KPI STRIP ── */
 function renderKPIs(rows) {
   const total = rows.length;
   let sum = 0;
@@ -1137,7 +1028,6 @@ function renderKPIs(rows) {
   document.getElementById("kpiOfficesSub").textContent = `of ${Object.keys(allOffices).length} total offices`;
 }
 
-/* ── CLIENT TYPE DISTRIBUTION — PIE CHART ── */
 function renderClientType(rows) {
   const wrap = document.getElementById("clientTypeWrap");
 
@@ -1212,7 +1102,6 @@ function renderClientType(rows) {
   `;
 }
 
-/* ── SQD BREAKDOWN ── */
 function renderSQD(rows) {
   const totals = {}, counts = {};
   SQD_LABELS.forEach(s => { totals[s.key] = 0; counts[s.key] = 0; });
@@ -1264,11 +1153,9 @@ function renderSQD(rows) {
   }
 }
 
-/* ── RATING BREAKDOWN (5, 4, 3, 2, 1) ── */
 function renderRatingBreakdown(rows) {
   const wrap = document.getElementById("ratingBreakdownWrap");
 
-  // Collect all individual SQD responses
   const allResponses = [];
   rows.forEach(r => {
     SQD_LABELS.forEach(s => {
@@ -1282,7 +1169,6 @@ function renderRatingBreakdown(rows) {
     return;
   }
 
-  // Count each rating
   const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   allResponses.forEach(rating => {
     const r = Math.round(rating);
@@ -1303,7 +1189,6 @@ function renderRatingBreakdown(rows) {
   const totalBarWidth = ratings.length * BAR_W + (ratings.length - 1) * GAP;
   const startX = PAD_LEFT + (plotW - totalBarWidth) / 2;
 
-  /* y-axis gridlines at 0/25/50/75/100% */
   const gridPcts = [0, 25, 50, 75, 100];
   const gridLines = gridPcts.map(p => {
     const gy = H - PAD_BOTTOM - (p / 100) * plotH;
@@ -1338,7 +1223,7 @@ function renderRatingBreakdown(rows) {
   `;
 }
 
-/* ── shared helper: totals codes across all offices ── */
+
 function totalCodeCounts() {
   const offices = Object.keys(allCodes);
   let used = 0, unused = 0;
@@ -1351,7 +1236,7 @@ function totalCodeCounts() {
   return { used, unused, total: used + unused };
 }
 
-/* ── CODE KPI (redemption rate strip) ── */
+
 function renderCodeKPI() {
   const { used, total } = totalCodeCounts();
   const rate = total ? (used / total) * 100 : 0;
@@ -1359,7 +1244,6 @@ function renderCodeKPI() {
   document.getElementById("kpiCodeSub").textContent   = `${used} of ${total} used`;
 }
 
-/* ── CODE STATUS — USED vs UNUSED (bar graph, x = status, y = % of total) ── */
 function renderCodeStatusBar() {
   const wrap = document.getElementById("codeStatusBarWrap");
   const { used, unused, total } = totalCodeCounts();
@@ -1387,7 +1271,6 @@ function renderCodeStatusBar() {
   const y1 = H - PAD_BOTTOM - usedH;
   const y2 = H - PAD_BOTTOM - unusedH;
 
-  /* y-axis gridlines at 0/25/50/75/100% */
   const gridPcts = [0, 25, 50, 75, 100];
   const gridLines = gridPcts.map(p => {
     const gy = H - PAD_BOTTOM - (p / 100) * plotH;
@@ -1413,26 +1296,12 @@ function renderCodeStatusBar() {
   `;
 }
 
-/* ══════════════════════════════════════════════════════════
-   OFFICE TREND OVER TIME (monthly average score per office)
-   ──────────────────────────────────────────────────────────
-   Question answered: is an office improving or declining?
-   Layout: offices are grouped along the x-axis; within each office
-   group there is one bar per month (color-coded) so the trend across
-   months is still visible per office. The chart scrolls horizontally
-   when there isn't room for every selected office.
 
-   Data source: reads directly from `rows` (= Object.values(allEvals),
-   i.e. services/evaluations/records — the same collection every
-   other chart on this page already uses) and `allOffices`
-   (services/offices/records). No new Firestore paths, no admin2
-   collections involved.
-══════════════════════════════════════════════════════════ */
 const OT_MONTHS_WINDOW = 6;
 const OT_MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-// Blue/orange palette to match this page's design tokens (--brand / --orange family)
+
 const OT_MONTH_COLORS = ["#2563eb", "#f97316", "#38bdf8", "#fb923c", "#1d4ed8", "#fdba74"];
-let otSelectedOffices = null; // null = auto (top 5 by volume); Set<string> once the user picks manually
+let otSelectedOffices = null; 
 
 function otBuildMonths() {
   const now = new Date();
@@ -1465,12 +1334,10 @@ function otTopOffices(rows, n) {
   return counts.sort((a, b) => b.count - a.count).slice(0, n).map(c => c.name);
 }
 
-// Fixed pixel geometry for the scrollable bar chart (not viewBox-scaled,
-// so a group always takes the same amount of horizontal space and the
-// wrapper can scroll instead of squeezing labels).
-const OT_GROUP_WIDTH = 110;   // px per office group
-const OT_BAR_WIDTH = 14;      // bar width in pixels
-const OT_BAR_GAP = 2;         // gap between bars
+
+const OT_GROUP_WIDTH = 110;   
+const OT_BAR_WIDTH = 14;      
+const OT_BAR_GAP = 2;         
 const OT_CHART_HEIGHT = 190;
 
 function renderOfficeTrend(rows) {
@@ -1500,7 +1367,6 @@ function renderOfficeTrend(rows) {
     ? "Top 5 offices"
     : `${activeNames.length} office${activeNames.length === 1 ? "" : "s"} selected`;
 
-  // Build the scrollable checkbox list (alphabetical for easy scanning)
   const sortedForList = [...officeNames].sort((a, b) => a.localeCompare(b));
   dropdownList.innerHTML = sortedForList.map(name => {
     const checked = activeNames.includes(name) ? "checked" : "";
@@ -1515,7 +1381,7 @@ function renderOfficeTrend(rows) {
   dropdownList.querySelectorAll("input[type=checkbox]").forEach(cb => {
     cb.addEventListener("change", () => {
       if (otSelectedOffices === null) {
-        otSelectedOffices = new Set(top5); // switch from auto top-5 into an explicit selection
+        otSelectedOffices = new Set(top5); 
       }
       const name = cb.dataset.office;
       if (cb.checked) {
@@ -1530,7 +1396,6 @@ function renderOfficeTrend(rows) {
   const months = otBuildMonths();
   const monthColors = OT_MONTH_COLORS.slice(0, months.length);
 
-  // Y-axis (fixed, non-scrolling) ticks
   yAxisEl.innerHTML = [100, 75, 50, 25, 0].map(pct => {
     const top = OT_CHART_HEIGHT - (pct / 100) * OT_CHART_HEIGHT;
     return `<span style="top:${top}px;">${pct}%</span>`;
@@ -1544,8 +1409,6 @@ function renderOfficeTrend(rows) {
     return;
   }
 
-  // Fixed-pixel width so the wrapper can scroll horizontally instead of
-  // squeezing office groups/labels when there are many offices selected.
   const totalWidth = activeNames.length * OT_GROUP_WIDTH;
   svg.setAttribute("width", totalWidth);
   svg.setAttribute("height", OT_CHART_HEIGHT);
@@ -1576,13 +1439,10 @@ function renderOfficeTrend(rows) {
 
   svg.innerHTML = gridLines + barsSvg;
 
-  // Diagonal office name labels, one per group, matching the group
-  // width in the SVG above so they line up while scrolling.
   groupLabelsEl.innerHTML = activeNames.map(name => `
     <div class="ot-group-label" style="width:${OT_GROUP_WIDTH}px;" title="${name}"><span>${name}</span></div>
   `).join("");
 
-  // Legend represents months (bar color), since offices are on the x-axis.
   legendEl.innerHTML = months.map((m, j) => `
     <div class="ot-line-legend-item">
       <span class="ot-line-legend-swatch" style="background:${monthColors[j]};"></span>
@@ -1591,7 +1451,6 @@ function renderOfficeTrend(rows) {
   `).join("");
 }
 
-/* ── SEX DISTRIBUTION — PIE CHART ── */
 function renderSexPie(rows) {
   const wrap = document.getElementById("sexPieWrap");
 
@@ -1630,9 +1489,6 @@ function renderSexPie(rows) {
   if (male > 0)   svgSlices += `<path class="cv-hover" data-tt-title="Male" data-tt-lines='["${male} of ${known} respondents","${malePct.toFixed(1)}% share"]' d="${arcPath(0, malePct)}" fill="#2563eb"/>`;
   if (female > 0) svgSlices += `<path class="cv-hover" data-tt-title="Female" data-tt-lines='["${female} of ${known} respondents","${femalePct.toFixed(1)}% share"]' d="${arcPath(malePct, malePct + femalePct)}" fill="#f97316"/>`;
 
-  /* NOTE: no width/height attributes here anymore — sizing comes
-     entirely from the .pie-svg CSS class so it scales with its
-     container instead of staying fixed at 180px. */
   wrap.innerHTML = `
     <svg class="pie-svg" viewBox="0 0 180 180">
       <circle cx="${CX}" cy="${CY}" r="${R}" fill="#f1f5f9"/>
@@ -1658,12 +1514,7 @@ function renderSexPie(rows) {
   `;
 }
 
-/* ── Auto-resize handling ──────────────────────────────────────────
-   Most charts on this page (trend line, sex pie, code-status bar) now
-   scale purely through CSS/viewBox and don't need JS recomputation.
-   The trend chart's day-label density does depend on available width
-   though (see renderTrend), so re-run it on resize/orientation change
-   using the data already in memory — no need to hit Firebase again. */
+
 CVOnResize([]);
 
 </script>
