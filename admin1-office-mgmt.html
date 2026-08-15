@@ -486,7 +486,7 @@ const db        = getFirestore(app);
 
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','office-mgmt');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Office Management','admin1');
-                             */
+
 const officesCol     = collection(db, "services", "offices", "records");
 const evaluationsCol = collection(db, "services", "evaluations", "records");
 const officeTableBody = document.getElementById("officeTableBody");
