@@ -12,7 +12,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-/* ── BASE ── */
+
 body { margin:0; font-family:'DM Sans',sans-serif; background:white; color:#0f172a; }
 .layout { display:flex; min-height:100vh; }
 .main   { flex:1; padding:24px; }
@@ -20,7 +20,7 @@ body { margin:0; font-family:'DM Sans',sans-serif; background:white; color:#0f17
 .page-title { font-size:2rem; font-weight:800; }
 .page-sub   { font-size:13px; color:#64748b; margin-bottom:18px; }
 
-/* ── FILTER CARD ── */
+
 .config-card {
   background:#fff; border:1px solid #bae6fd;
   border-radius:14px; padding:16px; margin-bottom:18px;
@@ -40,7 +40,6 @@ select { min-width:180px; }
 .btn-green   { background:#16a34a; color:#fff; }
 .btn-gray    { background:#e2e8f0; color:#475569; }
 
-/* ── KPI GRID — identical stat-card system to Dashboard ── */
 .kpi-grid{
   display:grid;
   grid-template-columns:repeat(4, 1fr);
@@ -157,7 +156,6 @@ select { min-width:180px; }
   }
 }
 
-/* ── SAVED REPORTS CARD ── */
 .card {
   background:#fff; border:1px solid #bae6fd;
   border-radius:14px; padding:18px; margin-bottom:18px;
@@ -172,7 +170,6 @@ select { min-width:180px; }
   background:#dbeafe; padding:4px 12px; border-radius:999px;
 }
 
-/* ── REPORTS TABLE ── */
 .reports-table { width:100%; border-collapse:collapse; }
 .reports-table th {
   text-align:left; padding:12px 14px; font-size:11px;
@@ -187,7 +184,6 @@ select { min-width:180px; }
 .reports-table tr:hover td { background:#f8fafc; transition:.1s; }
 .table-wrap { overflow-x:auto; }
 
-/* ── BADGE ── */
 .badge {
   display:inline-block; padding:4px 11px;
   border-radius:999px; font-size:11px; font-weight:700;
@@ -197,7 +193,6 @@ select { min-width:180px; }
 .badge-amber  { background:#fef9c3; color:#a16207; }
 .badge-red    { background:#fee2e2; color:#dc2626; }
 
-/* ── ACTION BTNS ── */
 .act-btn {
   border:none; padding:6px 12px; border-radius:8px;
   cursor:pointer; font-size:12px; font-weight:600;
@@ -206,23 +201,18 @@ select { min-width:180px; }
 .act-view   { background:#0f172a; color:#fff; }
 .act-delete { background:#fee2e2; color:#dc2626; }
 
-/* ── EMPTY STATE ── */
 .empty-state {
   text-align:center; padding:44px 20px; color:#94a3b8;
 }
 .empty-state .icon { font-size:36px; margin-bottom:8px; }
 .empty-state p { font-size:14px; margin:0; }
 
-/* ══════════════════════════════════════
-   REPORT PREVIEW (Official CSM Doc)
-══════════════════════════════════════ */
 #reportPreview {
   display:none; background:#fff; margin-top:0;
   border:1px solid #bae6fd; border-radius:14px;
   overflow:hidden; margin-bottom:18px;
 }
 
-/* Preview top action bar */
 .preview-bar {
   display:flex; align-items:center; gap:10px;
   padding:12px 18px; background:#f8fafc;
@@ -232,7 +222,6 @@ select { min-width:180px; }
   flex:1; font-size:13px; font-weight:700; color:#334155;
 }
 
-/* A4-style document */
 .csm-page {
   padding:32px 40px 40px;
   font-family:'Times New Roman',Times,serif;
@@ -240,7 +229,6 @@ select { min-width:180px; }
   max-width:780px; margin:0 auto;
 }
 
-/* LETTERHEAD */
 .lh-row { display:flex; align-items:center; gap:9px; margin-bottom:1px; }
 .lh-logo-box, .lh-seal-box {
   width:100px; height:100px; flex-shrink:0;
@@ -264,7 +252,6 @@ select { min-width:180px; }
 .csm-meta { font-size:10.5pt; line-height:1.8; margin-bottom:10px; }
 .csm-meta b { font-weight:bold; }
 
-/* SQD TABLE */
 .csm-table { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:10pt; }
 .csm-table th {
   background:#1a3a6b; color:#fff; padding:6px 8px;
@@ -273,18 +260,15 @@ select { min-width:180px; }
 .csm-table td { border:1px solid #aaa; padding:5px 8px; }
 .csm-table tr:nth-child(even) td { background:#eef2f9; }
 
-/* NARRATIVE */
 .csm-narrative { font-size:10.5pt; line-height:1.7; text-align:justify; margin-bottom:16px; }
 .csm-narrative p { margin-bottom:10px; }
 
-/* SIGNATURES */
 .csm-sigs { display:flex; gap:40px; margin-top:24px; font-size:10.5pt; }
 .csm-sig-block { flex:1; }
 .csm-sig-label { color:#555; font-size:9.5pt; margin-bottom:30px; }
 .csm-sig-name  { font-weight:bold; text-transform:uppercase; border-top:1px solid #000; padding-top:4px; display:inline-block; }
 .csm-sig-title { font-size:9.5pt; font-style:italic; color:#333; margin-top:2px; }
 
-/* FOOTER (official accreditation banner from ISUFST letterhead) */
 .csm-footer {
   margin-top:20px;
   padding-top:8px;
@@ -308,13 +292,11 @@ select { min-width:180px; }
     <div id="topbar-mount"></div>
   
 
-    <!-- ══ FILTER / GENERATE ══ -->
     <div class="config-card">
       <div class="config-row">
         <input type="date" id="startDate" class="input">
         <input type="date" id="endDate"   class="input">
 
-        <!-- Offices pulled from services/offices – same source as Evaluation Mgmt -->
         <select id="officeFilter">
           <option value="">Select Office…</option>
         </select>
@@ -324,7 +306,6 @@ select { min-width:180px; }
       </div>
     </div>
 
-    <!-- ══ KPI CARDS ══ -->
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-icon">📝</div>
@@ -352,7 +333,6 @@ select { min-width:180px; }
       </div>
     </div>
 
-    <!-- ══ REPORT PREVIEW (shown after Generate) ══ -->
     <div id="reportPreview">
       <div class="preview-bar">
         <span class="preview-label" id="previewLabel">📄 CSM Report Preview</span>
@@ -363,7 +343,6 @@ select { min-width:180px; }
 
       <div class="csm-page" id="csmPage">
 
-        <!-- LETTERHEAD (official ISUFST letterhead assets) -->
         <div class="lh-row">
   <div class="lh-logo-box" style="width:150px; height:90px;">
     <img src="2.png"
@@ -413,14 +392,14 @@ select { min-width:180px; }
           </div>
         </div>
 
-        <!-- FOOTER (official accreditation banner: THE / UI GreenMetric / WURI / Ambisyon Natin / SDG / GCL / tagline) -->
+
         <div class="csm-footer">
           <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
         </div>
-      </div><!-- /csm-page -->
-    </div><!-- /reportPreview -->
+      </div>
+    </div>
 
-    <!-- ══ SAVED REPORTS TABLE ══ -->
+    
     <div class="card">
       <div class="card-header">
         <div class="card-title">📋 Saved Reports</div>
@@ -455,7 +434,7 @@ select { min-width:180px; }
     </div>
 
   </main>
-</div><!-- /layout -->
+</div>
 
 <script src="shared.js"></script>
 
@@ -471,7 +450,7 @@ import {
   doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ── Firebase config ── */
+
 const firebaseConfig = {
   apiKey:            "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain:        "kristal-adb78.firebaseapp.com",
@@ -487,21 +466,14 @@ const app = initializeApp(firebaseConfig);
 getAnalytics(app);
 const db = getFirestore(app);
 
-/* ─────────────────────────────────────────────
-   Firestore collection paths (matching eval-mgmt.html)
-   services/offices/records
-   services/evaluations/records
-   services/reports/records
-───────────────────────────────────────────── */
 const officesCol     = collection(db, "services", "offices", "records");
 const evaluationsCol = collection(db, "services", "evaluations", "records");
 const reportsCol     = collection(db, "services", "reports", "records");
 
-/* ── Shared UI ── */
+
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','reports');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Reports','admin1');
 
-/* ── SQD dimension labels ── */
 const SQD_LABELS = [
   { key:"sq0", label:"SQD0 – Overall Satisfaction"  },
   { key:"sq1", label:"SQD1 – Responsiveness"        },
@@ -535,14 +507,6 @@ function fmtShort(v) {
   return new Date(v).toLocaleDateString("en-PH",{ month:"short", day:"numeric", year:"numeric" });
 }
 
-/* ── Safe, timezone-consistent date-only parsing ──
-   Handles both:
-   - "YYYY-MM-DD" (from <input type="date">) — parsed manually to avoid
-     the UTC-midnight shift that new Date("YYYY-MM-DD") triggers.
-   - "Month D, YYYY" / "Month DD, YYYY" (Firestore date strings, no
-     leading zero required) — new Date() already parses these as local
-     time correctly, so we just strip the time component.
-   Returns a local Date set to midnight, or null if unparsable. ── */
 function parseDateOnly(value) {
   if (!value) return null;
 
@@ -561,14 +525,11 @@ function parseDateOnly(value) {
   return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 }
 
-/* ── State ── */
-let allEvals     = {};   // services/evaluations
-let currentReport = null; // last generated — held for saving / PDF
 
-/* ══════════════════════════════════════════════════════
-   1. OFFICES → populate dropdown
-      Path: services/offices/records (Firestore)
-══════════════════════════════════════════════════════ */
+let allEvals     = {};  
+let currentReport = null; 
+
+
 onSnapshot(officesCol, (snapshot) => {
   const select = document.getElementById("officeFilter");
   const prev   = select.value;
@@ -594,10 +555,7 @@ onSnapshot(officesCol, (snapshot) => {
     });
 });
 
-/* ══════════════════════════════════════════════════════
-   2. EVALUATIONS → KPI cards
-      Path: services/evaluations/records (Firestore)
-══════════════════════════════════════════════════════ */
+
 onSnapshot(evaluationsCol, (snapshot) => {
   allEvals = {};
   snapshot.forEach(docSnap => {
@@ -609,7 +567,7 @@ onSnapshot(evaluationsCol, (snapshot) => {
 function avgScore(item) {
   let s = 0, c = 0;
   for (let x = 1; x <= 8; x++) {
-    /* support both sq{n} and sqd{n} field names */
+  
     const v = parseFloat(item["sq"+x] ?? item["sqd"+x]);
     if (!isNaN(v)) { s += v; c++; }
   }
@@ -629,16 +587,7 @@ function renderKPIs() {
   document.getElementById("negative").textContent      = neg;
 }
 
-/* ══════════════════════════════════════════════════════
-   3. SAVED REPORTS → table
-      Path: services/reports/records (Firestore)
-      Structure stored per document:
-      {
-        office, startDate, endDate, respondents,
-        overallPct, generatedAt,
-        dims: [{ key, label, pct, rating }]
-      }
-══════════════════════════════════════════════════════ */
+
 onSnapshot(reportsCol, (snapshot) => {
   const data = {};
   snapshot.forEach(docSnap => {
@@ -647,7 +596,7 @@ onSnapshot(reportsCol, (snapshot) => {
 
   const keys = Object.keys(data);
 
-  /* update KPI pill */
+ 
   document.getElementById("kpiSavedCount").textContent = keys.length;
   document.getElementById("savedCountPill").textContent = keys.length + " report" + (keys.length !== 1 ? "s" : "");
 
@@ -664,7 +613,6 @@ onSnapshot(reportsCol, (snapshot) => {
     return;
   }
 
-  /* sort newest first */
   keys.sort((a,b) => new Date(data[b].generatedAt) - new Date(data[a].generatedAt));
 
   tbody.innerHTML = keys.map((key, idx) => {
@@ -692,9 +640,6 @@ onSnapshot(reportsCol, (snapshot) => {
   }).join("");
 });
 
-/* ══════════════════════════════════════════════════════
-   4. GENERATE REPORT
-══════════════════════════════════════════════════════ */
 window.generateReport = () => {
   const office   = document.getElementById("officeFilter").value;
   const startVal = document.getElementById("startDate").value;
@@ -716,16 +661,16 @@ window.generateReport = () => {
   start.setHours(0, 0, 0, 0);
   end.setHours(23, 59, 59, 999);
 
-  /* normalize for tolerant matching (trim + case-insensitive) */
+ 
   const officeNorm = office.trim().toLowerCase();
 
-  /* filter evaluations for chosen office + date range */
+
   const rows = Object.values(allEvals).filter(i => {
     const rowOffice = (i.office || "").trim().toLowerCase();
     if (rowOffice !== officeNorm) return false;
 
     const d = parseDateOnly(i.date);
-    if (!d) return false; // skip records with missing/bad dates
+    if (!d) return false; 
 
     return d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
   });
@@ -740,21 +685,21 @@ window.generateReport = () => {
     return;
   }
 
-  /* per-dimension totals */
+  
   const totals = {}, counts = {};
   SQD_LABELS.forEach(s => { totals[s.key]=0; counts[s.key]=0; });
 
   rows.forEach(r => {
     let sq0Found = false;
     SQD_LABELS.forEach(s => {
-      /* accept sq{n} or sqd{n} */
+      
       const v = parseFloat(r[s.key] ?? r["sqd"+s.key.replace("sq","")]);
       if (!isNaN(v)) {
         totals[s.key]+=v; counts[s.key]++;
         if (s.key === "sq0") sq0Found = true;
       }
     });
-    /* sq0 fallback per-row: derive overall from sq1-sq8 only when THIS row has no sq0 */
+   
     if (!sq0Found) {
       const fallback = avgScore(r);
       if (fallback) { totals["sq0"] += fallback; counts["sq0"]++; }
@@ -771,7 +716,7 @@ window.generateReport = () => {
   const valid      = dims.filter(d => d.pct !== null);
   const overallPct = valid.length ? valid.reduce((s,d)=>s+d.pct,0)/valid.length : 0;
 
-  /* cache for save / PDF */
+  
   currentReport = {
     office, startDate:startVal, endDate:endVal,
     respondents:rows.length, overallPct,
@@ -782,7 +727,7 @@ window.generateReport = () => {
   renderPreview(currentReport);
 };
 
-/* ── Render the A4 preview ── */
+
 function renderPreview(r) {
   document.getElementById("csmMeta").innerHTML = `
     <b>Office:</b> ${r.office}, ISUFST – San Enrique Campus<br>
@@ -836,9 +781,7 @@ window.closePreview = () => {
   document.getElementById("reportPreview").style.display = "none";
 };
 
-/* ══════════════════════════════════════════════════════
-   5. SAVE REPORT → services/reports/records (Firestore)
-══════════════════════════════════════════════════════ */
+
 window.saveReport = async () => {
   if (!currentReport) {
     alert("Please generate a report first before saving.");
@@ -853,21 +796,17 @@ window.saveReport = async () => {
   }
 };
 
-/* ══════════════════════════════════════════════════════
-   6. VIEW SAVED REPORT
-══════════════════════════════════════════════════════ */
+
 window.viewSavedReport = (key) => {
   onSnapshot(doc(db, "services", "reports", "records", key), (docSnap) => {
     const r = docSnap.data();
     if (!r) return;
-    currentReport = r;          // enable PDF export of viewed report
+    currentReport = r;         
     renderPreview(r);
   }, { once: true });
 };
 
-/* ══════════════════════════════════════════════════════
-   7. DELETE SAVED REPORT
-══════════════════════════════════════════════════════ */
+
 window.deleteSavedReport = async (key) => {
   if (!confirm("Delete this saved report? This cannot be undone.")) return;
   try {
@@ -877,9 +816,7 @@ window.deleteSavedReport = async (key) => {
   }
 };
 
-/* ══════════════════════════════════════════════════════
-   8. EXPORT PDF
-══════════════════════════════════════════════════════ */
+
 window.exportPDF = async () => {
   if (document.getElementById("reportPreview").style.display === "none") {
     alert("Please generate or view a report first.");
@@ -890,7 +827,7 @@ window.exportPDF = async () => {
     canvas = await html2canvas(document.getElementById("csmPage"),{
       scale:2, useCORS:true, backgroundColor:"#ffffff"
     });
-    var img = canvas.toDataURL("image/png"); // throws here if canvas is tainted
+    var img = canvas.toDataURL("image/png");
   } catch (err) {
     console.error(err);
     alert("⚠ PDF export blocked by the browser.\n\nThis page is being opened directly from disk (file://...), and Chrome blocks exporting images of canvases in that mode for security reasons.\n\nFix: serve this folder over local HTTP instead of double-clicking the file, e.g. run:\n  python -m http.server 5500\nthen open http://localhost:5500/admin1-reports.html");
