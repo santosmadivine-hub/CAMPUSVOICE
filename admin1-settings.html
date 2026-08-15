@@ -34,7 +34,7 @@
   <main class="main fade-in">
     <div id="topbar-mount"></div>
     <div class="settings-grid">
-      <!-- ACCOUNT -->
+    
       <div class="settings-section">
         <div class="settings-title">👤 Account Information</div>
         <div class="settings-row">
@@ -59,7 +59,7 @@
         </div>
       </div>
 
-      <!-- LOGIN & SECURITY -->
+      
       <div class="settings-section">
         <div class="settings-title">🔒 Login &amp; Security</div>
         
@@ -146,7 +146,7 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// Check authentication and load user data
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = 'index.html';
@@ -156,17 +156,16 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   document.getElementById('email').value = user.email;
 
-  // Determine admin ID based on email
+ 
   const adminId = user.uid;
 
-  // Mount shared UI (adjust based on email)
+  
   const adminNum = user.email.includes('admin1') ? 'admin1' : 
                    user.email.includes('admin2') ? 'admin2' : 'admin3';
   
   document.getElementById('sidebar-mount').innerHTML = buildSidebar(adminNum, 'settings');
   document.getElementById('topbar-mount').innerHTML = buildTopbar('Settings', adminNum);
 
-  // Load admin profile from Firestore
   const adminDocRef = doc(db, 'admins', adminId);
   onSnapshot(adminDocRef, (docSnap) => {
     if (docSnap.exists()) {
@@ -178,7 +177,6 @@ onAuthStateChanged(auth, async (user) => {
   });
 });
 
-// Save account information (name only)
 window.saveAccount = async () => {
   if (!currentUser) return;
 
@@ -224,7 +222,6 @@ window.saveAccount = async () => {
   }
 };
 
-// Update password using Firebase Authentication
 window.savePassword = async () => {
   if (!currentUser) return;
 
@@ -235,7 +232,6 @@ window.savePassword = async () => {
   const securityText = document.getElementById('securityText');
   const securityLoading = document.getElementById('securityLoading');
 
-  // Validation
   if (!currentPassword) {
     showToast('❌ Enter your current password to proceed');
     return;
@@ -261,7 +257,7 @@ window.savePassword = async () => {
   securityLoading.classList.add('show');
 
   try {
-    // Re-authenticate user with current password
+    
     const credential = EmailAuthProvider.credential(
       currentUser.email,
       currentPassword
@@ -269,10 +265,8 @@ window.savePassword = async () => {
 
     await reauthenticateWithCredential(currentUser, credential);
 
-    // Update password in Firebase Authentication
     await updatePassword(currentUser, newPassword);
 
-    // Clear password fields
     document.getElementById('currentPassword').value = '';
     document.getElementById('newPassword').value = '';
     document.getElementById('confirmPassword').value = '';
