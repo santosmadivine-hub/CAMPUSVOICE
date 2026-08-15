@@ -239,7 +239,6 @@
     font-size: 14px;
   }
 
-  /* ===== Submission Status — vertical grouped bar chart ===== */
   .status-vbar-wrap {
     display: flex;
     gap: 8px;
@@ -339,7 +338,6 @@
     border-radius: 3px;
   }
 
-  /* Office Trend card spans full width */
   .office-trend-card {
     margin-bottom: 16px;
   }
@@ -553,7 +551,6 @@
     padding: 6px 8px 2px;
   }
 
-  /* Dimension Performance — per-question Chart.js bar chart, split by category */
   .dim-section-title {
     font-family: 'DM Sans', sans-serif;
     font-size: 12.5px;
@@ -661,7 +658,6 @@
   .dim-bar-fill.rating-satisfactory-fill { background: #f59e0b; }
   .dim-bar-fill.rating-poor-fill { background: #ef4444; }
 
-  /* Category / evidence pie charts */
   .pie-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -774,7 +770,6 @@
   <main class="main fade-in">
     <div id="topbar-mount"></div>
 
-    <!-- STAT CARDS -->
     <div class="stat-grid">
       <div class="stat-card blue">
         <div class="stat-icon">🗳️</div>
@@ -802,7 +797,6 @@
       </div>
     </div>
 
-    <!-- ROW: EVIDENCE COVERAGE + SEX DISTRIBUTION -->
     <div class="analytics-grid">
       <div class="card">
         <div class="card-title">Evidence Coverage <span class="card-sub">— by category</span></div>
@@ -830,7 +824,6 @@
       </div>
     </div>
 
-    <!-- DIMENSION PERFORMANCE — 5 questions per category, Chart.js bar charts (matches Admin 1's office analytics) -->
     <div class="card">
       <div class="card-title">Dimension Performance <span class="card-sub">— per category, 5 questions each</span></div>
 
@@ -850,7 +843,6 @@
       </div>
     </div>
 
-    <!-- OFFICE TREND — full width -->
     <div class="card office-trend-card">
       <div class="card-title" id="office-trend-title">Office Trend Over Time <span class="card-sub">— monthly average score, both categories</span></div>
       <div class="ot-controls">
@@ -874,12 +866,7 @@
   </main>
 </div>
 <style>
-/* ======================
-   SEX DISTRIBUTION — CIRCLE DATA ANALYSIS
-   These classes match what renderSexDistribution() actually renders.
-   Outer ring = Surroundings, Inner ring = Comfort Room.
-   Each ring is split into Male / Female (+ Other, only if present).
-   ====================== */
+
 .circle-analysis-card {
   display: flex;
   align-items: center;
@@ -1007,7 +994,7 @@
 }
 
 </style>
-<!-- Chart.js — pinned to a version that actually exists on jsDelivr (matches Admin 1's office analytics) -->
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="shared.js"></script>
 
@@ -1022,7 +1009,6 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase Configuration — identical to Evaluation Management / Office Management
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
@@ -1033,11 +1019,9 @@ const firebaseConfig = {
   measurementId: "G-LK8D1CBQ2J"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Build UI
 document.getElementById("sidebar-mount").innerHTML =
   buildSidebar("admin2", "analytics");
 
@@ -1056,31 +1040,18 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// ======================
-// FIRESTORE STRUCTURE — matches Evaluation Management / Office Management exactly.
-// No separate/legacy structure is created here; this page just reads the same
-// collections and fields those pages already read and write.
-// ======================
-
-// Each cleanliness category keeps its own office list (mirrors
-// CleanOfficeSelectActivity.officeCollectionName() in the Android app).
+/
 const OFFICE_COLLECTIONS = {
   "Comfort Room": "office-names-comfort-room",
   "Surroundings": "office_names_surroundings"
 };
 const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
-const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved before cleanlinessCategory existed
+const DEFAULT_CATEGORY = "Comfort Room"; 
 
-// Flat mirror written by ComfortRoomEvalActivity / SurroundingsEvalActivity
-// right after the nested cleanliness_evaluations doc succeeds — this is
-// what Evaluation Management reads from, and what we read from here too,
-// so figures always match across both pages (including status edits/deletes
-// made in Evaluation Management).
+
 const EVAL_HISTORY_COLLECTION = "evaluation_history";
 
-// Both eval activities set TOTAL_QUESTIONS = 5 and only ever write
-// rating1...rating5 — confirmed from the submission code (see
-// admin2-eval-mgmt.html), not rating1-15.
+
 const TOTAL_RATING_QUESTIONS = 5;
 
 const LOW_RATING_THRESHOLD = 3;
@@ -1091,16 +1062,15 @@ const STATUS_META = {
   resolved: { label: "Resolved", color: "#10b981" }
 };
 
-// Visual identity used to differentiate Comfort Room vs Surroundings inside
-// every card below (no separate filter/tab is added on this page).
+
 const CATEGORY_META = {
   "Comfort Room": { label: "Comfort Room", icon: "🚻", color: "#0284c7" },
   "Surroundings": { label: "Surroundings", icon: "🌳", color: "#16a34a" }
 };
 
 let evaluations = [];
-let comfortOffices = {};      // id -> name, from office-names-comfort-room
-let surroundingsOffices = {}; // id -> name, from office_names_surroundings
+let comfortOffices = {};      
+let surroundingsOffices = {}; 
 
 function officesForCategory(category) {
   return category === "Surroundings" ? surroundingsOffices : comfortOffices;
@@ -1148,12 +1118,7 @@ function parseEvidence(data) {
   return items;
 }
 
-// NOTE: the Android app only writes rating1..rating5 per category and does
-// not store question text, so these labels are inferred from the old
-// 15-question set: items 1–5 map onto the Surroundings screen's 5
-// questions, and items 11–15 map onto the Comfort Room screen's 5
-// questions. Double check these against the actual app copy and adjust if
-// needed — they don't affect any calculation, only display text.
+
 const CR_DIMENSION_LABELS = {
   1: "The comfort room floor is clean and dry.",
   2: "The toilets and urinals are clean and sanitary.",
@@ -1200,9 +1165,7 @@ function ratingFillColor(pct) {
   return "#ef4444";
 }
 
-// ======================
-// SEX NORMALIZATION
-// ======================
+
 function normalizeSex(value) {
   const raw = (value ?? "").toString().trim();
 
@@ -1224,9 +1187,7 @@ function normalizeSex(value) {
   return raw;
 }
 
-// ======================
-// LISTENERS — same collections Office Management / Evaluation Management use
-// ======================
+
 onSnapshot(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), (snapshot) => {
   comfortOffices = {};
   snapshot.forEach((docSnap) => {
@@ -1281,9 +1242,7 @@ function renderAll() {
   renderDimensionPerformance();
 }
 
-// ======================
-// STAT CARDS
-// ======================
+
 function renderStatCards() {
   const crEvals = evaluations.filter(e => e.cleanlinessCategory === "Comfort Room");
   const surrEvals = evaluations.filter(e => e.cleanlinessCategory === "Surroundings");
@@ -1312,12 +1271,7 @@ function renderStatCards() {
     `🚻 ${activeOfficesFor(crEvals)}/${Object.keys(comfortOffices).length} · 🌳 ${activeOfficesFor(surrEvals)}/${Object.keys(surroundingsOffices).length}`;
 }
 
-// ======================
-// SEX DISTRIBUTION — TWO-RING DONUT
-// Outer ring = Surroundings, split into Male / Female (+ Other if present).
-// Inner ring = Comfort Room, split into Male / Female (+ Other if present).
-// All values are calculated live from Firebase evaluation data.
-// ======================
+
 function renderSexDistribution() {
   const el = document.getElementById("sex-distribution-chart");
 
@@ -1329,7 +1283,7 @@ function renderSexDistribution() {
   const SEX_COLORS = {
     Male: "#2563eb",
     Female: "#ec4899",
-    Other: "#94a3b8" // bucket for Other / Prefer not to say / Not Specified
+    Other: "#94a3b8" 
   };
 
   function bucketSex(sex) {
@@ -1348,7 +1302,7 @@ function renderSexDistribution() {
       color: SEX_COLORS[key],
       count: counts[key],
       pct: total ? Math.round((counts[key] / total) * 100) : 0
-    })).filter(seg => seg.count > 0); // skip empty segments (e.g. no "Other" respondents)
+    })).filter(seg => seg.count > 0); 
   }
 
   const surroundingsBreakdown = breakdownFor("Surroundings");
@@ -1356,8 +1310,8 @@ function renderSexDistribution() {
 
   const size = 220;
   const cx = 110, cy = 110;
-  const outerRadius = 82;   // Surroundings
-  const innerRadius = 50;   // Comfort Room
+  const outerRadius = 82;   
+  const innerRadius = 50;   
   const strokeWidth = 18;
 
   function segmentPath(radius, startPct, endPct) {
@@ -1367,7 +1321,7 @@ function renderSexDistribution() {
     const endAngle = -90 + (endPct / 100) * 360;
 
     if (span >= 99.99) {
-      // a single sex accounts for 100% — needs two half-arcs to draw a full circle
+      
       const startRad = startAngle * Math.PI / 180;
       const midRad = (startAngle + 180) * Math.PI / 180;
       const x1 = cx + radius * Math.cos(startRad);
@@ -1457,9 +1411,7 @@ function renderSexDistribution() {
   `;
 }
 
-// ======================
-// EVIDENCE COVERAGE PIES
-// ======================
+
 const PIE_COLORS = ["#2563eb", "#FB923C", "#F87171", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
 function renderSinglePie(circleId, legendId, entries) {
@@ -1506,9 +1458,7 @@ function renderCategoryPies() {
   });
 }
 
-// ======================
-// OFFICE TREND — offices from both category collections, tagged by category
-// ======================
+
 const OT_MONTHS_WINDOW = 6;
 const OT_MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const OT_GROUP_WIDTH = 110;
@@ -1580,7 +1530,7 @@ function renderOfficeTrend() {
     return;
   }
 
-  const defaultTop = otTopEntries(3); // up to 3 per category by default
+  const defaultTop = otTopEntries(3); 
   const usingDefault = otSelectedKeys === null;
   const activeEntries = usingDefault ? defaultTop : allEntries.filter(e => otSelectedKeys.has(otKey(e)));
 
@@ -1681,10 +1631,7 @@ function renderOfficeTrend() {
   `;
 }
 
-// ======================
-// DIMENSION PERFORMANCE — two Chart.js bar charts (one per category),
-// matching Admin 1's office-analytics.html "Evaluation Dimensions" chart.
-// ======================
+
 let dimChartCR = null;
 let dimChartSurr = null;
 
@@ -1709,7 +1656,6 @@ function safeRenderChart(wrapId, canvasId, buildFn) {
 function renderDimensionSection(wrapId, canvasId, dims, evalsList, getChart, setChart) {
   const wrap = document.getElementById(wrapId);
 
-  // Data changed underneath a live chart — destroy before rebuilding or clearing.
   if (getChart()) {
     getChart().destroy();
     setChart(null);
@@ -1720,7 +1666,6 @@ function renderDimensionSection(wrapId, canvasId, dims, evalsList, getChart, set
     return;
   }
 
-  // The empty-state branch above replaces the canvas with a message; put it back.
   if (!document.getElementById(canvasId)) {
     wrap.innerHTML = `<canvas id="${canvasId}"></canvas>`;
   }
