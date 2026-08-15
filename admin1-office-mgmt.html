@@ -7,13 +7,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="shared.css"/>
 <style>
-/* ── Office Management Page Styles ── */
+
 .office-section {
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/* Row that holds the search box + Add Office button side by side */
 .search-add-row {
   display: flex;
   align-items: center;
@@ -38,7 +37,6 @@
 .search-input:focus { border-color: #0284c7; }
 .search-input::placeholder { color: #94a3b8; }
 
-/* Office table */
 .office-table-wrap {
   max-height: 600px;
   overflow-y: auto;
@@ -229,7 +227,6 @@
   flex-wrap: wrap;
 }
 
-/* ─── Stat cards — identical to Dashboard page ─── */
 .stat-grid{
   display:grid;
   grid-template-columns:repeat(4, 1fr);
@@ -291,9 +288,7 @@
   color:#94a3b8;
 }
 
-/* Office-name stat values (Highest/Lowest Rating) are text, not numbers —
-   34px is too large for names, so they get a smaller size while keeping
-   the same font family/weight/color as the rest of the card. */
+
 .stat-value-text{
   font-size:20px;
 }
@@ -411,7 +406,7 @@
     <div id="topbar-mount"></div>
 
     <div class="office-section">
-      <!-- Stats Grid -->
+     
       <div class="stat-grid">
         <div class="stat-card blue">
           <div class="stat-icon">🏢</div>
@@ -439,9 +434,8 @@
         </div>
       </div>
 
-      <!-- Main Card -->
       <div class="card">
-        <!-- Search box + Add Office button, side by side -->
+       
         <div class="search-add-row">
           <input type="text" id="officeTableSearch" class="search-input" placeholder="🔍 Search offices by name...">
           <button id="addOfficeBtn" class="primary-btn">+ Add Office</button>
@@ -490,18 +484,9 @@ const app      = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db        = getFirestore(app);
 
-// Initialize sidebar and topbar
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','office-mgmt');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Office Management','admin1');
-
-/* ── Firestore collection references ──────────────────────────────
-   Confirmed by this page's own RTDB code: services/offices held
-   push-key documents each with a { name } field. In Firestore that's
-   an auto-ID doc under services/offices with the same { name } field —
-   this is now CONFIRMED, not a guess.
-
-   Evaluations path matches ServiceEvalActivity.kt / the other pages:
-     services/evaluations/records/{id}                               */
+                             */
 const officesCol     = collection(db, "services", "offices", "records");
 const evaluationsCol = collection(db, "services", "evaluations", "records");
 const officeTableBody = document.getElementById("officeTableBody");
@@ -520,7 +505,6 @@ function avgScore(item) {
   return c?s/c:0;
 }
 
-// Add Office Handler
 document.getElementById("addOfficeBtn").addEventListener("click", async () => {
   const name = prompt("Enter Office Name:");
   if(!name || !name.trim()) return;
@@ -533,13 +517,11 @@ document.getElementById("addOfficeBtn").addEventListener("click", async () => {
   }
 });
 
-// Search Handler
 document.getElementById("officeTableSearch").addEventListener("input", (e) => {
   tableSearchTerm = e.target.value.toLowerCase();
   renderOfficeTable();
 });
 
-// Listen to offices
 onSnapshot(officesCol, (snapshot) => {
   offices = {};
   officeKeys = {};
@@ -563,11 +545,9 @@ onSnapshot(officesCol, (snapshot) => {
   updateStats();
 });
 
-// Listen to evaluations
 onSnapshot(evaluationsCol, (snapshot) => {
   allEvaluations = [];
 
-  // Reset office scores
   Object.keys(offices).forEach(o => {
     offices[o].total = 0;
     offices[o].count = 0;
@@ -625,7 +605,6 @@ function renderOfficeTable() {
     return { office, avg, count: d.count };
   });
 
-  // Apply search filter
   if (tableSearchTerm) {
     entries = entries.filter(e => e.office.toLowerCase().includes(tableSearchTerm));
   }
@@ -635,7 +614,6 @@ function renderOfficeTable() {
     return;
   }
 
-  // Sort by office name
   entries.sort((a, b) => a.office.localeCompare(b.office));
 
   entries.forEach(({office, avg, count}) => {
