@@ -8,9 +8,7 @@
 <link rel="stylesheet" href="shared.css">
 <style>
 
-/* ════════════════════════════════════════════════════════
-   DESIGN TOKENS — BLUE & ORANGE ONLY
-════════════════════════════════════════════════════════ */
+
 
 :root {
   --ink:        #0b1220;
@@ -29,7 +27,7 @@
   --orange-accent:   #f97316;
 }
 
-/* ── Office Analytics Page Styles ── */
+
 .analytics-page {
   max-width: 1200px;
   margin: 0 auto;
@@ -45,7 +43,6 @@
 }
 .back-link:hover { text-decoration: underline; }
 
-/* ── HEADER CONTAINER ── */
 .analytics-header {
   background: var(--card);
   padding: 28px;
@@ -94,7 +91,6 @@
 }
 .header-meta .dot { margin: 0 8px; }
 
-/* ── BANNERS ── */
 .state-banner {
   padding: 48px 24px;
   text-align: center;
@@ -111,7 +107,6 @@
   border-color: #fde68a; 
 }
 
-/* ── STAT CARDS CONTAINER ── */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -185,7 +180,6 @@
   --accent: #10b981;
 }
 
-/* ── CHARTS CONTAINER ── */
 .charts-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -308,7 +302,6 @@
   font-size: 14px;
 }
 
-/* ── BREAKDOWN TABLE CONTAINER ── */
 .breakdown-table-wrap { 
   overflow-x: auto;
   padding: 20px;
@@ -375,7 +368,6 @@
   text-align: right; 
 }
 
-/* ── COMMENTS CONTAINER ── */
 .comments-list {
   display: flex;
   flex-direction: column;
@@ -418,7 +410,6 @@
   border: 1px dashed #cbd5e1;
 }
 
-/* ── GENERIC CARD CONTAINER ── */
 .card {
   background: var(--card);
   border-radius: 18px;
@@ -449,18 +440,15 @@
 
 <div class="layout">
 
-    <!-- Sidebar -->
+   
     <div id="sidebar-mount"></div>
 
-    <!-- Main Content -->
     <main class="main fade-in">
 
-        <!-- Topbar -->
         <div id="topbar-mount"></div>
 
         <div class="analytics-page">
 
-    <!-- Header -->
     <header class="analytics-header">
       <a href="admin1-office-mgmt.html" class="back-link">← Back</a>
       <div class="header-row">
@@ -473,7 +461,6 @@
           </div>
     </header>
 
-    <!-- Loading / Empty states -->
     <div class="state-banner" id="loading-banner">Loading evaluation data…</div>
     <div class="state-banner state-empty" id="empty-banner" style="display:none;">
       No evaluations have been submitted for this office yet.
@@ -481,7 +468,6 @@
 
     <div id="report-content" style="display:none;">
 
-      <!-- Top stat cards -->
       <section class="stat-grid">
         <div class="stat-card stat-primary">
           <div class="stat-icon">📋</div>
@@ -506,7 +492,6 @@
         </div>
       </section>
 
-      <!-- Charts -->
       <section class="charts-grid">
         <div class="chart-card">
           <div class="card-title">Evaluation Dimensions<span class="card-sub">— average score per criterion</span></div>
@@ -531,7 +516,6 @@
         </div>
       </div>
 
-      <!-- Dimension breakdown table -->
       <div class="card">
         <div class="card-title">Dimension Breakdown<span class="card-sub">— detailed scores</span></div>
         <div class="breakdown-table-wrap">
@@ -548,7 +532,6 @@
         </div>
       </div>
 
-      <!-- Recent comments -->
       <div class="card">
         <div class="card-title">Recent Feedback<span class="card-sub">— latest comments from respondents</span></div>
         <div class="comments-list" id="comments-list"></div>
@@ -560,7 +543,6 @@
 </main>
 </div>
 
-  <!-- Chart.js — pinned to a version that actually exists on jsDelivr -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="shared.js"></script>
 
@@ -575,7 +557,7 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Same project as the rest of the CampusVoice admin dashboards.
+
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
@@ -590,14 +572,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Build shared Admin 1 layout
 document.getElementById("sidebar-mount").innerHTML =
     buildSidebar("admin1", "office-mgmt");
 
 document.getElementById("topbar-mount").innerHTML =
     buildTopbar("Summary Analytics", "admin1");
 
-// Labels for sq1..sq8 / sqd1..sqd8
 const DIMENSION_LABELS = [
   "Responsiveness",
   "Reliability",
@@ -739,21 +719,7 @@ async function main() {
   let officeCodes = [];
 
   try {
-    // FIX: previously this listed documents directly under
-    // "transaction_code/office_name" and matched one by ID. That fails
-    // for any office whose parent doc was never explicitly written
-    // (only its "codes" subcollection was) — Firestore treats such a
-    // doc as existing only implicitly, and it will NOT show up in a
-    // query against its parent collection, even though its
-    // subcollection is fully readable. That's exactly what was
-    // happening for Cashier.
-    //
-    // Querying the "codes" collectionGroup directly sidesteps this
-    // entirely — it reads the subcollection docs themselves, regardless
-    // of whether their parent office_name/{office} document has any
-    // data of its own. This is unfiltered (no where()), so it does not
-    // require a Firestore index, same as the plain collectionGroup
-    // listing already used successfully on the Generate Code page.
+   
     const targetKey = normalizeName(officeName);
     const allCodesSnap = await getDocs(collectionGroup(db, "codes"));
 
