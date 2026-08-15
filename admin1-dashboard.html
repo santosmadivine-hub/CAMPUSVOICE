@@ -256,11 +256,34 @@
   font-size:11px;
 }
 
+.trend-quick-row {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.trend-quick-row > .trend-card {
+  flex: 2 1 380px;
+  min-width: 0;
+}
+
+.trend-quick-row > .quick-access-card {
+  flex: 1 1 260px;
+  min-width: 0;
+  max-width: 320px;
+  padding: 18px 18px 20px;
+}
+
+.quick-access-card .card-title {
+  font-size: 15px;
+}
+
 .quick-access-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: 12px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .quick-access-btn {
@@ -268,11 +291,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 20px 16px;
+  gap: 8px;
+  padding: 12px 10px;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
+  border-radius: 12px;
   text-decoration: none;
   color: #0f172a;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -309,7 +332,7 @@
 }
 
 .qa-icon {
-  font-size: 28px;
+  font-size: 20px;
   line-height: 1;
   position: relative;
   z-index: 1;
@@ -318,7 +341,7 @@
 .qa-label {
   font-family: 'Syne', sans-serif;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
   color: #0f172a;
   text-align: center;
   position: relative;
@@ -354,8 +377,8 @@
   .donut-wrap svg {
     width: 170px;
   }
-  .quick-access-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .trend-quick-row > .quick-access-card {
+    max-width: 280px;
   }
 }
 
@@ -368,8 +391,16 @@
     flex-basis: auto;
     width: 100%;
   }
+  .trend-quick-row {
+    flex-direction: column;
+  }
+  .trend-quick-row > .quick-access-card {
+    flex-basis: auto;
+    width: 100%;
+    max-width: 100%;
+  }
   .quick-access-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -411,17 +442,17 @@
   }
   .quick-access-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  .quick-access-btn {
-    padding: 16px 12px;
     gap: 10px;
   }
+  .quick-access-btn {
+    padding: 10px 8px;
+    gap: 6px;
+  }
   .qa-icon {
-    font-size: 24px;
+    font-size: 18px;
   }
   .qa-label {
-    font-size: 12px;
+    font-size: 11px;
   }
 }
 
@@ -446,7 +477,7 @@
   }
   .quick-access-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 10px;
   }
 }
 
@@ -473,13 +504,13 @@
   }
   .quick-access-grid {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 8px;
   }
   .quick-access-btn {
-    padding: 14px 12px;
+    padding: 10px 8px;
   }
   .qa-icon {
-    font-size: 22px;
+    font-size: 18px;
   }
   .qa-label {
     font-size: 11px;
@@ -565,9 +596,8 @@
       </div>
 
       
-      <div class="charts-grid">
-
-        <div class="chart-card">
+      <div class="trend-quick-row">
+        <div class="chart-card trend-card">
           <div class="card-header-row">
             <div class="card-title">Submission Trend <span class="card-sub">— Last 7 days</span></div>
           </div>
@@ -579,7 +609,8 @@
           </div>
         </div>
 
-        <div class="chart-card">
+        
+        <div class="chart-card quick-access-card">
           <div class="card-title">Quick Access</div>
           <div class="quick-access-grid">
             <a href="admin1-analytics.html" class="quick-access-btn">
