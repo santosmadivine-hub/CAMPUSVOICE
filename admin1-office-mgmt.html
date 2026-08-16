@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CampusVoice – Office Management | Admin 2</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared.css">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CampusVoice – Office Management | Admin 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
 <style>
-/* ── Office Management Page Styles ── */
+
 .office-section {
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/* Row that holds the search box + Add Office button side by side */
 .search-add-row {
   display: flex;
   align-items: center;
@@ -38,47 +37,6 @@
 .search-input:focus { border-color: #0284c7; }
 .search-input::placeholder { color: #94a3b8; }
 
-/* ── Category tabs (Comfort Room / Surroundings) ── */
-.category-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.category-tab {
-  border: 1px solid #bae6fd;
-  background: #ffffff;
-  color: #0369a1;
-  padding: 9px 16px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
-  transition: background .2s, color .2s, transform .2s, border-color .2s;
-  white-space: nowrap;
-}
-
-.category-tab:hover {
-  border-color: #0284c7;
-  transform: translateY(-1px);
-}
-
-.category-tab.active {
-  background: #0284c7;
-  border-color: #0284c7;
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(2,132,199,.3);
-}
-
-.category-tab.active[data-category="Surroundings"] {
-  background: #16a34a;
-  border-color: #16a34a;
-  box-shadow: 0 4px 14px rgba(22,163,74,.3);
-}
-
-/* Office table */
 .office-table-wrap {
   max-height: 600px;
   overflow-y: auto;
@@ -106,7 +64,7 @@
   background: #f0f9ff;
   position: sticky;
   top: 0;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .office-table td {
@@ -221,22 +179,21 @@
   color: #991b1b;
 }
 
-.action-view { background: #dbeafe; color: #1e40af; }
-.action-edit { background: linear-gradient(160deg, #fef9e7 0%, #fef3c7 100%); color: #92400e; border: 1px solid #fde68a; box-shadow: 0 1px 2px rgba(146,64,14,.08); }
-.action-edit:hover { opacity: 1; background: linear-gradient(160deg, #fef3c7 0%, #fde68a 100%); border-color: #fbbf24; box-shadow: 0 3px 10px rgba(146,64,14,.2); transform: translateY(-1px); }
-.action-delete { background: #fee2e2; color: #991b1b; }
-
 .primary-btn {
   border: 1px solid rgba(255,255,255,.12);
   background: linear-gradient(160deg, #0ea5e9 0%, #0284c7 55%, #0369a1 100%);
   color: white;
-  padding: 11px 16px;
+  padding: 11px 18px;
   border-radius: 12px;
   cursor: pointer;
   font-weight: 700;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
   letter-spacing: .01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 4px 12px rgba(2,132,199,.28), 0 1px 2px rgba(2,132,199,.35);
   transition: background .25s ease, box-shadow .2s ease, transform .15s ease;
   white-space: nowrap;
@@ -259,6 +216,25 @@
   box-shadow: 0 0 0 3px rgba(2,132,199,.25), 0 4px 12px rgba(2,132,199,.28);
 }
 
+.dark-btn {
+  border: none;
+  background: #1e3a8a;
+  color: white;
+  padding: 11px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(30,58,138,.25);
+  transition: background .2s, transform .2s;
+}
+
+.dark-btn:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+}
+
 .no-results {
   padding: 40px 20px;
   text-align: center;
@@ -266,7 +242,27 @@
   font-size: 14px;
 }
 
-/* ─── Stat cards — identical to Admin 1's Office Management page ─── */
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .stat-grid{
   display:grid;
   grid-template-columns:repeat(4, 1fr);
@@ -328,9 +324,7 @@
   color:#94a3b8;
 }
 
-/* Office-name stat values (Highest/Lowest Rating) are text, not numbers —
-   30px is too large for names, so they get a smaller size while keeping
-   the same font family/weight/color as the rest of the card. */
+
 .stat-value-text{
   font-size:20px;
 }
@@ -340,19 +334,6 @@
   padding: 20px;
   border-radius: 12px;
   border: 1px solid #bae6fd;
-}
-
-.office-name-cell {
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.evals-cell {
-  text-align: center;
-}
-
-.actions-cell {
-  text-align: right;
 }
 
 @media (max-width: 1200px) {
@@ -382,13 +363,18 @@
     gap: 14px;
   }
 
-  .search-add-row {
+  .header-row {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
   }
 
-  .search-add-row .primary-btn {
+  .header-actions {
     width: 100%;
+  }
+
+  .header-actions button {
+    flex: 1;
+    min-width: 120px;
   }
 
   .rating-cell {
@@ -397,17 +383,13 @@
     gap: 8px;
   }
 
-  .action-buttons {
+  .search-add-row {
     flex-direction: column;
+    align-items: stretch;
   }
 
-  .action-btn {
+  .search-add-row .primary-btn {
     width: 100%;
-    text-align: center;
-  }
-
-  .office-table-wrap {
-    max-height: 400px;
   }
 }
 
@@ -451,7 +433,8 @@
   }
 }
 
-/* ---------- Office Add/Edit modal dialogs (ported from admin1 — replaces prompt()/confirm()/alert()) ---------- */
+
+/* ---------- Office Add/Edit modal dialogs (replaces prompt()/confirm()) ---------- */
 
 .cv-modal-overlay {
   display: none;
@@ -656,7 +639,7 @@
     <div id="topbar-mount"></div>
 
     <div class="office-section">
-      <!-- Stats Grid -->
+     
       <div class="stat-grid">
         <div class="stat-card blue">
           <div class="stat-icon">🏢</div>
@@ -668,7 +651,7 @@
           <div class="stat-icon">📋</div>
           <div class="stat-label">Total Evaluations</div>
           <div class="stat-value" id="totalEvals">0</div>
-          <div class="stat-sub" id="totalEvalsSub">All Time</div>
+          <div class="stat-sub">All Time</div>
         </div>
         <div class="stat-card blue">
           <div class="stat-icon">⭐</div>
@@ -684,21 +667,11 @@
         </div>
       </div>
 
-      <!-- Main Card -->
       <div class="card">
-        <!-- Category tabs: each category has its own Firestore office
-             collection (office-names-comfort-room / office_names_surroundings),
-             so switching tabs swaps which office list + stats are shown,
-             and which collection "+ Add Office" writes to. -->
-        <div class="category-tabs" id="category-tabs">
-          <button type="button" class="category-tab active" data-category="Comfort Room">🚻 Comfort Room</button>
-          <button type="button" class="category-tab" data-category="Surroundings">🌳 Surroundings</button>
-        </div>
-
-        <!-- Search box + Add Office button, side by side -->
+       
         <div class="search-add-row">
-          <input type="text" id="office-search-input" class="search-input" placeholder="🔍 Search offices by name...">
-          <button id="btn-add-office" class="primary-btn">+ Add Comfort Room Office</button>
+          <input type="text" id="officeTableSearch" class="search-input" placeholder="🔍 Search offices by name...">
+          <button id="addOfficeBtn" class="primary-btn">+ Add Office</button>
         </div>
 
         <div class="office-table-wrap">
@@ -711,7 +684,7 @@
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody id="office-table-body"></tbody>
+            <tbody id="officeTableBody"></tbody>
           </table>
         </div>
       </div>
@@ -762,334 +735,57 @@
 
 <script src="shared.js"></script>
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 import {
   getFirestore,
   collection,
-  onSnapshot,
-  query,
-  orderBy,
-  where,
-  getDocs,
-  writeBatch,
+  doc,
   addDoc,
   updateDoc,
   deleteDoc,
-  doc
+  onSnapshot,
+  query,
+  where,
+  getDocs,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase Config
 const firebaseConfig = {
-  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
-  authDomain: "kristal-adb78.firebaseapp.com",
-  projectId: "kristal-adb78",
-  storageBucket: "kristal-adb78.firebasestorage.app",
-  messagingSenderId: "1016283938031",
-  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
-  measurementId: "G-LK8D1CBQ2J"
+  apiKey:"AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",authDomain:"kristal-adb78.firebaseapp.com",
+  databaseURL:"https://kristal-adb78-default-rtdb.firebaseio.com",projectId:"kristal-adb78",
+  storageBucket:"kristal-adb78.firebasestorage.app",messagingSenderId:"1016283938031",
+  appId:"1:1016283938031:web:54c4d13409d9784ad7af1a",measurementId:"G-LK8D1CBQ2J"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app      = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db        = getFirestore(app);
 
-// Build UI
-document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin2", "office-mgmt");
-document.getElementById("topbar-mount").innerHTML = buildTopbar("Office Management", "admin2");
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','office-mgmt');
+document.getElementById('topbar-mount').innerHTML  = buildTopbar('Office Management','admin1');
 
-// ComfortRoomEvalActivity / SurroundingsEvalActivity both set
-// TOTAL_QUESTIONS = 5 and only ever write rating1...rating5 — confirmed
-// directly from the submission code (see admin2-eval-mgmt.html), not
-// rating1-15. Avg Rating and eval counts below are wrong unless this
-// matches.
-const TOTAL_RATING_QUESTIONS = 5;
+const officesCol     = collection(db, "services", "offices", "records");
+const evaluationsCol = collection(db, "services", "evaluations", "records");
+const reportsCol     = collection(db, "services", "reports", "records");
+const officeTableBody = document.getElementById("officeTableBody");
 
-// Mirrors CleanOfficeSelectActivity.officeCollectionName() in the Android
-// app: Comfort Room and Surroundings each keep their own office list,
-// in collections with different naming conventions (hyphen vs underscore) —
-// kept exactly as-is so this matches the real Firestore data.
-const OFFICE_COLLECTIONS = {
-  "Comfort Room": "office-names-comfort-room",
-  "Surroundings": "office_names_surroundings"
-};
+let offices   = {};
+let officeKeys = {};
+let allEvaluations = [];
+let tableSearchTerm = "";
+let renameInProgress = false;
 
-// The two cleanliness categories chosen on the Android app's
-// CleanlinessCategorySelectActivity screen. Evaluations submitted from
-// that screen are tagged with one of these via the "cleanlinessCategory"
-// field on the Firestore document, so an evaluation can be matched back
-// to the right office list even if a name were ever reused across categories.
-const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
-const DEFAULT_CATEGORY = "Comfort Room"; // fallback for older eval records saved before the category field existed
-
-let evaluations = [];
-let comfortOffices = {};      // docs from office-names-comfort-room
-let surroundingsOffices = {}; // docs from office_names_surroundings
-let activeCategory = "Comfort Room"; // "Comfort Room" | "Surroundings" — which tab is selected
-let renameInProgress = false; // guards against double-submit races during an office rename/merge
-
-function currentOffices() {
-  return activeCategory === "Comfort Room" ? comfortOffices : surroundingsOffices;
-}
-
-function currentOfficeCollectionName() {
-  return OFFICE_COLLECTIONS[activeCategory];
-}
-
-function normalizeName(name) {
-  return (name || "").toString().trim().toLowerCase();
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function avgOf(ev) {
-  let sum = 0;
-  let count = 0;
-
-  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-    const val = ev["rating" + i];
-    if (typeof val === "number" && !isNaN(val)) {
-      sum += val;
-      count++;
-    }
+function avgScore(item) {
+  let s=0,c=0;
+  for(let x=1;x<=8;x++){
+    const v=parseFloat(item["sq"+x]??item["sqd"+x]);
+    if(!isNaN(v)){s+=v;c++;}
   }
-
-  return count > 0 ? sum / count : 0;
+  return c?s/c:0;
 }
 
-function evaluationsForActiveCategory() {
-  return evaluations.filter(e => e.cleanlinessCategory === activeCategory);
-}
-
-function buildOfficeStats() {
-  const statsByKey = {};
-  const offices = currentOffices();
-
-  Object.entries(offices).forEach(([key, office]) => {
-    statsByKey[key] = { displayName: office.name, total: 0, sum: 0 };
-  });
-
-  evaluationsForActiveCategory().forEach(e => {
-    const matchingOfficeKey = Object.entries(offices).find(([_, office]) => 
-      normalizeName(office.name) === normalizeName(e.officeName)
-    )?.[0];
-    
-    if (matchingOfficeKey) {
-      statsByKey[matchingOfficeKey].total += 1;
-      statsByKey[matchingOfficeKey].sum += avgOf(e);
-    }
-  });
-
-  return statsByKey;
-}
-
-// Two permanent listeners — one per category's office collection — so
-// switching tabs is instant and doesn't need to re-subscribe.
-onSnapshot(query(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), orderBy("name", "asc")), (snapshot) => {
-  comfortOffices = {};
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    comfortOffices[doc.id] = { id: doc.id, name: data.name || data.officeName || doc.id };
-  });
-  renderOfficeTable();
-});
-
-onSnapshot(query(collection(db, OFFICE_COLLECTIONS["Surroundings"]), orderBy("name", "asc")), (snapshot) => {
-  surroundingsOffices = {};
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    surroundingsOffices[doc.id] = { id: doc.id, name: data.name || data.officeName || doc.id };
-  });
-  renderOfficeTable();
-});
-
-// Reads from the flat evaluation_history mirror — the same source
-// admin2-eval-mgmt.html reads from — instead of the raw
-// cleanliness_evaluations tree, so Avg Rating / Total Evaluations here
-// always match what Eval Mgmt shows (including any status edits/deletes
-// made there, since deletes there remove from this mirror too).
-const EVAL_HISTORY_COLLECTION = "evaluation_history";
-const evalCollectionRef = collection(db, EVAL_HISTORY_COLLECTION);
-
-onSnapshot(evalCollectionRef, (snapshot) => {
-  evaluations = [];
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-
-    // cleanlinessCategory comes from CleanlinessCategorySelectActivity
-    // ("Comfort Room" or "Surroundings"). Older docs saved before this
-    // field existed fall back to DEFAULT_CATEGORY so they still show up
-    // under a tab instead of disappearing from stats.
-    const rawCategory = data.cleanlinessCategory;
-    const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
-
-    const record = {
-      id: doc.id,
-      officeName: data.officeName || "Unknown",
-      cleanlinessCategory: category,
-      comments: data.comments || "",
-      timestamp: Number(data.timestamp) || 0
-    };
-
-    for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-      record["rating" + i] = Number(data["rating" + i]) || 0;
-    }
-
-    evaluations.push(record);
-  });
-
-  renderOfficeTable();
-});
-
-const officeTableBody = document.getElementById("office-table-body");
-const officeSearchInput = document.getElementById("office-search-input");
-const categoryTabsEl = document.getElementById("category-tabs");
-const totalEvalsSubEl = document.getElementById("totalEvalsSub");
-const addOfficeBtn = document.getElementById("btn-add-office");
-
-let officeSearchTerm = "";
-
-officeSearchInput.addEventListener("input", (e) => {
-  officeSearchTerm = e.target.value.toLowerCase();
-  renderOfficeTable();
-});
-
-// Category tab clicks — swap which office collection + evaluations
-// (stat cards + table) are shown, and re-label the Add Office button
-// so it's clear which list a new office will be added to.
-categoryTabsEl.querySelectorAll(".category-tab").forEach(btn => {
-  btn.addEventListener("click", () => {
-    activeCategory = btn.getAttribute("data-category");
-
-    categoryTabsEl.querySelectorAll(".category-tab").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    addOfficeBtn.textContent = `+ Add ${activeCategory} Office`;
-
-    renderOfficeTable();
-  });
-});
-
-function updateSummary() {
-  const offices = currentOffices();
-  const keys = Object.keys(offices);
-  const totalOffices = keys.length;
-
-  const statsByKey = buildOfficeStats();
-
-  let totalEvals = 0;
-  let highestOffice = "—";
-  let lowestOffice = "—";
-  let highestRating = -1;
-  let lowestRating = 6;
-
-  Object.values(statsByKey).forEach(stats => {
-    totalEvals += stats.total;
-
-    if (stats.total > 0) {
-      const avg = stats.sum / stats.total;
-
-      if (avg > highestRating) {
-        highestRating = avg;
-        highestOffice = stats.displayName;
-      }
-
-      if (avg < lowestRating) {
-        lowestRating = avg;
-        lowestOffice = stats.displayName;
-      }
-    }
-  });
-
-  document.getElementById("totalOffices").textContent = totalOffices;
-  document.getElementById("totalEvals").textContent = totalEvals;
-  document.getElementById("highestOffice").textContent = highestOffice;
-  document.getElementById("lowestOffice").textContent = lowestOffice;
-  totalEvalsSubEl.textContent = activeCategory;
-}
-
-function renderOfficeTable() {
-  updateSummary();
-
-  const offices = currentOffices();
-  const keys = Object.keys(offices).sort((a, b) =>
-    offices[a].name.localeCompare(offices[b].name, undefined, {
-      sensitivity: "base"
-    })
-  );
-
-  if (keys.length === 0) {
-    officeTableBody.innerHTML = `<tr><td colspan="4" class="no-results">No ${activeCategory} offices added yet.</td></tr>`;
-    return;
-  }
-
-  const statsByKey = buildOfficeStats();
-
-  let filteredKeys = keys;
-  if (officeSearchTerm) {
-    filteredKeys = keys.filter(key => offices[key].name.toLowerCase().includes(officeSearchTerm));
-  }
-
-  if (filteredKeys.length === 0) {
-    officeTableBody.innerHTML = `<tr><td colspan="4" class="no-results">No offices match your search.</td></tr>`;
-    return;
-  }
-
-  officeTableBody.innerHTML = filteredKeys.map(key => {
-    const office = offices[key];
-    const name = office.name;
-    const stats = statsByKey[key] || { total: 0, sum: 0 };
-    const avg = stats.total > 0 ? stats.sum / stats.total : 0;
-    const ratingPercent = (avg / 5) * 100;
-
-    return `
-      <tr>
-        <td class="office-name-cell"><strong>${escapeHtml(name)}</strong></td>
-        <td>
-          <div class="rating-cell">
-            <div class="rating-track"><div class="rating-fill" style="width:${ratingPercent}%"></div></div>
-            <span class="rating-number">${avg.toFixed(1)}</span>
-          </div>
-        </td>
-        <td class="evals-cell"><span class="eval-count">${stats.total}</span></td>
-        <td class="actions-cell">
-          <div class="action-buttons">
-            <button class="action-btn action-view" data-office-key="${key}" data-action="view">👁 View</button>
-            <button class="action-btn action-edit" data-office-key="${key}" data-action="edit">✏ Edit</button>
-            <button class="action-btn action-delete" data-office-key="${key}" data-action="delete">🗑 Delete</button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join("");
-
-  officeTableBody.querySelectorAll("[data-action='view']").forEach(btn => {
-    btn.addEventListener("click", () => viewOfficeAnalytics(btn.getAttribute("data-office-key")));
-  });
-  officeTableBody.querySelectorAll("[data-action='edit']").forEach(btn => {
-    btn.addEventListener("click", () => editOffice(btn.getAttribute("data-office-key")));
-  });
-  officeTableBody.querySelectorAll("[data-action='delete']").forEach(btn => {
-    btn.addEventListener("click", () => deleteOffice(btn.getAttribute("data-office-key")));
-  });
-}
-
-window.viewOfficeAnalytics = function(key) {
-  const office = currentOffices()[key];
-  const name = office.name || "";
-  // Pass the active category along so the analytics page knows to match
-  // evaluations against this office's cleanlinessCategory too.
-  const url = `admin2-office-analytics.html?office=${encodeURIComponent(key)}&name=${encodeURIComponent(name)}&category=${encodeURIComponent(activeCategory)}`;
-  window.location.href = url;
-};
-
-/* ---------- Modal & toast helpers (ported from admin1 — replace prompt()/confirm()/alert()) ---------- */
+/* ---------- Modal & toast helpers (replace prompt()/confirm()/alert()) ---------- */
 
 const cvInputOverlay   = document.getElementById("cvInputOverlay");
 const cvInputIcon      = document.getElementById("cvInputIcon");
@@ -1197,19 +893,26 @@ function showToast(message, isError) {
   }, 3800);
 }
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 /* ---------- Add Office ---------- */
 
-// Adds to whichever category is currently active — Comfort Room offices
-// and Surroundings offices are never mixed into the same collection.
-async function addOffice() {
+async function handleAddOffice() {
   let prefillValue = "";
   let fieldError = "";
 
   while (true) {
     const result = await openInputModal({
-      title: `Add ${activeCategory} Office`,
-      subtitle: `Create a new ${activeCategory} office record for evaluations.`,
-      icon: activeCategory === "Comfort Room" ? "🚻" : "🌳",
+      title: "Add Office",
+      subtitle: "Create a new office record for evaluations.",
+      icon: "🏢",
       placeholder: "e.g. Registrar's Office",
       value: prefillValue,
       confirmText: "Add Office",
@@ -1226,71 +929,197 @@ async function addOffice() {
       continue;
     }
 
-    const duplicate = Object.values(currentOffices()).some(
-      o => normalizeName(o.name) === normalizeName(trimmed)
+    const duplicate = Object.keys(offices).some(
+      o => o.toLowerCase() === trimmed.toLowerCase()
     );
     if (duplicate) {
       prefillValue = trimmed;
-      fieldError = `A ${activeCategory} office named "${trimmed}" already exists.`;
+      fieldError = `An office named "${trimmed}" already exists.`;
       continue;
     }
 
     try {
-      await addDoc(collection(db, currentOfficeCollectionName()), { name: trimmed });
-      showToast(`✓ Office added to ${activeCategory} successfully!`);
+      await addDoc(officesCol, { name: trimmed });
+      showToast(`✓ "${trimmed}" added successfully!`);
       return;
-    } catch (err) {
+    } catch (error) {
       prefillValue = trimmed;
-      fieldError = "Couldn't add office: " + err.message;
+      fieldError = "Error adding office: " + error.message;
       continue;
     }
   }
 }
 
-addOfficeBtn.addEventListener("click", addOffice);
+document.getElementById("addOfficeBtn").addEventListener("click", handleAddOffice);
 
-/* ---------- Edit / Rename Office ---------- */
+document.getElementById("officeTableSearch").addEventListener("input", (e) => {
+  tableSearchTerm = e.target.value.toLowerCase();
+  renderOfficeTable();
+});
+
+onSnapshot(officesCol, (snapshot) => {
+  offices = {};
+  officeKeys = {};
+
+  if (snapshot.empty) {
+    document.getElementById("totalOffices").textContent = 0;
+    officeTableBody.innerHTML = "";
+    updateStats();
+    return;
+  }
+
+  snapshot.forEach(docSnap => {
+    const name = docSnap.data().name;
+    if (!name) return;
+    officeKeys[name] = docSnap.id;
+    offices[name] = { total: 0, count: 0 };
+  });
+
+  document.getElementById("totalOffices").textContent = Object.keys(offices).length;
+  renderOfficeTable();
+  updateStats();
+});
+
+onSnapshot(evaluationsCol, (snapshot) => {
+  allEvaluations = [];
+
+  Object.keys(offices).forEach(o => {
+    offices[o].total = 0;
+    offices[o].count = 0;
+  });
+
+  snapshot.forEach(docSnap => {
+    const item = docSnap.data();
+    allEvaluations.push(item);
+    const avg = avgScore(item);
+
+    if (offices[item.office]) {
+      offices[item.office].total += avg;
+      offices[item.office].count++;
+    }
+  });
+
+  renderOfficeTable();
+  updateStats();
+});
+
+function updateStats() {
+  let totalEvals = allEvaluations.length;
+  let highestOffice = "—";
+  let lowestOffice = "—";
+  let highestRating = -1;
+  let lowestRating = 6;
+  
+  Object.keys(offices).forEach(office => {
+    if(offices[office].count > 0) {
+      const avg = offices[office].total / offices[office].count;
+      
+      if(avg > highestRating) {
+        highestRating = avg;
+        highestOffice = office;
+      }
+      
+      if(avg < lowestRating) {
+        lowestRating = avg;
+        lowestOffice = office;
+      }
+    }
+  });
+  
+  document.getElementById("totalEvals").textContent = totalEvals;
+  document.getElementById("highestOffice").textContent = highestOffice;
+  document.getElementById("lowestOffice").textContent = lowestOffice;
+}
+
+function renderOfficeTable() {
+  officeTableBody.innerHTML = "";
+  
+  let entries = Object.keys(offices).map(office => {
+    const d = offices[office];
+    const avg = d.count > 0 ? d.total / d.count : 0;
+    return { office, avg, count: d.count };
+  });
+
+  if (tableSearchTerm) {
+    entries = entries.filter(e => e.office.toLowerCase().includes(tableSearchTerm));
+  }
+
+  if (entries.length === 0) {
+    officeTableBody.innerHTML = `<tr><td colspan="4" class="no-results">No offices found</td></tr>`;
+    return;
+  }
+
+  entries.sort((a, b) => a.office.localeCompare(b.office));
+
+  entries.forEach(({office, avg, count}) => {
+    const ratingPercent = (avg / 5) * 100;
+    officeTableBody.innerHTML += `
+      <tr>
+        <td><strong>${office}</strong></td>
+        <td>
+          <div class="rating-cell">
+            <div class="rating-track"><div class="rating-fill" style="width:${ratingPercent}%"></div></div>
+            <span class="rating-number">${avg.toFixed(1)}</span>
+          </div>
+        </td>
+        <td><span class="eval-count">${count}</span></td>
+        <td>
+          <div class="action-buttons">
+            <button class="action-btn view-btn" onclick="viewOffice('${office.replace(/'/g, "\\'")}')">👁 View</button>
+            <button class="action-btn edit-btn" onclick="editOffice('${office.replace(/'/g, "\\'")}')">✏ Edit</button>
+            <button class="action-btn delete-btn" onclick="deleteOffice('${office.replace(/'/g, "\\'")}')">🗑 Delete</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+window.viewOffice = function(office) {
+  const key = officeKeys[office];
+  const params = new URLSearchParams({ office: key || "", name: office });
+  window.location.href = `admin1-office-analytics.html?${params.toString()}`;
+};
 
 /**
  * Renames an office while keeping it fully connected to its existing data.
  *
- * The office document itself never moves. It's updated with `updateDoc(...)`,
- * so its Firestore doc ID — the permanent identifier — stays the same before
- * and after the rename.
+ * The office's Firestore document ID never changes and the document is never
+ * deleted/recreated — only its `name` field is updated. Because evaluations,
+ * transaction codes, and saved reports are currently linked to an office by
+ * its NAME (not its ID), a rename also has to migrate those records so the
+ * relationship survives:
+ *   1. evaluations   -> update `office` field: oldName -> newName
+ *   2. reports        -> update `office` field: oldName -> newName
+ *   3. transaction codes -> copy from .../office_name/{oldName}/codes
+ *                           to .../office_name/{newName}/codes, then delete
+ *                           the old ones (Firestore can't "rename" a path
+ *                           segment directly, so copy+delete is the safe
+ *                           equivalent of moving them)
  *
- * Evaluations matching the old office name (within the same cleanliness
- * category) are found with a `where("officeName","==",oldName)` +
- * `where("cleanlinessCategory","==",activeCategory)` query and batch-updated
- * to the new name, plus a new `officeId` stamp for future-proofing.
- *
- * A duplicate-name guard (case-insensitive, scoped to the active category)
- * stops a plain rename from silently colliding with another office — instead
- * it offers to merge the two, moving every evaluation from the old office
- * onto the existing one and removing the now-empty source record. A
- * `renameInProgress` flag stops double-submits from racing each other.
+ * Each linked record is also stamped with `officeId` (the permanent doc ID)
+ * so that future tooling can look records up by ID instead of by name,
+ * without requiring another migration.
  */
-async function editOffice(key) {
+window.editOffice = async function(office) {
   if (renameInProgress) {
     showToast("A rename is already in progress. Please wait for it to finish.", true);
     return;
   }
 
-  const offices = currentOffices();
-  const office = offices[key];
-  if (!office) {
+  const sourceOfficeId = officeKeys[office];
+  if (!sourceOfficeId) {
     showToast("Could not find this office's record. Please refresh and try again.", true);
     return;
   }
 
-  const currentName = office.name || "";
-  let prefillValue = currentName;
+  let prefillValue = office;
   let fieldError = "";
 
   while (true) {
     const result = await openInputModal({
-      title: `Edit ${activeCategory} Office`,
-      subtitle: `Rename "${currentName}"`,
-      icon: "✏️",
+      title: "Edit Office",
+      subtitle: `Rename "${office}"`,
       placeholder: "Office name",
       value: prefillValue,
       confirmText: "Save Changes",
@@ -1307,26 +1136,27 @@ async function editOffice(key) {
       continue;
     }
 
-    if (trimmedNew === currentName) {
+    if (trimmedNew === office) {
       showToast("No changes made.");
       return;
     }
 
-    // Does a DIFFERENT office in this category already use the target name?
-    // If so this isn't a simple rename anymore — it's a merge — so we never
-    // end up with two offices sharing the same name in the same category.
-    const existingTargetKey = Object.keys(offices).find(
-      k => k !== key && normalizeName(offices[k].name) === normalizeName(trimmedNew)
+    // Does a DIFFERENT office already use the target name? If so this isn't a
+    // simple rename anymore — it's a merge (see below), so we never end up
+    // with two offices sharing the same name.
+    const existingTargetName = Object.keys(offices).find(
+      o => o.toLowerCase() === trimmedNew.toLowerCase() && o !== office
     );
 
     renameInProgress = true;
 
     try {
-      if (existingTargetKey) {
-        const existingTargetName = offices[existingTargetKey].name;
-        const targetCount = evaluationsForActiveCategory().filter(
-          e => normalizeName(e.officeName) === normalizeName(existingTargetName)
-        ).length;
+      if (existingTargetName) {
+        // MERGE: "trimmedNew" is already a separate, existing office. Move
+        // everything from "office" onto that existing office, then remove
+        // the now-empty source record so it doesn't linger as a duplicate.
+        const targetOfficeId = officeKeys[existingTargetName];
+        const targetCount = offices[existingTargetName]?.count || 0;
 
         const confirmed = await openConfirmModal({
           title: "Merge Offices?",
@@ -1334,11 +1164,11 @@ async function editOffice(key) {
           tone: "warn",
           confirmText: "Merge Offices",
           message:
-            `A ${activeCategory} office named "<strong>${escapeHtml(existingTargetName)}</strong>" already exists ` +
+            `An office named "<strong>${escapeHtml(existingTargetName)}</strong>" already exists ` +
             `(${targetCount} evaluation${targetCount === 1 ? "" : "s"}).<br><br>` +
-            `Merge "<strong>${escapeHtml(currentName)}</strong>" into "<strong>${escapeHtml(existingTargetName)}</strong>"? ` +
-            `All evaluations currently under "${escapeHtml(currentName)}" will be moved onto ` +
-            `"${escapeHtml(existingTargetName)}", and the "${escapeHtml(currentName)}" record will be removed. ` +
+            `Merge "<strong>${escapeHtml(office)}</strong>" into "<strong>${escapeHtml(existingTargetName)}</strong>"? ` +
+            `All evaluations, transaction codes, and reports currently under "${escapeHtml(office)}" will be moved ` +
+            `onto "${escapeHtml(existingTargetName)}", and the "${escapeHtml(office)}" record will be removed. ` +
             `Nothing is deleted — everything is combined under "${escapeHtml(existingTargetName)}".`
         });
 
@@ -1349,24 +1179,26 @@ async function editOffice(key) {
           continue;
         }
 
-        await migrateOfficeEvaluations(currentName, existingTargetName, existingTargetKey);
+        await migrateOfficeData(office, existingTargetName, targetOfficeId);
 
-        // All of the source office's evaluations have moved to the existing
-        // target office, so this record is now empty — remove it so it
-        // doesn't show up as a duplicate/leftover row.
-        await deleteDoc(doc(db, currentOfficeCollectionName(), key));
+        // All of the source office's data has moved to the existing target
+        // office, so this record is now empty — remove it so it doesn't show
+        // up as a duplicate/leftover row.
+        await deleteDoc(doc(db, "services", "offices", "records", sourceOfficeId));
 
-        showToast(`✓ Merged "${currentName}" into "${existingTargetName}" successfully!`);
+        showToast(`✓ Merged "${office}" into "${existingTargetName}" successfully!`);
       } else {
+        // Plain rename: the target name is free, so we keep the same office
+        // document (same permanent ID) and just update its name.
         const confirmed = await openConfirmModal({
           title: "Rename Office?",
           icon: "✏️",
           tone: "primary",
           confirmText: "Rename Office",
           message:
-            `Rename "<strong>${escapeHtml(currentName)}</strong>" to "<strong>${escapeHtml(trimmedNew)}</strong>"?<br><br>` +
-            `All existing evaluations linked to "${escapeHtml(currentName)}" will be moved to ` +
-            `"${escapeHtml(trimmedNew)}". No data will be deleted.`
+            `Rename "<strong>${escapeHtml(office)}</strong>" to "<strong>${escapeHtml(trimmedNew)}</strong>"?<br><br>` +
+            `All existing evaluations, transaction codes, and reports linked to "${escapeHtml(office)}" will be ` +
+            `moved to "${escapeHtml(trimmedNew)}". No data will be deleted.`
         });
 
         if (!confirmed) {
@@ -1376,39 +1208,44 @@ async function editOffice(key) {
           continue;
         }
 
-        // Same doc ID (key) before and after — only the name field changes.
-        await updateDoc(doc(db, currentOfficeCollectionName(), key), { name: trimmedNew });
-        await migrateOfficeEvaluations(currentName, trimmedNew, key);
+        await updateDoc(doc(db, "services", "offices", "records", sourceOfficeId), {
+          name: trimmedNew
+        });
+        await migrateOfficeData(office, trimmedNew, sourceOfficeId);
 
         showToast(`✓ Office renamed to "${trimmedNew}" successfully!`);
       }
 
       renameInProgress = false;
       return;
-    } catch (err) {
+    } catch (error) {
       renameInProgress = false;
-      console.error("Office rename/merge failed:", err);
+      console.error("Office rename/merge failed:", error);
       showToast(
-        "Error updating office: " + err.message +
+        "Error updating office: " + error.message +
         ". Some records may have already been migrated — please re-check the office's data and retry if needed.",
         true
       );
       return;
     }
   }
+};
+
+// Moves every evaluation, report, and transaction code from `oldName` onto
+// `newName` (which belongs to Firestore doc `targetOfficeId`). Used for both
+// plain renames (targetOfficeId === the same office being renamed) and
+// merges (targetOfficeId belongs to a different, already-existing office).
+async function migrateOfficeData(oldName, newName, targetOfficeId) {
+  await batchUpdateFieldWhere(evaluationsCol, "office", oldName, newName, targetOfficeId);
+  await batchUpdateFieldWhere(reportsCol, "office", oldName, newName, targetOfficeId);
+  await migrateTransactionCodes(oldName, newName, targetOfficeId);
 }
 
-// Batch-updates every evaluation_history doc where officeName === oldName
-// AND cleanlinessCategory === activeCategory, setting officeName to newName
-// and stamping officeId (the target office's permanent doc ID) for
-// future-proofing. Chunked to stay under Firestore's 500-writes-per-batch
-// limit.
-async function migrateOfficeEvaluations(oldName, newName, officeId) {
-  const q = query(
-    evalCollectionRef,
-    where("officeName", "==", oldName),
-    where("cleanlinessCategory", "==", activeCategory)
-  );
+// Batch-updates every document in `colRef` where `field === oldValue`,
+// setting `field` to `newValue` and stamping `officeId` for future use.
+// Chunked to stay under Firestore's 500-writes-per-batch limit.
+async function batchUpdateFieldWhere(colRef, field, oldValue, newValue, officeId) {
+  const q = query(colRef, where(field, "==", oldValue));
   const snap = await getDocs(q);
   if (snap.empty) return;
 
@@ -1418,39 +1255,47 @@ async function migrateOfficeEvaluations(oldName, newName, officeId) {
   for (let i = 0; i < docs.length; i += CHUNK) {
     const batch = writeBatch(db);
     docs.slice(i, i + CHUNK).forEach(d => {
-      batch.update(d.ref, { officeName: newName, officeId });
+      batch.update(d.ref, { [field]: newValue, officeId });
     });
     await batch.commit();
   }
 }
 
-window.editOffice = editOffice;
+// Copies every code doc from services/transaction_code/office_name/{oldName}/codes
+// to .../office_name/{newName}/codes (preserving doc ID, status, createdAt, etc.),
+// then deletes the originals. Nothing is lost between the copy and the delete
+// because both happen inside the same committed batch per chunk.
+async function migrateTransactionCodes(oldName, newName, officeId) {
+  const oldCodesCol = collection(db, "services", "transaction_code", "office_name", oldName, "codes");
+  const snap = await getDocs(oldCodesCol);
+  if (snap.empty) return;
 
-/* ---------- Delete Office ---------- */
+  const newCodesCol = collection(db, "services", "transaction_code", "office_name", newName, "codes");
 
-async function deleteOffice(key) {
-  const office = currentOffices()[key];
-  const name = office?.name || "this office";
+  const docs = snap.docs;
+  const CHUNK = 200; // 2 writes per code (set + delete), keep well under 500
 
-  const confirmed = await openConfirmModal({
-    title: "Delete Office?",
-    icon: "🗑",
-    tone: "warn",
-    confirmText: "Delete Office",
-    message: `Remove "<strong>${escapeHtml(name)}</strong>" from the ${activeCategory} office list? This action cannot be undone.`
-  });
-  if (!confirmed) return;
-
-  try {
-    await deleteDoc(doc(db, currentOfficeCollectionName(), key));
-    showToast("✓ Office deleted successfully!");
-  } catch (err) {
-    showToast("Couldn't remove office: " + err.message, true);
+  for (let i = 0; i < docs.length; i += CHUNK) {
+    const batch = writeBatch(db);
+    docs.slice(i, i + CHUNK).forEach(d => {
+      batch.set(doc(newCodesCol, d.id), { ...d.data(), officeId });
+      batch.delete(d.ref);
+    });
+    await batch.commit();
   }
 }
 
-window.deleteOffice = deleteOffice;
-
+window.deleteOffice = async function(office) {
+  if(!confirm(`Delete "${office}"? This action cannot be undone.`)) return;
+  
+  try {
+    const key = officeKeys[office];
+    await deleteDoc(doc(db, "services", "offices", "records", key));
+    alert("✓ Office deleted successfully!");
+  } catch (error) {
+    alert("Error deleting office: " + error.message);
+  }
+};
 </script>
 </body>
 </html>
