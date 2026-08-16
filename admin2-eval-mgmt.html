@@ -257,10 +257,9 @@
   }
 
   /* ─── Status tabs (Recent / Pending / No Action / Resolved) ───
-     Redesigned as an evenly-spaced segmented control that sits inside
-     a light "track" container, so every tab gets identical padding
-     and gap regardless of label length — fixes the uneven spacing
-     from the old underline-tab layout. */
+     Evenly-spaced segmented control inside a light "track" container,
+     so every tab gets identical padding and gap regardless of label
+     length. */
   .eval-tabs {
     display: flex;
     gap: 4px;
@@ -361,9 +360,7 @@
     appearance: none;
   }
 
-  /* Table — vertical + horizontal scroll with a sticky header, so long
-     result sets stay inside the card instead of pushing the page down
-     endlessly. */
+  /* Table — vertical + horizontal scroll with a sticky header */
   .table-wrap {
     overflow-x: auto;
     overflow-y: auto;
@@ -807,9 +804,9 @@
              filters stats, the office dropdown, and the table to just
              that category. -->
         <div class="category-tabs" id="category-tabs">
-          <button class="category-tab active" data-category="all"> All Categories <span class="tab-count" id="cat-count-all">0</span></button>
-          <button class="category-tab" data-category="Comfort Room"> Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
-          <button class="category-tab" data-category="Surroundings"> Surroundings <span class="tab-count" id="cat-count-surroundings">0</span></button>
+          <button class="category-tab active" data-category="all">All Categories <span class="tab-count" id="cat-count-all">0</span></button>
+          <button class="category-tab" data-category="Comfort Room">Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
+          <button class="category-tab" data-category="Surroundings">Surroundings <span class="tab-count" id="cat-count-surroundings">0</span></button>
         </div>
 
         <!-- Status tabs -->
@@ -950,6 +947,7 @@ const TOTAL_RATING_QUESTIONS = 5;
 
 const LOW_RATING_THRESHOLD = 3;
 
+// No icon field — status badges/modals now render label text only.
 const STATUS_META = {
   pending: { label: "Pending" },
   no_action: { label: "No Action Required" },
@@ -1025,8 +1023,7 @@ function parseEvalStatus(data, avgRating) {
 
 function categoryPillHtml(category) {
   const cls = category === "Surroundings" ? "surroundings" : "comfort-room";
-  const icon = category === "Surroundings" ? ;
-  return `<span class="category-pill ${cls}">${icon} ${category}</span>`;
+  return `<span class="category-pill ${cls}">${category}</span>`;
 }
 
 // ======================
@@ -1262,7 +1259,7 @@ function renderSubmissions() {
         ${ratingCellsHtml(e)}
         <td>${e.comments || "-"}</td>
         <td>${evidenceCellHtml(e)}</td>
-        <td><span class="status-badge ${e.status}">${meta.icon} ${meta.label}</span></td>
+        <td><span class="status-badge ${e.status}">${meta.label}</span></td>
         <td>${date}</td>${actionCell}
       </tr>
     `;
@@ -1541,7 +1538,7 @@ function openDeleteModal(evalId) {
   deleteModalMeta.innerHTML = `
     <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
     <div class="modal-row"><span>Category</span><span>${categoryPillHtml(e.cleanlinessCategory)}</span></div>
-    <div class="modal-row"><span>Status</span><span>${meta.icon} ${meta.label}</span></div>
+    <div class="modal-row"><span>Status</span><span>${meta.label}</span></div>
     <div class="modal-row"><span>Date</span><span>${date}</span></div>
   `;
 
