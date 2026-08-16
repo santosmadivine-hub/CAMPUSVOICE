@@ -488,7 +488,7 @@
 
 .cv-modal-title {
   font-family: 'Syne', sans-serif;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 17px;
   color: #0f172a;
   line-height: 1.3;
@@ -1119,8 +1119,7 @@ window.editOffice = async function(office) {
   while (true) {
     const result = await openInputModal({
       title: "Edit Office",
-      subtitle: `Rename "${office}" — its evaluations, codes, and reports stay linked.`,
-      icon: "✏️",
+      subtitle: `Rename "${office}"`,
       placeholder: "Office name",
       value: prefillValue,
       confirmText: "Save Changes",
