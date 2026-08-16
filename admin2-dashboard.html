@@ -855,12 +855,11 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-title">Evaluator Demographics</div>
-          <div class="card-sub" style="margin-top:-2px;">Respondents by category</div>
+          <div class="card-title">Average Ratings</div>
+          <div class="card-sub" style="margin-top:-2px;">Comfort Room vs Surroundings</div>
           <div class="donut-wrap" id="donutWrap">
             <svg id="donut-svg" viewBox="0 0 200 200" width="240" height="240">
-              <circle cx="100" cy="100" r="82" fill="none" stroke="#eef2f7" stroke-width="14"/>
-              <circle cx="100" cy="100" r="58" fill="none" stroke="#eef2f7" stroke-width="24"/>
+              <circle cx="100" cy="100" r="78" fill="none" stroke="#eef2f7" stroke-width="24"/>
             </svg>
             <div class="pie-tooltip" id="donut-tooltip"></div>
             <div class="donut-legend" id="donut-legend"></div>
@@ -1160,7 +1159,7 @@ onSnapshot(evalQuery, (snapshot) => {
 function renderDashboard() {
   renderStatCards();
   renderLineChart();
-  renderUserCategoryDonut();
+  renderAvgRatingPie();
 }
 
 function renderStatCards() {
@@ -1371,98 +1370,61 @@ function renderLineChart() {
 }
 
 // ======================
-// USER CATEGORY DISTRIBUTION — nested donut
-//   inner ring  -> userCategory (Student / Faculty-Staff / Guest / Visitor)
-//   outer ring  -> course breakdown, drawn only across the Student arc
-// Both rings are built live from the userCategory/course fields on each
-// evaluation_history record (written by ComfortRoomEvalActivity /
-// SurroundingsEvalActivity), so this always reflects real Firestore data.
+// AVERAGE RATINGS — pie chart
+//   Comfort Room vs Surroundings, each slice sized by its share of the
+//   combined average rating (comfortAvg vs surroundingsAvg), so the
+//   category with the higher average takes the bigger slice. Built live
+//   from rating1..rating5 on each evaluation_history record.
 // ======================
-const USER_CATEGORY_ORDER = ["Student", "Faculty/Staff", "Guest", "Visitor"];
-const USER_CATEGORY_COLORS = {
-  "Student": "#8b5cf6",
-  "Faculty/Staff": "#3b82f6",
-  "Guest": "#22c55e",
-  "Visitor": "#f97316"
+const RATING_CATEGORY_COLORS = {
+  "Comfort Room": "#2563eb",
+  "Surroundings": "#16a34a"
 };
-const OTHER_CATEGORY_COLOR = "#94a3b8";
-const COURSE_COLOR_PALETTE = ["#a78bfa", "#c4b5fd", "#ddd6fe", "#e9d5ff", "#f3e8ff", "#ede9fe"];
 
-// Tallies evaluations by userCategory, and separately by course for
-// whichever records are tagged "Student".
-function computeUserCategoryBreakdown() {
-  const categoryCounts = {};
-  const courseCounts = {};
-
-  evaluations.forEach(e => {
-    const cat = e.userCategory || "Unspecified";
-    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
-    if (cat === "Student") {
-      const course = e.course || "Unspecified";
-      courseCounts[course] = (courseCounts[course] || 0) + 1;
-    }
-  });
-
-  return { categoryCounts, courseCounts };
+// Average of avgOf(e) across all evaluations in a given cleanliness
+// category. Returns 0 when there are no evaluations for that category.
+function avgRatingForCategory(category) {
+  const catEvals = evaluations.filter(e => e.cleanlinessCategory === category);
+  if (catEvals.length === 0) return 0;
+  const sum = catEvals.reduce((acc, e) => acc + avgOf(e), 0);
+  return sum / catEvals.length;
 }
 
-// Known categories first (in a fixed order, matching the app's user
-// category options), then any other/legacy values sorted by count.
-function buildCategorySegments(categoryCounts) {
-  const known = USER_CATEGORY_ORDER.map(name => ({
-    key: name, label: name, color: USER_CATEGORY_COLORS[name], count: categoryCounts[name] || 0
-  }));
-  const extras = Object.keys(categoryCounts)
-    .filter(k => !USER_CATEGORY_ORDER.includes(k))
-    .sort((a, b) => categoryCounts[b] - categoryCounts[a])
-    .map(name => ({ key: name, label: name, color: OTHER_CATEGORY_COLOR, count: categoryCounts[name] }));
-  return [...known, ...extras];
-}
-
-// Courses sorted by count (most common first), colored from a lightening
-// purple palette so they read as sub-shades of the Student segment.
-function buildCourseSegments(courseCounts) {
-  return Object.entries(courseCounts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([course, count], i) => ({
-      key: course, label: course, color: COURSE_COLOR_PALETTE[i % COURSE_COLOR_PALETTE.length], count
-    }));
-}
-
-function renderUserCategoryDonut() {
+function renderAvgRatingPie() {
   const svg = document.getElementById("donut-svg");
   const legend = document.getElementById("donut-legend");
   const tooltip = document.getElementById("donut-tooltip");
   if (!svg || !legend || !tooltip) return;
 
   const cx = 100, cy = 100;
-  const rOuter = 78, rInner = 57;
-  const wOuter = 13, wInner = 21;
+  const rOuter = 78, wOuter = 24;
   const circOuter = 2 * Math.PI * rOuter;
-  const circInner = 2 * Math.PI * rInner;
-  const total = evaluations.length;
 
   svg.querySelectorAll(".donut-segment").forEach(el => el.remove());
   svg.querySelectorAll("text").forEach(el => el.remove());
   tooltip.classList.remove("show");
 
-  if (total === 0) {
+  if (evaluations.length === 0) {
     legend.innerHTML = `<div class="legend-item">No evaluations yet</div>`;
     return;
   }
 
-  const { categoryCounts, courseCounts } = computeUserCategoryBreakdown();
-  const categorySegments = buildCategorySegments(categoryCounts);
-  const courseSegments = buildCourseSegments(courseCounts);
+  const comfortAvg = avgRatingForCategory("Comfort Room");
+  const surroundingsAvg = avgRatingForCategory("Surroundings");
+  const combined = comfortAvg + surroundingsAvg;
+  const overallAvg = evaluations.reduce((acc, e) => acc + avgOf(e), 0) / evaluations.length;
 
-  function attachTooltip(el, label, count, sub) {
-    const pct = ((count / total) * 100).toFixed(1);
+  const segments = [
+    { key: "Comfort Room", label: "Comfort Room", color: RATING_CATEGORY_COLORS["Comfort Room"], avg: comfortAvg },
+    { key: "Surroundings", label: "Surroundings", color: RATING_CATEGORY_COLORS["Surroundings"], avg: surroundingsAvg }
+  ];
+
+  function attachTooltip(el, label, avg) {
     const showTooltip = (evt) => {
       tooltip.classList.add("show");
       tooltip.innerHTML = `
         <div class="tt-title">${label}</div>
-        <div>${count} respondent${count === 1 ? "" : "s"}</div>
-        <div class="tt-sub">${pct}% of total${sub ? " · " + sub : ""}</div>`;
+        <div>Avg rating: ${avg.toFixed(2)} / 5</div>`;
       tooltip.style.left = (evt.clientX + 10) + "px";
       tooltip.style.top = (evt.clientY - 35) + "px";
     };
@@ -1472,64 +1434,30 @@ function renderUserCategoryDonut() {
   }
 
   let offsetPct = 0;
-  let studentStartPct = 0;
-  let studentPct = 0;
-
-  categorySegments.forEach(seg => {
-    const pct = (seg.count / total) * 100;
-    if (seg.key === "Student") {
-      studentStartPct = offsetPct;
-      studentPct = pct;
-    }
+  segments.forEach(seg => {
+    const pct = combined > 0 ? (seg.avg / combined) * 100 : 50; // even split if both are 0
     if (pct <= 0) return;
 
-    const dash = (pct / 100) * circInner;
-    const gap = circInner - dash;
-    const dashOffset = -((offsetPct / 100) * circInner);
+    const dash = (pct / 100) * circOuter;
+    const gap = circOuter - dash;
+    const dashOffset = -((offsetPct / 100) * circOuter);
 
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     circle.setAttribute("class", "donut-segment");
     circle.setAttribute("cx", cx);
     circle.setAttribute("cy", cy);
-    circle.setAttribute("r", rInner);
+    circle.setAttribute("r", rOuter);
     circle.setAttribute("fill", "none");
     circle.setAttribute("stroke", seg.color);
-    circle.setAttribute("stroke-width", wInner);
+    circle.setAttribute("stroke-width", wOuter);
     circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
     circle.setAttribute("stroke-dashoffset", dashOffset);
     circle.setAttribute("transform", `rotate(-90 ${cx} ${cy})`);
     circle.style.cursor = "pointer";
-    attachTooltip(circle, seg.label, seg.count);
+    attachTooltip(circle, seg.label, seg.avg);
     svg.appendChild(circle);
     offsetPct += pct;
   });
-
-  if (studentPct > 0 && courseSegments.length > 0) {
-    let courseOffsetPct = studentStartPct;
-    courseSegments.forEach(cs => {
-      const coursePct = studentPct * (cs.count / (categoryCounts["Student"] || 1));
-      if (coursePct <= 0) return;
-      const dash = (coursePct / 100) * circOuter;
-      const gap = circOuter - dash;
-      const dashOffset = -((courseOffsetPct / 100) * circOuter);
-
-      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      circle.setAttribute("class", "donut-segment");
-      circle.setAttribute("cx", cx);
-      circle.setAttribute("cy", cy);
-      circle.setAttribute("r", rOuter);
-      circle.setAttribute("fill", "none");
-      circle.setAttribute("stroke", cs.color);
-      circle.setAttribute("stroke-width", wOuter);
-      circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
-      circle.setAttribute("stroke-dashoffset", dashOffset);
-      circle.setAttribute("transform", `rotate(-90 ${cx} ${cy})`);
-      circle.style.cursor = "pointer";
-      attachTooltip(circle, cs.label, cs.count, "Student");
-      svg.appendChild(circle);
-      courseOffsetPct += coursePct;
-    });
-  }
 
   const totalLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
   totalLabel.setAttribute("x", cx);
@@ -1539,7 +1467,7 @@ function renderUserCategoryDonut() {
   totalLabel.setAttribute("font-size", "12");
   totalLabel.setAttribute("font-family", "Syne, sans-serif");
   totalLabel.setAttribute("font-weight", "800");
-  totalLabel.textContent = "Total";
+  totalLabel.textContent = "Overall Avg";
   svg.appendChild(totalLabel);
 
   const totalNumber = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -1550,29 +1478,21 @@ function renderUserCategoryDonut() {
   totalNumber.setAttribute("font-size", "16");
   totalNumber.setAttribute("font-family", "Syne, sans-serif");
   totalNumber.setAttribute("font-weight", "800");
-  totalNumber.textContent = total.toLocaleString();
+  totalNumber.textContent = overallAvg.toFixed(2);
   svg.appendChild(totalNumber);
 
   let rows = "";
-  categorySegments.forEach(seg => {
-    if (seg.count <= 0) return;
-    const pct = ((seg.count / total) * 100).toFixed(0);
+  segments.forEach(seg => {
     rows += `
       <div class="category-row">
         <div class="cat-name"><div class="category-dot" style="background:${seg.color}"></div>${seg.label}</div>
-        <div class="category-count">${pct}%</div>
+        <div class="category-count">${seg.avg.toFixed(2)} / 5</div>
       </div>`;
   });
 
-  rows += `
-    <div class="category-row total">
-      <div>Total</div>
-      <div>100%</div>
-    </div>`;
-
   legend.innerHTML = `
     <div class="category-table">
-      <div class="category-table-head"><span>Category</span><span>%</span></div>
+      <div class="category-table-head"><span>Category</span><span>Avg</span></div>
       ${rows}
     </div>`;
 }
