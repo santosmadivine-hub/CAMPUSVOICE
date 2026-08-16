@@ -697,62 +697,98 @@ window.editOffice = async function(office) {
     return;
   }
 
-  const duplicate = Object.keys(offices).some(
-    o => o.toLowerCase() === trimmedNew.toLowerCase() && o !== office
-  );
-  if (duplicate) {
-    alert(`An office named "${trimmedNew}" already exists. Choose a different name.`);
-    return;
-  }
-
-  const officeId = officeKeys[office];
-  if (!officeId) {
+  const sourceOfficeId = officeKeys[office];
+  if (!sourceOfficeId) {
     alert("Could not find this office's record. Please refresh and try again.");
     return;
   }
 
-  const confirmMsg =
-    `Rename "${office}" to "${trimmedNew}"?\n\n` +
-    `All existing evaluations, transaction codes, and reports linked to ` +
-    `"${office}" will be moved to "${trimmedNew}". No data will be deleted.`;
-  if (!confirm(confirmMsg)) return;
+  // Does a DIFFERENT office already use the target name? If so this isn't a
+  // simple rename anymore — it's a merge (see below), so we never end up
+  // with two offices sharing the same name.
+  const existingTargetName = Object.keys(offices).find(
+    o => o.toLowerCase() === trimmedNew.toLowerCase() && o !== office
+  );
 
   renameInProgress = true;
 
   try {
-    await migrateOfficeRename(officeId, office, trimmedNew);
-    alert(
-      `✓ Office renamed to "${trimmedNew}" successfully!\n\n` +
-      `Existing evaluations, transaction codes, and reports remain linked.`
-    );
+    if (existingTargetName) {
+      // MERGE: "trimmedNew" is already a separate, existing office. Move
+      // everything from "office" onto that existing office, then remove
+      // the now-empty source record so it doesn't linger as a duplicate.
+      const targetOfficeId = officeKeys[existingTargetName];
+      const targetCount = offices[existingTargetName]?.count || 0;
+
+      const confirmMerge =
+        `An office named "${existingTargetName}" already exists ` +
+        `(${targetCount} evaluation${targetCount === 1 ? "" : "s"}).\n\n` +
+        `Merge "${office}" into "${existingTargetName}"?\n\n` +
+        `All evaluations, transaction codes, and reports currently under ` +
+        `"${office}" will be moved onto "${existingTargetName}", and the ` +
+        `"${office}" record will be removed. Nothing is deleted — everything ` +
+        `is combined under "${existingTargetName}".`;
+
+      if (!confirm(confirmMerge)) {
+        renameInProgress = false;
+        return;
+      }
+
+      await migrateOfficeData(office, existingTargetName, targetOfficeId);
+
+      // All of the source office's data has moved to the existing target
+      // office, so this record is now empty — remove it so it doesn't show
+      // up as a duplicate/leftover row.
+      await deleteDoc(doc(db, "services", "offices", "records", sourceOfficeId));
+
+      alert(
+        `✓ Merged "${office}" into "${existingTargetName}" successfully!\n\n` +
+        `All evaluations, transaction codes, and reports are now combined ` +
+        `under "${existingTargetName}".`
+      );
+    } else {
+      // Plain rename: the target name is free, so we keep the same office
+      // document (same permanent ID) and just update its name.
+      const confirmMsg =
+        `Rename "${office}" to "${trimmedNew}"?\n\n` +
+        `All existing evaluations, transaction codes, and reports linked to ` +
+        `"${office}" will be moved to "${trimmedNew}". No data will be deleted.`;
+      if (!confirm(confirmMsg)) {
+        renameInProgress = false;
+        return;
+      }
+
+      await updateDoc(doc(db, "services", "offices", "records", sourceOfficeId), {
+        name: trimmedNew
+      });
+      await migrateOfficeData(office, trimmedNew, sourceOfficeId);
+
+      alert(
+        `✓ Office renamed to "${trimmedNew}" successfully!\n\n` +
+        `Existing evaluations, transaction codes, and reports remain linked.`
+      );
+    }
   } catch (error) {
-    console.error("Office rename failed:", error);
+    console.error("Office rename/merge failed:", error);
     alert(
-      "Error renaming office: " + error.message +
+      "Error updating office: " + error.message +
       "\n\nSome records may have already been migrated. Please re-check the " +
-      "office's data (evaluations / codes / reports) and, if needed, re-run " +
-      "the rename to finish moving anything still under the old name."
+      "office's data (evaluations / codes / reports) and, if needed, retry " +
+      "to finish moving anything still under the old name."
     );
   } finally {
     renameInProgress = false;
   }
 };
 
-async function migrateOfficeRename(officeId, oldName, newName) {
-  // 1) Update the office document itself. Same document ID throughout —
-  //    this is the permanent identifier for the office.
-  await updateDoc(doc(db, "services", "offices", "records", officeId), {
-    name: newName
-  });
-
-  // 2) Re-point evaluations that reference the old office name.
-  await batchUpdateFieldWhere(evaluationsCol, "office", oldName, newName, officeId);
-
-  // 3) Re-point saved reports that reference the old office name.
-  await batchUpdateFieldWhere(reportsCol, "office", oldName, newName, officeId);
-
-  // 4) Move transaction codes from the old name-keyed path to the new one.
-  await migrateTransactionCodes(oldName, newName, officeId);
+// Moves every evaluation, report, and transaction code from `oldName` onto
+// `newName` (which belongs to Firestore doc `targetOfficeId`). Used for both
+// plain renames (targetOfficeId === the same office being renamed) and
+// merges (targetOfficeId belongs to a different, already-existing office).
+async function migrateOfficeData(oldName, newName, targetOfficeId) {
+  await batchUpdateFieldWhere(evaluationsCol, "office", oldName, newName, targetOfficeId);
+  await batchUpdateFieldWhere(reportsCol, "office", oldName, newName, targetOfficeId);
+  await migrateTransactionCodes(oldName, newName, targetOfficeId);
 }
 
 // Batch-updates every document in `colRef` where `field === oldValue`,
