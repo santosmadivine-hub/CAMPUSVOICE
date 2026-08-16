@@ -825,6 +825,13 @@
     </div>
 
     <div class="card">
+      <div class="card-title">User Category Distribution <span class="card-sub">— % of respondents, by category</span></div>
+      <div class="chart-wrap" id="chart-user-category-wrap">
+        <canvas id="chart-user-category"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="card-title">Dimension Performance <span class="card-sub">— per category, 5 questions each</span></div>
 
       <div class="analytics-grid">
@@ -1186,6 +1193,31 @@ function normalizeSex(value) {
   return raw;
 }
 
+const USER_CATEGORY_BUCKETS = ["Student", "Faculty/Staff", "Visitor", "Guest"];
+
+function normalizeUserCategory(value) {
+  const raw = (value ?? "").toString().trim();
+  if (!raw) return "Other";
+
+  const normalized = raw.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+
+  if (normalized === "student" || normalized === "students") return "Student";
+  if (
+    normalized === "faculty" ||
+    normalized === "staff" ||
+    normalized === "faculty staff" ||
+    normalized === "faculty/staff" ||
+    normalized === "employee" ||
+    normalized === "personnel"
+  ) {
+    return "Faculty/Staff";
+  }
+  if (normalized === "visitor" || normalized === "visitors") return "Visitor";
+  if (normalized === "guest" || normalized === "guests") return "Guest";
+
+  return "Other";
+}
+
 
 onSnapshot(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), (snapshot) => {
   comfortOffices = {};
@@ -1221,6 +1253,9 @@ onSnapshot(evalQuery, (snapshot) => {
       cleanlinessCategory: category,
       comments: data.comments || "",
       sex: normalizeSex(data.sex ?? data.gender ?? data.sexGender),
+      userCategory: normalizeUserCategory(
+        data.userCategory ?? data.respondentType ?? data.userType ?? data.respondentCategory ?? data.role
+      ),
       timestamp: Number(data.timestamp) || 0,
       evidence: parseEvidence(data)
     };
@@ -1237,6 +1272,7 @@ function renderAll() {
   renderStatCards();
   renderSexDistribution();
   renderCategoryPies();
+  renderUserCategoryChart();
   renderOfficeTrend();
   renderDimensionPerformance();
 }
@@ -1454,6 +1490,92 @@ function renderCategoryPies() {
       { label: "With Evidence", count: withEvidence, color: CATEGORY_META[cat].color },
       { label: "No Evidence", count: withoutEvidence, color: "#e2e8f0" }
     ]);
+  });
+}
+
+
+let userCategoryChart = null;
+
+function renderUserCategoryChart() {
+  const wrapId = "chart-user-category-wrap";
+  const canvasId = "chart-user-category";
+  const wrap = document.getElementById(wrapId);
+
+  if (userCategoryChart) {
+    userCategoryChart.destroy();
+    userCategoryChart = null;
+  }
+
+  if (evaluations.length === 0) {
+    wrap.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
+    return;
+  }
+
+  if (!document.getElementById(canvasId)) {
+    wrap.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+  }
+
+  const crList = evaluations.filter(e => e.cleanlinessCategory === "Comfort Room");
+  const surrList = evaluations.filter(e => e.cleanlinessCategory === "Surroundings");
+
+  function pctBreakdown(list) {
+    const total = list.length;
+    const counts = {};
+    USER_CATEGORY_BUCKETS.forEach(b => { counts[b] = 0; });
+    list.forEach(e => {
+      if (counts.hasOwnProperty(e.userCategory)) counts[e.userCategory]++;
+    });
+    return USER_CATEGORY_BUCKETS.map(b => total ? (counts[b] / total) * 100 : 0);
+  }
+
+  const crPct = pctBreakdown(crList);
+  const surrPct = pctBreakdown(surrList);
+
+  userCategoryChart = safeRenderChart(wrapId, canvasId, (canvas) => {
+    return new Chart(canvas, {
+      type: "bar",
+      data: {
+        labels: USER_CATEGORY_BUCKETS,
+        datasets: [
+          {
+            label: `${CATEGORY_META["Comfort Room"].icon} Comfort Room`,
+            data: crPct.map(v => Number(v.toFixed(1))),
+            backgroundColor: CATEGORY_META["Comfort Room"].color,
+            borderRadius: 6
+          },
+          {
+            label: `${CATEGORY_META["Surroundings"].icon} Surroundings`,
+            data: surrPct.map(v => Number(v.toFixed(1))),
+            backgroundColor: CATEGORY_META["Surroundings"].color,
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: "top", labels: { font: { family: "'DM Sans', sans-serif", size: 12 } } },
+          tooltip: {
+            callbacks: {
+              label: (item) => {
+                const list = item.datasetIndex === 0 ? crList : surrList;
+                const count = list.filter(e => e.userCategory === item.label).length;
+                return `${item.dataset.label}: ${item.formattedValue}% (${count} of ${list.length})`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            min: 0,
+            max: 100,
+            ticks: { callback: (v) => v + "%" }
+          }
+        }
+      }
+    });
   });
 }
 
