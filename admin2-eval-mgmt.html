@@ -85,65 +85,6 @@
     color:#94a3b8;
   }
 
-  @media (max-width: 1200px) {
-    .stat-value {
-      font-size: 30px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    .stat-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (max-width: 900px) {
-    .stat-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (max-width: 768px) {
-    .stat-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-  }
-
-  @media (max-width: 600px) {
-    .stat-card {
-      padding: 16px 16px 18px;
-    }
-    .stat-value {
-      font-size: 26px;
-    }
-    .stat-icon {
-      width: 32px;
-      height: 32px;
-      font-size: 14px;
-      top: 14px;
-      right: 14px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .stat-grid {
-      grid-template-columns: 1fr;
-    }
-    .stat-value {
-      font-size: 28px;
-    }
-  }
-
-  @media (max-width: 360px) {
-    .stat-grid {
-      gap: 10px;
-    }
-    .stat-card {
-      padding: 14px 14px 18px;
-    }
-  }
-
   /* Toolbar */
   .submissions-toolbar {
     display: flex;
@@ -169,6 +110,7 @@
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
     -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
   }
 
   .btn-secondary {
@@ -263,6 +205,17 @@
     margin-bottom: 18px;
     border-bottom: 1px solid #e2e8f0;
     flex-wrap: wrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .eval-tabs::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  .eval-tabs::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
   }
 
   .eval-tab {
@@ -281,6 +234,7 @@
     gap: 8px;
     transition: all 0.2s ease;
     white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .eval-tab:hover {
@@ -355,18 +309,27 @@
   .table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    border: 1px solid #bae6fd;
   }
-  .table-wrap::-webkit-scrollbar {
-  width: 5px;
-  }
-  .table-wrap::-webkit-scrollbar {
-  height: 7px;   /* Change this value to make it thicker or thinner */
-}
 
+  .table-wrap::-webkit-scrollbar {
+    height: 7px;
+  }
+
+  .table-wrap::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+  }
+
+  .table-wrap::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
   .submissions-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 900px;
   }
 
   .submissions-table th {
@@ -377,13 +340,16 @@
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: #94a3b8;
-    padding: 14px 10px;
-    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 8px;
+    border-bottom: 2px solid #e2e8f0;
     white-space: nowrap;
+    background: #f8fafc;
+    position: sticky;
+    top: 0;
   }
 
   .submissions-table td {
-    padding: 14px 10px;
+    padding: 12px 8px;
     border-bottom: 1px solid #edf2f7;
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
@@ -398,10 +364,13 @@
   .row-index {
     color: #94a3b8;
     font-size: 12px;
+    font-weight: 600;
   }
 
   .rating-q-cell {
     text-align: center;
+    font-weight: 600;
+    color: #0284c7;
   }
 
   .empty-row td {
@@ -438,58 +407,41 @@
     color: #166534;
   }
 
-  /* Action Links */
-  .btn-view {
-    background: none;
-    border: none;
-    color: #2563eb;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    padding: 0;
-    margin-right: 14px;
-  }
-
-  .btn-view:hover {
-    text-decoration: underline;
-  }
-
-  .btn-edit {
-    background: none;
-    border: none;
-    color: #c2410c;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    padding: 0;
-    margin-right: 14px;
-  }
-
-  .btn-edit:hover {
-    text-decoration: underline;
-  }
-
+  /* Action Links - Emoji Buttons */
+  .btn-view,
+  .btn-edit,
   .btn-delete {
     background: none;
     border: none;
-    color: #dc2626;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
+    font-size: 18px;
     cursor: pointer;
-    padding: 0;
+    padding: 4px 6px;
+    margin-right: 6px;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    display: inline-block;
+    line-height: 1;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
+  .btn-view:hover,
+  .btn-edit:hover,
   .btn-delete:hover {
-    text-decoration: underline;
+    transform: scale(1.3);
+    opacity: 0.85;
+  }
+
+  .btn-view:active,
+  .btn-edit:active,
+  .btn-delete:active {
+    transform: scale(0.85);
+    opacity: 1;
   }
 
   .btn-delete:disabled {
-    opacity: 0.5;
-    cursor: default;
-    text-decoration: none;
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
   }
 
   /* Modals */
@@ -502,6 +454,7 @@
     justify-content: center;
     z-index: 999;
     padding: 20px;
+    backdrop-filter: blur(2px);
   }
 
   .modal-overlay.open {
@@ -518,6 +471,18 @@
     max-height: 85vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    animation: slideUp 0.2s ease;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .modal-content h3 {
@@ -547,11 +512,13 @@
     color: #94a3b8;
     font-weight: 600;
     min-width: 120px;
+    flex-shrink: 0;
   }
 
   .modal-row span:last-child {
     word-break: break-word;
     text-align: right;
+    flex: 1;
   }
 
   .modal-footer {
@@ -707,19 +674,431 @@
     color: #94a3b8;
   }
 
-  @media (max-width: 768px) {
-    .submissions-filter-row {
-      flex-direction: column;
+  /* ========== RESPONSIVE MEDIA QUERIES ========== */
+
+  @media (max-width: 1200px) {
+    .stat-value {
+      font-size: 26px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .stat-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .stat-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
 
-    .search-input-wrap,
+    .submissions-table th,
+    .submissions-table td {
+      padding: 10px 6px;
+      font-size: 12px;
+    }
+
+    .submissions-table th {
+      font-size: 10px;
+    }
+
+    .btn-view,
+    .btn-edit,
+    .btn-delete {
+      font-size: 12px;
+      margin-right: 6px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .card {
+      padding: 14px;
+      border-radius: 14px;
+    }
+
+    .stat-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      padding: 14px 14px 16px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+    }
+
+    .stat-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+      top: 12px;
+      right: 12px;
+    }
+
+    .submissions-toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .card-title {
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .toolbar-actions {
+      width: 100%;
+    }
+
+    .toolbar-actions .btn {
+      flex: 1;
+    }
+
+    .submissions-filter-row {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .search-input-wrap {
+      width: 100%;
+      min-width: unset;
+    }
+
     .office-filter-select {
       width: 100%;
       min-width: unset;
     }
 
+    .submissions-table th,
+    .submissions-table td {
+      padding: 8px 6px;
+      font-size: 11px;
+    }
+
+    .submissions-table th {
+      font-size: 9px;
+    }
+
+    .btn-view,
+    .btn-edit,
+    .btn-delete {
+      font-size: 11px;
+      margin-right: 4px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
     .modal-content {
-      padding: 20px;
+      padding: 18px;
+      max-width: 100%;
+    }
+
+    .modal-content h3 {
+      font-size: 16px;
+      margin-bottom: 14px;
+    }
+
+    .modal-row {
+      font-size: 13px;
+      flex-direction: column;
+    }
+
+    .modal-row span:first-child {
+      min-width: unset;
+      margin-bottom: 4px;
+    }
+
+    .modal-row span:last-child {
+      text-align: left;
+    }
+
+    .modal-footer {
+      flex-direction: column-reverse;
+    }
+
+    .modal-footer .btn {
+      width: 100%;
+    }
+
+    .category-tabs {
+      gap: 6px;
+    }
+
+    .category-tab {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .category-tab .tab-count {
+      font-size: 10px;
+      padding: 0px 5px;
+    }
+
+    .eval-tabs {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .eval-tab {
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+
+    .evidence-gallery {
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 8px;
+    }
+
+    .evidence-gallery-item img,
+    .evidence-gallery-item video {
+      height: 80px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .stat-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+    }
+
+    .card {
+      padding: 12px;
+      border-radius: 12px;
+    }
+
+    .card-title {
+      font-size: 14px;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .submissions-table {
+      min-width: 100%;
+    }
+
+    .submissions-table th,
+    .submissions-table td {
+      padding: 6px 4px;
+      font-size: 10px;
+    }
+
+    .submissions-table th {
+      font-size: 8px;
+    }
+
+    .row-index {
+      font-size: 10px;
+    }
+
+    .status-badge {
+      padding: 3px 8px;
+      font-size: 11px;
+    }
+
+    .btn-view,
+    .btn-edit,
+    .btn-delete {
+      font-size: 10px;
+      display: block;
+      margin-bottom: 3px;
+      margin-right: 0;
+    }
+
+    .search-input-wrap input {
+      font-size: 13px;
+    }
+
+    .office-filter-select {
+      font-size: 13px;
+    }
+
+    .modal-content {
+      padding: 14px;
+      max-height: 90vh;
+      border-radius: 14px;
+    }
+
+    .modal-content h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .modal-row {
+      padding: 8px 0;
+      font-size: 12px;
+    }
+
+    .edit-field {
+      margin-bottom: 12px;
+    }
+
+    .edit-field label {
+      font-size: 11px;
+    }
+
+    .edit-field select {
+      height: 40px;
+      font-size: 13px;
+    }
+
+    .category-tab {
+      padding: 7px 10px;
+      font-size: 11px;
+    }
+
+    .eval-tab {
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+
+    .evidence-gallery {
+      grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+      gap: 6px;
+    }
+
+    .evidence-gallery-item img,
+    .evidence-gallery-item video {
+      height: 70px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .stat-value {
+      font-size: 20px;
+    }
+
+    .stat-card {
+      padding: 10px 10px 12px;
+    }
+
+    .stat-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      top: 10px;
+      right: 10px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+    }
+
+    .stat-sub {
+      font-size: 11px;
+    }
+
+    .card {
+      padding: 10px;
+      margin-bottom: 16px;
+    }
+
+    .submissions-toolbar {
+      gap: 6px;
+    }
+
+    .toolbar-actions .btn {
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+
+    .submissions-filter-row {
+      gap: 8px;
+    }
+
+    .search-input-wrap {
+      height: 40px;
+      padding: 0 10px;
+      font-size: 12px;
+    }
+
+    .search-input-wrap input {
+      font-size: 12px;
+    }
+
+    .office-filter-select {
+      height: 40px;
+      padding: 0 10px;
+      font-size: 12px;
+    }
+
+    .submissions-table th,
+    .submissions-table td {
+      padding: 4px 3px;
+      font-size: 9px;
+    }
+
+    .submissions-table th {
+      font-size: 7px;
+      padding: 3px 2px;
+    }
+
+    .status-badge {
+      padding: 2px 6px;
+      font-size: 10px;
+    }
+
+    .category-tab {
+      padding: 6px 8px;
+      font-size: 10px;
+    }
+
+    .category-tab .tab-count {
+      font-size: 8px;
+    }
+
+    .eval-tab {
+      padding: 6px 8px;
+      font-size: 10px;
+    }
+
+    .evidence-gallery {
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 4px;
+    }
+
+    .evidence-gallery-item img,
+    .evidence-gallery-item video {
+      height: 60px;
+    }
+
+    .evidence-gallery-item .evidence-type-tag {
+      font-size: 8px;
+      padding: 1px 4px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .stat-grid {
+      gap: 8px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+    }
+
+    .submissions-table th,
+    .submissions-table td {
+      padding: 3px 2px;
+      font-size: 8px;
+    }
+
+    .evidence-gallery {
+      grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+    }
+
+    .evidence-gallery-item img,
+    .evidence-gallery-item video {
+      height: 50px;
     }
   }
 </style>
@@ -769,14 +1148,10 @@
           </div>
         </div>
 
-        <!-- Category tabs: cleanliness evaluations are split into Comfort
-             Room and Surroundings (separate office lists + separate
-             Firestore subtree per the Android app). Switching tabs
-             filters stats, the office dropdown, and the table to just
-             that category. -->
+        <!-- Category tabs -->
         <div class="category-tabs" id="category-tabs">
-          <button class="category-tab active" data-category="all">🗂 All Categories <span class="tab-count" id="cat-count-all">0</span></button>
-          <button class="category-tab" data-category="Comfort Room">🚻 Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
+          <button class="category-tab active" data-category="all">🗂 All <span class="tab-count" id="cat-count-all">0</span></button>
+          <button class="category-tab" data-category="Comfort Room">🚻 Comfort <span class="tab-count" id="cat-count-comfort">0</span></button>
           <button class="category-tab" data-category="Surroundings">🌳 Surroundings <span class="tab-count" id="cat-count-surroundings">0</span></button>
         </div>
 
@@ -784,7 +1159,7 @@
         <div class="eval-tabs" id="eval-tabs">
           <button class="eval-tab active" data-tab="recent">Recent <span class="tab-count" id="tab-count-recent">0</span></button>
           <button class="eval-tab" data-tab="pending">Pending <span class="tab-count" id="tab-count-pending">0</span></button>
-          <button class="eval-tab" data-tab="no_action">No Action Required <span class="tab-count" id="tab-count-no_action">0</span></button>
+          <button class="eval-tab" data-tab="no_action">No Action <span class="tab-count" id="tab-count-no_action">0</span></button>
           <button class="eval-tab" data-tab="resolved">Resolved <span class="tab-count" id="tab-count-resolved">0</span></button>
         </div>
 
@@ -804,10 +1179,7 @@
           <table class="submissions-table">
             <thead>
               <tr id="submissions-thead-row">
-                <!-- #, Office, Category, Q1..Q5, Comments, Evidence, Status,
-                     Date, Action are built dynamically in JS so the number
-                     of rating columns (TOTAL_RATING_QUESTIONS) only needs
-                     to be changed in one place. -->
+                <!-- Built dynamically -->
               </tr>
             </thead>
             <tbody id="submissions-tbody"></tbody>
@@ -821,7 +1193,7 @@
 <!-- VIEW DETAIL MODAL -->
 <div class="modal-overlay" id="detail-modal">
   <div class="modal-content">
-    <h3>📋 Submission Details</h3>
+    <h3>📋 Details</h3>
     <div id="detail-modal-body"></div>
     <div class="modal-footer">
       <button class="btn btn-primary" id="detail-modal-close">Close</button>
@@ -832,7 +1204,7 @@
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="edit-modal">
   <div class="modal-content">
-    <h3>✏️ Edit Submission</h3>
+    <h3>✏️ Edit Status</h3>
     <div id="edit-modal-meta" style="margin-bottom: 18px;"></div>
     <div class="edit-field">
       <label for="edit-status-select">Status</label>
@@ -843,7 +1215,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" id="edit-modal-cancel">Cancel</button>
-      <button class="btn btn-primary" id="edit-modal-save">Save Changes</button>
+      <button class="btn btn-primary" id="edit-modal-save">Save</button>
     </div>
   </div>
 </div>
@@ -851,10 +1223,10 @@
 <!-- DELETE CONFIRM MODAL -->
 <div class="modal-overlay" id="delete-modal">
   <div class="modal-content">
-    <h3>🗑️ Delete Submission</h3>
+    <h3>🗑️ Delete</h3>
     <div id="delete-modal-meta" style="margin-bottom: 18px;"></div>
     <p style="font-family:'DM Sans',sans-serif; font-size:14px; color:#64748b; margin: 0;">
-      This will permanently remove this evaluation submission. This action cannot be undone.
+      This will permanently remove this submission. This action cannot be undone.
     </p>
     <div class="modal-footer">
       <button class="btn btn-secondary" id="delete-modal-cancel">Cancel</button>
@@ -901,76 +1273,35 @@ document.getElementById("sidebar-mount").innerHTML =
 document.getElementById("topbar-mount").innerHTML =
   buildTopbar("Evaluation Management", "admin2");
 
-// ======================
-// FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
-// ======================
-// ComfortRoomEvalActivity / SurroundingsEvalActivity write each
-// evaluation to TWO places:
-//   1. cleanliness_evaluations/{category}/offices/{officeName}/evaluations/{id}
-//      — nested, useful for per-office queries, but hard to list "all
-//      evaluations across every office" from without a collection-group
-//      query.
-//   2. evaluation_history/{id} — a FLAT mirror of the exact same data
-//      (same fields, same id == evaluationId), written right after #1
-//      succeeds. This is what this page reads from, since it lets a
-//      single onSnapshot listener show every submission across both
-//      categories and every office at once.
-// When an admin edits a submission's status here, we write to BOTH
-// locations (see saveStatusUpdate) so they stay in sync. Deletes follow
-// the same pattern (see deleteEvaluation).
 const EVAL_HISTORY_COLLECTION = "evaluation_history";
 const NESTED_EVAL_ROOT = "cleanliness_evaluations";
 
-// Each cleanliness category keeps its own office list, in a separately
-// named Firestore collection (mirrors CleanOfficeSelectActivity.officeCollectionName()).
-// Kept exactly as named in the app, including the differing hyphen vs
-// underscore convention.
 const OFFICE_COLLECTIONS = {
   "Comfort Room": "office-names-comfort-room",
   "Surroundings": "office_names_surroundings"
 };
 const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
-const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved before cleanlinessCategory existed
+const DEFAULT_CATEGORY = "Comfort Room";
 
-// ComfortRoomEvalActivity / SurroundingsEvalActivity both set
-// TOTAL_QUESTIONS = 5 and only ever write rating1...rating5 — confirmed
-// directly from the submission code, not just the console. Every place
-// that needs to loop over the rating questions (table headers, row
-// cells, detail modal, CSV export) drives off this constant so there's
-// only one place to change if it's ever adjusted.
 const TOTAL_RATING_QUESTIONS = 5;
-
-// Evaluations with an average rating at or above this threshold (out of
-// 5, matching Admin 3's eval-mgmt page) are treated as positive feedback
-// and auto-classified as "No Action Required" instead of "Pending", so
-// admins only need to look at genuinely low-rated submissions in the
-// Pending tab. Adjust this single constant to tune the cutoff.
 const LOW_RATING_THRESHOLD = 3;
 
-// Display labels/icons for each status value, used across the table,
-// stat pills, detail modal, and CSV export.
 const STATUS_META = {
   pending: { label: "Pending", icon: "⏳" },
-  no_action: { label: "No Action Required", icon: "🙅" },
+  no_action: { label: "No Action", icon: "🙅" },
   resolved: { label: "Resolved", icon: "✅" }
 };
 
-// ======================
-// STATE
-// ======================
 let evaluations = [];
-let comfortOffices = {};      // id -> name, from office-names-comfort-room
-let surroundingsOffices = {}; // id -> name, from office_names_surroundings
+let comfortOffices = {};
+let surroundingsOffices = {};
 let searchTerm = "";
 let officeFilter = "";
-let categoryFilter = "all"; // "all" | "Comfort Room" | "Surroundings"
+let categoryFilter = "all";
 let currentTab = "recent";
 let editingId = null;
 let deletingId = null;
 
-// ======================
-// HELPERS
-// ======================
 function makeCode(officeName, id) {
   const prefix = (officeName || "GEN")
     .toUpperCase()
@@ -980,7 +1311,6 @@ function makeCode(officeName, id) {
   return `${prefix}-${suffix}`;
 }
 
-// Averages rating1 ... ratingN (out of 5) for one record.
 function evalAvg(record) {
   let sum = 0;
   for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
@@ -989,11 +1319,6 @@ function evalAvg(record) {
   return sum / TOTAL_RATING_QUESTIONS;
 }
 
-// Normalizes evidence into a consistent array of { url, type }.
-// Supports the current multi-file Android schema (evidenceUrls[] /
-// evidenceTypes[]), the earlier single-file schema (evidenceUrl /
-// evidenceType), and the very first schema (fileUrl only, type unknown —
-// guessed from the file extension).
 function parseEvidence(data) {
   const items = [];
 
@@ -1020,17 +1345,6 @@ function parseEvidence(data) {
   return items;
 }
 
-// Normalizes whatever is stored under a record's status into "pending",
-// "no_action", or "resolved" (mirrors Admin 3's eval-mgmt page).
-//
-// Records with no status field at all — which today is every record the
-// app writes, since it never sets a status field on submit — are
-// auto-classified from their average rating instead of defaulting to
-// "pending":
-//   - avgRating < LOW_RATING_THRESHOLD  -> "pending"    (needs attention)
-//   - avgRating >= LOW_RATING_THRESHOLD -> "no_action"   (positive feedback)
-// Once an admin explicitly sets a status via the Edit modal, that saved
-// value is always respected and skips the auto-classification.
 function parseEvalStatus(data, avgRating) {
   const stored = (data.status || "").toString().toLowerCase();
   if (stored === "resolved" || stored === "pending" || stored === "no_action") {
@@ -1045,9 +1359,6 @@ function categoryPillHtml(category) {
   return `<span class="category-pill ${cls}">${icon} ${category}</span>`;
 }
 
-// ======================
-// BUILD TABLE HEADER (# / Office / Category / Q1..Q5 / Comments / Evidence / Status / Date / Action)
-// ======================
 function renderTableHeader() {
   const headRow = document.getElementById("submissions-thead-row");
 
@@ -1059,21 +1370,17 @@ function renderTableHeader() {
   headRow.innerHTML = `
     <th>#</th>
     <th>Office</th>
-    <th>Category</th>
+    <th>Cat</th>
     ${questionHeaders}
-    <th>Comments</th>
-    <th>Evidence</th>
+    <th>Comm</th>
+    <th>Evd</th>
     <th>Status</th>
     <th>Date</th>
-    <th>Action</th>
+    <th>Act</th>
   `;
 }
 renderTableHeader();
 
-// ======================
-// LOAD OFFICES (both category collections, always on — used to build the
-// office filter dropdown for whichever category tab is active)
-// ======================
 onSnapshot(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), (snapshot) => {
   comfortOffices = {};
   snapshot.forEach((doc) => {
@@ -1092,11 +1399,6 @@ onSnapshot(collection(db, OFFICE_COLLECTIONS["Surroundings"]), (snapshot) => {
   populateOfficeFilter();
 });
 
-// ======================
-// LOAD EVALUATIONS from the flat evaluation_history mirror (real-time —
-// fires for every new Android submission, across both categories and
-// every office, in one listener)
-// ======================
 const evalCollectionRef = collection(db, EVAL_HISTORY_COLLECTION);
 const evalQuery = query(evalCollectionRef, orderBy("timestamp", "desc"));
 
@@ -1115,19 +1417,12 @@ onSnapshot(evalQuery, (snapshot) => {
       comments: data.comments || "",
       timestamp: Number(data.timestamp) || 0,
       evidence: parseEvidence(data),
-      // Extra respondent/record metadata — captured so the View detail
-      // modal can display the full submission, not just the ratings.
       sex: data.sex || "-",
       userCategory: data.userCategory || "-",
       userId: data.userId || "-",
-      // evaluationId is normally identical to the Firestore doc id
-      // (doc.id), but we still read the stored field with a fallback
-      // in case an older record predates this field being written.
       evaluationId: data.evaluationId || doc.id
     };
 
-    // Pull rating1 ... rating5 (matches what ComfortRoomEvalActivity /
-    // SurroundingsEvalActivity actually write — TOTAL_QUESTIONS = 5).
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
       record["rating" + i] = Number(data["rating" + i]) || 0;
     }
@@ -1146,23 +1441,17 @@ onSnapshot(evalQuery, (snapshot) => {
   renderSubmissions();
 });
 
-// ======================
-// CATEGORY TABS
-// ======================
 document.getElementById("category-tabs").addEventListener("click", (ev) => {
   const btn = ev.target.closest(".category-tab");
   if (!btn) return;
   categoryFilter = btn.getAttribute("data-category");
   document.querySelectorAll(".category-tab").forEach(t => t.classList.toggle("active", t === btn));
-  officeFilter = ""; // switching category invalidates the previously selected office
+  officeFilter = "";
   document.getElementById("office-filter").value = "";
   populateOfficeFilter();
   renderSubmissions();
 });
 
-// ======================
-// TABS
-// ======================
 document.getElementById("eval-tabs").addEventListener("click", (ev) => {
   const btn = ev.target.closest(".eval-tab");
   if (!btn) return;
@@ -1171,13 +1460,9 @@ document.getElementById("eval-tabs").addEventListener("click", (ev) => {
   renderSubmissions();
 });
 
-// ======================
-// RENDER
-// ======================
 function officesForCategory(category) {
   if (category === "Comfort Room") return comfortOffices;
   if (category === "Surroundings") return surroundingsOffices;
-  // "all" — combine both, since evaluations may reference either list
   return { ...comfortOffices, ...surroundingsOffices };
 }
 
@@ -1216,7 +1501,6 @@ function getFilteredSubmissions() {
     .sort((a, b) => b.timestamp - a.timestamp);
 }
 
-// Builds the Q1..Q5 <td> cells for one evaluation row.
 function ratingCellsHtml(e) {
   let html = "";
   for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
@@ -1225,35 +1509,29 @@ function ratingCellsHtml(e) {
   return html;
 }
 
-// Builds the Evidence <td> cell — a clickable badge summarizing image
-// and video counts, or "No evidence" if the record has none. Clicking
-// it opens the same detail modal as the View action.
 function evidenceCellHtml(e) {
   const imgCount = e.evidence.filter(item => item.type === "image").length;
   const vidCount = e.evidence.filter(item => item.type === "video").length;
 
   if (imgCount === 0 && vidCount === 0) {
-    return `<span class="evidence-badge empty">No evidence</span>`;
+    return `<span class="evidence-badge empty">—</span>`;
   }
 
   const parts = [];
   if (imgCount) parts.push(`📷 ${imgCount}`);
   if (vidCount) parts.push(`🎥 ${vidCount}`);
 
-  return `<span class="evidence-badge evidence-cell" data-eval-id="${e.id}">${parts.join("  ")}</span>`;
+  return `<span class="evidence-badge evidence-cell" data-eval-id="${e.id}">${parts.join(" ")}</span>`;
 }
 
 function renderSubmissions() {
   const categoryScoped = getCategoryFilteredSubmissions();
   const filtered = getFilteredSubmissions();
 
-  // Category tab counts always reflect ALL evaluations (unfiltered by
-  // status/office/search), so the tabs read as a stable overview.
   document.getElementById("cat-count-all").textContent = evaluations.length;
   document.getElementById("cat-count-comfort").textContent = evaluations.filter(e => e.cleanlinessCategory === "Comfort Room").length;
   document.getElementById("cat-count-surroundings").textContent = evaluations.filter(e => e.cleanlinessCategory === "Surroundings").length;
 
-  // Update stats (scoped to the active category tab)
   document.getElementById("stat-total").textContent = categoryScoped.length;
   document.getElementById("stat-total-sub").textContent = categoryFilter === "all" ? "All Submissions" : categoryFilter;
 
@@ -1271,10 +1549,6 @@ function renderSubmissions() {
 
   const tbody = document.getElementById("submissions-tbody");
 
-  // #, Office, Category, Q1..Q5, Comments, Evidence, Status, Date, Action
-  // The Action column (View / Edit / Delete) is now shown on every tab
-  // and every category, so Delete is always reachable, not just from
-  // the Pending/Resolved tabs.
   const colCount = 3 + TOTAL_RATING_QUESTIONS + 5;
 
   if (filtered.length === 0) {
@@ -1282,27 +1556,25 @@ function renderSubmissions() {
     return;
   }
 
-  // Edit is only available for Pending and Resolved records — records
-  // that are No Action Required only get View + Delete, matching Admin 3.
   tbody.innerHTML = filtered.map((e, i) => {
-    const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-";
+    const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-";
     const meta = STATUS_META[e.status] || STATUS_META.pending;
     const showEditButton = e.status !== "no_action";
     const actionCell = `
         <td>
-          <button class="btn-view" data-eval-id="${e.id}">View</button>
-          ${showEditButton ? `<button class="btn-edit" data-eval-id="${e.id}">Edit</button>` : ""}
-          <button class="btn-delete" data-eval-id="${e.id}">Delete</button>
+          <button class="btn-view" data-eval-id="${e.id}" title="View details">👁️</button>
+          ${showEditButton ? `<button class="btn-edit" data-eval-id="${e.id}" title="Edit status">✏️</button>` : ""}
+          <button class="btn-delete" data-eval-id="${e.id}" title="Delete submission">🗑️</button>
         </td>`;
     return `
       <tr>
         <td class="row-index">${i + 1}</td>
-        <td>${e.officeName}</td>
-        <td>${categoryPillHtml(e.cleanlinessCategory)}</td>
+        <td>${e.officeName.substring(0, 12)}</td>
+        <td>${e.cleanlinessCategory === "Surroundings" ? "🌳" : "🚻"}</td>
         ${ratingCellsHtml(e)}
-        <td>${e.comments || "-"}</td>
+        <td title="${e.comments}">${e.comments ? "📝" : "—"}</td>
         <td>${evidenceCellHtml(e)}</td>
-        <td><span class="status-badge ${e.status}">${meta.icon} ${meta.label}</span></td>
+        <td><span class="status-badge ${e.status}">${meta.icon}</span></td>
         <td>${date}</td>${actionCell}
       </tr>
     `;
@@ -1322,9 +1594,6 @@ function renderSubmissions() {
   });
 }
 
-// ======================
-// SEARCH / FILTER
-// ======================
 document.getElementById("search-input").addEventListener("input", (ev) => {
   searchTerm = ev.target.value;
   renderSubmissions();
@@ -1335,13 +1604,10 @@ document.getElementById("office-filter").addEventListener("change", (ev) => {
   renderSubmissions();
 });
 
-// ======================
-// REFRESH
-// ======================
 document.getElementById("btn-refresh").addEventListener("click", () => {
   const btn = document.getElementById("btn-refresh");
   const original = btn.textContent;
-  btn.textContent = "🔄 Refreshing...";
+  btn.textContent = "⏳";
   btn.disabled = true;
   renderSubmissions();
   setTimeout(() => {
@@ -1350,9 +1616,6 @@ document.getElementById("btn-refresh").addEventListener("click", () => {
   }, 500);
 });
 
-// ======================
-// EXPORT CSV
-// ======================
 document.getElementById("btn-export").addEventListener("click", () => {
   const filtered = getFilteredSubmissions();
 
@@ -1405,16 +1668,13 @@ document.getElementById("btn-export").addEventListener("click", () => {
 
   const link = document.createElement("a");
   link.href = url;
-  link.download = `cleanliness-submissions-${categoryFilter === "all" ? "all" : categoryFilter.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `eval-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 });
 
-// ======================
-// VIEW DETAIL MODAL
-// ======================
 const detailModal = document.getElementById("detail-modal");
 const detailModalBody = document.getElementById("detail-modal-body");
 
@@ -1437,9 +1697,9 @@ function openDetailModal(evalId) {
     ${questionRows}
     <div class="modal-row"><span>Comments</span><span>${e.comments || "-"}</span></div>
     <div class="modal-row"><span>Sex</span><span>${e.sex}</span></div>
-    <div class="modal-row"><span>Respondent Type</span><span>${e.userCategory}</span></div>
+    <div class="modal-row"><span>Type</span><span>${e.userCategory}</span></div>
     <div class="modal-row"><span>User ID</span><span>${e.userId}</span></div>
-    <div class="modal-row"><span>Evaluation ID</span><span>${e.evaluationId}</span></div>
+    <div class="modal-row"><span>Eval ID</span><span>${e.evaluationId}</span></div>
     <div class="modal-row"><span>Status</span><span>${statusLabel}</span></div>
     <div class="modal-row"><span>Submitted</span><span>${date}</span></div>
     <div class="modal-row" style="display:block;">
@@ -1451,13 +1711,9 @@ function openDetailModal(evalId) {
   detailModal.classList.add("open");
 }
 
-// Renders the thumbnail grid inside the detail modal from a record's
-// normalized evidence array. Images use <img>, videos use a muted
-// <video> frame with a "Video" tag; both are wrapped in a link that
-// opens the full Cloudinary URL in a new tab.
 function evidenceGalleryHtml(e) {
   if (!e.evidence.length) {
-    return `<div class="evidence-empty-note">No images or videos were attached.</div>`;
+    return `<div class="evidence-empty-note">No images or videos attached.</div>`;
   }
 
   const items = e.evidence.map(item => {
@@ -1485,9 +1741,6 @@ detailModal.addEventListener("click", (ev) => {
   if (ev.target === detailModal) detailModal.classList.remove("open");
 });
 
-// ======================
-// EDIT MODAL
-// ======================
 const editModal = document.getElementById("edit-modal");
 const editModalMeta = document.getElementById("edit-modal-meta");
 const editStatusSelect = document.getElementById("edit-status-select");
@@ -1497,8 +1750,6 @@ function openEditModal(evalId) {
   const e = evaluations.find(item => item.id === evalId);
   if (!e) return;
 
-  // Edit is not reachable from the No Action Required tab; guard here
-  // too in case this is ever called from elsewhere.
   if (e.status === "no_action") return;
 
   const date = e.timestamp ? new Date(e.timestamp).toLocaleString() : "-";
@@ -1527,12 +1778,6 @@ editModal.addEventListener("click", (ev) => {
   }
 });
 
-// Writes the new status to BOTH copies of the record — the flat
-// evaluation_history/{id} mirror this page reads from, and the nested
-// cleanliness_evaluations/{category}/offices/{officeName}/evaluations/{id}
-// doc the Android app originally wrote — so nothing goes out of sync if
-// another surface (e.g. an office analytics page) reads the nested tree
-// directly.
 async function saveStatusUpdate(record, newStatus) {
   const flatRef = doc(db, EVAL_HISTORY_COLLECTION, record.id);
   const nestedRef = doc(
@@ -1547,11 +1792,7 @@ async function saveStatusUpdate(record, newStatus) {
 
   await Promise.all([
     updateDoc(flatRef, { status: newStatus }),
-    updateDoc(nestedRef, { status: newStatus }).catch(() => {
-      // If the nested doc can't be found/updated (e.g. office was
-      // renamed after submission, breaking the path) we still keep the
-      // flat mirror — which this page relies on — up to date.
-    })
+    updateDoc(nestedRef, { status: newStatus }).catch(() => {})
   ]);
 }
 
@@ -1564,7 +1805,7 @@ editSaveBtn.addEventListener("click", async () => {
   const newStatus = editStatusSelect.value;
 
   editSaveBtn.disabled = true;
-  editSaveBtn.textContent = "Saving...";
+  editSaveBtn.textContent = "⏳";
 
   try {
     await saveStatusUpdate(record, newStatus);
@@ -1575,13 +1816,10 @@ editSaveBtn.addEventListener("click", async () => {
     console.error(err);
   } finally {
     editSaveBtn.disabled = false;
-    editSaveBtn.textContent = "Save Changes";
+    editSaveBtn.textContent = "Save";
   }
 });
 
-// ======================
-// DELETE MODAL
-// ======================
 const deleteModal = document.getElementById("delete-modal");
 const deleteModalMeta = document.getElementById("delete-modal-meta");
 const deleteConfirmBtn = document.getElementById("delete-modal-confirm");
@@ -1615,11 +1853,6 @@ deleteModal.addEventListener("click", (ev) => {
   }
 });
 
-// Deletes both copies of the record — the flat evaluation_history/{id}
-// mirror this page reads from, and the nested
-// cleanliness_evaluations/{category}/offices/{officeName}/evaluations/{id}
-// doc the Android app originally wrote — so a deleted submission
-// disappears everywhere, not just here.
 async function deleteEvaluation(record) {
   const flatRef = doc(db, EVAL_HISTORY_COLLECTION, record.id);
   const nestedRef = doc(
@@ -1634,11 +1867,7 @@ async function deleteEvaluation(record) {
 
   await Promise.all([
     deleteDoc(flatRef),
-    deleteDoc(nestedRef).catch(() => {
-      // If the nested doc can't be found/deleted (e.g. office was
-      // renamed after submission, breaking the path) we still remove
-      // the flat mirror — which this page relies on.
-    })
+    deleteDoc(nestedRef).catch(() => {})
   ]);
 }
 
@@ -1649,7 +1878,7 @@ deleteConfirmBtn.addEventListener("click", async () => {
   if (!record) return;
 
   deleteConfirmBtn.disabled = true;
-  deleteConfirmBtn.textContent = "Deleting...";
+  deleteConfirmBtn.textContent = "⏳";
 
   try {
     await deleteEvaluation(record);
