@@ -470,7 +470,11 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  onSnapshot
+  onSnapshot,
+  query,
+  where,
+  getDocs,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -489,12 +493,14 @@ document.getElementById('topbar-mount').innerHTML  = buildTopbar('Office Managem
 
 const officesCol     = collection(db, "services", "offices", "records");
 const evaluationsCol = collection(db, "services", "evaluations", "records");
+const reportsCol     = collection(db, "services", "reports", "records");
 const officeTableBody = document.getElementById("officeTableBody");
 
 let offices   = {};
 let officeKeys = {};
 let allEvaluations = [];
 let tableSearchTerm = "";
+let renameInProgress = false;
 
 function avgScore(item) {
   let s=0,c=0;
@@ -509,8 +515,17 @@ document.getElementById("addOfficeBtn").addEventListener("click", async () => {
   const name = prompt("Enter Office Name:");
   if(!name || !name.trim()) return;
 
+  const trimmed = name.trim();
+  const duplicate = Object.keys(offices).some(
+    o => o.toLowerCase() === trimmed.toLowerCase()
+  );
+  if (duplicate) {
+    alert(`An office named "${trimmed}" already exists.`);
+    return;
+  }
+
   try {
-    await addDoc(officesCol, { name: name.trim() });
+    await addDoc(officesCol, { name: trimmed });
     alert("✓ Office added successfully!");
   } catch (error) {
     alert("Error adding office: " + error.message);
@@ -646,23 +661,143 @@ window.viewOffice = function(office) {
   window.location.href = `admin1-office-analytics.html?${params.toString()}`;
 };
 
+/**
+ * Renames an office while keeping it fully connected to its existing data.
+ *
+ * The office's Firestore document ID never changes and the document is never
+ * deleted/recreated — only its `name` field is updated. Because evaluations,
+ * transaction codes, and saved reports are currently linked to an office by
+ * its NAME (not its ID), a rename also has to migrate those records so the
+ * relationship survives:
+ *   1. evaluations   -> update `office` field: oldName -> newName
+ *   2. reports        -> update `office` field: oldName -> newName
+ *   3. transaction codes -> copy from .../office_name/{oldName}/codes
+ *                           to .../office_name/{newName}/codes, then delete
+ *                           the old ones (Firestore can't "rename" a path
+ *                           segment directly, so copy+delete is the safe
+ *                           equivalent of moving them)
+ *
+ * Each linked record is also stamped with `officeId` (the permanent doc ID)
+ * so that future tooling can look records up by ID instead of by name,
+ * without requiring another migration.
+ */
 window.editOffice = async function(office) {
+  if (renameInProgress) {
+    alert("A rename is already in progress. Please wait for it to finish.");
+    return;
+  }
+
   const newName = prompt("Edit Office Name:", office);
-  if(!newName || !newName.trim()) return;
-  
-  if(newName.trim() === office) {
+  if (!newName || !newName.trim()) return;
+
+  const trimmedNew = newName.trim();
+
+  if (trimmedNew === office) {
     alert("No changes made.");
     return;
   }
-  
+
+  const duplicate = Object.keys(offices).some(
+    o => o.toLowerCase() === trimmedNew.toLowerCase() && o !== office
+  );
+  if (duplicate) {
+    alert(`An office named "${trimmedNew}" already exists. Choose a different name.`);
+    return;
+  }
+
+  const officeId = officeKeys[office];
+  if (!officeId) {
+    alert("Could not find this office's record. Please refresh and try again.");
+    return;
+  }
+
+  const confirmMsg =
+    `Rename "${office}" to "${trimmedNew}"?\n\n` +
+    `All existing evaluations, transaction codes, and reports linked to ` +
+    `"${office}" will be moved to "${trimmedNew}". No data will be deleted.`;
+  if (!confirm(confirmMsg)) return;
+
+  renameInProgress = true;
+
   try {
-    const key = officeKeys[office];
-    await updateDoc(doc(db, "services", "offices", "records", key), { name: newName.trim() });
-    alert("✓ Office updated successfully!");
+    await migrateOfficeRename(officeId, office, trimmedNew);
+    alert(
+      `✓ Office renamed to "${trimmedNew}" successfully!\n\n` +
+      `Existing evaluations, transaction codes, and reports remain linked.`
+    );
   } catch (error) {
-    alert("Error updating office: " + error.message);
+    console.error("Office rename failed:", error);
+    alert(
+      "Error renaming office: " + error.message +
+      "\n\nSome records may have already been migrated. Please re-check the " +
+      "office's data (evaluations / codes / reports) and, if needed, re-run " +
+      "the rename to finish moving anything still under the old name."
+    );
+  } finally {
+    renameInProgress = false;
   }
 };
+
+async function migrateOfficeRename(officeId, oldName, newName) {
+  // 1) Update the office document itself. Same document ID throughout —
+  //    this is the permanent identifier for the office.
+  await updateDoc(doc(db, "services", "offices", "records", officeId), {
+    name: newName
+  });
+
+  // 2) Re-point evaluations that reference the old office name.
+  await batchUpdateFieldWhere(evaluationsCol, "office", oldName, newName, officeId);
+
+  // 3) Re-point saved reports that reference the old office name.
+  await batchUpdateFieldWhere(reportsCol, "office", oldName, newName, officeId);
+
+  // 4) Move transaction codes from the old name-keyed path to the new one.
+  await migrateTransactionCodes(oldName, newName, officeId);
+}
+
+// Batch-updates every document in `colRef` where `field === oldValue`,
+// setting `field` to `newValue` and stamping `officeId` for future use.
+// Chunked to stay under Firestore's 500-writes-per-batch limit.
+async function batchUpdateFieldWhere(colRef, field, oldValue, newValue, officeId) {
+  const q = query(colRef, where(field, "==", oldValue));
+  const snap = await getDocs(q);
+  if (snap.empty) return;
+
+  const docs = snap.docs;
+  const CHUNK = 450;
+
+  for (let i = 0; i < docs.length; i += CHUNK) {
+    const batch = writeBatch(db);
+    docs.slice(i, i + CHUNK).forEach(d => {
+      batch.update(d.ref, { [field]: newValue, officeId });
+    });
+    await batch.commit();
+  }
+}
+
+// Copies every code doc from services/transaction_code/office_name/{oldName}/codes
+// to .../office_name/{newName}/codes (preserving doc ID, status, createdAt, etc.),
+// then deletes the originals. Nothing is lost between the copy and the delete
+// because both happen inside the same committed batch per chunk.
+async function migrateTransactionCodes(oldName, newName, officeId) {
+  const oldCodesCol = collection(db, "services", "transaction_code", "office_name", oldName, "codes");
+  const snap = await getDocs(oldCodesCol);
+  if (snap.empty) return;
+
+  const newCodesCol = collection(db, "services", "transaction_code", "office_name", newName, "codes");
+
+  const docs = snap.docs;
+  const CHUNK = 200; // 2 writes per code (set + delete), keep well under 500
+
+  for (let i = 0; i < docs.length; i += CHUNK) {
+    const batch = writeBatch(db);
+    docs.slice(i, i + CHUNK).forEach(d => {
+      batch.set(doc(newCodesCol, d.id), { ...d.data(), officeId });
+      batch.delete(d.ref);
+    });
+    await batch.commit();
+  }
+}
 
 window.deleteOffice = async function(office) {
   if(!confirm(`Delete "${office}"? This action cannot be undone.`)) return;
