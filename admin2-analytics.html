@@ -729,7 +729,11 @@
 
   .mini-pie-block {
     flex: 1;
-    min-width: 200px;
+    min-width: 220px;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    border-radius: 14px;
+    padding: 16px;
   }
 
   .mini-pie-title {
@@ -744,8 +748,146 @@
 
   .mini-pie-row {
     display: flex;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .cat-badge {
+    display: inline-flex;
     align-items: center;
-    gap: 14px;
+    gap: 6px;
+    padding: 3px 10px 3px 8px;
+    border-radius: 999px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  .cat-badge .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .cat-badge.cr { background: #e0f2fe; color: #075985; }
+  .cat-badge.cr .dot { background: #0284c7; }
+  .cat-badge.surr { background: #dcfce7; color: #166534; }
+  .cat-badge.surr .dot { background: #16a34a; }
+
+  .evidence-donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+  }
+
+  .evidence-donut-visual {
+    position: relative;
+    width: 104px;
+    height: 104px;
+    flex-shrink: 0;
+  }
+
+  .evidence-donut-svg {
+    width: 104px;
+    height: 104px;
+    display: block;
+    filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.08));
+  }
+
+  .evidence-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .evidence-donut-center strong {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: #0f172a;
+    line-height: 1;
+  }
+
+  .evidence-donut-center span {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-top: 2px;
+  }
+
+  .evidence-bar-legend {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .evidence-bar-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: help;
+  }
+
+  .evidence-bar-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11.5px;
+  }
+
+  .evidence-bar-row-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #475569;
+    font-weight: 600;
+  }
+
+  .evidence-bar-row-label .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .evidence-bar-row-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 12px;
+  }
+
+  .evidence-bar-track {
+    height: 6px;
+    background: #eef2f7;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .evidence-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
+  .sex-dist-legend-divider {
+    height: 1px;
+    background: #eef2f7;
+    margin: 10px 0;
+    border: none;
   }
 
   [title] {
@@ -775,25 +917,25 @@
         <div class="stat-icon">🗳️</div>
         <div class="stat-label">Total Evaluations</div>
         <div class="stat-value" id="stat-total">0</div>
-        <div class="stat-sub" id="stat-total-sub">🚻 0 · 🌳 0</div>
+        <div class="stat-sub" id="stat-total-sub">🔵 0 · 🟢 0</div>
       </div>
       <div class="stat-card blue">
         <div class="stat-icon">📈</div>
         <div class="stat-label">Avg Satisfaction</div>
         <div class="stat-value" id="stat-avg-satisfaction">0%</div>
-        <div class="stat-sub" id="stat-avg-satisfaction-sub">🚻 0% · 🌳 0%</div>
+        <div class="stat-sub" id="stat-avg-satisfaction-sub">🔵 0% · 🟢 0%</div>
       </div>
       <div class="stat-card blue">
         <div class="stat-icon">🗂️</div>
         <div class="stat-label">Total Evidence</div>
         <div class="stat-value" id="stat-total-evidence">0</div>
-        <div class="stat-sub" id="stat-total-evidence-sub">🚻 0 · 🌳 0</div>
+        <div class="stat-sub" id="stat-total-evidence-sub">🔵 0 · 🟢 0</div>
       </div>
       <div class="stat-card green">
         <div class="stat-icon">🏢</div>
         <div class="stat-label">Active Offices</div>
         <div class="stat-value" id="stat-active-offices">0</div>
-        <div class="stat-sub" id="stat-active-offices-sub">🚻 0/0 · 🌳 0/0</div>
+        <div class="stat-sub" id="stat-active-offices-sub">🔵 0/0 · 🟢 0/0</div>
       </div>
     </div>
 
@@ -802,18 +944,12 @@
         <div class="card-title">Evidence Coverage <span class="card-sub">— by category</span></div>
         <div class="mini-pie-row">
           <div class="mini-pie-block">
-            <div class="mini-pie-title">🚻 Comfort Room</div>
-            <div class="pie-wrap">
-              <div class="pie-circle mini" id="pie-evidence-cr-circle"></div>
-              <div class="pie-legend" id="pie-evidence-cr-legend"></div>
-            </div>
+            <span class="cat-badge cr"><span class="dot"></span>Comfort Room</span>
+            <div class="evidence-donut-wrap" id="pie-evidence-cr"></div>
           </div>
           <div class="mini-pie-block">
-            <div class="mini-pie-title">🌳 Surroundings</div>
-            <div class="pie-wrap">
-              <div class="pie-circle mini" id="pie-evidence-surr-circle"></div>
-              <div class="pie-legend" id="pie-evidence-surr-legend"></div>
-            </div>
+            <span class="cat-badge surr"><span class="dot"></span>Surroundings</span>
+            <div class="evidence-donut-wrap" id="pie-evidence-surr"></div>
           </div>
         </div>
       </div>
@@ -1402,12 +1538,12 @@ function renderSexDistribution() {
       return `<div class="circle-analysis-legend-row"><div class="circle-analysis-label"><span>No data yet.</span></div></div>`;
     }
     return breakdown.map(seg => `
-      <div class="circle-analysis-legend-row">
-        <span class="circle-analysis-dot" style="background:${seg.color};"></span>
-        <div class="circle-analysis-label">
-          <strong>${seg.key}</strong>
-          <span>${seg.count} (${seg.pct}%)</span>
+      <div class="evidence-bar-row" title="${seg.key}: ${seg.count} (${seg.pct}%)">
+        <div class="evidence-bar-row-top">
+          <span class="evidence-bar-row-label"><span class="dot" style="background:${seg.color};"></span>${seg.key}</span>
+          <span class="evidence-bar-row-value">${seg.count} <span style="color:#94a3b8; font-weight:600;">(${seg.pct}%)</span></span>
         </div>
+        <div class="evidence-bar-track"><div class="evidence-bar-fill" style="width:${seg.pct}%; background:${seg.color};"></div></div>
       </div>
     `).join("");
   }
@@ -1415,7 +1551,7 @@ function renderSexDistribution() {
   el.innerHTML = `
     <div class="circle-analysis-card">
       <div class="circle-analysis-visual">
-        <svg viewBox="0 0 ${size} ${size}" class="circle-analysis-svg" role="img" aria-label="Sex distribution by category">
+        <svg viewBox="0 0 ${size} ${size}" class="circle-analysis-svg" role="img" aria-label="Sex distribution by category" style="filter: drop-shadow(0 3px 8px rgba(15,23,42,0.08));">
           ${backgroundRings}
           ${outerRingSvg}
           ${innerRingSvg}
@@ -1431,14 +1567,16 @@ function renderSexDistribution() {
         </div>
 
         <div class="circle-analysis-legend">
-          <div style="font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; color:${CATEGORY_META["Surroundings"].color}; margin-top:2px;">
-            🟢 Surroundings <span style="font-weight:400; color:#94a3b8;">(outer ring)</span>
-          </div>
+          <span class="cat-badge surr">
+            <span class="dot"></span>Surroundings <span style="font-weight:400; opacity:.75;">· outer ring</span>
+          </span>
           ${legendRows(surroundingsBreakdown)}
 
-          <div style="font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; color:${CATEGORY_META["Comfort Room"].color}; margin-top:8px;">
-            🔵 Comfort Room <span style="font-weight:400; color:#94a3b8;">(inner ring)</span>
-          </div>
+          <hr class="sex-dist-legend-divider">
+
+          <span class="cat-badge cr">
+            <span class="dot"></span>Comfort Room <span style="font-weight:400; opacity:.75;">· inner ring</span>
+          </span>
           ${legendRows(crBreakdown)}
         </div>
       </div>
@@ -1449,36 +1587,57 @@ function renderSexDistribution() {
 
 const PIE_COLORS = ["#2563eb", "#FB923C", "#F87171", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
-function renderSinglePie(circleId, legendId, entries) {
-  const circle = document.getElementById(circleId);
-  const legend = document.getElementById(legendId);
+function renderEvidenceDonut(containerId, entries, accentColor) {
+  const container = document.getElementById(containerId);
   const total = entries.reduce((sum, e) => sum + e.count, 0);
 
+  const size = 104;
+  const cx = 52, cy = 52;
+  const radius = 42;
+  const strokeWidth = 14;
+  const circumference = 2 * Math.PI * radius;
+
   if (total === 0) {
-    circle.style.background = "#f1f5f9";
-    legend.innerHTML = `<div class="lb-empty">No data yet.</div>`;
+    container.innerHTML = `
+      <div class="evidence-donut-visual">
+        <svg viewBox="0 0 ${size} ${size}" class="evidence-donut-svg">
+          <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#eef2f7" stroke-width="${strokeWidth}"></circle>
+        </svg>
+        <div class="evidence-donut-center"><strong>0</strong><span>Records</span></div>
+      </div>
+      <div class="evidence-bar-legend"><div class="lb-empty" style="padding:0;">No data yet.</div></div>
+    `;
     return;
   }
 
-  let cumulative = 0;
-  const gradientParts = entries.map(e => {
-    const start = (cumulative / total) * 360;
-    cumulative += e.count;
-    const end = (cumulative / total) * 360;
-    return `${e.color} ${start.toFixed(2)}deg ${end.toFixed(2)}deg`;
-  });
-  circle.style.background = `conic-gradient(${gradientParts.join(", ")})`;
+  const withEvidencePct = Math.round((entries[0].count / total) * 100);
+  const dashOffset = circumference * (1 - withEvidencePct / 100);
 
-  legend.innerHTML = entries.map(e => {
-    const pct = Math.round((e.count / total) * 100);
-    return `
-      <div class="pie-legend-row" title="${e.label}: ${e.count} (${pct}% of ${total})">
-        <span class="pie-legend-dot" style="background:${e.color};"></span>
-        <span class="pie-legend-label">${e.label}</span>
-        <span class="pie-legend-value">${pct}% (${e.count})</span>
-      </div>
-    `;
-  }).join("");
+  container.innerHTML = `
+    <div class="evidence-donut-visual">
+      <svg viewBox="0 0 ${size} ${size}" class="evidence-donut-svg">
+        <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#eef2f7" stroke-width="${strokeWidth}"></circle>
+        <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${accentColor}" stroke-width="${strokeWidth}"
+          stroke-linecap="round" stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${dashOffset.toFixed(2)}"
+          transform="rotate(-90 ${cx} ${cy})"></circle>
+      </svg>
+      <div class="evidence-donut-center"><strong>${withEvidencePct}%</strong><span>Documented</span></div>
+    </div>
+    <div class="evidence-bar-legend">
+      ${entries.map(e => {
+        const pct = Math.round((e.count / total) * 100);
+        return `
+          <div class="evidence-bar-row" title="${e.label}: ${e.count} of ${total} (${pct}%)">
+            <div class="evidence-bar-row-top">
+              <span class="evidence-bar-row-label"><span class="dot" style="background:${e.color};"></span>${e.label}</span>
+              <span class="evidence-bar-row-value">${pct}%</span>
+            </div>
+            <div class="evidence-bar-track"><div class="evidence-bar-fill" style="width:${pct}%; background:${e.color};"></div></div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
 }
 
 function renderCategoryPies() {
@@ -1486,10 +1645,10 @@ function renderCategoryPies() {
     const list = evaluations.filter(e => e.cleanlinessCategory === cat);
     const withEvidence = list.filter(e => e.evidence.length > 0).length;
     const withoutEvidence = list.length - withEvidence;
-    renderSinglePie(`pie-evidence-${key}-circle`, `pie-evidence-${key}-legend`, [
+    renderEvidenceDonut(`pie-evidence-${key}`, [
       { label: "With Evidence", count: withEvidence, color: CATEGORY_META[cat].color },
-      { label: "No Evidence", count: withoutEvidence, color: "#e2e8f0" }
-    ]);
+      { label: "No Evidence", count: withoutEvidence, color: "#cbd5e1" }
+    ], CATEGORY_META[cat].color);
   });
 }
 
