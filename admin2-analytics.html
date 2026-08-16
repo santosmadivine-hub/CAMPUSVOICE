@@ -836,13 +836,13 @@
 
       <div class="analytics-grid">
         <div>
-          <div class="dim-section-title"><span style="color:#0284c7;">🚻 Comfort Room</span></div>
+          <div class="dim-section-title"><span style="color:#0284c7;">🔵 Comfort Room</span></div>
           <div class="chart-wrap" id="chart-dimensions-cr-wrap">
             <canvas id="chart-dimensions-cr"></canvas>
           </div>
         </div>
         <div>
-          <div class="dim-section-title"><span style="color:#16a34a;">🌳 Surroundings</span></div>
+          <div class="dim-section-title"><span style="color:#16a34a;">🟢 Surroundings</span></div>
           <div class="chart-wrap" id="chart-dimensions-surr-wrap">
             <canvas id="chart-dimensions-surr"></canvas>
           </div>
@@ -1070,8 +1070,8 @@ const STATUS_META = {
 
 
 const CATEGORY_META = {
-  "Comfort Room": { label: "Comfort Room", icon: "🚻", color: "#0284c7" },
-  "Surroundings": { label: "Surroundings", icon: "🌳", color: "#16a34a" }
+  "Comfort Room": { label: "Comfort Room", icon: "🔵", color: "#0284c7" },
+  "Surroundings": { label: "Surroundings", icon: "🟢", color: "#16a34a" }
 };
 
 let evaluations = [];
@@ -1283,27 +1283,27 @@ function renderStatCards() {
   const surrEvals = evaluations.filter(e => e.cleanlinessCategory === "Surroundings");
 
   document.getElementById("stat-total").textContent = evaluations.length;
-  document.getElementById("stat-total-sub").innerHTML = `🚻 ${crEvals.length} · 🌳 ${surrEvals.length}`;
+  document.getElementById("stat-total-sub").innerHTML = `🔵 ${crEvals.length} · 🟢 ${surrEvals.length}`;
 
   const pctOf = (list) => list.length
     ? Math.round((list.reduce((sum, e) => sum + avgOf(e), 0) / list.length / 5) * 100)
     : 0;
   document.getElementById("stat-avg-satisfaction").textContent = `${pctOf(evaluations)}%`;
   document.getElementById("stat-avg-satisfaction-sub").innerHTML =
-    `🚻 ${pctOf(crEvals)}% · 🌳 ${pctOf(surrEvals)}%`;
+    `🔵 ${pctOf(crEvals)}% · 🟢 ${pctOf(surrEvals)}%`;
 
   const evidenceCount = (list) => list.reduce((sum, e) => sum + e.evidence.length, 0);
   const totalImages = evaluations.reduce((sum, e) => sum + e.evidence.filter(i => i.type === "image").length, 0);
   const totalVideos = evaluations.reduce((sum, e) => sum + e.evidence.filter(i => i.type === "video").length, 0);
   document.getElementById("stat-total-evidence").textContent = totalImages + totalVideos;
   const evidenceSubEl = document.getElementById("stat-total-evidence-sub");
-  evidenceSubEl.innerHTML = `🚻 ${evidenceCount(crEvals)} · 🌳 ${evidenceCount(surrEvals)}`;
+  evidenceSubEl.innerHTML = `🔵 ${evidenceCount(crEvals)} · 🟢 ${evidenceCount(surrEvals)}`;
   evidenceSubEl.title = `${totalImages} images · ${totalVideos} videos overall`;
 
   const activeOfficesFor = (list) => new Set(list.map(e => e.officeName)).size;
   document.getElementById("stat-active-offices").textContent = new Set(evaluations.map(e => e.officeName)).size;
   document.getElementById("stat-active-offices-sub").innerHTML =
-    `🚻 ${activeOfficesFor(crEvals)}/${Object.keys(comfortOffices).length} · 🌳 ${activeOfficesFor(surrEvals)}/${Object.keys(surroundingsOffices).length}`;
+    `🔵 ${activeOfficesFor(crEvals)}/${Object.keys(comfortOffices).length} · 🟢 ${activeOfficesFor(surrEvals)}/${Object.keys(surroundingsOffices).length}`;
 }
 
 
@@ -1432,12 +1432,12 @@ function renderSexDistribution() {
 
         <div class="circle-analysis-legend">
           <div style="font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; color:${CATEGORY_META["Surroundings"].color}; margin-top:2px;">
-            🌳 Surroundings <span style="font-weight:400; color:#94a3b8;">(outer ring)</span>
+            🟢 Surroundings <span style="font-weight:400; color:#94a3b8;">(outer ring)</span>
           </div>
           ${legendRows(surroundingsBreakdown)}
 
           <div style="font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; color:${CATEGORY_META["Comfort Room"].color}; margin-top:8px;">
-            🚻 Comfort Room <span style="font-weight:400; color:#94a3b8;">(inner ring)</span>
+            🔵 Comfort Room <span style="font-weight:400; color:#94a3b8;">(inner ring)</span>
           </div>
           ${legendRows(crBreakdown)}
         </div>
