@@ -150,8 +150,28 @@
 }
 
 .edit-btn {
-  background: #fef3c7;
+  background: linear-gradient(160deg, #fef9e7 0%, #fef3c7 100%);
   color: #92400e;
+  border: 1px solid #fde68a;
+  box-shadow: 0 1px 2px rgba(146,64,14,.08);
+}
+
+.action-btn.edit-btn:hover {
+  opacity: 1;
+  background: linear-gradient(160deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #fbbf24;
+  box-shadow: 0 3px 10px rgba(146,64,14,.2);
+  transform: translateY(-1px);
+}
+
+.action-btn.edit-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(146,64,14,.15);
+}
+
+.action-btn.edit-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(217,119,6,.2), 0 1px 2px rgba(146,64,14,.15);
 }
 
 .delete-btn {
@@ -160,24 +180,40 @@
 }
 
 .primary-btn {
-  border: none;
-  background: #0284c7;
+  border: 1px solid rgba(255,255,255,.12);
+  background: linear-gradient(160deg, #0ea5e9 0%, #0284c7 55%, #0369a1 100%);
   color: white;
-  padding: 11px 16px;
+  padding: 11px 18px;
   border-radius: 12px;
   cursor: pointer;
   font-weight: 700;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
-  box-shadow: 0 4px 14px rgba(2,132,199,.3);
-  transition: background .2s, transform .2s;
+  letter-spacing: .01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 4px 12px rgba(2,132,199,.28), 0 1px 2px rgba(2,132,199,.35);
+  transition: background .25s ease, box-shadow .2s ease, transform .15s ease;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .primary-btn:hover {
-  background: #0369a1;
-  transform: translateY(-1px);
+  background: linear-gradient(160deg, #38bdf8 0%, #0369a1 55%, #075985 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 8px 20px rgba(2,132,199,.35), 0 2px 4px rgba(2,132,199,.4);
+  transform: translateY(-1.5px);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 0 rgba(255,255,255,.15) inset, 0 2px 6px rgba(2,132,199,.3);
+}
+
+.primary-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2,132,199,.25), 0 4px 12px rgba(2,132,199,.28);
 }
 
 .dark-btn {
