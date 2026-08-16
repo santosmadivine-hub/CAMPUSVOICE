@@ -807,9 +807,9 @@
              filters stats, the office dropdown, and the table to just
              that category. -->
         <div class="category-tabs" id="category-tabs">
-          <button class="category-tab active" data-category="all">🗂 All Categories <span class="tab-count" id="cat-count-all">0</span></button>
-          <button class="category-tab" data-category="Comfort Room">🚻 Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
-          <button class="category-tab" data-category="Surroundings">🌳 Surroundings <span class="tab-count" id="cat-count-surroundings">0</span></button>
+          <button class="category-tab active" data-category="all"> All Categories <span class="tab-count" id="cat-count-all">0</span></button>
+          <button class="category-tab" data-category="Comfort Room"> Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
+          <button class="category-tab" data-category="Surroundings"> Surroundings <span class="tab-count" id="cat-count-surroundings">0</span></button>
         </div>
 
         <!-- Status tabs -->
@@ -951,9 +951,9 @@ const TOTAL_RATING_QUESTIONS = 5;
 const LOW_RATING_THRESHOLD = 3;
 
 const STATUS_META = {
-  pending: { label: "Pending", icon: "⏳" },
-  no_action: { label: "No Action Required", icon: "🙅" },
-  resolved: { label: "Resolved", icon: "✅" }
+  pending: { label: "Pending" },
+  no_action: { label: "No Action Required" },
+  resolved: { label: "Resolved" }
 };
 
 // ======================
@@ -1025,7 +1025,7 @@ function parseEvalStatus(data, avgRating) {
 
 function categoryPillHtml(category) {
   const cls = category === "Surroundings" ? "surroundings" : "comfort-room";
-  const icon = category === "Surroundings" ? "🌳" : "🚻";
+  const icon = category === "Surroundings" ? ;
   return `<span class="category-pill ${cls}">${icon} ${category}</span>`;
 }
 
