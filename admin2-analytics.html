@@ -1533,21 +1533,33 @@ function renderUserCategoryChart() {
 
   userCategoryChart = safeRenderChart(wrapId, canvasId, (canvas) => {
     return new Chart(canvas, {
-      type: "bar",
+      type: "line",
       data: {
         labels: USER_CATEGORY_BUCKETS,
         datasets: [
           {
             label: `${CATEGORY_META["Comfort Room"].icon} Comfort Room`,
             data: crPct.map(v => Number(v.toFixed(1))),
+            borderColor: CATEGORY_META["Comfort Room"].color,
             backgroundColor: CATEGORY_META["Comfort Room"].color,
-            borderRadius: 6
+            pointBackgroundColor: CATEGORY_META["Comfort Room"].color,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false
           },
           {
             label: `${CATEGORY_META["Surroundings"].icon} Surroundings`,
             data: surrPct.map(v => Number(v.toFixed(1))),
+            borderColor: CATEGORY_META["Surroundings"].color,
             backgroundColor: CATEGORY_META["Surroundings"].color,
-            borderRadius: 6
+            pointBackgroundColor: CATEGORY_META["Surroundings"].color,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false
           }
         ]
       },
