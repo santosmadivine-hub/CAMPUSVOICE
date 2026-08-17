@@ -143,6 +143,7 @@
   opacity: .85;
   transform: translateY(-1px);
 }
+.action-view { background: #dbeafe; color: #1e40af; }
 
 .edit-btn {
   background: linear-gradient(160deg, #fef9e7 0%, #fef3c7 100%);
@@ -1060,7 +1061,7 @@ function renderOfficeTable() {
         <td><span class="eval-count">${count}</span></td>
         <td>
           <div class="action-buttons">
-             <button class="action-btn view-btn" onclick="viewOffice('${office.replace(/'/g, "\\'")}')">✏ View</button>
+             <button class="action-btn view-btn" onclick="viewOffice('${office.replace(/'/g, "\\'")}')">👁 View</button>
             <button class="action-btn edit-btn" onclick="editOffice('${office.replace(/'/g, "\\'")}')">✏ Edit</button>
             <button class="action-btn delete-btn" onclick="deleteOffice('${office.replace(/'/g, "\\'")}')">🗑 Delete</button>
           </div>
