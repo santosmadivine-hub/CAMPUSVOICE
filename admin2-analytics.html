@@ -941,17 +941,8 @@
 
     <div class="analytics-grid">
       <div class="card">
-        <div class="card-title">Evidence Coverage <span class="card-sub">— by category</span></div>
-        <div class="mini-pie-row">
-          <div class="mini-pie-block">
-            <span class="cat-badge cr"><span class="dot"></span>Comfort Room</span>
-            <div class="evidence-donut-wrap" id="pie-evidence-cr"></div>
-          </div>
-          <div class="mini-pie-block">
-            <span class="cat-badge surr"><span class="dot"></span>Surroundings</span>
-            <div class="evidence-donut-wrap" id="pie-evidence-surr"></div>
-          </div>
-        </div>
+        <div class="card-title">Evidence Coverage <span class="card-sub">— submissions with evidence, by category</span></div>
+        <div id="evidence-coverage-chart" style="margin-top: 12px;"></div>
       </div>
 
       <div class="card">
@@ -1407,7 +1398,7 @@ onSnapshot(evalQuery, (snapshot) => {
 function renderAll() {
   renderStatCards();
   renderSexDistribution();
-  renderCategoryPies();
+  renderEvidenceCoverageChart();
   renderUserCategoryChart();
   renderOfficeTrend();
   renderDimensionPerformance();
@@ -1587,69 +1578,106 @@ function renderSexDistribution() {
 
 const PIE_COLORS = ["#2563eb", "#FB923C", "#F87171", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
-function renderEvidenceDonut(containerId, entries, accentColor) {
-  const container = document.getElementById(containerId);
-  const total = entries.reduce((sum, e) => sum + e.count, 0);
+function renderEvidenceCoverageChart() {
+  const container = document.getElementById("evidence-coverage-chart");
 
-  const size = 104;
-  const cx = 52, cy = 52;
-  const radius = 42;
-  const strokeWidth = 14;
-  const circumference = 2 * Math.PI * radius;
+  const crWithEvidence = evaluations.filter(e => e.cleanlinessCategory === "Comfort Room" && e.evidence.length > 0).length;
+  const surrWithEvidence = evaluations.filter(e => e.cleanlinessCategory === "Surroundings" && e.evidence.length > 0).length;
+  const totalWithEvidence = crWithEvidence + surrWithEvidence;
+  const totalEvals = evaluations.length;
 
-  if (total === 0) {
+  const entries = [
+    { label: "Comfort Room", count: crWithEvidence, color: CATEGORY_META["Comfort Room"].color },
+    { label: "Surroundings", count: surrWithEvidence, color: CATEGORY_META["Surroundings"].color }
+  ];
+
+  const size = 150;
+  const cx = 75, cy = 75;
+  const radius = 58;
+  const strokeWidth = 20;
+
+  if (totalWithEvidence === 0) {
     container.innerHTML = `
-      <div class="evidence-donut-visual">
-        <svg viewBox="0 0 ${size} ${size}" class="evidence-donut-svg">
-          <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#eef2f7" stroke-width="${strokeWidth}"></circle>
-        </svg>
-        <div class="evidence-donut-center"><strong>0</strong><span>Records</span></div>
+      <div class="evidence-donut-wrap">
+        <div class="evidence-donut-visual" style="width:${size}px; height:${size}px;">
+          <svg viewBox="0 0 ${size} ${size}" class="evidence-donut-svg" style="width:${size}px; height:${size}px;">
+            <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#eef2f7" stroke-width="${strokeWidth}"></circle>
+          </svg>
+          <div class="evidence-donut-center"><strong>0</strong><span>With Evidence</span></div>
+        </div>
+        <div class="evidence-bar-legend"><div class="lb-empty" style="padding:0;">No evidence submitted yet.</div></div>
       </div>
-      <div class="evidence-bar-legend"><div class="lb-empty" style="padding:0;">No data yet.</div></div>
     `;
     return;
   }
 
-  const withEvidencePct = Math.round((entries[0].count / total) * 100);
-  const dashOffset = circumference * (1 - withEvidencePct / 100);
+  function segmentPath(startPct, endPct) {
+    const span = endPct - startPct;
+    if (span <= 0) return "";
+    const startAngle = -90 + (startPct / 100) * 360;
+    const endAngle = -90 + (endPct / 100) * 360;
+
+    if (span >= 99.99) {
+      const startRad = startAngle * Math.PI / 180;
+      const midRad = (startAngle + 180) * Math.PI / 180;
+      const x1 = cx + radius * Math.cos(startRad);
+      const y1 = cy + radius * Math.sin(startRad);
+      const xm = cx + radius * Math.cos(midRad);
+      const ym = cy + radius * Math.sin(midRad);
+      return `M ${x1} ${y1} A ${radius} ${radius} 0 1 1 ${xm} ${ym} A ${radius} ${radius} 0 1 1 ${x1} ${y1}`;
+    }
+
+    const startRad = startAngle * Math.PI / 180;
+    const endRad = endAngle * Math.PI / 180;
+    const x1 = cx + radius * Math.cos(startRad);
+    const y1 = cy + radius * Math.sin(startRad);
+    const x2 = cx + radius * Math.cos(endRad);
+    const y2 = cy + radius * Math.sin(endRad);
+    const largeArc = span > 50 ? 1 : 0;
+    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
+  }
+
+  let cumulative = 0;
+  const segmentsSvg = entries.filter(e => e.count > 0).map(e => {
+    const startPct = cumulative;
+    const pct = (e.count / totalWithEvidence) * 100;
+    cumulative += pct;
+    const d = segmentPath(startPct, cumulative);
+    if (!d) return "";
+    return `<path d="${d}" fill="none" stroke="${e.color}" stroke-width="${strokeWidth}" stroke-linecap="${entries.filter(x => x.count > 0).length > 1 ? 'butt' : 'round'}"><title>${e.label}: ${e.count} (${Math.round(pct)}%)</title></path>`;
+  }).join("");
 
   container.innerHTML = `
-    <div class="evidence-donut-visual">
-      <svg viewBox="0 0 ${size} ${size}" class="evidence-donut-svg">
-        <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#eef2f7" stroke-width="${strokeWidth}"></circle>
-        <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${accentColor}" stroke-width="${strokeWidth}"
-          stroke-linecap="round" stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${dashOffset.toFixed(2)}"
-          transform="rotate(-90 ${cx} ${cy})"></circle>
-      </svg>
-      <div class="evidence-donut-center"><strong>${withEvidencePct}%</strong><span>Documented</span></div>
-    </div>
-    <div class="evidence-bar-legend">
-      ${entries.map(e => {
-        const pct = Math.round((e.count / total) * 100);
-        return `
-          <div class="evidence-bar-row" title="${e.label}: ${e.count} of ${total} (${pct}%)">
-            <div class="evidence-bar-row-top">
-              <span class="evidence-bar-row-label"><span class="dot" style="background:${e.color};"></span>${e.label}</span>
-              <span class="evidence-bar-row-value">${pct}%</span>
+    <div class="evidence-donut-wrap">
+      <div class="evidence-donut-visual" style="width:${size}px; height:${size}px;">
+        <svg viewBox="0 0 ${size} ${size}" class="evidence-donut-svg" style="width:${size}px; height:${size}px;">
+          <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#eef2f7" stroke-width="${strokeWidth}"></circle>
+          ${segmentsSvg}
+        </svg>
+        <div class="evidence-donut-center"><strong>${totalWithEvidence}</strong><span>With Evidence</span></div>
+      </div>
+      <div class="evidence-bar-legend">
+        ${entries.map(e => {
+          const pctOfEvidence = Math.round((e.count / totalWithEvidence) * 100);
+          return `
+            <div class="evidence-bar-row" title="${e.label}: ${e.count} evaluation${e.count === 1 ? "" : "s"} with evidence (${pctOfEvidence}% of all evidenced submissions)">
+              <div class="evidence-bar-row-top">
+                <span class="evidence-bar-row-label"><span class="dot" style="background:${e.color};"></span>${e.label}</span>
+                <span class="evidence-bar-row-value">${e.count} <span style="color:#94a3b8; font-weight:600;">(${pctOfEvidence}%)</span></span>
+              </div>
+              <div class="evidence-bar-track"><div class="evidence-bar-fill" style="width:${pctOfEvidence}%; background:${e.color};"></div></div>
             </div>
-            <div class="evidence-bar-track"><div class="evidence-bar-fill" style="width:${pct}%; background:${e.color};"></div></div>
+          `;
+        }).join("")}
+        <div class="evidence-bar-row" style="opacity:.6;" title="${totalWithEvidence} of ${totalEvals} total evaluations include evidence">
+          <div class="evidence-bar-row-top">
+            <span class="evidence-bar-row-label" style="font-weight:500;">Overall coverage</span>
+            <span class="evidence-bar-row-value" style="color:#64748b;">${totalEvals ? Math.round((totalWithEvidence / totalEvals) * 100) : 0}% of all submissions</span>
           </div>
-        `;
-      }).join("")}
+        </div>
+      </div>
     </div>
   `;
-}
-
-function renderCategoryPies() {
-  [{ cat: "Comfort Room", key: "cr" }, { cat: "Surroundings", key: "surr" }].forEach(({ cat, key }) => {
-    const list = evaluations.filter(e => e.cleanlinessCategory === cat);
-    const withEvidence = list.filter(e => e.evidence.length > 0).length;
-    const withoutEvidence = list.length - withEvidence;
-    renderEvidenceDonut(`pie-evidence-${key}`, [
-      { label: "With Evidence", count: withEvidence, color: CATEGORY_META[cat].color },
-      { label: "No Evidence", count: withoutEvidence, color: "#cbd5e1" }
-    ], CATEGORY_META[cat].color);
-  });
 }
 
 
