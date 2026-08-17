@@ -10,7 +10,1070 @@
   /* ─── Office Management Page Styles ─── */
   .office-section {
     max-width: 1200px;
+    margin: 0 auto;<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Office Management | Admin 3</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  /* ─── Office Management Page Styles ─── */
+  .office-section {
+    max-width: 1200px;
     margin: 0 auto;
+    padding: 0 20px 40px;
+  }
+
+  /* ─── Stat cards grid ─── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid #bae6fd;
+    border-top: 4px solid #2563eb;
+    border-radius: 16px;
+    padding: 20px 20px 22px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .stat-icon {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .stat-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    color: #0f172a;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .stat-value-text {
+    font-size: 20px;
+  }
+
+  .stat-sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  /* ─── Card styling ─── */
+  .card {
+    background: #ffffff;
+    border: 1px solid #bae6fd;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    padding: 20px;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: #0f172a;
+    margin: 0 0 12px 0;
+  }
+
+  /* Row that holds the search box + Add Office button side by side */
+  .search-add-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #bae6fd;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+    box-sizing: border-box;
+    color: #1e293b;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-input:focus {
+    border-color: #0284c7;
+  }
+
+  .search-input::placeholder {
+    color: #94a3b8;
+  }
+
+  /* Office table */
+  .office-table-wrap {
+    max-height: 600px;
+    overflow-y: auto;
+    border-radius: 12px;
+    border: 1px solid #bae6fd;
+  }
+
+  .office-table-wrap::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .office-table-wrap::-webkit-scrollbar-thumb {
+    background: #7dd3fc;
+    border-radius: 999px;
+  }
+
+  .office-table-wrap::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .office-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+  }
+
+  .office-table th {
+    text-align: left;
+    padding: 14px 16px;
+    font-size: 11px;
+    color: #475569;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    border-bottom: 2px solid #bae6fd;
+    background: #f0f9ff;
+    position: sticky;
+    top: 0;
+    font-weight: 700;
+  }
+
+  .office-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f9ff;
+    font-size: 14px;
+    color: #1e293b;
+  }
+
+  .office-table tbody tr:hover td {
+    background: #f0f9ff;
+  }
+
+  .rating-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 220px;
+  }
+
+  .rating-track {
+    flex: 1;
+    height: 8px;
+    background: #bae6fd;
+    border-radius: 999px;
+    overflow: hidden;
+    min-width: 130px;
+  }
+
+  .rating-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #0284c7, #0ea5e9);
+    transition: width .6s ease;
+  }
+
+  .rating-number {
+    font-weight: 700;
+    color: #0c4a6e;
+    width: 34px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .eval-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    padding: 4px 10px;
+    background: #e0f2fe;
+    color: #0c4a6e;
+    font-weight: 700;
+    font-size: 13px;
+    border-radius: 999px;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .action-btn {
+    border: none;
+    padding: 7px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity .2s, transform .2s;
+  }
+
+  .action-btn:hover {
+    opacity: .85;
+    transform: translateY(-1px);
+  }
+
+  .action-view {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .action-edit {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .action-delete {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .primary-btn {
+    border: none;
+    background: #0284c7;
+    color: white;
+    padding: 11px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, .3);
+    transition: background .2s, transform .2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .primary-btn:hover {
+    background: #0369a1;
+    transform: translateY(-1px);
+  }
+
+  .no-results {
+    padding: 40px 20px;
+    text-align: center;
+    color: #64748b;
+    font-size: 14px;
+  }
+
+  .office-name-cell {
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .evals-cell {
+    text-align: center;
+  }
+
+  .actions-cell {
+    text-align: right;
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 1200px) {
+    .stat-value {
+      font-size: 30px;
+    }
+    .stat-value-text {
+      font-size: 18px;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .stat-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .stat-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .search-add-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .search-add-row .primary-btn {
+      width: 100%;
+    }
+
+    .rating-cell {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .action-buttons {
+      flex-direction: column;
+    }
+
+    .action-btn {
+      width: 100%;
+      text-align: center;
+    }
+
+    .office-table-wrap {
+      max-height: 400px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .stat-card {
+      padding: 16px 16px 18px;
+    }
+    .stat-value {
+      font-size: 26px;
+    }
+    .stat-value-text {
+      font-size: 16px;
+    }
+    .stat-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 14px;
+      top: 14px;
+      right: 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .stat-grid {
+      grid-template-columns: 1fr;
+    }
+    .stat-value {
+      font-size: 28px;
+    }
+    .stat-value-text {
+      font-size: 18px;
+    }
+  }
+
+  /* ---------- Add Office modal + toast (ported from Admin 2 — used ONLY for
+     Add Office; View/Edit/Delete below are untouched and still use
+     prompt()/confirm()/alert()) ---------- */
+
+  .cv-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .cv-modal-overlay.open { display: flex; }
+
+  .cv-modal {
+    background: #ffffff;
+    border-radius: 18px;
+    width: 440px;
+    max-width: 100%;
+    box-shadow: 0 24px 60px rgba(15,23,42,.25);
+    overflow: hidden;
+    animation: cvModalIn .18s ease;
+  }
+
+  @keyframes cvModalIn {
+    from { opacity: 0; transform: translateY(8px) scale(.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .cv-modal-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid #f0f9ff;
+  }
+
+  .cv-modal-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: #e0f2fe;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    flex-shrink: 0;
+  }
+  .cv-modal-icon.warn { background: #ffedd5; }
+
+  .cv-modal-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: #0f172a;
+    line-height: 1.3;
+  }
+
+  .cv-modal-sub {
+    font-size: 12.5px;
+    color: #64748b;
+    margin-top: 4px;
+    line-height: 1.45;
+  }
+
+  .cv-modal-body {
+    padding: 18px 24px 6px;
+  }
+
+  .cv-field-label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 8px;
+  }
+
+  .cv-field-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #bae6fd;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: #0f172a;
+    outline: none;
+    box-sizing: border-box;
+    background: #f8fafc;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .cv-field-input:focus {
+    border-color: #0284c7;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(2,132,199,.12);
+  }
+  .cv-field-input.error {
+    border-color: #f87171;
+  }
+
+  .cv-field-error {
+    min-height: 18px;
+    font-size: 12px;
+    color: #dc2626;
+    margin-top: 8px;
+    font-weight: 600;
+  }
+
+  .cv-modal-text {
+    font-size: 13.5px;
+    color: #334155;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .cv-modal-text strong { color: #0f172a; }
+
+  .cv-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 18px 24px 22px;
+  }
+
+  .cv-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .18s ease, box-shadow .18s ease, transform .12s ease;
+  }
+
+  .cv-btn-ghost {
+    background: #f1f5f9;
+    color: #334155;
+  }
+  .cv-btn-ghost:hover { background: #e2e8f0; }
+
+  .cv-btn-primary {
+    background: linear-gradient(160deg, #0ea5e9 0%, #0284c7 55%, #0369a1 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(2,132,199,.28);
+  }
+  .cv-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(2,132,199,.32); }
+  .cv-btn-primary:active { transform: translateY(0); }
+
+  .cv-btn-warn {
+    background: linear-gradient(160deg, #fb923c 0%, #f97316 55%, #ea580c 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(234,88,12,.28);
+  }
+  .cv-btn-warn:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(234,88,12,.32); }
+  .cv-btn-warn:active { transform: translateY(0); }
+
+  .cv-toast-stack {
+    position: fixed;
+    bottom: 26px;
+    right: 26px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+    z-index: 1100;
+    max-width: calc(100vw - 40px);
+  }
+
+  .cv-toast {
+    background: #0f172a;
+    color: #ffffff;
+    padding: 13px 18px;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    box-shadow: 0 10px 24px rgba(15,23,42,.28);
+    max-width: 340px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .cv-toast.show { opacity: 1; transform: translateY(0); }
+  .cv-toast.error { background: #7f1d1d; }
+
+  @media (max-width: 480px) {
+    .cv-modal-header { padding: 20px 18px 14px; }
+    .cv-modal-body { padding: 16px 18px 4px; }
+    .cv-modal-footer { padding: 16px 18px 20px; flex-direction: column-reverse; }
+    .cv-modal-footer .cv-btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+
+    <div class="office-section">
+      <!-- Stats Grid -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-label">Total Offices</div>
+          <div class="stat-value" id="summary-total-offices-count">0</div>
+          <div class="stat-sub">All Offices</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-label">Total Evaluations</div>
+          <div class="stat-value" id="summary-total-evals">0</div>
+          <div class="stat-sub">All Time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-label">Highest Rating</div>
+          <div class="stat-value stat-value-text" id="summary-highest-office">—</div>
+          <div class="stat-sub">Top Office</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📉</div>
+          <div class="stat-label">Lowest Rating</div>
+          <div class="stat-value stat-value-text" id="summary-lowest-office">—</div>
+          <div class="stat-sub">Needs Support</div>
+        </div>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card">
+        <div class="card-title">Office Management</div>
+
+        <!-- Search box + Add Office button, side by side -->
+        <div class="search-add-row">
+          <input type="text" id="office-search-input" class="search-input" placeholder="🔍 Search offices by name...">
+          <button id="btn-add-office" class="primary-btn">+ Add Office</button>
+        </div>
+
+        <div class="office-table-wrap">
+          <table class="office-table">
+            <thead>
+              <tr>
+                <th>Office Name</th>
+                <th>Avg Rating</th>
+                <th>Total Evaluations</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="office-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Add Office modal (ported from Admin 2) -->
+<div class="cv-modal-overlay" id="cvInputOverlay">
+  <div class="cv-modal">
+    <div class="cv-modal-header">
+      <div class="cv-modal-icon" id="cvInputIcon">🏢</div>
+      <div>
+        <div class="cv-modal-title" id="cvInputTitle">Add Office</div>
+        <div class="cv-modal-sub" id="cvInputSub">Create a new office record for evaluations.</div>
+      </div>
+    </div>
+    <div class="cv-modal-body">
+      <label class="cv-field-label" for="cvInputField">Office Name</label>
+      <input type="text" id="cvInputField" class="cv-field-input" placeholder="e.g. Registrar's Office" autocomplete="off"/>
+      <div class="cv-field-error" id="cvInputError"></div>
+    </div>
+    <div class="cv-modal-footer">
+      <button class="cv-btn cv-btn-ghost" id="cvInputCancel">Cancel</button>
+      <button class="cv-btn cv-btn-primary" id="cvInputConfirm">Add Office</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename/Merge confirm modal (ported from Admin 2, used by Edit Office) -->
+<div class="cv-modal-overlay" id="cvConfirmOverlay">
+  <div class="cv-modal">
+    <div class="cv-modal-header">
+      <div class="cv-modal-icon" id="cvConfirmIcon">❓</div>
+      <div>
+        <div class="cv-modal-title" id="cvConfirmTitle">Confirm</div>
+      </div>
+    </div>
+    <div class="cv-modal-body">
+      <p class="cv-modal-text" id="cvConfirmMessage"></p>
+    </div>
+    <div class="cv-modal-footer">
+      <button class="cv-btn cv-btn-ghost" id="cvConfirmCancel">Cancel</button>
+      <button class="cv-btn cv-btn-primary" id="cvConfirmOk">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="cv-toast-stack" id="cvToastStack"></div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain: "kristal-adb78.firebaseapp.com",
+  projectId: "kristal-adb78",
+  storageBucket: "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId: "G-LK8D1CBQ2J"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Build UI
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin3", "office-mgmt");
+document.getElementById("topbar-mount").innerHTML = buildTopbar("Office Management", "admin3");
+
+// ======================
+// STATE
+// ======================
+let evaluations = [];
+let offices = {};
+
+function normalizeName(name) {
+  return (name || "").toString().trim().toLowerCase();
+}
+
+function avgOf(ev) {
+  return (ev.rating1 + ev.rating2 + ev.rating3 + ev.rating4 + ev.rating5 + 
+          ev.rating6 + ev.rating7 + ev.rating8 + ev.rating9 + ev.rating10) / 10;
+}
+
+function buildOfficeStats() {
+  const statsByKey = {};
+
+  Object.entries(offices).forEach(([key, name]) => {
+    const normalizedKey = normalizeName(name);
+    statsByKey[normalizedKey] = { docId: key, displayName: name, total: 0, sum: 0 };
+  });
+
+  evaluations.forEach(e => {
+    const key = normalizeName(e.officeName);
+    if (!statsByKey[key]) return;
+    statsByKey[key].total += 1;
+    statsByKey[key].sum += avgOf(e);
+  });
+
+  return statsByKey;
+}
+
+// ======================
+// LOAD OFFICES FROM FIRESTORE
+// ======================
+const officesRef = collection(db, "offices");
+
+onSnapshot(officesRef, (snapshot) => {
+  offices = {};
+  snapshot.docs.forEach((doc) => {
+    offices[doc.id] = doc.data().name || doc.id;
+  });
+
+  renderOfficeTable();
+});
+
+// ======================
+// LOAD EVALUATIONS FROM FIRESTORE
+// ======================
+const evalRef = collection(db, "facility_evaluations");
+
+onSnapshot(evalRef, (snapshot) => {
+  evaluations = snapshot.docs.map((doc) => {
+    const ev = doc.data();
+    return {
+      id: doc.id,
+      officeName: ev.officeName || "Unknown",
+      rating1: Number(ev.rating1) || 0,
+      rating2: Number(ev.rating2) || 0,
+      rating3: Number(ev.rating3) || 0,
+      rating4: Number(ev.rating4) || 0,
+      rating5: Number(ev.rating5) || 0,
+      rating6: Number(ev.rating6) || 0,
+      rating7: Number(ev.rating7) || 0,
+      rating8: Number(ev.rating8) || 0,
+      rating9: Number(ev.rating9) || 0,
+      rating10: Number(ev.rating10) || 0
+    };
+  });
+
+  renderOfficeTable();
+});
+
+// ======================
+// TABLE RENDERING
+// ======================
+const officeTableBody = document.getElementById("office-table-body");
+const officeSearchInput = document.getElementById("office-search-input");
+
+let officeSearchTerm = "";
+
+officeSearchInput.addEventListener("input", (e) => {
+  officeSearchTerm = e.target.value.toLowerCase();
+  renderOfficeTable();
+});
+
+function updateSummary() {
+  const keys = Object.keys(offices);
+  const totalOffices = keys.length;
+
+  const statsByKey = buildOfficeStats();
+
+  let totalEvals = 0;
+  let highestOffice = "—";
+  let lowestOffice = "—";
+  let highestRating = -1;
+  let lowestRating = 11;
+
+  Object.values(statsByKey).forEach(stats => {
+    totalEvals += stats.total;
+
+    if (stats.total > 0) {
+      const avg = stats.sum / stats.total;
+
+      if (avg > highestRating) {
+        highestRating = avg;
+        highestOffice = stats.displayName;
+      }
+
+      if (avg < lowestRating) {
+        lowestRating = avg;
+        lowestOffice = stats.displayName;
+      }
+    }
+  });
+
+  document.getElementById("summary-total-offices-count").textContent = totalOffices;
+  document.getElementById("summary-total-evals").textContent = totalEvals;
+  document.getElementById("summary-highest-office").textContent = highestOffice;
+  document.getElementById("summary-lowest-office").textContent = lowestOffice;
+}
+
+function renderOfficeTable() {
+  updateSummary();
+
+  const keys = Object.keys(offices).sort((a, b) =>
+    offices[a].localeCompare(offices[b], undefined, { sensitivity: "base" })
+  );
+
+  if (keys.length === 0) {
+    officeTableBody.innerHTML = `<tr class="office-empty-row"><td colspan="4" class="no-results">No offices added yet.</td></tr>`;
+    return;
+  }
+
+  const statsByKey = buildOfficeStats();
+
+  let filteredKeys = keys;
+  if (officeSearchTerm) {
+    filteredKeys = keys.filter(key => offices[key].toLowerCase().includes(officeSearchTerm));
+  }
+
+  if (filteredKeys.length === 0) {
+    officeTableBody.innerHTML = `<tr><td colspan="4" class="no-results">No offices match your search.</td></tr>`;
+    return;
+  }
+
+  officeTableBody.innerHTML = filteredKeys.map(key => {
+    const name = offices[key];
+    const stats = statsByKey[normalizeName(name)] || { total: 0, sum: 0 };
+    const avg = stats.total > 0 ? stats.sum / stats.total : 0;
+    const pct = (avg / 5) * 100;
+
+    return `
+      <tr>
+        <td class="office-name-cell">${name}</td>
+        <td>
+          <div class="rating-cell">
+            <div class="rating-track"><div class="rating-fill" style="width:${pct}%"></div></div>
+            <span class="rating-number">${avg.toFixed(1)}</span>
+          </div>
+        </td>
+        <td class="evals-cell"><span class="eval-count">${stats.total}</span></td>
+        <td class="actions-cell">
+          <div class="action-buttons">
+            <button class="action-btn action-view" data-office-key="${key}" data-office-name="${name}">👁️ View</button>
+            <button class="action-btn action-edit" data-office-key="${key}">✏️ Edit</button>
+            <button class="action-btn action-delete" data-office-key="${key}">🗑️ Delete</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  officeTableBody.querySelectorAll(".action-view").forEach(btn => {
+    btn.addEventListener("click", () => viewOfficeAnalytics(btn.getAttribute("data-office-key"), btn.getAttribute("data-office-name")));
+  });
+
+  officeTableBody.querySelectorAll(".action-edit").forEach(btn => {
+    btn.addEventListener("click", () => editOffice(btn.getAttribute("data-office-key")));
+  });
+
+  officeTableBody.querySelectorAll(".action-delete").forEach(btn => {
+    btn.addEventListener("click", () => deleteOffice(btn.getAttribute("data-office-key")));
+  });
+}
+
+function viewOfficeAnalytics(docId, officeName) {
+  const url = `admin3-office-analytics.html?office=${encodeURIComponent(docId)}&name=${encodeURIComponent(officeName)}`;
+  window.location.href = url;
+}
+
+async function editOffice(docId) {
+  const currentName = offices[docId] || "";
+  const newName = prompt("Edit office name:", currentName);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed || trimmed === currentName) return;
+
+  try {
+    await updateDoc(doc(db, "offices", docId), {
+      name: trimmed
+    });
+  } catch (err) {
+    alert("Couldn't update office: " + err.message);
+    console.error(err);
+  }
+}
+
+async function deleteOffice(docId) {
+  const name = offices[docId] || "this office";
+  if (!confirm(`Remove "${name}" from the office list?`)) return;
+
+  try {
+    await deleteDoc(doc(db, "offices", docId));
+  } catch (err) {
+    alert("Couldn't remove office: " + err.message);
+    console.error(err);
+  }
+}
+
+/* ---------- Add Office modal + toast helpers (ported from Admin 2) ---------- */
+
+const cvInputOverlay    = document.getElementById("cvInputOverlay");
+const cvInputIcon       = document.getElementById("cvInputIcon");
+const cvInputTitle      = document.getElementById("cvInputTitle");
+const cvInputSub        = document.getElementById("cvInputSub");
+const cvInputField      = document.getElementById("cvInputField");
+const cvInputError      = document.getElementById("cvInputError");
+const cvInputCancelBtn  = document.getElementById("cvInputCancel");
+const cvInputConfirmBtn = document.getElementById("cvInputConfirm");
+
+let cvInputResolve = null;
+
+// Opens the styled input modal and resolves with the entered text, or
+// `null` if the user cancels / closes it. Call again with `error` set to
+// re-open pre-filled with a validation message (used for inline duplicate /
+// empty-name feedback instead of a blocking alert()).
+function openInputModal({ title, subtitle, icon, placeholder, value, confirmText, error }) {
+  cvInputTitle.textContent = title || "";
+  cvInputSub.textContent = subtitle || "";
+  cvInputIcon.textContent = icon || "🏢";
+  cvInputField.placeholder = placeholder || "";
+  cvInputField.value = value || "";
+  cvInputError.textContent = error || "";
+  cvInputField.classList.toggle("error", !!error);
+  cvInputConfirmBtn.textContent = confirmText || "Save";
+  cvInputOverlay.classList.add("open");
+  requestAnimationFrame(() => { cvInputField.focus(); cvInputField.select(); });
+
+  return new Promise((resolve) => { cvInputResolve = resolve; });
+}
+
+function closeInputModal(result) {
+  cvInputOverlay.classList.remove("open");
+  if (cvInputResolve) {
+    const r = cvInputResolve;
+    cvInputResolve = null;
+    r(result);
+  }
+}
+
+cvInputConfirmBtn.addEventListener("click", () => closeInputModal(cvInputField.value));
+cvInputCancelBtn.addEventListener("click", () => closeInputModal(null));
+cvInputField.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); closeInputModal(cvInputField.value); }
+  if (e.key === "Escape") { e.preventDefault(); closeInputModal(null); }
+});
+cvInputOverlay.addEventListener("click", (e) => {
+  if (e.target === cvInputOverlay) closeInputModal(null);
+});
+
+const cvToastStack = document.getElementById("cvToastStack");
+
+// Non-blocking success/error notification, replacing alert() for Add Office.
+function showToast(message, isError) {
+  const el = document.createElement("div");
+  el.className = "cv-toast" + (isError ? " error" : "");
+  el.textContent = message;
+  cvToastStack.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("show"));
+  setTimeout(() => {
+    el.classList.remove("show");
+    setTimeout(() => el.remove(), 250);
+  }, 3800);
+}
+
+/* ---------- Add Office (Admin 2 style: modal + duplicate check + toast) ---------- */
+
+async function addOffice() {
+  let prefillValue = "";
+  let fieldError = "";
+
+  while (true) {
+    const result = await openInputModal({
+      title: "Add Office",
+      subtitle: "Create a new office record for evaluations.",
+      icon: "🏢",
+      placeholder: "e.g. Registrar's Office",
+      value: prefillValue,
+      confirmText: "Add Office",
+      error: fieldError
+    });
+
+    if (result === null) return; // cancelled
+
+    const trimmed = result.trim();
+
+    if (!trimmed) {
+      prefillValue = "";
+      fieldError = "Office name is required.";
+      continue;
+    }
+
+    const duplicate = Object.values(offices).some(
+      name => normalizeName(name) === normalizeName(trimmed)
+    );
+    if (duplicate) {
+      prefillValue = trimmed;
+      fieldError = `An office named "${trimmed}" already exists.`;
+      continue;
+    }
+
+    try {
+      await addDoc(collection(db, "offices"), { name: trimmed });
+      showToast("✓ Office added successfully!");
+      return;
+    } catch (err) {
+      prefillValue = trimmed;
+      fieldError = "Couldn't add office: " + err.message;
+      continue;
+    }
+  }
+}
+
+document.getElementById("btn-add-office").addEventListener("click", addOffice);
+
+</script>
+</body>
+</html>
     padding: 0 20px 40px;
   }
 
