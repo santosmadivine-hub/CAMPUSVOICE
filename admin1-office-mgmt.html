@@ -1060,6 +1060,7 @@ function renderOfficeTable() {
         <td><span class="eval-count">${count}</span></td>
         <td>
           <div class="action-buttons">
+             <button class="action-btn view-btn" onclick="viewOffice('${office.replace(/'/g, "\\'")}')">✏ View</button>
             <button class="action-btn edit-btn" onclick="editOffice('${office.replace(/'/g, "\\'")}')">✏ Edit</button>
             <button class="action-btn delete-btn" onclick="deleteOffice('${office.replace(/'/g, "\\'")}')">🗑 Delete</button>
           </div>
@@ -1068,6 +1069,12 @@ function renderOfficeTable() {
     `;
   });
 }
+
+  window.viewOffice = function(office) {
+  const key = officeKeys[office];
+  const params = new URLSearchParams({ office: key || "", name: office });
+  window.location.href = `admin1-office-analytics.html?${params.toString()}`;
+};
 
 
 /**
