@@ -383,8 +383,9 @@
   }
 
   /* ---------- Add Office modal + toast (ported from Admin 2 — used ONLY for
-     Add Office; View/Edit/Delete below are untouched and still use
-     prompt()/confirm()/alert()) ---------- */
+     Add Office; View/Delete below are untouched and still use
+     prompt()/confirm()/alert(). Edit Office now uses the modal-based
+     rename/merge flow ported from Admin 2 as well. ---------- */
 
   .cv-modal-overlay {
     display: none;
@@ -700,7 +701,11 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  doc
+  doc,
+  query,
+  where,
+  getDocs,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase Config
@@ -727,9 +732,19 @@ document.getElementById("topbar-mount").innerHTML = buildTopbar("Office Manageme
 // ======================
 let evaluations = [];
 let offices = {};
+let renameInProgress = false; // guards against double-submit races during an office rename/merge
 
 function normalizeName(name) {
   return (name || "").toString().trim().toLowerCase();
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function avgOf(ev) {
@@ -914,20 +929,169 @@ function viewOfficeAnalytics(docId, officeName) {
   window.location.href = url;
 }
 
-async function editOffice(docId) {
-  const currentName = offices[docId] || "";
-  const newName = prompt("Edit office name:", currentName);
-  if (newName === null) return;
-  const trimmed = newName.trim();
-  if (!trimmed || trimmed === currentName) return;
+/* ---------- Edit / Rename Office (ported from Admin 2) ---------- */
 
-  try {
-    await updateDoc(doc(db, "offices", docId), {
-      name: trimmed
+/**
+ * Renames an office while keeping it fully connected to its existing data.
+ *
+ * The office document itself never moves. It's updated with `updateDoc(...)`,
+ * so its Firestore doc ID — the permanent identifier — stays the same before
+ * and after the rename.
+ *
+ * Evaluations matching the old office name are found with a
+ * `where("officeName","==",oldName)` query against `facility_evaluations`
+ * and batch-updated to the new name.
+ *
+ * A duplicate-name guard (case-insensitive) stops a plain rename from
+ * silently colliding with another office — instead it offers to merge the
+ * two, moving every evaluation from the old office onto the existing one
+ * and removing the now-empty source record. A `renameInProgress` flag stops
+ * double-submits from racing each other.
+ */
+async function editOffice(docId) {
+  if (renameInProgress) {
+    showToast("A rename is already in progress. Please wait for it to finish.", true);
+    return;
+  }
+
+  const currentName = offices[docId];
+  if (currentName === undefined) {
+    showToast("Could not find this office's record. Please refresh and try again.", true);
+    return;
+  }
+
+  let prefillValue = currentName;
+  let fieldError = "";
+
+  while (true) {
+    const result = await openInputModal({
+      title: "Edit Office",
+      subtitle: `Rename "${currentName}"`,
+      icon: "✏️",
+      placeholder: "Office name",
+      value: prefillValue,
+      confirmText: "Save Changes",
+      error: fieldError
     });
-  } catch (err) {
-    alert("Couldn't update office: " + err.message);
-    console.error(err);
+
+    if (result === null) return; // cancelled
+
+    const trimmedNew = result.trim();
+
+    if (!trimmedNew) {
+      prefillValue = "";
+      fieldError = "Office name is required.";
+      continue;
+    }
+
+    if (trimmedNew === currentName) {
+      showToast("No changes made.");
+      return;
+    }
+
+    // Does a DIFFERENT office already use the target name? If so this isn't
+    // a simple rename anymore — it's a merge — so we never end up with two
+    // offices sharing the same name.
+    const existingTargetKey = Object.keys(offices).find(
+      k => k !== docId && normalizeName(offices[k]) === normalizeName(trimmedNew)
+    );
+
+    renameInProgress = true;
+
+    try {
+      if (existingTargetKey) {
+        const existingTargetName = offices[existingTargetKey];
+        const targetCount = evaluations.filter(
+          e => normalizeName(e.officeName) === normalizeName(existingTargetName)
+        ).length;
+
+        const confirmed = await openConfirmModal({
+          title: "Merge Offices?",
+          icon: "🔀",
+          tone: "warn",
+          confirmText: "Merge Offices",
+          message:
+            `An office named "<strong>${escapeHtml(existingTargetName)}</strong>" already exists ` +
+            `(${targetCount} evaluation${targetCount === 1 ? "" : "s"}).<br><br>` +
+            `Merge "<strong>${escapeHtml(currentName)}</strong>" into "<strong>${escapeHtml(existingTargetName)}</strong>"? ` +
+            `All evaluations currently under "${escapeHtml(currentName)}" will be moved onto ` +
+            `"${escapeHtml(existingTargetName)}", and the "${escapeHtml(currentName)}" record will be removed. ` +
+            `Nothing is deleted — everything is combined under "${escapeHtml(existingTargetName)}".`
+        });
+
+        if (!confirmed) {
+          renameInProgress = false;
+          prefillValue = trimmedNew;
+          fieldError = "";
+          continue;
+        }
+
+        await migrateOfficeEvaluations(currentName, existingTargetName);
+
+        // All of the source office's evaluations have moved to the existing
+        // target office, so this record is now empty — remove it so it
+        // doesn't show up as a duplicate/leftover row.
+        await deleteDoc(doc(db, "offices", docId));
+
+        showToast(`✓ Merged "${currentName}" into "${existingTargetName}" successfully!`);
+      } else {
+        const confirmed = await openConfirmModal({
+          title: "Rename Office?",
+          icon: "✏️",
+          tone: "primary",
+          confirmText: "Rename Office",
+          message:
+            `Rename "<strong>${escapeHtml(currentName)}</strong>" to "<strong>${escapeHtml(trimmedNew)}</strong>"?<br><br>` +
+            `All existing evaluations linked to "${escapeHtml(currentName)}" will be moved to ` +
+            `"${escapeHtml(trimmedNew)}". No data will be deleted.`
+        });
+
+        if (!confirmed) {
+          renameInProgress = false;
+          prefillValue = trimmedNew;
+          fieldError = "";
+          continue;
+        }
+
+        // Same doc ID before and after — only the name field changes.
+        await updateDoc(doc(db, "offices", docId), { name: trimmedNew });
+        await migrateOfficeEvaluations(currentName, trimmedNew);
+
+        showToast(`✓ Office renamed to "${trimmedNew}" successfully!`);
+      }
+
+      renameInProgress = false;
+      return;
+    } catch (err) {
+      renameInProgress = false;
+      console.error("Office rename/merge failed:", err);
+      showToast(
+        "Error updating office: " + err.message +
+        ". Some records may have already been migrated — please re-check the office's data and retry if needed.",
+        true
+      );
+      return;
+    }
+  }
+}
+
+// Batch-updates every facility_evaluations doc where officeName === oldName,
+// setting officeName to newName. Chunked to stay under Firestore's
+// 500-writes-per-batch limit.
+async function migrateOfficeEvaluations(oldName, newName) {
+  const q = query(evalRef, where("officeName", "==", oldName));
+  const snap = await getDocs(q);
+  if (snap.empty) return;
+
+  const docs = snap.docs;
+  const CHUNK = 450;
+
+  for (let i = 0; i < docs.length; i += CHUNK) {
+    const batch = writeBatch(db);
+    docs.slice(i, i + CHUNK).forEach(d => {
+      batch.update(d.ref, { officeName: newName });
+    });
+    await batch.commit();
   }
 }
 
@@ -943,7 +1107,7 @@ async function deleteOffice(docId) {
   }
 }
 
-/* ---------- Add Office modal + toast helpers (ported from Admin 2) ---------- */
+/* ---------- Add Office / Edit Office modal + toast helpers (ported from Admin 2) ---------- */
 
 const cvInputOverlay    = document.getElementById("cvInputOverlay");
 const cvInputIcon       = document.getElementById("cvInputIcon");
@@ -994,9 +1158,52 @@ cvInputOverlay.addEventListener("click", (e) => {
   if (e.target === cvInputOverlay) closeInputModal(null);
 });
 
+const cvConfirmOverlay   = document.getElementById("cvConfirmOverlay");
+const cvConfirmIcon      = document.getElementById("cvConfirmIcon");
+const cvConfirmTitle     = document.getElementById("cvConfirmTitle");
+const cvConfirmMessage   = document.getElementById("cvConfirmMessage");
+const cvConfirmCancelBtn = document.getElementById("cvConfirmCancel");
+const cvConfirmOkBtn     = document.getElementById("cvConfirmOk");
+
+let cvConfirmResolve = null;
+
+// Opens the styled confirm modal and resolves true/false. `message` may
+// contain simple inline HTML (e.g. <strong>) for emphasis.
+function openConfirmModal({ title, message, icon, confirmText, tone }) {
+  cvConfirmTitle.textContent = title || "Confirm";
+  cvConfirmMessage.innerHTML = message || "";
+  cvConfirmIcon.textContent = icon || "❓";
+  cvConfirmIcon.classList.toggle("warn", tone === "warn");
+  cvConfirmOkBtn.textContent = confirmText || "Confirm";
+  cvConfirmOkBtn.classList.toggle("cv-btn-warn", tone === "warn");
+  cvConfirmOkBtn.classList.toggle("cv-btn-primary", tone !== "warn");
+  cvConfirmOverlay.classList.add("open");
+
+  return new Promise((resolve) => { cvConfirmResolve = resolve; });
+}
+
+function closeConfirmModal(result) {
+  cvConfirmOverlay.classList.remove("open");
+  if (cvConfirmResolve) {
+    const r = cvConfirmResolve;
+    cvConfirmResolve = null;
+    r(result);
+  }
+}
+
+cvConfirmOkBtn.addEventListener("click", () => closeConfirmModal(true));
+cvConfirmCancelBtn.addEventListener("click", () => closeConfirmModal(false));
+cvConfirmOverlay.addEventListener("click", (e) => {
+  if (e.target === cvConfirmOverlay) closeConfirmModal(false);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && cvConfirmOverlay.classList.contains("open")) closeConfirmModal(false);
+});
+
 const cvToastStack = document.getElementById("cvToastStack");
 
-// Non-blocking success/error notification, replacing alert() for Add Office.
+// Non-blocking success/error notification, replacing alert() for Add Office
+// and Edit Office.
 function showToast(message, isError) {
   const el = document.createElement("div");
   el.className = "cv-toast" + (isError ? " error" : "");
