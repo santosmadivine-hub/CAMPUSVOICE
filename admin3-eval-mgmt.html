@@ -749,11 +749,9 @@
                 <th>Q3</th>
                 <th>Q4</th>
                 <th>Q5</th>
-                <th>Q6</th>
                 <th>Q7</th>
                 <th>Q8</th>
                 <th>Q9</th>
-                <th>Q10</th>
                 <th>Comments</th>
                 <th>Evidence</th>
                 <th>Status</th>
@@ -1107,8 +1105,8 @@ function renderSubmissions() {
   const tbody = document.getElementById("submissions-tbody");
   const showActionColumn = currentTab !== "recent";
   document.getElementById("action-col-header").style.display = showActionColumn ? "" : "none";
-  // #, Office, Q1..Q10, Comments, Evidence, Status, Date [, Action]
-  const colCount = showActionColumn ? 17 : 16;
+  // #, Office, Q1-Q5, Q7-Q9, Comments, Evidence, Status, Date [, Action]
+  const colCount = showActionColumn ? 15 : 14;
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="${colCount}">No submissions found.</td></tr>`;
@@ -1122,7 +1120,7 @@ function renderSubmissions() {
     const meta = STATUS_META[e.status] || STATUS_META.pending;
     const ratingCells = [
       e.rating1, e.rating2, e.rating3, e.rating4, e.rating5,
-      e.rating6, e.rating7, e.rating8, e.rating9, e.rating10
+      e.rating7, e.rating8, e.rating9
     ].map(r => `<td class="rating-cell">${r}</td>`).join("");
     const actionCell = showActionColumn ? `
         <td>
