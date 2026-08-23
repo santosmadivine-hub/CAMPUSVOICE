@@ -739,7 +739,7 @@
 
     <!-- DIMENSION PERFORMANCE — active evaluation questions -->
     <div class="card">
-      <div class="card-title">Dimension Performance <span class="card-sub">— all offices, Q1–Q5 &amp; Q7–Q8</span></div>
+      <div class="card-title">Dimension Performance <span class="card-sub">— all offices, Q1–Q8</span></div>
       <div id="dimension-performance-chart" class="dim-bar-list"></div>
     </div>
   </main>
@@ -800,10 +800,10 @@ const EVAL_COLLECTION = "facility_evaluations";
 const OFFICE_COLLECTION = "offices";
 
 // The Facilities Evaluation Form still stores 10 rating fields
-// (rating1 -> rating10) on each document, but only Q1-Q5, Q7, and Q8
-// are used for scoring/analytics here — Q6, Q9, and Q10 have been
-// dropped from the evaluation and are ignored throughout this page.
-const ACTIVE_RATING_IDS = [1, 2, 3, 4, 5, 7, 8];
+// (rating1 -> rating10) on each document, but only Q1-Q8 are used for
+// scoring/analytics here — Q9 and Q10 have been dropped from the
+// evaluation and are ignored throughout this page.
+const ACTIVE_RATING_IDS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 // ======================
 // STATE
@@ -878,6 +878,7 @@ const KNOWN_DIMENSION_LABELS = {
   3: "The facility has enough resources to meet users' needs.",
   4: "The facility is clean and well-maintained.",
   5: "The furniture (chairs, tables, etc.) is in good condition.",
+  6: "The facility is well-lit and properly ventilated.",
   7: "The facility layout allows for comfortable movement.",
   8: "The facility is free from safety hazards."
 };
