@@ -749,6 +749,7 @@
                 <th>Q3</th>
                 <th>Q4</th>
                 <th>Q5</th>
+                <th>Q6</th>
                 <th>Q7</th>
                 <th>Q8</th>
                 <th>Comments</th>
@@ -929,15 +930,13 @@ const QUESTION_LABELS = {
   rating5: "5. The furniture (chairs, tables, etc.) is in good condition.",
   rating6: "6. The facility is well-lit and properly ventilated.",
   rating7: "7. The facility layout allows for comfortable movement.",
-  rating8: "8. The facility is free from safety hazards.",
-  rating9: "9. Air conditioning is excellent.",
-  rating10: "10. How satisfied are you with this facility?"
+  rating8: "8. The facility is free from safety hazards."
 };
 
 function evalAvg(ev) {
   const ratings = [
     ev.rating1, ev.rating2, ev.rating3, ev.rating4, ev.rating5,
-    ev.rating6, ev.rating7, ev.rating8, ev.rating9, ev.rating10
+    ev.rating6, ev.rating7, ev.rating8
   ];
   return ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
 }
@@ -992,8 +991,6 @@ onSnapshot(evalCollRef, (snapshot) => {
       rating6: Number(ev.rating6) || 0,
       rating7: Number(ev.rating7) || 0,
       rating8: Number(ev.rating8) || 0,
-      rating9: Number(ev.rating9) || 0,
-      rating10: Number(ev.rating10) || 0,
       date: parseEvalDate(ev)
     };
   }).map(ev => {
@@ -1104,8 +1101,8 @@ function renderSubmissions() {
   const tbody = document.getElementById("submissions-tbody");
   const showActionColumn = currentTab !== "recent";
   document.getElementById("action-col-header").style.display = showActionColumn ? "" : "none";
-  // #, Office, Q1-Q5, Q7-Q8, Comments, Evidence, Status, Date [, Action]
-  const colCount = showActionColumn ? 14 : 13;
+  // #, Office, Q1-Q8, Comments, Evidence, Status, Date [, Action]
+  const colCount = showActionColumn ? 15 : 14;
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="${colCount}">No submissions found.</td></tr>`;
@@ -1119,7 +1116,7 @@ function renderSubmissions() {
     const meta = STATUS_META[e.status] || STATUS_META.pending;
     const ratingCells = [
       e.rating1, e.rating2, e.rating3, e.rating4, e.rating5,
-      e.rating7, e.rating8
+      e.rating6, e.rating7, e.rating8
     ].map(r => `<td class="rating-cell">${r}</td>`).join("");
     const actionCell = showActionColumn ? `
         <td>
@@ -1191,7 +1188,7 @@ document.getElementById("btn-export").addEventListener("click", () => {
 
   const header = [
     "#", "Office", "Category", "Event", "Sex", "Respondent Type",
-    "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Avg",
+    "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Avg",
     "Comments", "Image URLs", "Video URLs", "Status", "Date", "Evaluation ID"
   ];
   const rows = filtered.map((e, i) => {
@@ -1203,7 +1200,7 @@ document.getElementById("btn-export").addEventListener("click", () => {
     return [
       i + 1, e.officeName, e.category, e.events, e.sex, e.userCategory,
       e.rating1, e.rating2, e.rating3, e.rating4, e.rating5,
-      e.rating6, e.rating7, e.rating8, e.rating9, e.rating10,
+      e.rating6, e.rating7, e.rating8,
       e.avgRating.toFixed(1), comments, imageUrls, videoUrls, status, date, e.evaluationId
     ].join(",");
   });
