@@ -799,16 +799,16 @@ document.addEventListener("click", (e) => {
 const EVAL_COLLECTION = "facility_evaluations";
 const OFFICE_COLLECTION = "offices";
 
-// The Facilities Evaluation Form still stores 10 rating fields
-// (rating1 -> rating10) on each document, but only Q1-Q8 are used for
-// scoring/analytics here — Q9 and Q10 have been dropped from the
-// evaluation and are ignored throughout this page.
+// The Facilities Evaluation Form stores 8 rating fields on each
+// document — rating1 through rating8 — confirmed directly from the
+// live Firestore schema. There is no rating9 or rating10 field; all
+// 8 questions are active and used for scoring/analytics here.
 const ACTIVE_RATING_IDS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 // ======================
 // STATE
 // ======================
-let evaluations = [];   // [{id, officeName, rating1..rating8 (subset), timestamp, sex, userCategory, evidence, ...}]
+let evaluations = [];   // [{id, officeName, rating1..rating8, timestamp, sex, userCategory, evidence, ...}]
 let offices = {};       // { officeDocId: officeName }
 
 function avgOf(e) {
@@ -867,10 +867,8 @@ function parseEvidence(data) {
 }
 
 // ======================
-// EVALUATION QUESTION LABELS (active questions only: 1-5, 7, 8)
-// Matches QUESTION_LABELS in admin3-eval-mgmt.html — the questions
-// actually scored on the Facilities Evaluation Form after Q6/Q9/Q10
-// were dropped.
+// EVALUATION QUESTION LABELS (Q1-Q8, matching the live Firestore
+// schema and QUESTION_LABELS in admin3-eval-mgmt.html)
 // ======================
 const KNOWN_DIMENSION_LABELS = {
   1: "The needed equipment/resources are available.",
