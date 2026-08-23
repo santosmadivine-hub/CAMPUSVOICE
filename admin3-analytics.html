@@ -737,9 +737,9 @@
       </div>
     </div>
 
-    <!-- DIMENSION PERFORMANCE — all 10 evaluation questions -->
+    <!-- DIMENSION PERFORMANCE — active evaluation questions -->
     <div class="card">
-      <div class="card-title">Dimension Performance <span class="card-sub">— all offices, all 10 questions</span></div>
+      <div class="card-title">Dimension Performance <span class="card-sub">— all offices, Q1–Q5 &amp; Q7–Q8</span></div>
       <div id="dimension-performance-chart" class="dim-bar-list"></div>
     </div>
   </main>
@@ -793,34 +793,34 @@ document.addEventListener("click", (e) => {
 
 // ======================
 // FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
-// (unchanged from admin3-eval-mgmt.html and admin3-reports.html —
-// this page reads the exact same Firestore structure, nothing new
-// is written or restructured)
+// (matches admin3-eval-mgmt.html — this page reads the exact same
+// Firestore structure, nothing new is written or restructured)
 // ======================
 const EVAL_COLLECTION = "facility_evaluations";
 const OFFICE_COLLECTION = "offices";
 
-// The Facilities Evaluation Form has 10 rating questions (rating1 ->
-// rating10) — NOT 15 like the cleanliness form on Admin 2. Everything
-// that loops over rating questions drives off this constant.
-const TOTAL_RATING_QUESTIONS = 10;
+// The Facilities Evaluation Form still stores 10 rating fields
+// (rating1 -> rating10) on each document, but only Q1-Q5, Q7, and Q8
+// are used for scoring/analytics here — Q6, Q9, and Q10 have been
+// dropped from the evaluation and are ignored throughout this page.
+const ACTIVE_RATING_IDS = [1, 2, 3, 4, 5, 7, 8];
 
 // ======================
 // STATE
 // ======================
-let evaluations = [];   // [{id, officeName, rating1..10, timestamp, sex, userCategory, evidence, ...}]
+let evaluations = [];   // [{id, officeName, rating1..rating8 (subset), timestamp, sex, userCategory, evidence, ...}]
 let offices = {};       // { officeDocId: officeName }
 
 function avgOf(e) {
   let sum = 0;
-  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
+  ACTIVE_RATING_IDS.forEach(i => {
     sum += e["rating" + i] || 0;
-  }
-  return sum / TOTAL_RATING_QUESTIONS;
+  });
+  return sum / ACTIVE_RATING_IDS.length;
 }
 
 // FacilitiesEvalActivity.kt stores "date" as a human-readable string
-// (e.g. "July 02, 2026 10:29 AM") rather than a numeric timestamp —
+// (e.g. "August 17, 2026 02:05 PM") rather than a numeric timestamp —
 // unlike the cleanliness form, which already has a numeric "timestamp"
 // field. This derives a millisecond timestamp so the reused Admin2
 // trend/office-trend logic (which expects e.timestamp) works unchanged.
@@ -867,10 +867,10 @@ function parseEvidence(data) {
 }
 
 // ======================
-// EVALUATION QUESTION LABELS (rating1 -> rating10)
-// Matches QUESTION_LABELS in admin3-eval-mgmt.html and DIMENSIONS in
-// admin3-reports.html — the actual 10 questions on the Facilities
-// Evaluation Form.
+// EVALUATION QUESTION LABELS (active questions only: 1-5, 7, 8)
+// Matches QUESTION_LABELS in admin3-eval-mgmt.html — the questions
+// actually scored on the Facilities Evaluation Form after Q6/Q9/Q10
+// were dropped.
 // ======================
 const KNOWN_DIMENSION_LABELS = {
   1: "The needed equipment/resources are available.",
@@ -878,21 +878,15 @@ const KNOWN_DIMENSION_LABELS = {
   3: "The facility has enough resources to meet users' needs.",
   4: "The facility is clean and well-maintained.",
   5: "The furniture (chairs, tables, etc.) is in good condition.",
-  6: "The facility is well-lit and properly ventilated.",
   7: "The facility layout allows for comfortable movement.",
-  8: "The facility is free from safety hazards.",
-  9: "Air conditioning is excellent.",
-  10: "How satisfied are you with this facility?"
+  8: "The facility is free from safety hazards."
 };
 
-const DIMENSIONS = [];
-for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-  DIMENSIONS.push({
-    id: i,
-    field: "rating" + i,
-    label: KNOWN_DIMENSION_LABELS[i] || `Evaluation Question ${i}`
-  });
-}
+const DIMENSIONS = ACTIVE_RATING_IDS.map(i => ({
+  id: i,
+  field: "rating" + i,
+  label: KNOWN_DIMENSION_LABELS[i] || `Evaluation Question ${i}`
+}));
 
 const RATING_SCALE = [
   { min: 90, label: "Outstanding", cssClass: "rating-outstanding-fill" },
@@ -937,21 +931,25 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
     const ev = docSnap.data();
     const record = {
       id: docSnap.id,
+      // The app's own generated id for this submission, distinct from
+      // the Firestore doc id (though in practice they're usually the same).
+      evaluationId: ev.evaluationId || "",
       officeName: ev.officeName || "Unknown",
       comments: ev.comments || "",
-      course: ev.course || "",
+      category: ev.category || "",
+      // Occasion / purpose of the visit, e.g. "Acquaintance"
+      events: ev.events || "",
       date: ev.date || "",
       sex: ev.sex || "",
       userCategory: ev.userCategory || "",
       userId: ev.userId || "",
-      year: ev.year || "",
       timestamp: parseEvalTimestamp(ev),
       rawStatus: ev.status || "",
       evidence: parseEvidence(ev)
     };
-    for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
+    ACTIVE_RATING_IDS.forEach(i => {
       record["rating" + i] = Number(ev["rating" + i]) || 0;
-    }
+    });
     const avg = avgOf(record);
     record.status = record.rawStatus === "resolved" ? "resolved" : getStatusForAverage(avg);
     evaluations.push(record);
@@ -1290,7 +1288,7 @@ function renderRatingDistribution() {
 }
 
 // ======================
-// DIMENSION PERFORMANCE (all 10 evaluation questions, all offices)
+// DIMENSION PERFORMANCE (active evaluation questions, all offices)
 // x-axis: evaluation question | y-axis: average percentage
 // ======================
 function renderDimensionPerformance() {
