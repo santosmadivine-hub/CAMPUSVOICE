@@ -152,6 +152,33 @@
     margin-bottom: 12px;
   }
 
+  /* ─── Chart legend (ported from admin2, used above the Weekly
+       Reports line chart) ─── */
+  .chart-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: -6px;
+    margin-bottom: 4px;
+  }
+
+  .chart-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .chart-legend .legend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
   /* ─── Charts grid ─── */
   .charts-grid {
     display: grid;
@@ -162,6 +189,25 @@
 
   @media (max-width: 1024px) {
     .charts-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ─── Evaluation Status + Quick Access row ─── */
+  .eval-quick-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+    gap: 24px;
+    align-items: stretch;
+    margin-bottom: 28px;
+  }
+
+  .eval-quick-row > .card {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 1024px) {
+    .eval-quick-row {
       grid-template-columns: 1fr;
     }
   }
@@ -184,12 +230,12 @@
 
   /* ─── Line chart ─── */
   .line-chart-wrap {
-    margin-top: 12px;
+    margin-top: 4px;
   }
 
   #line-chart-svg {
     width: 100%;
-    height: 220px;
+    height: 235px;
     display: block;
   }
 
@@ -348,9 +394,13 @@
   /* ─── Quick Access Section ─── */
   .quick-access-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-top: 12px;
+  }
+
+  .quick-access-card .quick-access-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .quick-access-btn {
@@ -422,7 +472,7 @@
       font-size: 30px;
     }
     .quick-access-grid {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
     }
   }
 
@@ -432,6 +482,9 @@
     }
     .quick-access-grid {
       grid-template-columns: repeat(2, 1fr);
+    }
+    .quick-access-card .quick-access-grid {
+      grid-template-columns: repeat(3, 1fr);
     }
   }
 
@@ -613,8 +666,11 @@
             </div>
             <div class="badge-pill" id="office-count-badge">Total Offices: 0</div>
           </div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Facility Evaluations</div>
+          </div>
           <div class="line-chart-wrap" id="lineWrap">
-            <svg id="line-chart-svg" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
+            <svg id="line-chart-svg" viewBox="0 0 600 235" preserveAspectRatio="none"></svg>
             <div class="pie-tooltip" id="line-tooltip"></div>
           </div>
         </div>
@@ -631,92 +687,93 @@
         </div>
       </div>
 
-      <!-- EVALUATION STATUS -->
-      <div class="card">
-        <div class="eval-status-header">
-          <div>
-            <div class="card-title">Evaluation Status <span class="card-sub">— No Action Required, Pending & Resolved by month</span></div>
+      <!-- EVALUATION STATUS + QUICK ACCESS -->
+      <div class="eval-quick-row">
+        <div class="card">
+          <div class="eval-status-header">
+            <div>
+              <div class="card-title">Evaluation Status <span class="card-sub">— No Action Required, Pending & Resolved by month</span></div>
+            </div>
+          </div>
+
+          <div class="eval-filters">
+            <div class="eval-filter-group">
+              <label class="eval-filter-label" for="eval-month-select">Month</label>
+              <select id="eval-month-select" class="eval-filter-select"></select>
+            </div>
+            <div class="eval-filter-group">
+              <label class="eval-filter-label" for="eval-office-select">Office</label>
+              <select id="eval-office-select" class="eval-filter-select">
+                <option value="all">All Offices</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="status-rows" id="statusRowsWrap">
+            <div class="status-row" data-status="no_action">
+              <div class="status-label-wrap">
+                <div class="status-dot" style="background: #3b82f6;"></div>
+                <div class="status-label" style="color: #3b82f6;">No Action Required</div>
+              </div>
+              <div class="status-bar-track">
+                <div class="status-bar-fill" id="bar-no_action" style="background: #3b82f6;"></div>
+              </div>
+              <div class="status-count" id="count-no_action">0</div>
+            </div>
+
+            <div class="status-row" data-status="pending">
+              <div class="status-label-wrap">
+                <div class="status-dot" style="background: #f59e0b;"></div>
+                <div class="status-label" style="color: #f59e0b;">Pending</div>
+              </div>
+              <div class="status-bar-track">
+                <div class="status-bar-fill" id="bar-pending" style="background: #f59e0b;"></div>
+              </div>
+              <div class="status-count" id="count-pending">0</div>
+            </div>
+
+            <div class="status-row" data-status="resolved">
+              <div class="status-label-wrap">
+                <div class="status-dot" style="background: #10b981;"></div>
+                <div class="status-label" style="color: #10b981;">Resolved</div>
+              </div>
+              <div class="status-bar-track">
+                <div class="status-bar-fill" id="bar-resolved" style="background: #10b981;"></div>
+              </div>
+              <div class="status-count" id="count-resolved">0</div>
+            </div>
+            <div class="pie-tooltip" id="status-tooltip"></div>
           </div>
         </div>
 
-        <div class="eval-filters">
-          <div class="eval-filter-group">
-            <label class="eval-filter-label" for="eval-month-select">Month</label>
-            <select id="eval-month-select" class="eval-filter-select"></select>
+        <div class="card quick-access-card">
+          <div class="card-title">Quick Access</div>
+          <div class="quick-access-grid">
+            <a href="admin3-analytics.html" class="quick-access-btn">
+              <div class="qa-icon">📈</div>
+              <div class="qa-label">Analytics</div>
+            </a>
+            <a href="admin3-office-mgmt.html" class="quick-access-btn">
+              <div class="qa-icon">🏛</div>
+              <div class="qa-label">Office Management</div>
+            </a>
+            <a href="admin3-eval-mgmt.html" class="quick-access-btn">
+              <div class="qa-icon">📑</div>
+              <div class="qa-label">Evaluation Management</div>
+            </a>
+            <a href="admin3-multimedia.html" class="quick-access-btn">
+              <div class="qa-icon">🎞️</div>
+              <div class="qa-label">Multimedia Feedback</div>
+            </a>
+            <a href="admin3-reports.html" class="quick-access-btn">
+              <div class="qa-icon">📁</div>
+              <div class="qa-label">Reports</div>
+            </a>
+            <a href="admin3-settings.html" class="quick-access-btn">
+              <div class="qa-icon">⚙️</div>
+              <div class="qa-label">Settings</div>
+            </a>
           </div>
-          <div class="eval-filter-group">
-            <label class="eval-filter-label" for="eval-office-select">Office</label>
-            <select id="eval-office-select" class="eval-filter-select">
-              <option value="all">All Offices</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="status-rows" id="statusRowsWrap">
-          <div class="status-row" data-status="no_action">
-            <div class="status-label-wrap">
-              <div class="status-dot" style="background: #3b82f6;"></div>
-              <div class="status-label" style="color: #3b82f6;">No Action Required</div>
-            </div>
-            <div class="status-bar-track">
-              <div class="status-bar-fill" id="bar-no_action" style="background: #3b82f6;"></div>
-            </div>
-            <div class="status-count" id="count-no_action">0</div>
-          </div>
-
-          <div class="status-row" data-status="pending">
-            <div class="status-label-wrap">
-              <div class="status-dot" style="background: #f59e0b;"></div>
-              <div class="status-label" style="color: #f59e0b;">Pending</div>
-            </div>
-            <div class="status-bar-track">
-              <div class="status-bar-fill" id="bar-pending" style="background: #f59e0b;"></div>
-            </div>
-            <div class="status-count" id="count-pending">0</div>
-          </div>
-
-          <div class="status-row" data-status="resolved">
-            <div class="status-label-wrap">
-              <div class="status-dot" style="background: #10b981;"></div>
-              <div class="status-label" style="color: #10b981;">Resolved</div>
-            </div>
-            <div class="status-bar-track">
-              <div class="status-bar-fill" id="bar-resolved" style="background: #10b981;"></div>
-            </div>
-            <div class="status-count" id="count-resolved">0</div>
-          </div>
-          <div class="pie-tooltip" id="status-tooltip"></div>
-        </div>
-      </div>
-
-      <!-- QUICK ACCESS -->
-      <div class="card">
-        <div class="card-title">Quick Access</div>
-        <div class="quick-access-grid">
-          <a href="admin3-analytics.html" class="quick-access-btn">
-            <div class="qa-icon">📈</div>
-            <div class="qa-label">Analytics</div>
-          </a>
-          <a href="admin3-office-mgmt.html" class="quick-access-btn">
-            <div class="qa-icon">🏛</div>
-            <div class="qa-label">Office Management</div>
-          </a>
-          <a href="admin3-eval-mgmt.html" class="quick-access-btn">
-            <div class="qa-icon">📑</div>
-            <div class="qa-label">Evaluation Management</div>
-          </a>
-          <a href="admin3-multimedia.html" class="quick-access-btn">
-            <div class="qa-icon">🎞️</div>
-            <div class="qa-label">Multimedia Feedback</div>
-          </a>
-          <a href="admin3-reports.html" class="quick-access-btn">
-            <div class="qa-icon">📁</div>
-            <div class="qa-label">Reports</div>
-          </a>
-          <a href="admin3-settings.html" class="quick-access-btn">
-            <div class="qa-icon">⚙️</div>
-            <div class="qa-label">Settings</div>
-          </a>
         </div>
       </div>
     </div>
@@ -895,22 +952,30 @@ function renderStatCards() {
 
 // ======================
 // WEEKLY REPORTS — LINE CHART (last 7 days)
+// Ported from admin2-dashboard.html's smooth-curve/area-fill/gridline
+// styling. Admin 3 only has one evaluation source (facility_evaluations,
+// no Comfort Room / Surroundings split), so this renders a single
+// "Facility Evaluations" series instead of two category series — same
+// visual treatment (smooth spline, filled area, gridlines, y-axis
+// labels, per-day tooltip), just one line instead of two.
 // ======================
 function renderLineChart() {
   const svg = document.getElementById("line-chart-svg");
   const tooltip = document.getElementById("line-tooltip");
+  if (!svg || !tooltip) return;
+
   svg.innerHTML = "";
   tooltip.classList.remove("show");
 
-  const width = 600, height = 220;
-  const padding = { top: 24, right: 20, bottom: 34, left: 28 };
+  const width = 600, height = 235;
+  const padding = { top: 18, right: 16, bottom: 28, left: 34 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
-  // Build last 7 days (oldest -> newest)
   const days = [];
   const fullDayNames = [];
   const counts = [];
+
   for (let i = 6; i >= 0; i--) {
     const dayStart = new Date();
     dayStart.setHours(0, 0, 0, 0);
@@ -918,100 +983,127 @@ function renderLineChart() {
     const dayEnd = new Date(dayStart);
     dayEnd.setDate(dayStart.getDate() + 1);
 
-    const label = dayStart.toLocaleDateString(undefined, { weekday: "short" });
-    const fullLabel = dayStart.toLocaleDateString(undefined, { weekday: "long" });
-    const count = evaluations.filter(
+    const dayEvals = evaluations.filter(
       e => e.timestamp >= dayStart.getTime() && e.timestamp < dayEnd.getTime()
-    ).length;
+    );
 
-    days.push(label);
-    fullDayNames.push(fullLabel);
-    counts.push(count);
+    days.push(dayStart.toLocaleDateString(undefined, { weekday: "short" }));
+    fullDayNames.push(dayStart.toLocaleDateString(undefined, { weekday: "long" }));
+    counts.push(dayEvals.length);
   }
 
+  // Keep the same Firestore-derived values. The scale is visual only.
   const maxCount = Math.max(1, ...counts);
-  const xStep = counts.length > 1 ? chartW / (counts.length - 1) : 0;
+  const yMax = Math.max(10, Math.ceil(maxCount / 10) * 10);
+  const xStep = chartW / Math.max(1, days.length - 1);
 
-  const points = counts.map((c, i) => ({
-    x: padding.left + i * xStep,
-    y: padding.top + chartH - (c / maxCount) * chartH,
-    c
-  }));
+  function toPoints(vals) {
+    return vals.map((c, i) => ({
+      x: padding.left + i * xStep,
+      y: padding.top + chartH - (c / yMax) * chartH,
+      c
+    }));
+  }
 
-  // Gridlines
-  const gridLines = 4;
-  for (let g = 0; g <= gridLines; g++) {
-    const y = padding.top + (chartH / gridLines) * g;
+  const points = toPoints(counts);
+
+  // Soft horizontal gridlines.
+  const gridCount = 4;
+  for (let g = 0; g <= gridCount; g++) {
+    const y = padding.top + (chartH / gridCount) * g;
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", padding.left);
     line.setAttribute("x2", width - padding.right);
     line.setAttribute("y1", y);
     line.setAttribute("y2", y);
-    line.setAttribute("stroke", "rgba(148,163,184,0.15)");
+    line.setAttribute("stroke", "#eef1f5");
     line.setAttribute("stroke-width", "1");
     svg.appendChild(line);
   }
 
-  if (points.length > 1) {
-    // Area fill under the line
-    const areaPath =
-      `M${points[0].x},${padding.top + chartH} ` +
-      points.map(p => `L${p.x},${p.y}`).join(" ") +
-      ` L${points[points.length - 1].x},${padding.top + chartH} Z`;
-    const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    area.setAttribute("d", areaPath);
-    area.setAttribute("fill", "rgba(37,99,235,0.12)");
-    area.setAttribute("stroke", "none");
-    svg.appendChild(area);
-
-    // Line
-    const linePath = points.map((p, i) => (i === 0 ? "M" : "L") + `${p.x},${p.y}`).join(" ");
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    line.setAttribute("d", linePath);
-    line.setAttribute("fill", "none");
-    line.setAttribute("stroke", "#2563eb");
-    line.setAttribute("stroke-width", "2.5");
-    line.setAttribute("stroke-linecap", "round");
-    line.setAttribute("stroke-linejoin", "round");
-    svg.appendChild(line);
+  // Small y-axis labels, matching the admin2 reference style.
+  for (let g = 0; g <= gridCount; g++) {
+    const value = Math.round(yMax - (yMax / gridCount) * g);
+    const y = padding.top + (chartH / gridCount) * g + 3;
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", padding.left - 7);
+    label.setAttribute("y", y);
+    label.setAttribute("text-anchor", "end");
+    label.setAttribute("font-size", "9");
+    label.setAttribute("font-family", "DM Sans, sans-serif");
+    label.setAttribute("fill", "#94a3b8");
+    label.textContent = value;
+    svg.appendChild(label);
   }
 
-  // Dots + labels + interactive hit areas
+  function smoothPath(pts) {
+    if (!pts.length) return "";
+    if (pts.length === 1) return `M ${pts[0].x},${pts[0].y}`;
+    let d = `M ${pts[0].x},${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] || p2;
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+    }
+    return d;
+  }
+
+  // Blue area under the line, as in the admin2 reference.
+  if (points.length > 1) {
+    const linePath = smoothPath(points);
+    const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    area.setAttribute(
+      "d",
+      `${linePath} L ${points[points.length - 1].x},${padding.top + chartH} L ${points[0].x},${padding.top + chartH} Z`
+    );
+    area.setAttribute("fill", "#2563eb");
+    area.setAttribute("fill-opacity", "0.10");
+    svg.appendChild(area);
+  }
+
+  if (points.length > 1) {
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", smoothPath(points));
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", "#2563eb");
+    path.setAttribute("stroke-width", "2.5");
+    path.setAttribute("stroke-linecap", "round");
+    path.setAttribute("stroke-linejoin", "round");
+    svg.appendChild(path);
+  }
+
   points.forEach((p, i) => {
     const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     dot.setAttribute("cx", p.x);
     dot.setAttribute("cy", p.y);
-    dot.setAttribute("r", "4");
-    dot.setAttribute("fill", "#2563eb");
-    dot.setAttribute("stroke", "#ffffff");
-    dot.setAttribute("stroke-width", "1.5");
+    dot.setAttribute("r", "3.5");
+    dot.setAttribute("fill", "#fff");
+    dot.setAttribute("stroke", "#2563eb");
+    dot.setAttribute("stroke-width", "2");
     svg.appendChild(dot);
-
-    const val = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    val.setAttribute("x", p.x);
-    val.setAttribute("y", p.y - 10);
-    val.setAttribute("text-anchor", "middle");
-    val.setAttribute("font-size", "10");
-    val.setAttribute("font-family", "DM Sans, sans-serif");
-    val.setAttribute("fill", "#64748b");
-    val.textContent = p.c;
-    svg.appendChild(val);
 
     const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
     label.setAttribute("x", p.x);
-    label.setAttribute("y", height - 10);
+    label.setAttribute("y", height - 8);
     label.setAttribute("text-anchor", "middle");
-    label.setAttribute("font-size", "11");
+    label.setAttribute("font-size", "9");
     label.setAttribute("font-family", "DM Sans, sans-serif");
-    label.setAttribute("fill", "#94a3b8");
+    label.setAttribute("fill", "#64748b");
     label.textContent = days[i];
     svg.appendChild(label);
 
-    // Wider invisible hit-area
-    const hitArea = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    hitArea.setAttribute("cx", p.x);
-    hitArea.setAttribute("cy", p.y);
-    hitArea.setAttribute("r", "14");
+    const hitWidth = i === 0 || i === points.length - 1 ? xStep / 2 : xStep;
+    const hitArea = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    hitArea.setAttribute("x", p.x - hitWidth / 2);
+    hitArea.setAttribute("y", padding.top);
+    hitArea.setAttribute("width", hitWidth);
+    hitArea.setAttribute("height", chartH);
     hitArea.setAttribute("fill", "transparent");
     hitArea.style.cursor = "pointer";
 
@@ -1020,26 +1112,20 @@ function renderLineChart() {
       tooltip.classList.add("show");
       tooltip.innerHTML = `
         <div class="tt-title">${fullDayNames[i]}</div>
-        <div>${p.c} evaluation${p.c === 1 ? "" : "s"}</div>
-      `;
-      moveTooltip(evt);
-    };
-    const moveTooltip = (evt) => {
+        <div>🔵 Facility Evaluations: ${p.c}</div>`;
       tooltip.style.left = (evt.clientX + 10) + "px";
-      tooltip.style.top = (evt.clientY - 35) + "px";
+      tooltip.style.top = (evt.clientY - 45) + "px";
     };
-
     hitArea.addEventListener("mouseenter", showTooltip);
-    hitArea.addEventListener("mousemove", moveTooltip);
+    hitArea.addEventListener("mousemove", showTooltip);
     hitArea.addEventListener("mouseleave", () => {
-      dot.setAttribute("r", "4");
+      dot.setAttribute("r", "3.5");
       tooltip.classList.remove("show");
     });
     hitArea.addEventListener("touchstart", (evt) => {
       evt.preventDefault();
       showTooltip(evt.touches[0]);
     }, { passive: false });
-
     svg.appendChild(hitArea);
   });
 
@@ -1048,7 +1134,7 @@ function renderLineChart() {
     empty.setAttribute("x", width / 2);
     empty.setAttribute("y", height / 2);
     empty.setAttribute("text-anchor", "middle");
-    empty.setAttribute("font-size", "13");
+    empty.setAttribute("font-size", "12");
     empty.setAttribute("font-family", "DM Sans, sans-serif");
     empty.setAttribute("fill", "#94a3b8");
     empty.textContent = "No evaluations yet";
