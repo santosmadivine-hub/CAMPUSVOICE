@@ -868,6 +868,10 @@ function makeCode(officeName, id) {
   return `${prefix}-${suffix}`;
 }
 
+// The `date` field on facility_evaluations is written by the mobile app as a
+// human-readable string, e.g. "August 17, 2026 02:05 PM". We still guard for
+// numeric timestamps and Firestore Timestamp objects in case older or
+// alternate writers populate this field differently.
 function parseEvalDate(ev) {
   if (ev.date === undefined || ev.date === null || ev.date === "") return 0;
 
@@ -881,6 +885,7 @@ function parseEvalDate(ev) {
   const asNumber = Number(ev.date);
   if (!Number.isNaN(asNumber) && String(ev.date).trim() !== "") return asNumber;
 
+  // Handles formatted strings like "August 17, 2026 02:05 PM"
   const parsed = new Date(ev.date).getTime();
   return Number.isNaN(parsed) ? 0 : parsed;
 }
@@ -968,11 +973,14 @@ onSnapshot(evalCollRef, (snapshot) => {
 
     return {
       id,
+      // The app's own generated id for this submission, distinct from the
+      // Firestore doc id (though in practice they're usually the same).
+      evaluationId: ev.evaluationId || "",
       officeName: ev.officeName || "Unknown",
       comments: ev.comments || "",
       category: ev.category || "",
-      course: ev.course || "",
-      year: ev.year || "",
+      // Occasion / purpose of the visit, e.g. "Acquaintance"
+      events: ev.events || "",
       sex: ev.sex || "",
       userCategory: ev.userCategory || "",
       userId: ev.userId || "",
@@ -1185,9 +1193,9 @@ document.getElementById("btn-export").addEventListener("click", () => {
   }
 
   const header = [
-    "#", "Office", "Category", "Course", "Year", "Sex", "Respondent Type",
+    "#", "Office", "Category", "Event", "Sex", "Respondent Type",
     "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Avg",
-    "Comments", "Image URLs", "Video URLs", "Status", "Date"
+    "Comments", "Image URLs", "Video URLs", "Status", "Date", "Evaluation ID"
   ];
   const rows = filtered.map((e, i) => {
     const date = e.date ? new Date(e.date).toLocaleDateString() : "-";
@@ -1196,10 +1204,10 @@ document.getElementById("btn-export").addEventListener("click", () => {
     const imageUrls = `"${e.evidence.filter(item => item.type === "image").map(item => item.url).join(" | ")}"`;
     const videoUrls = `"${e.evidence.filter(item => item.type === "video").map(item => item.url).join(" | ")}"`;
     return [
-      i + 1, e.officeName, e.category, e.course, e.year, e.sex, e.userCategory,
+      i + 1, e.officeName, e.category, e.events, e.sex, e.userCategory,
       e.rating1, e.rating2, e.rating3, e.rating4, e.rating5,
       e.rating6, e.rating7, e.rating8, e.rating9, e.rating10,
-      e.avgRating.toFixed(1), comments, imageUrls, videoUrls, status, date
+      e.avgRating.toFixed(1), comments, imageUrls, videoUrls, status, date, e.evaluationId
     ].join(",");
   });
 
@@ -1258,11 +1266,11 @@ function openDetailModal(evalId) {
 
   const optionalRows = [
     e.category ? `<div class="modal-row"><span>Category</span><span>${e.category}</span></div>` : "",
+    e.events ? `<div class="modal-row"><span>Event/Purpose</span><span>${e.events}</span></div>` : "",
     e.userCategory ? `<div class="modal-row"><span>Respondent Type</span><span>${e.userCategory}</span></div>` : "",
-    e.course ? `<div class="modal-row"><span>Course</span><span>${e.course}</span></div>` : "",
-    e.year ? `<div class="modal-row"><span>Year Level</span><span>${e.year}</span></div>` : "",
     e.sex ? `<div class="modal-row"><span>Sex</span><span>${e.sex}</span></div>` : "",
-    e.transactionCode ? `<div class="modal-row"><span>Transaction Code</span><span>${e.transactionCode}</span></div>` : ""
+    e.transactionCode ? `<div class="modal-row"><span>Transaction Code</span><span>${e.transactionCode}</span></div>` : "",
+    e.evaluationId ? `<div class="modal-row"><span>Evaluation ID</span><span>${e.evaluationId}</span></div>` : ""
   ].join("");
 
   detailModalBody.innerHTML = `
