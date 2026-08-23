@@ -905,7 +905,8 @@ import {
   orderBy,
   doc,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase Configuration
@@ -935,6 +936,7 @@ document.getElementById("topbar-mount").innerHTML =
 // ======================
 const EVAL_HISTORY_COLLECTION = "evaluation_history";
 const NESTED_EVAL_ROOT = "cleanliness_evaluations";
+const NOTIFICATIONS_COLLECTION = "notifications";
 
 const OFFICE_COLLECTIONS = {
   "Comfort Room": "office-names-comfort-room",
@@ -1496,6 +1498,45 @@ async function saveStatusUpdate(record, newStatus) {
   ]);
 }
 
+// ======================
+// NOTIFY USER OF STATUS CHANGE
+// ======================
+// Writes a notification document to notifications/{userId}/items so the
+// submitter sees it in the Android app's Profile notification bell.
+// Uses the same collection the app already writes login/logout entries
+// to, distinguished by `type: "eval_status"` so the app can filter it.
+async function notifyUserOfStatusChange(record, newStatus) {
+  if (!record.userId || record.userId === "-") return;
+
+  const label = (STATUS_META[newStatus] || STATUS_META.pending).label;
+  const timestamp = Date.now();
+  const date = new Date(timestamp).toLocaleString("en-US", {
+    month: "long",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  try {
+    await addDoc(collection(db, NOTIFICATIONS_COLLECTION, record.userId, "items"), {
+      message: `Your cleanliness evaluation for ${record.officeName} was marked as "${label}".`,
+      date,
+      timestamp,
+      type: "eval_status",
+      status: newStatus,
+      office: record.officeName,
+      category: record.cleanlinessCategory,
+      evaluationId: record.evaluationId,
+      read: false
+    });
+  } catch (err) {
+    // Don't block the status save if the notification write fails —
+    // just log it so the admin isn't blocked by a secondary write.
+    console.error("Failed to send status notification", err);
+  }
+}
+
 editSaveBtn.addEventListener("click", async () => {
   if (!editingId) return;
 
@@ -1503,12 +1544,18 @@ editSaveBtn.addEventListener("click", async () => {
   if (!record) return;
 
   const newStatus = editStatusSelect.value;
+  const statusChanged = record.status !== newStatus;
 
   editSaveBtn.disabled = true;
   editSaveBtn.textContent = "Saving...";
 
   try {
     await saveStatusUpdate(record, newStatus);
+
+    if (statusChanged) {
+      await notifyUserOfStatusChange(record, newStatus);
+    }
+
     editModal.classList.remove("open");
     editingId = null;
   } catch (err) {
