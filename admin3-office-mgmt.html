@@ -28,11 +28,14 @@
     border: 1px solid #bae6fd;
     border-top: 4px solid #2563eb;
     border-radius: 16px;
-    padding: 20px 20px 22px;
+    /* Extra right padding keeps long values (e.g. an office name) from
+       running under the icon badge in the corner. */
+    padding: 20px 56px 22px 20px;
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-width: 0;
   }
 
   .stat-icon {
@@ -47,6 +50,7 @@
     align-items: center;
     justify-content: center;
     font-size: 16px;
+    flex-shrink: 0;
   }
 
   .stat-label {
@@ -65,10 +69,22 @@
     color: #0f172a;
     line-height: 1.1;
     overflow-wrap: anywhere;
+    word-break: break-word;
+    min-width: 0;
   }
 
+  /* Used for text values (office names) instead of numbers — smaller,
+     wraps onto up to 2 lines, and truncates with an ellipsis instead of
+     overflowing the card or running under the icon badge. */
   .stat-value-text {
-    font-size: 20px;
+    font-size: 18px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .stat-sub {
@@ -306,7 +322,7 @@
       font-size: 30px;
     }
     .stat-value-text {
-      font-size: 18px;
+      font-size: 17px;
     }
   }
 
@@ -353,13 +369,13 @@
 
   @media (max-width: 600px) {
     .stat-card {
-      padding: 16px 16px 18px;
+      padding: 16px 50px 18px 16px;
     }
     .stat-value {
       font-size: 26px;
     }
     .stat-value-text {
-      font-size: 16px;
+      font-size: 15px;
     }
     .stat-icon {
       width: 32px;
@@ -378,7 +394,7 @@
       font-size: 28px;
     }
     .stat-value-text {
-      font-size: 18px;
+      font-size: 17px;
     }
   }
 
@@ -857,7 +873,9 @@ function updateSummary() {
   document.getElementById("summary-total-offices-count").textContent = totalOffices;
   document.getElementById("summary-total-evals").textContent = totalEvals;
   document.getElementById("summary-highest-office").textContent = highestOffice;
+  document.getElementById("summary-highest-office").title = highestOffice;
   document.getElementById("summary-lowest-office").textContent = lowestOffice;
+  document.getElementById("summary-lowest-office").title = lowestOffice;
 }
 
 function renderOfficeTable() {
