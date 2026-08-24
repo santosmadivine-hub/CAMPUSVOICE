@@ -764,6 +764,110 @@
   .pie-legend-row[title] {
     cursor: help;
   }
+
+  /* ─── Submission Status — vertical grouped bar chart (ported from
+       admin2-dashboard.html so this card now matches Admin 2's layout,
+       driven by facility_evaluations' `category` field instead of the
+       fixed Comfort Room / Surroundings pair) ─── */
+  .status-vbar-wrap {
+    display: flex;
+    gap: 8px;
+  }
+
+  .status-vbar-yaxis {
+    flex: 0 0 32px;
+    width: 32px;
+    position: relative;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    color: #94a3b8;
+  }
+
+  .status-vbar-yaxis span {
+    position: absolute;
+    right: 6px;
+    transform: translateY(-50%);
+  }
+
+  .status-vbar-chart {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    border-left: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0 12px;
+  }
+
+  .status-vbar-group {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 100%;
+  }
+
+  .status-vbar-col {
+    width: 34px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    cursor: help;
+  }
+
+  .status-vbar-fill {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.3s ease;
+    min-height: 1px;
+  }
+
+  .status-vbar-value {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 4px;
+  }
+
+  .status-vbar-labels {
+    display: flex;
+    justify-content: space-around;
+    margin: 8px 0 0;
+    padding: 0 12px;
+    margin-left: 32px;
+  }
+
+  .status-vbar-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    text-align: center;
+  }
+
+  .status-vbar-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: #475569;
+  }
+
+  .status-vbar-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-vbar-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
 </style>
 </head>
 <body>
@@ -799,7 +903,7 @@
     <!-- ROW: SUBMISSION STATUS + RATING DISTRIBUTION -->
     <div class="analytics-grid">
       <div class="card">
-        <div class="card-title">Submission Status <span class="card-sub">— % of total evaluations</span></div>
+        <div class="card-title">Submission Status <span class="card-sub">— by category</span></div>
         <div class="status-trend-wrap" id="status-breakdown-chart"></div>
       </div>
 
@@ -917,7 +1021,7 @@ const ACTIVE_RATING_IDS = [1, 2, 3, 4, 5, 6, 7, 8];
 // ======================
 // STATE
 // ======================
-let evaluations = [];   // [{id, officeName, rating1..rating8, timestamp, sex, userCategory, evidence, ...}]
+let evaluations = [];   // [{id, officeName, rating1..rating8, timestamp, sex, userCategory, evidence, category, ...}]
 let offices = {};       // { officeDocId: officeName }
 
 function avgOf(e) {
@@ -1108,7 +1212,19 @@ function renderStatCards() {
 }
 
 // ======================
-// SUBMISSION STATUS BAR CHART (Admin 2 style)
+// SUBMISSION STATUS — vertical grouped bar chart
+// (ported from admin2-dashboard.html so this card now shows the same
+// "Submission Status — by category" layout as Admin 2, rendered as
+// HTML/CSS bars instead of an SVG bar chart.
+//
+//   x-axis  -> the three statuses (Pending / No Action Required / Resolved)
+//   y-axis  -> percentage of that status's own category total (0–100%)
+//   each status has one bar per facility category, colored dynamically
+//
+// Admin 2 has a fixed two-category pair (Comfort Room / Surroundings).
+// Facilities don't have a fixed pair like that, so the category groups
+// here are derived from whatever values actually appear in each
+// facility_evaluations record's `category` field.
 // ======================
 const STATUS_META = {
   pending: { label: "Pending", color: "#f59e0b" },
@@ -1116,88 +1232,73 @@ const STATUS_META = {
   resolved: { label: "Resolved", color: "#10b981" }
 };
 
+const STATUS_VBAR_MAX_H = 200;
+
+function getFacilityCategories() {
+  const seen = new Set();
+  evaluations.forEach(e => {
+    seen.add((e.category || "").toString().trim() || "Uncategorized");
+  });
+  return Array.from(seen).sort();
+}
+
 function renderSubmissionStatus() {
   const el = document.getElementById("status-breakdown-chart");
-  
-  const total = evaluations.length;
-  if (total === 0) {
+
+  if (evaluations.length === 0) {
     el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
     return;
   }
 
-  const counts = { pending: 0, no_action: 0, resolved: 0 };
-  evaluations.forEach(e => { 
-    counts[e.status] = (counts[e.status] || 0) + 1;
-  });
-
   const statusOrder = ["pending", "no_action", "resolved"];
-  const bars = statusOrder.map(key => ({
-    key,
-    count: counts[key] || 0,
-    pct: ((counts[key] || 0) / total) * 100,
-    meta: STATUS_META[key]
-  }));
+  const cats = getFacilityCategories();
+  const catMeta = {};
+  cats.forEach((c, i) => { catMeta[c] = { label: c, color: PIE_COLORS[i % PIE_COLORS.length] }; });
 
-  const CHART_WIDTH = 400;
-  const CHART_HEIGHT = 220;
-  const PAD_LEFT = 46;
-  const PAD_RIGHT = 16;
-  const PAD_TOP = 20;
-  const PAD_BOTTOM = 16;
+  const catOf = e => (e.category || "").toString().trim() || "Uncategorized";
 
-  const plotW = CHART_WIDTH - PAD_LEFT - PAD_RIGHT;
-  const plotH = CHART_HEIGHT - PAD_TOP - PAD_BOTTOM;
+  const totals = {};
+  cats.forEach(c => { totals[c] = evaluations.filter(e => catOf(e) === c).length; });
 
-  const colWidth = plotW / bars.length;
-  const barWidth = Math.min(70, colWidth * 0.5);
-
-  const yTicks = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-  const yFor = (pct) => PAD_TOP + plotH - (Math.min(pct, 100) / 100) * plotH;
-  const baselineY = yFor(0);
-
-  const gridLines = yTicks.map(t => {
-    const y = yFor(t);
-    return `<line x1="${PAD_LEFT}" y1="${y.toFixed(1)}" x2="${CHART_WIDTH - PAD_RIGHT}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1" vector-effect="non-scaling-stroke"></line>`;
+  const groupsHtml = statusOrder.map(statusKey => {
+    const meta = STATUS_META[statusKey];
+    const cols = cats.map(c => {
+      const cm = catMeta[c];
+      const count = evaluations.filter(e => catOf(e) === c && e.status === statusKey).length;
+      const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
+      const h = Math.max(1, Math.round((pct / 100) * STATUS_VBAR_MAX_H));
+      return `
+        <div class="status-vbar-col" title="${cm.label} — ${meta.label}: ${count} of ${totals[c]} evaluations (${pct}%)">
+          <div class="status-vbar-value">${pct}%</div>
+          <div class="status-vbar-fill" style="height:${h}px;background:${cm.color};"></div>
+        </div>
+      `;
+    }).join("");
+    return `<div class="status-vbar-group">${cols}</div>`;
   }).join("");
 
-  const yLabels = yTicks.map(t => {
-    const y = yFor(t);
-    return `<text x="${PAD_LEFT - 8}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-family="DM Sans, sans-serif" font-size="9.5" fill="#94a3b8">${t}%</text>`;
+  const yAxis = [100, 75, 50, 25, 0].map(pct => {
+    const top = STATUS_VBAR_MAX_H - (pct / 100) * STATUS_VBAR_MAX_H;
+    return `<span style="top:${top}px;">${pct}%</span>`;
   }).join("");
 
-  const barsSvg = bars.map((b, i) => {
-    const colX0 = PAD_LEFT + i * colWidth;
-    const barX = colX0 + (colWidth - barWidth) / 2;
-    const barH = (b.pct / 100) * plotH;
-    const barY = baselineY - barH;
-    return `
-      <rect x="${barX.toFixed(1)}" y="${barY.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barH.toFixed(1)}" rx="6" fill="${b.meta.color}">
-        <title>${b.meta.label}: ${b.count} of ${total} evaluations (${b.pct.toFixed(1)}%)</title>
-      </rect>
-      <text x="${(barX + barWidth / 2).toFixed(1)}" y="${(barY - 8).toFixed(1)}" text-anchor="middle" font-family="Syne, sans-serif" font-weight="700" font-size="12" fill="#0f1b32">${b.pct.toFixed(1)}%</text>
-    `;
-  }).join("");
+  const xLabels = statusOrder.map(s => `<div class="status-vbar-label">${STATUS_META[s].label}</div>`).join("");
 
-  const axisLine = `<line x1="${PAD_LEFT}" y1="${baselineY.toFixed(1)}" x2="${CHART_WIDTH - PAD_RIGHT}" y2="${baselineY.toFixed(1)}" stroke="#cbd5e1" stroke-width="1"></line>`;
-  const yAxisLine = `<line x1="${PAD_LEFT}" y1="${PAD_TOP}" x2="${PAD_LEFT}" y2="${baselineY.toFixed(1)}" stroke="#cbd5e1" stroke-width="1"></line>`;
-
-  const svgContent = `
-    <svg width="100%" viewBox="0 0 ${CHART_WIDTH} ${CHART_HEIGHT}" class="status-chart-svg" style="min-height: 220px;">
-      ${gridLines}
-      ${yLabels}
-      ${barsSvg}
-      ${yAxisLine}
-      ${axisLine}
-    </svg>
-  `;
-
-  const axisLabels = `
-    <div class="status-axis-labels" style="padding: 0 16px 0 46px;">
-      ${bars.map(b => `<div style="text-align: center; flex: 1;">${b.meta.label}</div>`).join("")}
+  const legend = cats.map(c => `
+    <div class="status-vbar-legend-item">
+      <span class="status-vbar-legend-swatch" style="background:${catMeta[c].color};"></span>
+      <span>${catMeta[c].label}</span>
     </div>
-  `;
+  `).join("");
 
-  el.innerHTML = svgContent + axisLabels;
+  el.innerHTML = `
+    <div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;">
+      <div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div>
+      <div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div>
+    </div>
+    <div class="status-vbar-labels">${xLabels}</div>
+    <div class="status-vbar-legend">${legend}</div>
+  `;
 }
 
 // ======================
