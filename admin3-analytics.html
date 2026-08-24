@@ -511,66 +511,32 @@
     font-size: 14px;
   }
 
-  /* Dimension Performance — per-question bar chart */
-  .dim-bar-list {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    margin-top: 10px;
+  /* Dimension Performance — Chart.js bar chart (ported from
+     admin2-dashboard.html) */
+  .chart-wrap {
+    position: relative;
+    height: 260px;
+    background: #f2f4f9;
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 8px;
   }
 
-  .dim-bar-row {
-    display: grid;
-    grid-template-columns: 20px 1fr 40px;
-    align-items: center;
-    gap: 8px;
+  .chart-wrap canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
   }
 
-  .dim-bar-num {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #dbeafe;
-    color: #1e40af;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 10px;
-    flex-shrink: 0;
+  .chart-error {
+    padding: 32px 16px;
+    text-align: center;
+    color: #92400e;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    font-size: 14px;
   }
-
-  .dim-bar-main {
-    min-width: 0;
-  }
-
-  .dim-bar-label {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    color: #334155;
-    margin-bottom: 3px;
-    line-height: 1.25;
-  }
-
-  .dim-bar-track {
-    height: 8px;
-    background: #f1f5f9;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .dim-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    background: #2563eb;
-    transition: width 0.3s ease;
-  }
-
-  .dim-bar-fill.rating-outstanding-fill { background: #10b981; }
-  .dim-bar-fill.rating-very-satisfactory-fill { background: #2563eb; }
-  .dim-bar-fill.rating-satisfactory-fill { background: #f59e0b; }
-  .dim-bar-fill.rating-poor-fill { background: #ef4444; }
 
   /* Respondent Breakdown — pie charts */
   .pie-row {
@@ -928,6 +894,16 @@
       </div>
     </div>
 
+    <!-- DIMENSION PERFORMANCE — active evaluation questions
+         (Chart.js bar chart, ported from Admin 2's Dimension
+         Performance card — now placed above Office Trend) -->
+    <div class="card">
+      <div class="card-title">Dimension Performance <span class="card-sub">— all offices, Q1–Q8</span></div>
+      <div class="chart-wrap" id="chart-dimensions-wrap">
+        <canvas id="chart-dimensions"></canvas>
+      </div>
+    </div>
+
     <!-- OFFICE TREND — full width -->
     <div class="card office-trend-card">
       <div class="card-title" id="office-trend-title">Office Trend Over Time <span class="card-sub">— monthly average score</span></div>
@@ -949,14 +925,9 @@
         <div class="ot-line-legend" id="ot-line-legend"></div>
       </div>
     </div>
-
-    <!-- DIMENSION PERFORMANCE — active evaluation questions -->
-    <div class="card">
-      <div class="card-title">Dimension Performance <span class="card-sub">— all offices, Q1–Q8</span></div>
-      <div id="dimension-performance-chart" class="dim-bar-list"></div>
-    </div>
   </main>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="shared.js"></script>
 
 <script type="module">
@@ -1023,6 +994,7 @@ const ACTIVE_RATING_IDS = [1, 2, 3, 4, 5, 6, 7, 8];
 // ======================
 let evaluations = [];   // [{id, officeName, rating1..rating8, timestamp, sex, userCategory, evidence, category, ...}]
 let offices = {};       // { officeDocId: officeName }
+let dimensionChart = null; // Chart.js instance for the Dimension Performance card
 
 function avgOf(e) {
   let sum = 0;
@@ -1101,10 +1073,10 @@ const DIMENSIONS = ACTIVE_RATING_IDS.map(i => ({
 }));
 
 const RATING_SCALE = [
-  { min: 90, label: "Outstanding", cssClass: "rating-outstanding-fill" },
-  { min: 75, label: "Very Satisfactory", cssClass: "rating-very-satisfactory-fill" },
-  { min: 60, label: "Satisfactory", cssClass: "rating-satisfactory-fill" },
-  { min: 0, label: "Needs Improvement", cssClass: "rating-poor-fill" }
+  { min: 90, label: "Outstanding", cssClass: "rating-outstanding-fill", color: "#10b981" },
+  { min: 75, label: "Very Satisfactory", cssClass: "rating-very-satisfactory-fill", color: "#2563eb" },
+  { min: 60, label: "Satisfactory", cssClass: "rating-satisfactory-fill", color: "#f59e0b" },
+  { min: 0, label: "Needs Improvement", cssClass: "rating-poor-fill", color: "#ef4444" }
 ];
 
 function ratingFillClass(pct) {
@@ -1112,6 +1084,13 @@ function ratingFillClass(pct) {
     if (pct >= r.min) return r.cssClass;
   }
   return "rating-poor-fill";
+}
+
+function ratingFillColor(pct) {
+  for (const r of RATING_SCALE) {
+    if (pct >= r.min) return r.color;
+  }
+  return "#ef4444";
 }
 
 // Derive status based on average rating (same logic as admin3-eval-mgmt.html)
@@ -1177,9 +1156,9 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
 function renderAll() {
   renderStatCards();
   renderSubmissionStatus();
+  renderDimensionPerformance();
   renderOfficeTrend();
   renderRatingDistribution();
-  renderDimensionPerformance();
   renderRespondentPies();
 }
 
@@ -1299,6 +1278,94 @@ function renderSubmissionStatus() {
     <div class="status-vbar-labels">${xLabels}</div>
     <div class="status-vbar-legend">${legend}</div>
   `;
+}
+
+// ======================
+// DIMENSION PERFORMANCE (active evaluation questions, all offices)
+// Chart.js bar chart — ported from admin2-dashboard.html's
+// "Dimension Performance" card (renderDimensionSection), driven by
+// facility_evaluations' rating1..rating8 instead of the fixed
+// Comfort Room / Surroundings 5-question sets. Rendered as a single
+// chart (Q1–Q8) since Facilities doesn't have a fixed two-category
+// split like Admin 2's Comfort Room / Surroundings.
+// x-axis: evaluation question | y-axis: average rating (0–5)
+// ======================
+function renderDimensionPerformance() {
+  const wrapId = "chart-dimensions-wrap";
+  const canvasId = "chart-dimensions";
+  const wrap = document.getElementById(wrapId);
+
+  if (dimensionChart) {
+    dimensionChart.destroy();
+    dimensionChart = null;
+  }
+
+  if (evaluations.length === 0) {
+    wrap.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
+    return;
+  }
+
+  if (!document.getElementById(canvasId)) {
+    wrap.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+  }
+
+  const computed = DIMENSIONS.map(dim => {
+    const values = evaluations.map(e => e[dim.field]).filter(v => v > 0);
+    const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+    const pct = values.length ? (avg / 5) * 100 : 0;
+    return { ...dim, avg, pct, count: values.length };
+  });
+
+  dimensionChart = safeRenderChart(wrapId, canvasId, (canvas) => {
+    return new Chart(canvas, {
+      type: "bar",
+      data: {
+        labels: computed.map(d => `Q${d.id}`),
+        datasets: [{
+          data: computed.map(d => Number(d.avg.toFixed(2))),
+          backgroundColor: computed.map(d => ratingFillColor(d.pct)),
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => computed[items[0].dataIndex].label,
+              label: (item) => {
+                const d = computed[item.dataIndex];
+                return `Avg ${d.avg.toFixed(2)}/5 (${d.pct.toFixed(1)}%) — ${d.count} response${d.count === 1 ? "" : "s"}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: { beginAtZero: true, max: 5 }
+        }
+      }
+    });
+  });
+}
+
+function safeRenderChart(wrapId, canvasId, buildFn) {
+  if (typeof Chart === "undefined") {
+    const wrap = document.getElementById(wrapId);
+    if (wrap) wrap.innerHTML = `<div class="chart-error">Chart library failed to load. Check your internet connection and reload.</div>`;
+    console.error(`Chart.js is not loaded — skipped "${canvasId}"`);
+    return null;
+  }
+  try {
+    const canvas = document.getElementById(canvasId);
+    return buildFn(canvas);
+  } catch (err) {
+    console.error(`Failed to render chart "${canvasId}":`, err);
+    const wrap = document.getElementById(wrapId);
+    if (wrap) wrap.innerHTML = `<div class="chart-error">Couldn't render this chart.</div>`;
+    return null;
+  }
 }
 
 // ======================
@@ -1491,39 +1558,6 @@ function renderRatingDistribution() {
         <div class="bar-label">${star} Star${star === 1 ? '' : 's'}</div>
         <div class="bar-track"><div class="bar-fill" data-width="${pct}%" style="width: ${pct}%; background: #2563eb;" title="${count} evaluations (${pct}%)"></div></div>
         <div class="bar-value">${pct}%</div>
-      </div>
-    `;
-  }).join("");
-}
-
-// ======================
-// DIMENSION PERFORMANCE (active evaluation questions, all offices)
-// x-axis: evaluation question | y-axis: average percentage
-// ======================
-function renderDimensionPerformance() {
-  const el = document.getElementById("dimension-performance-chart");
-
-  if (evaluations.length === 0) {
-    el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
-    return;
-  }
-
-  el.innerHTML = DIMENSIONS.map(dim => {
-    const values = evaluations.map(e => e[dim.field]).filter(v => v > 0);
-    const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
-    const pct = values.length ? (avg / 5) * 100 : 0;
-    const fillClass = ratingFillClass(pct);
-
-    return `
-      <div class="dim-bar-row" title="Q${dim.id}: Average ${avg.toFixed(2)}/5.0 (${pct.toFixed(1)}%) from ${values.length} responses">
-        <div class="dim-bar-num">${dim.id}</div>
-        <div class="dim-bar-main">
-          <div class="dim-bar-label" title="${dim.label}">${dim.label}</div>
-          <div class="dim-bar-track" title="Average: ${avg.toFixed(2)}/5">
-            <div class="dim-bar-fill ${fillClass}" style="width: ${pct.toFixed(1)}%;" title="${pct.toFixed(1)}% satisfaction"></div>
-          </div>
-        </div>
-        <div class="dim-bar-value" title="${avg.toFixed(2)} avg rating">${pct.toFixed(1)}%</div>
       </div>
     `;
   }).join("");
