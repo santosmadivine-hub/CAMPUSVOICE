@@ -637,6 +637,118 @@
     font-size: 12.5px;
   }
 
+  /* Sex Distribution — single-ring donut (styled after Admin 2's
+     Evidence Coverage donut) */
+  .evidence-donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .evidence-donut-visual {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .evidence-donut-svg {
+    display: block;
+    filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.08));
+  }
+
+  .evidence-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .evidence-donut-center strong {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0f172a;
+    line-height: 1;
+  }
+
+  .evidence-donut-center span {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-top: 2px;
+  }
+
+  .evidence-bar-legend {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    min-width: 160px;
+  }
+
+  .evidence-bar-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: help;
+  }
+
+  .evidence-bar-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+  }
+
+  .evidence-bar-row-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #475569;
+    font-weight: 600;
+  }
+
+  .evidence-bar-row-label .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .evidence-bar-row-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 12.5px;
+  }
+
+  .evidence-bar-track {
+    height: 6px;
+    background: #eef2f7;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .evidence-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
+  /* Office Trend card spans full width */
+  .office-trend-card {
+    margin-bottom: 16px;
+  }
+
   /* Tooltip Styling */
   [title] {
     position: relative;
@@ -697,14 +809,11 @@
       </div>
     </div>
 
-    <!-- RESPONDENT BREAKDOWN — sex + user category pie charts -->
+    <!-- RESPONDENT BREAKDOWN — sex + user category -->
     <div class="pie-row">
       <div class="card">
         <div class="card-title">Respondents by Sex</div>
-        <div class="pie-wrap">
-          <div class="pie-circle" id="pie-sex-circle"></div>
-          <div class="pie-legend" id="pie-sex-legend"></div>
-        </div>
+        <div id="sex-distribution-chart" style="margin-top: 12px;"></div>
       </div>
       <div class="card">
         <div class="card-title">Respondents by Category</div>
@@ -1320,9 +1429,141 @@ function renderDimensionPerformance() {
 }
 
 // ======================
-// RESPONDENT BREAKDOWN (sex + user category) — pie charts
+// RESPONDENT BREAKDOWN (sex + user category)
+// Sex uses a single-ring donut (styled after Admin 2's Evidence
+// Coverage / Sex Distribution rings); user category keeps the
+// existing conic-gradient pie.
 // ======================
 const PIE_COLORS = ["#2563eb", "#FB923C", "#F87171", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
+
+const SEX_COLORS = {
+  Male: "#2563eb",
+  Female: "#ec4899",
+  Other: "#94a3b8"
+};
+
+function normalizeSex(value) {
+  const raw = (value ?? "").toString().trim();
+
+  if (!raw) return "Not Specified";
+
+  const normalized = raw.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+
+  if (normalized === "male" || normalized === "m") return "Male";
+  if (normalized === "female" || normalized === "f") return "Female";
+  if (normalized === "other") return "Other";
+  if (
+    normalized === "prefer not to say" ||
+    normalized === "prefer not say" ||
+    normalized === "rather not say"
+  ) {
+    return "Prefer not to say";
+  }
+
+  return raw;
+}
+
+function bucketSex(value) {
+  const normalized = normalizeSex(value);
+  if (normalized === "Male") return "Male";
+  if (normalized === "Female") return "Female";
+  return "Other";
+}
+
+function sexDonutSegmentPath(cx, cy, radius, startPct, endPct) {
+  const span = endPct - startPct;
+  if (span <= 0) return "";
+  const startAngle = -90 + (startPct / 100) * 360;
+  const endAngle = -90 + (endPct / 100) * 360;
+
+  if (span >= 99.99) {
+    const startRad = startAngle * Math.PI / 180;
+    const midRad = (startAngle + 180) * Math.PI / 180;
+    const x1 = cx + radius * Math.cos(startRad);
+    const y1 = cy + radius * Math.sin(startRad);
+    const xm = cx + radius * Math.cos(midRad);
+    const ym = cy + radius * Math.sin(midRad);
+    return `M ${x1} ${y1} A ${radius} ${radius} 0 1 1 ${xm} ${ym} A ${radius} ${radius} 0 1 1 ${x1} ${y1}`;
+  }
+
+  const startRad = startAngle * Math.PI / 180;
+  const endRad = endAngle * Math.PI / 180;
+  const x1 = cx + radius * Math.cos(startRad);
+  const y1 = cy + radius * Math.sin(startRad);
+  const x2 = cx + radius * Math.cos(endRad);
+  const y2 = cy + radius * Math.sin(endRad);
+  const largeArc = span > 50 ? 1 : 0;
+  return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
+}
+
+function renderSexDistributionDonut() {
+  const el = document.getElementById("sex-distribution-chart");
+
+  const size = 190;
+  const cx = size / 2, cy = size / 2;
+  const radius = 70;
+  const strokeWidth = 18;
+  const total = evaluations.length;
+
+  if (total === 0) {
+    el.innerHTML = `
+      <div class="evidence-donut-wrap">
+        <div class="evidence-donut-visual" style="width:${size}px; height:${size}px;">
+          <svg viewBox="0 0 ${size} ${size}" class="evidence-donut-svg" style="width:${size}px; height:${size}px;">
+            <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#eef2f7" stroke-width="${strokeWidth}"></circle>
+          </svg>
+          <div class="evidence-donut-center"><strong>0</strong><span>Respondents</span></div>
+        </div>
+        <div class="evidence-bar-legend"><div class="lb-empty" style="padding:0;">No data yet.</div></div>
+      </div>
+    `;
+    return;
+  }
+
+  const counts = { Male: 0, Female: 0, Other: 0 };
+  evaluations.forEach(e => { counts[bucketSex(e.sex)]++; });
+
+  const entries = ["Male", "Female", "Other"]
+    .map(key => ({
+      key,
+      color: SEX_COLORS[key],
+      count: counts[key],
+      pct: total ? Math.round((counts[key] / total) * 100) : 0
+    }))
+    .filter(seg => seg.count > 0);
+
+  let cumulative = 0;
+  const segmentsSvg = entries.map(seg => {
+    const startPct = cumulative;
+    cumulative += seg.pct;
+    const d = sexDonutSegmentPath(cx, cy, radius, startPct, Math.min(cumulative, 100));
+    if (!d) return "";
+    return `<path d="${d}" fill="none" stroke="${seg.color}" stroke-width="${strokeWidth}" stroke-linecap="${entries.length > 1 ? 'butt' : 'round'}"><title>${seg.key}: ${seg.count} respondent${seg.count !== 1 ? 's' : ''} (${seg.pct}%)</title></path>`;
+  }).join("");
+
+  el.innerHTML = `
+    <div class="evidence-donut-wrap">
+      <div class="evidence-donut-visual" style="width:${size}px; height:${size}px;">
+        <svg viewBox="0 0 ${size} ${size}" class="evidence-donut-svg" style="width:${size}px; height:${size}px;">
+          <circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#eef2f7" stroke-width="${strokeWidth}"></circle>
+          ${segmentsSvg}
+        </svg>
+        <div class="evidence-donut-center"><strong>${total}</strong><span>Respondents</span></div>
+      </div>
+      <div class="evidence-bar-legend">
+        ${entries.map(seg => `
+          <div class="evidence-bar-row" title="${seg.key}: ${seg.count} respondent${seg.count !== 1 ? 's' : ''} (${seg.pct}% of ${total} total)">
+            <div class="evidence-bar-row-top">
+              <span class="evidence-bar-row-label"><span class="dot" style="background:${seg.color};"></span>${seg.key}</span>
+              <span class="evidence-bar-row-value">${seg.count} <span style="color:#94a3b8; font-weight:600;">(${seg.pct}%)</span></span>
+            </div>
+            <div class="evidence-bar-track"><div class="evidence-bar-fill" style="width:${seg.pct}%; background:${seg.color};"></div></div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
 
 function renderPieChart(circleId, legendId, values) {
   const circle = document.getElementById(circleId);
@@ -1367,7 +1608,7 @@ function renderPieChart(circleId, legendId, values) {
 }
 
 function renderRespondentPies() {
-  renderPieChart("pie-sex-circle", "pie-sex-legend", evaluations.map(e => e.sex));
+  renderSexDistributionDonut();
   renderPieChart("pie-usercat-circle", "pie-usercat-legend", evaluations.map(e => e.userCategory));
 }
 
