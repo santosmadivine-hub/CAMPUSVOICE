@@ -676,21 +676,6 @@
           <span id="stat-total">0</span>
           <div class="eval-stat-pill-sub">All Submissions</div>
         </div>
-        <div class="eval-stat-pill" data-icon="🏢">
-          <div class="eval-stat-pill-label">Offices</div>
-          <span id="stat-offices">0</span>
-          <div class="eval-stat-pill-sub">Evaluated</div>
-        </div>
-        <div class="eval-stat-pill" data-icon="📷">
-          <div class="eval-stat-pill-label">Total Images</div>
-          <span id="stat-images">0</span>
-          <div class="eval-stat-pill-sub">Evidence</div>
-        </div>
-        <div class="eval-stat-pill" data-icon="🎥">
-          <div class="eval-stat-pill-label">Total Videos</div>
-          <span id="stat-videos">0</span>
-          <div class="eval-stat-pill-sub">Evidence</div>
-        </div>
         <div class="eval-stat-pill" data-icon="⏳">
           <div class="eval-stat-pill-label">Pending</div>
           <span id="stat-pending">0</span>
@@ -1072,19 +1057,6 @@ function renderSubmissions() {
   const filtered = getFilteredSubmissions();
 
   document.getElementById("stat-total").textContent = evaluations.length;
-  const distinctOffices = new Set(evaluations.map(e => e.officeName));
-  document.getElementById("stat-offices").textContent = distinctOffices.size;
-
-  const totalImages = evaluations.reduce(
-    (sum, e) => sum + e.evidence.filter(item => item.type === "image").length,
-    0
-  );
-  const totalVideos = evaluations.reduce(
-    (sum, e) => sum + e.evidence.filter(item => item.type === "video").length,
-    0
-  );
-  document.getElementById("stat-images").textContent = totalImages;
-  document.getElementById("stat-videos").textContent = totalVideos;
 
   const pendingCount = evaluations.filter(e => e.status === "pending").length;
   const noActionCount = evaluations.filter(e => e.status === "no_action").length;
