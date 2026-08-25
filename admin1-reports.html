@@ -291,22 +291,6 @@ select { min-width:180px; }
 
   <main class="main">
     <div id="topbar-mount"></div>
-  
-
-    <div class="config-card">
-      <div class="config-row">
-        <input type="date" id="startDate" class="input">
-        <input type="date" id="endDate"   class="input">
-
-        <select id="officeFilter">
-          <option value="">Select Office…</option>
-        </select>
-
-        <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
-        <button class="btn btn-purple"  onclick="generateCommentsReport()">💬 Comments Report</button>
-        <button class="btn btn-green"   onclick="saveReport()">💾 Save Report</button>
-      </div>
-    </div>
 
     <div class="kpi-grid">
       <div class="kpi-card">
@@ -332,6 +316,20 @@ select { min-width:180px; }
         <div class="kpi-title">Saved Reports</div>
         <div class="kpi-value" id="kpiSavedCount">0</div>
         <div class="kpi-sub">Generated</div>
+      </div>
+    </div>
+    <div class="config-card">
+      <div class="config-row">
+        <input type="date" id="startDate" class="input">
+        <input type="date" id="endDate"   class="input">
+
+        <select id="officeFilter">
+          <option value="">Select Office…</option>
+        </select>
+
+        <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
+        <button class="btn btn-purple"  onclick="generateCommentsReport()">💬 Comments Report</button>
+        <button class="btn btn-green"   onclick="saveReport()">💾 Save Report</button>
       </div>
     </div>
 
