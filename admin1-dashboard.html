@@ -10,14 +10,14 @@
 
 .dashboard-container {
   flex: 1;
-  padding: 28px 40px 12px;
+  padding: 25px 30px 12px;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
 }
 
 .charts-grid {
@@ -37,6 +37,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+
 }
 
 .charts-grid > .chart-card {
@@ -85,7 +86,6 @@
   display:grid;
   grid-template-columns:repeat(4, 1fr);
   gap:20px;
-  padding: 0 0;
 }
 
 .stat-card{
@@ -94,11 +94,11 @@
   border:1px solid #bae6fd;
   border-top:4px solid var(--accent3, #2563eb);
   border-radius:16px;
-  padding:24px 22px 28px;
+  padding:20px 20px 22px;
   box-shadow:0 4px 14px rgba(15,23,42,0.05);
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:6px;
 }
 
 .stat-card.blue{ border-top-color:#2563eb; }
@@ -106,40 +106,39 @@
 
 .stat-icon{
   position:absolute;
-  top:20px;
-  right:20px;
-  width:42px;
-  height:42px;
+  top:18px;
+  right:18px;
+  width:38px;
+  height:38px;
   border-radius:10px;
   background:#f1f5f9;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:18px;
+  font-size:16px;
 }
 
 .stat-label{
   font-family:'DM Sans',sans-serif;
-  font-size:12px;
-  font-weight:600;
+  font-size:13px;
+  font-weight:500;
   color:#64748b;
   text-transform:uppercase;
-  letter-spacing:.05em;
+  letter-spacing:.04em;
 }
 
 .stat-value{
   font-family:'Syne',sans-serif;
-  font-weight:800;
-  font-size:36px;
+  font-weight:700;
+  font-size:30px;
   color:#0f172a;
   line-height:1.1;
 }
 
 .stat-sub{
   font-family:'DM Sans',sans-serif;
-  font-size:13px;
+  font-size:12px;
   color:#94a3b8;
-  font-weight:500;
 }
 
 .line-chart-wrap{
@@ -353,10 +352,9 @@
 @media (max-width: 1200px) {
   .dashboard-container {
     max-width: 100%;
-    padding: 24px 32px 12px;
   }
   .stat-value {
-    font-size: 32px;
+    font-size: 30px;
   }
   .quick-access-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -425,24 +423,16 @@
     width: 180px;
   }
   .dashboard-container {
-    padding: 20px 20px 28px;
+    padding: 20px 16px 28px;
     border-radius: 16px;
     gap: 18px;
   }
   .stat-grid{
     grid-template-columns:1fr 1fr;
-    gap:16px;
-  }
-  .stat-card {
-    padding: 20px 18px 24px;
+    gap:14px;
   }
   .stat-value {
-    font-size: 28px;
-  }
-  .stat-icon {
-    width: 38px;
-    height: 38px;
-    font-size: 16px;
+    font-size: 26px;
   }
   .chart-card {
     padding: 18px 18px 22px;
@@ -469,17 +459,17 @@
 
 @media (max-width: 600px) {
   .stat-card {
-    padding: 18px 16px 20px;
+    padding: 16px 16px 18px;
   }
   .stat-value {
-    font-size: 28px;
+    font-size: 26px;
   }
   .stat-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 15px;
-    top: 16px;
-    right: 16px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    top: 14px;
+    right: 14px;
   }
   .badge-pill {
     font-size: 12px;
@@ -498,10 +488,9 @@
   }
   .stat-grid{
     grid-template-columns:1fr;
-    gap: 14px;
   }
   .stat-value {
-    font-size: 32px;
+    font-size: 28px;
   }
   #line-chart-svg { height:160px; }
   .bar-chart-wrap svg {
@@ -530,7 +519,7 @@
 
 @media (max-width: 360px) {
   .stat-grid{
-    gap: 12px;
+    gap: 10px;
   }
   .chart-card {
     padding: 14px 14px 18px;
