@@ -797,6 +797,40 @@
       </div>
     </div>
 
+    <!-- ===================== NEW: Citizen's Charter (CC1–CC3) Awareness ===================== -->
+    <div class="an-section">
+      <div class="section-eyebrow"><span>Citizen's Charter Awareness</span></div>
+
+      <div class="an-row3">
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">CC1 – Awareness</div>
+            <div class="card-sub">— knowledge of the CC</div>
+          </div>
+          <div id="cc1Wrap" class="bar-wrap"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">CC2 – Visibility</div>
+            <div class="card-sub">— how easy the CC was to see</div>
+          </div>
+          <div id="cc2Wrap" class="bar-wrap"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">CC3 – Helpfulness</div>
+            <div class="card-sub">— how much the CC helped</div>
+          </div>
+          <div id="cc3Wrap" class="bar-wrap"></div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ===================== END NEW SECTION ===================== -->
+
   </main>
 </div>
 
@@ -962,6 +996,16 @@ function normalizeClientType(item) {
   return null;
 }
 
+// NEW: pulls a CC1/CC2/CC3 answer text out of an evaluation record.
+// Tries a few likely field-name variants (cc1, CC1, cc_1) so it works
+// regardless of exactly how the feedback form saved it.
+function getCCText(item, key) {
+  const n = key.replace("cc", "");
+  const raw = item[key] ?? item[key.toUpperCase()] ?? item["cc_" + n] ?? item["CC_" + n] ?? item["CC" + n];
+  if (typeof raw === "string" && raw.trim()) return raw.trim();
+  return null;
+}
+
 onSnapshot(officesCol, (snap) => {
   allOffices = {};
   snap.forEach((docSnap) => {
@@ -1004,6 +1048,7 @@ function render() {
   renderOfficeTrend(rows);
   renderSQD(rows);
   renderRatingBreakdown(rows);
+  renderCC(rows); // NEW
 }
 
 function renderKPIs(rows) {
@@ -1222,6 +1267,57 @@ function renderRatingBreakdown(rows) {
     </svg>
   `;
 }
+
+/* ===================== NEW: Citizen's Charter (CC1–CC3) breakdown ===================== */
+
+function renderCategoricalDist(containerId, rows, fieldKey) {
+  const wrap = document.getElementById(containerId);
+  const counts = {};
+  let total = 0;
+
+  rows.forEach(r => {
+    const v = getCCText(r, fieldKey);
+    if (v) {
+      counts[v] = (counts[v] || 0) + 1;
+      total++;
+    }
+  });
+
+  if (!total) {
+    wrap.innerHTML = `<div class="an-empty"><div class="icon">📋</div>No ${fieldKey.toUpperCase()} responses recorded yet.</div>`;
+    return;
+  }
+
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const colors = ["#2563eb", "#f97316", "#38bdf8", "#fb923c", "#1d4ed8", "#a855f7", "#dc2626"];
+
+  wrap.innerHTML = `<div class="sqd-list" style="margin-top:4px;">` + entries.map(([label, count], i) => {
+    const pct = (count / total) * 100;
+    const color = colors[i % colors.length];
+    const safeLabel = cvAttrSafe(label);
+    const lines = cvAttrSafe(JSON.stringify([
+      `${count} of ${total} respondents`,
+      `${pct.toFixed(1)}% share`
+    ]));
+    return `
+      <div class="sqd-row" style="grid-template-columns:1fr 2fr 46px;">
+        <div class="sqd-label" title="${safeLabel}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${label}</div>
+        <div class="sqd-track cv-hover" data-tt-title="${safeLabel}" data-tt-lines='${lines}'>
+          <div class="sqd-fill" style="width:${pct}%;background:${color};"></div>
+        </div>
+        <div class="sqd-val">${count}</div>
+      </div>
+    `;
+  }).join("") + `</div>`;
+}
+
+function renderCC(rows) {
+  renderCategoricalDist("cc1Wrap", rows, "cc1");
+  renderCategoricalDist("cc2Wrap", rows, "cc2");
+  renderCategoricalDist("cc3Wrap", rows, "cc3");
+}
+
+/* ===================== END NEW SECTION ===================== */
 
 
 function totalCodeCounts() {
