@@ -1654,10 +1654,23 @@ function renderOfficeTrend() {
 
 // ======================
 // RATING DISTRIBUTION (all offices)
+// Ported from admin1-analytics.html's renderRatingBreakdown: an SVG
+// bar chart with a percentage grid, star-labeled bars, and rounded
+// corners — replacing the old horizontal bar-row list. Data source
+// stays facility_evaluations (each evaluation's overall avgOf() score
+// rounded to the nearest whole star), same as before. Tooltips use a
+// native <title> element per bar (matching how other SVG charts on
+// this page — e.g. Office Trend — already show tooltips), rather than
+// Admin 1's separate cv-hover/mouse-tracking tooltip system.
 // ======================
 function renderRatingDistribution() {
   const el = document.getElementById("rating-distribution-chart");
   const total = evaluations.length;
+
+  if (total === 0) {
+    el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
+    return;
+  }
 
   const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   evaluations.forEach(e => {
@@ -1665,17 +1678,49 @@ function renderRatingDistribution() {
     counts[rounded]++;
   });
 
-  el.innerHTML = [5, 4, 3, 2, 1].map(star => {
-    const pct = total ? Math.round((counts[star] / total) * 100) : 0;
-    const count = counts[star];
+  const ratings = [5, 4, 3, 2, 1];
+  const labels = ["5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star"];
+  const colors = ["#2563eb", "#38bdf8", "#f97316", "#fb923c", "#dc2626"];
+
+  const W = 420, H = 220;
+  const PAD_LEFT = 40, PAD_BOTTOM = 30, PAD_TOP = 24;
+  const plotH = H - PAD_BOTTOM - PAD_TOP;
+  const plotW = W - PAD_LEFT - 20;
+
+  const BAR_W = 50, GAP = 16;
+  const totalBarWidth = ratings.length * BAR_W + (ratings.length - 1) * GAP;
+  const startX = PAD_LEFT + (plotW - totalBarWidth) / 2;
+
+  const gridPcts = [0, 25, 50, 75, 100];
+  const gridLines = gridPcts.map(p => {
+    const gy = H - PAD_BOTTOM - (p / 100) * plotH;
     return `
-      <div class="bar-row" title="${count} evaluation${count !== 1 ? 's' : ''} with ${star}-star rating (${pct}%)">
-        <div class="bar-label">${star} Star${star === 1 ? '' : 's'}</div>
-        <div class="bar-track"><div class="bar-fill" data-width="${pct}%" style="width: ${pct}%; background: #2563eb;" title="${count} evaluations (${pct}%)"></div></div>
-        <div class="bar-value">${pct}%</div>
-      </div>
+      <line x1="${PAD_LEFT}" y1="${gy}" x2="${W - 20}" y2="${gy}" stroke="#f1f5f9" stroke-width="1"/>
+      <text x="${PAD_LEFT - 8}" y="${gy + 4}" text-anchor="end" font-size="10" fill="#94a3b8">${p}%</text>
     `;
   }).join("");
+
+  const bars = ratings.map((rating, i) => {
+    const count = counts[rating];
+    const pct = (count / total) * 100;
+    const x = startX + i * (BAR_W + GAP);
+    const barH = (pct / 100) * plotH;
+    const y = H - PAD_BOTTOM - barH;
+    return `
+      <rect x="${x}" y="${y}" width="${BAR_W}" height="${barH}" rx="8" fill="${colors[i]}">
+        <title>${labels[i]}: ${count} evaluation${count !== 1 ? "s" : ""} (${pct.toFixed(1)}%)</title>
+      </rect>
+      <text x="${x + BAR_W / 2}" y="${H - PAD_BOTTOM + 18}" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">${rating}★</text>
+    `;
+  }).join("");
+
+  el.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:500px;height:auto;display:block;margin:0 auto;">
+      ${gridLines}
+      <line x1="${PAD_LEFT}" y1="${H - PAD_BOTTOM}" x2="${W - 20}" y2="${H - PAD_BOTTOM}" stroke="#e2e8f0" stroke-width="1.5"/>
+      ${bars}
+    </svg>
+  `;
 }
 
 // ======================
