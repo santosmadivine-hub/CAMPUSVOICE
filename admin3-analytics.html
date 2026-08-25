@@ -887,9 +887,8 @@
       </div>
       <div class="card">
         <div class="card-title">Respondents by Category</div>
-        <div class="pie-wrap">
-          <div class="pie-circle" id="pie-usercat-circle"></div>
-          <div class="pie-legend" id="pie-usercat-legend"></div>
+        <div class="chart-wrap" id="chart-usercat-wrap">
+          <canvas id="chart-usercat"></canvas>
         </div>
       </div>
     </div>
@@ -1602,6 +1601,37 @@ function bucketSex(value) {
   const normalized = normalizeSex(value);
   if (normalized === "Male") return "Male";
   if (normalized === "Female") return "Female";
+  return "Other";
+}
+
+// ======================
+// USER CATEGORY BUCKETS (ported from admin2-dashboard.html, used by
+// the "Respondents by Category" line chart below — same bucket set
+// and normalization Admin 2 uses, applied to facility_evaluations'
+// own userCategory field instead of the cleanliness form's).
+// ======================
+const USER_CATEGORY_BUCKETS = ["Student", "Faculty/Staff", "Visitor", "Guest"];
+
+function normalizeUserCategory(value) {
+  const raw = (value ?? "").toString().trim();
+  if (!raw) return "Other";
+
+  const normalized = raw.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+
+  if (normalized === "student" || normalized === "students") return "Student";
+  if (
+    normalized === "faculty" ||
+    normalized === "staff" ||
+    normalized === "faculty staff" ||
+    normalized === "faculty/staff" ||
+    normalized === "employee" ||
+    normalized === "personnel"
+  ) {
+    return "Faculty/Staff";
+  }
+  if (normalized === "visitor" || normalized === "visitors") return "Visitor";
+  if (normalized === "guest" || normalized === "guests") return "Guest";
+
   return "Other";
 }
 
