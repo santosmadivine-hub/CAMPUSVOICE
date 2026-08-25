@@ -887,9 +887,8 @@
       </div>
       <div class="card">
         <div class="card-title">Respondents by Category</div>
-        <div class="pie-wrap">
-          <div class="pie-circle" id="pie-usercat-circle"></div>
-          <div class="pie-legend" id="pie-usercat-legend"></div>
+        <div class="chart-wrap" id="chart-user-category-wrap">
+          <canvas id="chart-user-category"></canvas>
         </div>
       </div>
     </div>
@@ -995,6 +994,7 @@ const ACTIVE_RATING_IDS = [1, 2, 3, 4, 5, 6, 7, 8];
 let evaluations = [];   // [{id, officeName, rating1..rating8, timestamp, sex, userCategory, evidence, category, ...}]
 let offices = {};       // { officeDocId: officeName }
 let dimensionChart = null; // Chart.js instance for the Dimension Performance card
+let userCategoryChart = null; // Chart.js instance for the Respondents by Category card
 
 function avgOf(e) {
   let sum = 0;
@@ -1049,6 +1049,38 @@ function parseEvidence(data) {
   }
 
   return items;
+}
+
+// ======================
+// RESPONDENT NORMALIZATION HELPERS
+// (userCategory ported from admin2-dashboard.html so Facilities
+// buckets respondents the same way Admin 2 does — Student /
+// Faculty-Staff / Visitor / Guest / Other — regardless of how the
+// value was originally typed/stored on the document)
+// ======================
+const USER_CATEGORY_BUCKETS = ["Student", "Faculty/Staff", "Visitor", "Guest"];
+
+function normalizeUserCategory(value) {
+  const raw = (value ?? "").toString().trim();
+  if (!raw) return "Other";
+
+  const normalized = raw.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+
+  if (normalized === "student" || normalized === "students") return "Student";
+  if (
+    normalized === "faculty" ||
+    normalized === "staff" ||
+    normalized === "faculty staff" ||
+    normalized === "faculty/staff" ||
+    normalized === "employee" ||
+    normalized === "personnel"
+  ) {
+    return "Faculty/Staff";
+  }
+  if (normalized === "visitor" || normalized === "visitors") return "Visitor";
+  if (normalized === "guest" || normalized === "guests") return "Guest";
+
+  return "Other";
 }
 
 // ======================
@@ -1132,7 +1164,7 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
       events: ev.events || "",
       date: ev.date || "",
       sex: ev.sex || "",
-      userCategory: ev.userCategory || "",
+      userCategory: normalizeUserCategory(ev.userCategory),
       userId: ev.userId || "",
       timestamp: parseEvalTimestamp(ev),
       rawStatus: ev.status || "",
@@ -1344,6 +1376,89 @@ function renderDimensionPerformance() {
         },
         scales: {
           y: { beginAtZero: true, max: 5 }
+        }
+      }
+    });
+  });
+}
+
+// ======================
+// RESPONDENTS BY CATEGORY — line chart
+// (ported from admin2-dashboard.html's "User Category Distribution"
+// card so this card visualizes the same way — % of respondents per
+// bucket across Student / Faculty-Staff / Visitor / Guest — but as a
+// single "Facilities" series, since facility_evaluations doesn't have
+// Admin 2's fixed Comfort Room / Surroundings split. Card title stays
+// "Respondents by Category" as before; only the visualization changed.)
+// ======================
+function renderUserCategoryChart() {
+  const wrapId = "chart-user-category-wrap";
+  const canvasId = "chart-user-category";
+  const wrap = document.getElementById(wrapId);
+
+  if (userCategoryChart) {
+    userCategoryChart.destroy();
+    userCategoryChart = null;
+  }
+
+  if (evaluations.length === 0) {
+    wrap.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`;
+    return;
+  }
+
+  if (!document.getElementById(canvasId)) {
+    wrap.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+  }
+
+  const total = evaluations.length;
+  const counts = {};
+  USER_CATEGORY_BUCKETS.forEach(b => { counts[b] = 0; });
+  evaluations.forEach(e => {
+    if (counts.hasOwnProperty(e.userCategory)) counts[e.userCategory]++;
+  });
+  const pctData = USER_CATEGORY_BUCKETS.map(b => total ? (counts[b] / total) * 100 : 0);
+
+  userCategoryChart = safeRenderChart(wrapId, canvasId, (canvas) => {
+    return new Chart(canvas, {
+      type: "line",
+      data: {
+        labels: USER_CATEGORY_BUCKETS,
+        datasets: [
+          {
+            label: "Facilities",
+            data: pctData.map(v => Number(v.toFixed(1))),
+            borderColor: "#2563eb",
+            backgroundColor: "#2563eb",
+            pointBackgroundColor: "#2563eb",
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            borderWidth: 2,
+            tension: 0.3,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: "top", labels: { font: { family: "'DM Sans', sans-serif", size: 12 } } },
+          tooltip: {
+            callbacks: {
+              label: (item) => {
+                const count = evaluations.filter(e => e.userCategory === item.label).length;
+                return `${item.dataset.label}: ${item.formattedValue}% (${count} of ${total})`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            min: 0,
+            max: 100,
+            ticks: { callback: (v) => v + "%" }
+          }
         }
       }
     });
@@ -1566,8 +1681,9 @@ function renderRatingDistribution() {
 // ======================
 // RESPONDENT BREAKDOWN (sex + user category)
 // Sex uses a single-ring donut (styled after Admin 2's Evidence
-// Coverage / Sex Distribution rings); user category keeps the
-// existing conic-gradient pie.
+// Coverage / Sex Distribution rings); user category now uses a line
+// chart (ported from Admin 2's User Category Distribution card) in
+// place of the old conic-gradient pie.
 // ======================
 const PIE_COLORS = ["#2563eb", "#FB923C", "#F87171", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
@@ -1700,51 +1816,9 @@ function renderSexDistributionDonut() {
   `;
 }
 
-function renderPieChart(circleId, legendId, values) {
-  const circle = document.getElementById(circleId);
-  const legend = document.getElementById(legendId);
-
-  const counts = {};
-  values.forEach(v => {
-    const key = (v && String(v).trim()) ? String(v).trim() : "Unspecified";
-    counts[key] = (counts[key] || 0) + 1;
-  });
-
-  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  const total = values.length;
-
-  if (total === 0) {
-    circle.style.background = "#f1f5f9";
-    legend.innerHTML = `<div class="lb-empty">No data yet.</div>`;
-    return;
-  }
-
-  let cumulative = 0;
-  const gradientParts = entries.map(([label, count], i) => {
-    const color = PIE_COLORS[i % PIE_COLORS.length];
-    const start = (cumulative / total) * 360;
-    cumulative += count;
-    const end = (cumulative / total) * 360;
-    return `${color} ${start.toFixed(2)}deg ${end.toFixed(2)}deg`;
-  });
-  circle.style.background = `conic-gradient(${gradientParts.join(", ")})`;
-
-  legend.innerHTML = entries.map(([label, count], i) => {
-    const color = PIE_COLORS[i % PIE_COLORS.length];
-    const pct = Math.round((count / total) * 100);
-    return `
-      <div class="pie-legend-row" title="${label}: ${count} respondent${count !== 1 ? 's' : ''} (${pct}% of ${total} total)">
-        <span class="pie-legend-dot" style="background:${color};" title="${label}"></span>
-        <span class="pie-legend-label" title="${label}: ${count} count">${label}</span>
-        <span class="pie-legend-value" title="${count} respondents, ${pct}% of total">${pct}% (${count})</span>
-      </div>
-    `;
-  }).join("");
-}
-
 function renderRespondentPies() {
   renderSexDistributionDonut();
-  renderPieChart("pie-usercat-circle", "pie-usercat-legend", evaluations.map(e => e.userCategory));
+  renderUserCategoryChart();
 }
 
 </script>
