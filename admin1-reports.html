@@ -467,8 +467,16 @@ select { min-width:180px; }
     </div>
     <!-- ===================== END NEW SECTION ===================== -->
 
-    
-    <div class="card">
+    <!-- ===================== NEW: Ratings / Comments toggle tabs ===================== -->
+    <div class="config-card" style="padding:10px 16px;">
+      <div class="config-row">
+        <button class="btn btn-primary" id="tabRatingsBtn" onclick="switchReportsTab('ratings')">⭐ Ratings Reports</button>
+        <button class="btn btn-gray"    id="tabCommentsBtn" onclick="switchReportsTab('comments')">💬 Comments Reports</button>
+      </div>
+    </div>
+    <!-- ===================== END NEW SECTION ===================== -->
+
+    <div class="card" id="ratingsReportsSection">
       <div class="card-header">
         <div class="card-title">📋 Saved Reports</div>
         <span class="count-pill" id="savedCountPill">0 reports</span>
@@ -502,7 +510,7 @@ select { min-width:180px; }
     </div>
 
     <!-- ===================== NEW: Saved Comments Reports table ===================== -->
-    <div class="card">
+    <div class="card" id="commentsReportsSection" style="display:none;">
       <div class="card-header">
         <div class="card-title">💬 Saved Comments &amp; Suggestions Reports</div>
         <span class="count-pill" id="commentsSavedCountPill">0 reports</span>
@@ -845,6 +853,7 @@ window.generateReport = () => {
   };
 
   renderPreview(currentReport);
+  switchReportsTab('ratings'); // NEW
 };
 
 
@@ -923,6 +932,7 @@ window.viewSavedReport = (key) => {
     if (!r) return;
     currentReport = r;         
     renderPreview(r);
+    switchReportsTab('ratings'); // NEW: jump to the ratings tab
   }, { once: true });
 };
 
@@ -980,6 +990,27 @@ window.exportPDF = async () => {
   pdf.save(`CSM_Report_${name}.pdf`);
 };
 
+/* ===================== NEW: Ratings / Comments tab toggle ===================== */
+
+window.switchReportsTab = (tab) => {
+  const ratingsSection  = document.getElementById("ratingsReportsSection");
+  const commentsSection = document.getElementById("commentsReportsSection");
+  const ratingsBtn      = document.getElementById("tabRatingsBtn");
+  const commentsBtn     = document.getElementById("tabCommentsBtn");
+
+  if (tab === "comments") {
+    ratingsSection.style.display  = "none";
+    commentsSection.style.display = "block";
+    ratingsBtn.classList.replace("btn-primary","btn-gray");
+    commentsBtn.classList.replace("btn-gray","btn-primary");
+  } else {
+    commentsSection.style.display = "none";
+    ratingsSection.style.display  = "block";
+    commentsBtn.classList.replace("btn-primary","btn-gray");
+    ratingsBtn.classList.replace("btn-gray","btn-primary");
+  }
+};
+
 /* ===================== NEW: Comments & Suggestions Report ===================== */
 
 window.generateCommentsReport = () => {
@@ -1034,6 +1065,7 @@ window.generateCommentsReport = () => {
   };
 
   renderCommentsPreview(currentCommentsReport);
+  switchReportsTab('comments'); // NEW
 };
 
 function renderCommentsPreview(r) {
@@ -1096,6 +1128,7 @@ window.viewSavedCommentsReport = (key) => {
     if (!r) return;
     currentCommentsReport = r;
     renderCommentsPreview(r);
+    switchReportsTab('comments'); // NEW: jump to the comments tab
   }, { once: true });
 };
 
