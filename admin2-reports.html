@@ -208,55 +208,6 @@
     border-color: #6d28d9;
   }
 
-  .sentiment-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 9px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-
-  .sentiment-pill.positive { background: #d1fae5; color: #065f46; }
-  .sentiment-pill.neutral  { background: #fef3c7; color: #92400e; }
-  .sentiment-pill.negative { background: #fee2e2; color: #991b1b; }
-
-  .comments-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .comment-row {
-    padding: 10px 11px;
-    border: 1px solid #aaa;
-    border-top: none;
-  }
-
-  .comment-row:first-child {
-    border-top: 1px solid #aaa;
-  }
-
-  .comment-row-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 4px;
-    font-family: 'Times New Roman', Times, serif;
-  }
-
-  .comment-row-date {
-    font-size: 10.5pt;
-    color: #555;
-  }
-
-  .comment-row-text {
-    font-size: 13pt;
-  }
-
   .empty-state {
     text-align: center;
     color: #94a3b8;
@@ -1712,11 +1663,21 @@ function deleteSavedReport(id) {
 // Ratings whenever a ratings report is generated or viewed.
 // ======================================================================
 
-function sentimentForScore(avgScore) {
-  // avgScore is on the same 1-5 scale as evalAvgScore()
-  if (avgScore >= 4) return { label: "Positive", class: "positive" };
-  if (avgScore >= 3) return { label: "Neutral", class: "neutral" };
-  return { label: "Negative", class: "negative" };
+// Pulls a comment/suggestion string out of an evaluation record, trying
+// a handful of likely field names so it keeps working even if the
+// Firestore field name ever changes. `comments` is the one confirmed
+// field on evaluation_history records; the rest are just safety nets.
+function getCommentText(item) {
+  const candidates = [
+    item.comments, item.comment,
+    item.suggestion, item.suggestions,
+    item.commentsSuggestions, item.commentSuggestion,
+    item.feedback, item.remarks, item.message
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string" && c.trim()) return c.trim();
+  }
+  return "";
 }
 
 // ======================
@@ -1745,17 +1706,16 @@ function createCommentsDocument(report) {
 
   const rowsHtml = report.comments.length
     ? report.comments.map(c => `
-        <div class="comment-row">
-          <div class="comment-row-head">
-            <span class="sentiment-pill ${c.sentiment.class.toLowerCase()}">${c.sentiment.label}</span>
-            <span class="comment-row-date">${new Date(c.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-          </div>
-          <div class="comment-row-text">${c.comment}</div>
-        </div>
+        <tr>
+          <td style="text-align:center;white-space:nowrap;">${new Date(c.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+          <td style="padding-left:10px;">${c.text.replace(/</g, "&lt;")}</td>
+        </tr>
       `).join('')
-    : `<div class="comment-row"><div class="comment-row-text" style="font-style:italic;color:#777;">No comments or suggestions were submitted in this period.</div></div>`;
+    : `<tr><td colspan="2" style="text-align:center;color:#777;font-style:italic;padding:18px;">No comments or suggestions were submitted for this period.</td></tr>`;
 
-  const summaryLine = `Out of <strong>${report.respondents}</strong> respondent(s) evaluated in this period, <strong>${report.comments.length}</strong> left a written comment or suggestion — ${report.positiveCount} positive, ${report.neutralCount} neutral, and ${report.negativeCount} negative in tone (based on their accompanying ratings).`;
+  const summaryLine = report.commentsCount
+    ? `During the covered period, the <strong>${report.office}</strong> received <strong>${report.commentsCount}</strong> written comment(s) and suggestion(s) out of <strong>${report.respondents}</strong> total respondent(s). These qualitative responses provide additional context to the quantitative ratings and are provided here to support the office in identifying areas for continuous improvement.`
+    : `No written comments or suggestions were submitted by respondents of the <strong>${report.office}</strong> during the covered period.`;
 
   const officialHTML = `
     <div class="official-report" id="ccsPage">
@@ -1784,15 +1744,24 @@ function createCommentsDocument(report) {
         <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
         <b>Category:</b> ${category}<br>
         <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
-        <b>No. of Respondents:</b> ${report.respondents}
+        <b>No. of Respondents:</b> ${report.respondents}<br>
+        <b>No. of Comments/Suggestions Received:</b> ${report.commentsCount}
       </div>
+
+      <table class="official-table">
+        <thead>
+          <tr>
+            <th style="width:18%;">Date</th>
+            <th style="width:82%;text-align:left;padding-left:10px;">Comment / Suggestion</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
 
       <div class="official-narrative">
         <p>${summaryLine}</p>
-      </div>
-
-      <div class="comments-list">
-        ${rowsHtml}
       </div>
 
       <div class="official-signatures">
@@ -1871,22 +1840,10 @@ function generateCommentsReport() {
     return;
   }
 
-  let positiveCount = 0, neutralCount = 0, negativeCount = 0;
-
   const comments = filteredEvals
-    .filter(e => (e.comments || "").toString().trim().length > 0)
-    .map(e => {
-      const sentiment = sentimentForScore(evalAvgScore(e));
-      if (sentiment.class === "positive") positiveCount++;
-      else if (sentiment.class === "neutral") neutralCount++;
-      else negativeCount++;
-      return {
-        comment: e.comments.toString().trim(),
-        timestamp: e.timestamp,
-        sentiment
-      };
-    })
-    .sort((a, b) => b.timestamp - a.timestamp);
+    .map(e => ({ text: getCommentText(e), timestamp: e.timestamp }))
+    .filter(c => c.text)
+    .sort((a, b) => a.timestamp - b.timestamp);
 
   currentCommentsReport = {
     office: selectedOffice,
@@ -1894,10 +1851,8 @@ function generateCommentsReport() {
     startDate,
     endDate,
     respondents: filteredEvals.length,
+    commentsCount: comments.length,
     comments,
-    positiveCount,
-    neutralCount,
-    negativeCount,
     generatedAt: new Date().toISOString()
   };
 
@@ -2003,7 +1958,6 @@ function renderSavedCommentsReports() {
           <th>Date Range</th>
           <th>Respondents</th>
           <th>Comments</th>
-          <th>Sentiment (+/=/-)</th>
           <th>Saved On</th>
           <th>Actions</th>
         </tr>
@@ -2016,8 +1970,7 @@ function renderSavedCommentsReports() {
             <td>${categoryPillHtml(r.category || DEFAULT_CATEGORY)}</td>
             <td>${r.startDate} → ${r.endDate}</td>
             <td>${r.respondents}</td>
-            <td>${(r.comments || []).length}</td>
-            <td>${r.positiveCount || 0} / ${r.neutralCount || 0} / ${r.negativeCount || 0}</td>
+            <td>${r.commentsCount ?? (r.comments || []).length}</td>
             <td>${r.savedOn ? new Date(r.savedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "-"}</td>
             <td>
               <div class="action-btns">
