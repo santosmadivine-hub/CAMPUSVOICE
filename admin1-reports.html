@@ -208,7 +208,7 @@ select { min-width:180px; }
 .empty-state .icon { font-size:36px; margin-bottom:8px; }
 .empty-state p { font-size:14px; margin:0; }
 
-#reportPreview {
+#reportPreview, #commentsPreview {
   display:none; background:#fff; margin-top:0;
   border:1px solid #bae6fd; border-radius:14px;
   overflow:hidden; margin-bottom:18px;
@@ -248,12 +248,6 @@ select { min-width:180px; }
 .csm-doc-title {
   text-align:center; font-size:11.5pt; font-weight:bold;
   text-transform:uppercase; letter-spacing:.8px; margin-bottom:12px;
-}
-
-.csm-section-title {
-  text-align:left; font-size:10.5pt; font-weight:bold;
-  text-transform:uppercase; letter-spacing:.4px;
-  margin:6px 0 10px; color:#1a3a6b;
 }
 
 .csm-meta { font-size:10.5pt; line-height:1.8; margin-bottom:10px; }
@@ -334,6 +328,7 @@ select { min-width:180px; }
         </select>
 
         <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
+        <button class="btn btn-purple"  onclick="generateCommentsReport()">💬 Comments Report</button>
         <button class="btn btn-green"   onclick="saveReport()">💾 Save Report</button>
       </div>
     </div>
@@ -384,19 +379,6 @@ select { min-width:180px; }
 
         <div class="csm-narrative" id="csmNarrative"></div>
 
-        <!-- Comments & Suggestions — now generated automatically together with the ratings report -->
-        <div class="csm-section-title">Client Comments &amp; Suggestions</div>
-        <table class="csm-table">
-          <thead>
-            <tr>
-              <th style="width:18%;">Date</th>
-              <th style="width:82%;text-align:left;padding-left:10px;">Comment / Suggestion</th>
-            </tr>
-          </thead>
-          <tbody id="csmCommentsTableBody"></tbody>
-        </table>
-        <div class="csm-narrative" id="csmCommentsNarrative"></div>
-
         <div class="csm-sigs">
           <div class="csm-sig-block">
             <div class="csm-sig-label">Prepared by:</div>
@@ -417,6 +399,81 @@ select { min-width:180px; }
       </div>
     </div>
 
+    <!-- ===================== NEW: Comments & Suggestions Report Preview ===================== -->
+    <div id="commentsPreview">
+      <div class="preview-bar">
+        <span class="preview-label" id="commentsPreviewLabel">💬 Comments &amp; Suggestions Report Preview</span>
+        <button class="btn btn-green"  onclick="saveCommentsReport()">💾 Save to DB</button>
+        <button class="btn btn-blue"   onclick="exportCommentsPDF()">⬇ PDF</button>
+        <button class="btn btn-gray"   onclick="closeCommentsPreview()">✕ Close</button>
+      </div>
+
+      <div class="csm-page" id="commentsPage">
+
+        <div class="lh-row">
+          <div class="lh-logo-box" style="width:150px; height:90px;">
+            <img src="2.png"
+                 alt="ISUFST Logo"
+                 crossorigin="anonymous"
+                 style="width:100%; height:100%; object-fit:contain;">
+          </div>
+          <div class="lh-text">
+            <div class="rep">Republic of the Philippines</div>
+            <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
+            <div class="dept">Research &amp; Development Office</div>
+            <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
+            <div class="addr">Website: www.isufst.edu.ph</div>
+          </div>
+          <div class="lh-seal-box">
+            <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous">
+          </div>
+        </div>
+
+        <hr class="lh-divider">
+        <div class="csm-doc-title">Client Comments &amp; Suggestions Report</div>
+        <div class="csm-meta" id="commentsMeta"></div>
+
+        <table class="csm-table">
+          <thead>
+            <tr>
+              <th style="width:18%;">Date</th>
+              <th style="width:82%;text-align:left;padding-left:10px;">Comment / Suggestion</th>
+            </tr>
+          </thead>
+          <tbody id="commentsTableBody"></tbody>
+        </table>
+
+        <div class="csm-narrative" id="commentsNarrative"></div>
+
+        <div class="csm-sigs">
+          <div class="csm-sig-block">
+            <div class="csm-sig-label">Prepared by:</div>
+            <div class="csm-sig-name">Ricky June Garcia, PhD</div>
+            <div class="csm-sig-title">Chair, Research and Development</div>
+          </div>
+          <div class="csm-sig-block">
+            <div class="csm-sig-label">Noted by:</div>
+            <div class="csm-sig-name">MICHAEL B. DIZON, EdD, PhD</div>
+            <div class="csm-sig-title">Campus Administrator</div>
+          </div>
+        </div>
+
+        <div class="csm-footer">
+          <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
+        </div>
+      </div>
+    </div>
+    <!-- ===================== END NEW SECTION ===================== -->
+
+    <!-- ===================== NEW: Ratings / Comments toggle tabs ===================== -->
+    <div class="config-card" style="padding:10px 16px;">
+      <div class="config-row">
+        <button class="btn btn-primary" id="tabRatingsBtn" onclick="switchReportsTab('ratings')">⭐ Ratings Reports</button>
+        <button class="btn btn-gray"    id="tabCommentsBtn" onclick="switchReportsTab('comments')">💬 Comments Reports</button>
+      </div>
+    </div>
+    <!-- ===================== END NEW SECTION ===================== -->
+
     <div class="card" id="ratingsReportsSection">
       <div class="card-header">
         <div class="card-title">📋 Saved Reports</div>
@@ -431,7 +488,6 @@ select { min-width:180px; }
               <th>Date Range</th>
               <th>Respondents</th>
               <th>Avg Satisfaction</th>
-              <th>Comments</th>
               <th>Rating</th>
               <th>Saved On</th>
               <th>Actions</th>
@@ -439,7 +495,7 @@ select { min-width:180px; }
           </thead>
           <tbody id="reportsTableBody">
             <tr>
-              <td colspan="9">
+              <td colspan="8">
                 <div class="empty-state">
                   <div class="icon">📄</div>
                   <p>No saved reports yet. Generate a report above, then click <strong>Save Report</strong>.</p>
@@ -450,6 +506,39 @@ select { min-width:180px; }
         </table>
       </div>
     </div>
+
+    <!-- ===================== NEW: Saved Comments Reports table ===================== -->
+    <div class="card" id="commentsReportsSection" style="display:none;">
+      <div class="card-header">
+        <div class="card-title">💬 Saved Comments &amp; Suggestions Reports</div>
+        <span class="count-pill" id="commentsSavedCountPill">0 reports</span>
+      </div>
+      <div class="table-wrap">
+        <table class="reports-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Office</th>
+              <th>Date Range</th>
+              <th>Comments</th>
+              <th>Saved On</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="commentsReportsTableBody">
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <div class="icon">💬</div>
+                  <p>No saved comments reports yet. Generate one above, then click <strong>Save to DB</strong>.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- ===================== END NEW SECTION ===================== -->
 
   </main>
 </div>
@@ -487,6 +576,7 @@ const db = getFirestore(app);
 const officesCol     = collection(db, "services", "offices", "records");
 const evaluationsCol = collection(db, "services", "evaluations", "records");
 const reportsCol     = collection(db, "services", "reports", "records");
+const commentReportsCol = collection(db, "services", "commentReports", "records"); // NEW
 
 
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','reports');
@@ -543,9 +633,10 @@ function parseDateOnly(value) {
   return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 }
 
-// Pulls a comment/suggestion string out of an evaluation record, trying a handful
-// of likely field names so it works regardless of how your feedback form names
-// the field. Adjust/add to this list if your Firestore field is named differently.
+// NEW: pulls a comment/suggestion string out of an evaluation record,
+// trying a handful of likely field names so it works regardless of how
+// your feedback form names the field. Adjust/add to this list if your
+// Firestore field is named something else.
 function getCommentText(item) {
   const candidates = [
     item.comments, item.comment,
@@ -559,19 +650,10 @@ function getCommentText(item) {
   return "";
 }
 
-// Builds the sorted list of { date, text } comment entries from a set of
-// evaluation rows. Shared by report generation so ratings + comments always
-// come from the exact same underlying record set.
-function buildCommentsData(rows) {
-  return rows
-    .map(r => ({ date: r.date, text: getCommentText(r) }))
-    .filter(c => c.text)
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
-}
-
 
 let allEvals     = {};  
 let currentReport = null; 
+let currentCommentsReport = null; // NEW
 
 
 onSnapshot(officesCol, (snapshot) => {
@@ -648,7 +730,7 @@ onSnapshot(reportsCol, (snapshot) => {
 
   if (!keys.length) {
     tbody.innerHTML = `
-      <tr><td colspan="9">
+      <tr><td colspan="8">
         <div class="empty-state">
           <div class="icon">📄</div>
           <p>No saved reports yet. Generate a report above, then click <strong>Save Report</strong>.</p>
@@ -672,7 +754,6 @@ onSnapshot(reportsCol, (snapshot) => {
         </td>
         <td style="text-align:center;">${r.respondents || 0}</td>
         <td style="text-align:center;font-weight:800;">${(r.overallPct||0).toFixed(1)}%</td>
-        <td style="text-align:center;">${r.commentsCount ?? 0}</td>
         <td><span class="badge ${badgeClass(rating)}">${rating}</span></td>
         <td style="font-size:12px;color:#64748b;">${saved}</td>
         <td>
@@ -761,20 +842,16 @@ window.generateReport = () => {
   const valid      = dims.filter(d => d.pct !== null);
   const overallPct = valid.length ? valid.reduce((s,d)=>s+d.pct,0)/valid.length : 0;
 
-  // Comments & Suggestions are pulled from the same filtered rows, automatically,
-  // so every generated report always carries both ratings and comments together.
-  const commentRows = buildCommentsData(rows);
-
+  
   currentReport = {
     office, startDate:startVal, endDate:endVal,
     respondents:rows.length, overallPct,
     dims: dims.map(d=>({ key:d.key, label:d.label, pct:d.pct, rating:d.rating })),
-    comments: commentRows,
-    commentsCount: commentRows.length,
     generatedAt: new Date().toISOString()
   };
 
   renderPreview(currentReport);
+  switchReportsTab('ratings'); // NEW
 };
 
 
@@ -820,31 +897,6 @@ function renderPreview(r) {
     office achieve even higher levels of client satisfaction in future assessments.`;
 
   document.getElementById("csmNarrative").innerHTML = `<p>${p1}</p><p>${p2}</p><p>${p3}</p>`;
-
-  // Comments & Suggestions — rendered automatically as part of the same report.
-  // Falls back to an empty list for older saved reports that predate this field.
-  const comments = r.comments || [];
-  const commentsTbody = document.getElementById("csmCommentsTableBody");
-  if (!comments.length) {
-    commentsTbody.innerHTML = `<tr><td colspan="2" style="text-align:center;color:#94a3b8;padding:18px;">No comments or suggestions were submitted for this period.</td></tr>`;
-  } else {
-    commentsTbody.innerHTML = comments.map(c => `
-      <tr>
-        <td style="white-space:nowrap;">${c.date ? fmtShort(c.date) : "—"}</td>
-        <td style="padding-left:10px;">${(c.text || "").replace(/</g,"&lt;")}</td>
-      </tr>`).join("");
-  }
-
-  const commentsCount = r.commentsCount ?? comments.length;
-  const commentsNarrative = commentsCount
-    ? `<p>During the covered period, the <strong>${r.office}</strong> received <strong>${commentsCount}</strong>
-       written comment(s) and suggestion(s) out of <strong>${r.respondents}</strong> total respondent(s).
-       These qualitative responses provide additional context to the quantitative satisfaction ratings above
-       and are provided here to support the office in identifying areas for continuous improvement.</p>`
-    : `<p>No written comments or suggestions were submitted by respondents of the <strong>${r.office}</strong>
-       during the covered period.</p>`;
-  document.getElementById("csmCommentsNarrative").innerHTML = commentsNarrative;
-
   document.getElementById("previewLabel").textContent = `📄 Preview — ${r.office}  (${r.startDate} → ${r.endDate})`;
 
   const preview = document.getElementById("reportPreview");
@@ -878,6 +930,7 @@ window.viewSavedReport = (key) => {
     if (!r) return;
     currentReport = r;         
     renderPreview(r);
+    switchReportsTab('ratings'); // NEW: jump to the ratings tab
   }, { once: true });
 };
 
@@ -934,6 +987,249 @@ window.exportPDF = async () => {
   const name = (currentReport?.office || "report").replace(/\s+/g,"_");
   pdf.save(`CSM_Report_${name}.pdf`);
 };
+
+/* ===================== NEW: Ratings / Comments tab toggle ===================== */
+
+window.switchReportsTab = (tab) => {
+  const ratingsSection  = document.getElementById("ratingsReportsSection");
+  const commentsSection = document.getElementById("commentsReportsSection");
+  const ratingsBtn      = document.getElementById("tabRatingsBtn");
+  const commentsBtn     = document.getElementById("tabCommentsBtn");
+
+  if (tab === "comments") {
+    ratingsSection.style.display  = "none";
+    commentsSection.style.display = "block";
+    ratingsBtn.classList.replace("btn-primary","btn-gray");
+    commentsBtn.classList.replace("btn-gray","btn-primary");
+  } else {
+    commentsSection.style.display = "none";
+    ratingsSection.style.display  = "block";
+    commentsBtn.classList.replace("btn-primary","btn-gray");
+    ratingsBtn.classList.replace("btn-gray","btn-primary");
+  }
+};
+
+/* ===================== NEW: Comments & Suggestions Report ===================== */
+
+window.generateCommentsReport = () => {
+  const office   = document.getElementById("officeFilter").value;
+  const startVal = document.getElementById("startDate").value;
+  const endVal   = document.getElementById("endDate").value;
+
+  if (!office || !startVal || !endVal) {
+    alert("Please select an office and a date range first.");
+    return;
+  }
+
+  const start = parseDateOnly(startVal);
+  const end   = parseDateOnly(endVal);
+
+  if (!start || !end) {
+    alert("Invalid date range selected.");
+    return;
+  }
+
+  start.setHours(0, 0, 0, 0);
+  end.setHours(23, 59, 59, 999);
+
+  const officeNorm = office.trim().toLowerCase();
+
+  const rows = Object.values(allEvals).filter(i => {
+    const rowOffice = (i.office || "").trim().toLowerCase();
+    if (rowOffice !== officeNorm) return false;
+
+    const d = parseDateOnly(i.date);
+    if (!d) return false;
+
+    return d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
+  });
+
+  if (!rows.length) {
+    alert("No feedback records found for the selected office and date range.");
+    return;
+  }
+
+  const commentRows = rows
+    .map(r => ({ date: r.date, text: getCommentText(r) }))
+    .filter(c => c.text)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  currentCommentsReport = {
+    office, startDate: startVal, endDate: endVal,
+    respondents: rows.length,
+    commentsCount: commentRows.length,
+    comments: commentRows,
+    generatedAt: new Date().toISOString()
+  };
+
+  renderCommentsPreview(currentCommentsReport);
+  switchReportsTab('comments'); // NEW
+};
+
+function renderCommentsPreview(r) {
+  document.getElementById("commentsMeta").innerHTML = `
+    <b>Office:</b> ${r.office}, ISUFST – San Enrique Campus<br>
+    <b>Covered Period:</b> ${fmtDate(r.startDate)} – ${fmtDate(r.endDate)}<br>
+    <b>No. of Respondents:</b> ${r.respondents}<br>
+    <b>No. of Comments/Suggestions Received:</b> ${r.commentsCount}
+  `;
+
+  const tbody = document.getElementById("commentsTableBody");
+  if (!r.comments || !r.comments.length) {
+    tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;color:#94a3b8;padding:18px;">No comments or suggestions were submitted for this period.</td></tr>`;
+  } else {
+    tbody.innerHTML = r.comments.map(c => `
+      <tr>
+        <td style="white-space:nowrap;">${c.date ? fmtShort(c.date) : "—"}</td>
+        <td style="padding-left:10px;">${(c.text || "").replace(/</g,"&lt;")}</td>
+      </tr>`).join("");
+  }
+
+  const narrative = r.commentsCount
+    ? `<p>During the covered period, the <strong>${r.office}</strong> received <strong>${r.commentsCount}</strong>
+       written comment(s) and suggestion(s) out of <strong>${r.respondents}</strong> total respondent(s).
+       These qualitative responses provide additional context to the quantitative satisfaction ratings and
+       are provided here to support the office in identifying areas for continuous improvement.</p>`
+    : `<p>No written comments or suggestions were submitted by respondents of the <strong>${r.office}</strong>
+       during the covered period.</p>`;
+
+  document.getElementById("commentsNarrative").innerHTML = narrative;
+  document.getElementById("commentsPreviewLabel").textContent =
+    `💬 Comments Preview — ${r.office}  (${r.startDate} → ${r.endDate})`;
+
+  const preview = document.getElementById("commentsPreview");
+  preview.style.display = "block";
+  preview.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+window.closeCommentsPreview = () => {
+  document.getElementById("commentsPreview").style.display = "none";
+};
+
+window.saveCommentsReport = async () => {
+  if (!currentCommentsReport) {
+    alert("Please generate a comments report first before saving.");
+    return;
+  }
+  try {
+    await addDoc(commentReportsCol, currentCommentsReport);
+    alert("✅ Comments report saved successfully!");
+  } catch (err) {
+    console.error(err);
+    alert("❌ Failed to save comments report: " + err.message);
+  }
+};
+
+window.viewSavedCommentsReport = (key) => {
+  onSnapshot(doc(db, "services", "commentReports", "records", key), (docSnap) => {
+    const r = docSnap.data();
+    if (!r) return;
+    currentCommentsReport = r;
+    renderCommentsPreview(r);
+    switchReportsTab('comments'); // NEW: jump to the comments tab
+  }, { once: true });
+};
+
+window.deleteSavedCommentsReport = async (key) => {
+  if (!confirm("Delete this saved comments report? This cannot be undone.")) return;
+  try {
+    await deleteDoc(doc(db, "services", "commentReports", "records", key));
+  } catch (err) {
+    alert("Failed to delete: " + err.message);
+  }
+};
+
+onSnapshot(commentReportsCol, (snapshot) => {
+  const data = {};
+  snapshot.forEach(docSnap => {
+    data[docSnap.id] = docSnap.data();
+  });
+
+  const keys = Object.keys(data);
+
+  document.getElementById("commentsSavedCountPill").textContent =
+    keys.length + " report" + (keys.length !== 1 ? "s" : "");
+
+  const tbody = document.getElementById("commentsReportsTableBody");
+
+  if (!keys.length) {
+    tbody.innerHTML = `
+      <tr><td colspan="6">
+        <div class="empty-state">
+          <div class="icon">💬</div>
+          <p>No saved comments reports yet. Generate one above, then click <strong>Save to DB</strong>.</p>
+        </div>
+      </td></tr>`;
+    return;
+  }
+
+  keys.sort((a,b) => new Date(data[b].generatedAt) - new Date(data[a].generatedAt));
+
+  tbody.innerHTML = keys.map((key, idx) => {
+    const r     = data[key];
+    const saved = r.generatedAt ? fmtShort(r.generatedAt) : "—";
+    return `
+      <tr>
+        <td style="color:#94a3b8;font-size:12px;">${idx+1}</td>
+        <td><strong>${r.office || "—"}</strong></td>
+        <td style="font-size:12px;color:#64748b;white-space:nowrap;">
+          ${r.startDate || ""} → ${r.endDate || ""}
+        </td>
+        <td style="text-align:center;font-weight:800;">${r.commentsCount ?? 0}</td>
+        <td style="font-size:12px;color:#64748b;">${saved}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="act-btn act-view"   onclick="viewSavedCommentsReport('${key}')">👁 View</button>
+            <button class="act-btn act-delete" onclick="deleteSavedCommentsReport('${key}')">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join("");
+});
+
+window.exportCommentsPDF = async () => {
+  if (document.getElementById("commentsPreview").style.display === "none") {
+    alert("Please generate or view a comments report first.");
+    return;
+  }
+  let canvas;
+  try {
+    canvas = await html2canvas(document.getElementById("commentsPage"),{
+      scale:2, useCORS:true, backgroundColor:"#ffffff"
+    });
+    var img = canvas.toDataURL("image/png");
+  } catch (err) {
+    console.error(err);
+    alert("⚠ PDF export blocked by the browser.\n\nThis page is being opened directly from disk (file://...), and Chrome blocks exporting images of canvases in that mode for security reasons.\n\nFix: serve this folder over local HTTP instead of double-clicking the file, e.g. run:\n  python -m http.server 5500\nthen open http://localhost:5500/admin1-reports.html");
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const pdf     = new jsPDF({ unit:"mm", format:"a4" });
+  const margin  = 10;
+  const usableW = pdf.internal.pageSize.getWidth()  - margin*2;
+  const usableH = pdf.internal.pageSize.getHeight() - margin*2;
+  const scale   = usableW / canvas.width;
+  const pdfH    = canvas.height * scale;
+
+  if (pdfH <= usableH) {
+    pdf.addImage(img,"PNG",margin,margin,usableW,pdfH);
+  } else {
+    const slicePx = Math.floor(usableH / scale);
+    let offset = 0;
+    while (offset < canvas.height) {
+      const sc = document.createElement("canvas");
+      sc.width  = canvas.width;
+      sc.height = Math.min(slicePx, canvas.height - offset);
+      sc.getContext("2d").drawImage(canvas,0,-offset);
+      pdf.addImage(sc.toDataURL("image/png"),"PNG",margin,margin,usableW,sc.height*scale);
+      offset += slicePx;
+      if (offset < canvas.height) pdf.addPage();
+    }
+  }
+  const name = (currentCommentsReport?.office || "comments_report").replace(/\s+/g,"_");
+  pdf.save(`Comments_Report_${name}.pdf`);
+};
+/* ===================== END NEW SECTION ===================== */
 </script>
 </body>
 </html>
