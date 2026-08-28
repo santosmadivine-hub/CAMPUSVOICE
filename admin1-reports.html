@@ -282,6 +282,26 @@ select { min-width:180px; }
   height:auto;
   object-fit:contain;
 }
+
+/* ===================== NEW: Print styles ===================== */
+@media print {
+  #sidebar-mount, #topbar-mount,
+  .kpi-grid, .config-card,
+  #ratingsReportsSection, #commentsReportsSection,
+  .preview-bar {
+    display:none !important;
+  }
+  body, .main, .layout { margin:0; padding:0; background:#fff; }
+  .main { padding:0; }
+  #reportPreview, #commentsPreview {
+    border:none; border-radius:0; margin:0;
+    box-shadow:none;
+  }
+  .csm-page { max-width:none; }
+  /* Toggled to "always" via JS only when both reports are being printed together,
+     so the CSM report prints as page 1 and the Comments report starts on page 2. */
+  #csmPage { page-break-after: auto; }
+}
 </style>
 </head>
 <body>
@@ -338,6 +358,7 @@ select { min-width:180px; }
         <span class="preview-label" id="previewLabel">📄 CSM Report Preview</span>
         <button class="btn btn-green"  onclick="saveReport()">💾 Save to DB</button>
         <button class="btn btn-blue"   onclick="exportPDF()">⬇ PDF</button>
+        <button class="btn btn-gray"   onclick="printReports()">🖨 Print</button>
         <button class="btn btn-gray"   onclick="closePreview()">✕ Close</button>
       </div>
 
@@ -405,6 +426,7 @@ select { min-width:180px; }
         <span class="preview-label" id="commentsPreviewLabel">💬 Comments &amp; Suggestions Report Preview</span>
         <button class="btn btn-green"  onclick="saveCommentsReport()">💾 Save to DB</button>
         <button class="btn btn-blue"   onclick="exportCommentsPDF()">⬇ PDF</button>
+        <button class="btn btn-gray"   onclick="printReports()">🖨 Print</button>
         <button class="btn btn-gray"   onclick="closeCommentsPreview()">✕ Close</button>
       </div>
 
@@ -1228,6 +1250,26 @@ window.exportCommentsPDF = async () => {
   }
   const name = (currentCommentsReport?.office || "comments_report").replace(/\s+/g,"_");
   pdf.save(`Comments_Report_${name}.pdf`);
+};
+/* ===================== END NEW SECTION ===================== */
+
+/* ===================== NEW: Print (combined CSM page 1 / Comments page 2) ===================== */
+window.printReports = () => {
+  const reportShown   = document.getElementById("reportPreview").style.display   !== "none";
+  const commentsShown = document.getElementById("commentsPreview").style.display !== "none";
+
+  if (!reportShown && !commentsShown) {
+    alert("Please generate a CSM report and/or a Comments report first.");
+    return;
+  }
+
+  // If both the CSM report and the Comments report are open, force the CSM
+  // page to break so it prints as page 1 and the Comments report starts
+  // fresh on page 2. If only one is open, no forced break is needed.
+  const csmPage = document.getElementById("csmPage");
+  csmPage.style.pageBreakAfter = (reportShown && commentsShown) ? "always" : "auto";
+
+  window.print();
 };
 /* ===================== END NEW SECTION ===================== */
 </script>
