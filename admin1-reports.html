@@ -209,14 +209,15 @@ select { min-width:180px; }
 .empty-state p { font-size:14px; margin:0; }
 
 #reportPreview, #commentsPreview {
-  display:none; background:#fff; margin-top:0;
-  border:1px solid #bae6fd; border-radius:14px;
-  overflow:hidden; margin-bottom:18px;
+  display:none; background:transparent; margin-top:0;
+  border:none; border-radius:0;
+  overflow:visible; margin-bottom:18px;
 }
 
 .preview-bar {
   display:flex; align-items:center; gap:10px;
   padding:12px 18px; background:#f8fafc;
+  border:1px solid #bae6fd; border-radius:14px 14px 0 0;
   border-bottom:1px solid #bae6fd; flex-wrap:wrap;
 }
 .preview-bar .preview-label {
@@ -228,11 +229,55 @@ select { min-width:180px; }
   font-family:'Times New Roman',Times,serif;
   font-size:11pt; color:#000;
   max-width:780px; margin:0 auto;
+  background:#fff;
+  box-shadow:0 1px 3px rgba(15,23,42,0.10), 0 1px 2px rgba(15,23,42,0.06);
+  border:1px solid #e2e8f0;
 }
 
+/* A visually distinct "next sheet" — separated by real blank space plus a
+   torn-paper style divider, so it reads as page 2, not a continuation
+   of page 1's content. */
 .page-break-sheet {
-  border-top:2px dashed #cbd5e1;
-  margin-top:10px;
+  margin-top:44px;
+  padding-top:32px;
+  border-top:none;
+  position:relative;
+}
+.page-break-sheet::before {
+  content:"";
+  position:absolute;
+  top:0; left:0; right:0;
+  height:1px;
+  background:repeating-linear-gradient(
+    90deg,
+    #cbd5e1 0px, #cbd5e1 8px,
+    transparent 8px, transparent 16px
+  );
+}
+.page-break-sheet::after {
+  content:"— New Page —";
+  position:absolute;
+  top:-9px; left:50%; transform:translateX(-50%);
+  background:#f7fafc;
+  padding:0 12px;
+  font-family:'DM Sans',sans-serif;
+  font-size:10px; font-weight:700; letter-spacing:.5px;
+  color:#94a3b8; text-transform:uppercase;
+}
+
+/* Ensures the comments sheet always starts on its own page when the
+   browser's native print / "Save as PDF" is used too. */
+@media print {
+  .page-break-sheet {
+    page-break-before: always;
+    break-before: page;
+    margin-top:0;
+    padding-top:0;
+  }
+  .page-break-sheet::before,
+  .page-break-sheet::after {
+    display:none;
+  }
 }
 
 .page-number-tag {
@@ -408,7 +453,7 @@ select { min-width:180px; }
         </div>
       </div>
 
-      <!-- ===================== NEW: Auto-attached Comments & Suggestions page (2nd bond paper) ===================== -->
+      <!-- ===================== Auto-attached Comments & Suggestions page (2nd bond paper) ===================== -->
       <div class="csm-page page-break-sheet" id="csmCommentsPage">
 
         <div class="page-number-tag">— Page 2 of 2 —</div>
@@ -465,11 +510,11 @@ select { min-width:180px; }
           <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
         </div>
       </div>
-      <!-- ===================== END NEW SECTION ===================== -->
+      <!-- ===================== END SECTION ===================== -->
 
     </div>
 
-    <!-- ===================== NEW: Comments & Suggestions Report Preview ===================== -->
+    <!-- ===================== Comments & Suggestions Report Preview ===================== -->
     <div id="commentsPreview">
       <div class="preview-bar">
         <span class="preview-label" id="commentsPreviewLabel">💬 Comments &amp; Suggestions Report Preview</span>
@@ -533,16 +578,16 @@ select { min-width:180px; }
         </div>
       </div>
     </div>
-    <!-- ===================== END NEW SECTION ===================== -->
+    <!-- ===================== END SECTION ===================== -->
 
-    <!-- ===================== NEW: Ratings / Comments toggle tabs ===================== -->
+    <!-- ===================== Ratings / Comments toggle tabs ===================== -->
     <div class="config-card" style="padding:10px 16px;">
       <div class="config-row">
         <button class="btn btn-primary" id="tabRatingsBtn" onclick="switchReportsTab('ratings')">⭐ Ratings Reports</button>
         <button class="btn btn-gray"    id="tabCommentsBtn" onclick="switchReportsTab('comments')">💬 Comments Reports</button>
       </div>
     </div>
-    <!-- ===================== END NEW SECTION ===================== -->
+    <!-- ===================== END SECTION ===================== -->
 
     <div class="card" id="ratingsReportsSection">
       <div class="card-header">
@@ -577,7 +622,7 @@ select { min-width:180px; }
       </div>
     </div>
 
-    <!-- ===================== NEW: Saved Comments Reports table ===================== -->
+    <!-- ===================== Saved Comments Reports table ===================== -->
     <div class="card" id="commentsReportsSection" style="display:none;">
       <div class="card-header">
         <div class="card-title">💬 Saved Comments &amp; Suggestions Reports</div>
@@ -608,7 +653,7 @@ select { min-width:180px; }
         </table>
       </div>
     </div>
-    <!-- ===================== END NEW SECTION ===================== -->
+    <!-- ===================== END SECTION ===================== -->
 
   </main>
 </div>
@@ -646,7 +691,7 @@ const db = getFirestore(app);
 const officesCol     = collection(db, "services", "offices", "records");
 const evaluationsCol = collection(db, "services", "evaluations", "records");
 const reportsCol     = collection(db, "services", "reports", "records");
-const commentReportsCol = collection(db, "services", "commentReports", "records"); // NEW
+const commentReportsCol = collection(db, "services", "commentReports", "records");
 
 
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','reports');
@@ -703,7 +748,7 @@ function parseDateOnly(value) {
   return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 }
 
-// NEW: pulls a comment/suggestion string out of an evaluation record,
+// pulls a comment/suggestion string out of an evaluation record,
 // trying a handful of likely field names so it works regardless of how
 // your feedback form names the field. Adjust/add to this list if your
 // Firestore field is named something else.
@@ -720,7 +765,7 @@ function getCommentText(item) {
   return "";
 }
 
-// NEW: given a list of evaluation rows already filtered by office/date range,
+// given a list of evaluation rows already filtered by office/date range,
 // build the comments payload (count + sorted list) shared by both the main
 // CSM report's auto-attached page and the standalone Comments Report.
 function buildCommentsPayload(rows) {
@@ -735,7 +780,7 @@ function buildCommentsPayload(rows) {
 
 let allEvals     = {};  
 let currentReport = null; 
-let currentCommentsReport = null; // NEW
+let currentCommentsReport = null;
 
 
 onSnapshot(officesCol, (snapshot) => {
@@ -924,7 +969,7 @@ window.generateReport = () => {
   const valid      = dims.filter(d => d.pct !== null);
   const overallPct = valid.length ? valid.reduce((s,d)=>s+d.pct,0)/valid.length : 0;
 
-  // NEW: automatically gather the Comments & Suggestions for the same
+  // automatically gather the Comments & Suggestions for the same
   // office/date-range so they can be attached as a second page of this report.
   const commentsPayload = buildCommentsPayload(rows);
 
@@ -932,13 +977,13 @@ window.generateReport = () => {
     office, startDate:startVal, endDate:endVal,
     respondents:rows.length, overallPct,
     dims: dims.map(d=>({ key:d.key, label:d.label, pct:d.pct, rating:d.rating })),
-    commentsCount: commentsPayload.commentsCount, // NEW
-    comments: commentsPayload.comments,           // NEW
+    commentsCount: commentsPayload.commentsCount,
+    comments: commentsPayload.comments,
     generatedAt: new Date().toISOString()
   };
 
   renderPreview(currentReport);
-  switchReportsTab('ratings'); // NEW
+  switchReportsTab('ratings');
 };
 
 
@@ -986,7 +1031,7 @@ function renderPreview(r) {
   document.getElementById("csmNarrative").innerHTML = `<p>${p1}</p><p>${p2}</p><p>${p3}</p>`;
   document.getElementById("previewLabel").textContent = `📄 Preview — ${r.office}  (${r.startDate} → ${r.endDate})`;
 
-  // NEW: populate the auto-attached Comments & Suggestions page (page 2 of the same report)
+  // populate the auto-attached Comments & Suggestions page (page 2 of the same report)
   renderReportCommentsPage(r);
 
   const preview = document.getElementById("reportPreview");
@@ -994,9 +1039,9 @@ function renderPreview(r) {
   preview.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
-// NEW: renders the comments/suggestions that belong to this same generated report
-// onto the second "bond paper" page (#csmCommentsPage) that sits right below the
-// ratings page inside #reportPreview.
+// renders the comments/suggestions that belong to this same generated report
+// onto the second, visually distinct sheet (#csmCommentsPage) that sits below
+// the ratings page inside #reportPreview.
 function renderReportCommentsPage(r) {
   document.getElementById("csmCommentsMeta").innerHTML = `
     <b>Office:</b> ${r.office}, ISUFST – San Enrique Campus<br>
@@ -1053,7 +1098,7 @@ window.viewSavedReport = (key) => {
     if (!r) return;
     currentReport = r;         
     renderPreview(r);
-    switchReportsTab('ratings'); // NEW: jump to the ratings tab
+    switchReportsTab('ratings');
   }, { once: true });
 };
 
@@ -1067,9 +1112,10 @@ window.deleteSavedReport = async (key) => {
   }
 };
 
-// NEW: shared helper — draws one html2canvas canvas onto a jsPDF document,
+// shared helper — draws one html2canvas canvas onto a jsPDF document,
 // slicing it across multiple pages if it's taller than one sheet, and adding
-// a fresh PDF page beforehand when `addPageBefore` is true.
+// a fresh PDF page beforehand when `addPageBefore` is true. This is what
+// guarantees the comments page is exported as a real, separate PDF page.
 async function renderElementToPdf(pdf, element, { margin, usableW, usableH, addPageBefore }) {
   const canvas = await html2canvas(element, { scale:2, useCORS:true, backgroundColor:"#ffffff" });
   const scale  = usableW / canvas.width;
@@ -1109,7 +1155,7 @@ window.exportPDF = async () => {
   try {
     // Page 1: CSM ratings page
     await renderElementToPdf(pdf, document.getElementById("csmPage"), { margin, usableW, usableH, addPageBefore:false });
-    // Page 2 (new bond paper): auto-attached Comments & Suggestions page
+    // Page 2 (separate bond paper): auto-attached Comments & Suggestions page
     await renderElementToPdf(pdf, document.getElementById("csmCommentsPage"), { margin, usableW, usableH, addPageBefore:true });
   } catch (err) {
     console.error(err);
@@ -1121,7 +1167,7 @@ window.exportPDF = async () => {
   pdf.save(`CSM_Report_${name}.pdf`);
 };
 
-/* ===================== NEW: Ratings / Comments tab toggle ===================== */
+/* ===================== Ratings / Comments tab toggle ===================== */
 
 window.switchReportsTab = (tab) => {
   const ratingsSection  = document.getElementById("ratingsReportsSection");
@@ -1142,7 +1188,7 @@ window.switchReportsTab = (tab) => {
   }
 };
 
-/* ===================== NEW: Comments & Suggestions Report (standalone) ===================== */
+/* ===================== Comments & Suggestions Report (standalone) ===================== */
 
 window.generateCommentsReport = () => {
   const office   = document.getElementById("officeFilter").value;
@@ -1193,7 +1239,7 @@ window.generateCommentsReport = () => {
   };
 
   renderCommentsPreview(currentCommentsReport);
-  switchReportsTab('comments'); // NEW
+  switchReportsTab('comments');
 };
 
 function renderCommentsPreview(r) {
@@ -1256,7 +1302,7 @@ window.viewSavedCommentsReport = (key) => {
     if (!r) return;
     currentCommentsReport = r;
     renderCommentsPreview(r);
-    switchReportsTab('comments'); // NEW: jump to the comments tab
+    switchReportsTab('comments');
   }, { once: true });
 };
 
@@ -1359,7 +1405,7 @@ window.exportCommentsPDF = async () => {
   const name = (currentCommentsReport?.office || "comments_report").replace(/\s+/g,"_");
   pdf.save(`Comments_Report_${name}.pdf`);
 };
-/* ===================== END NEW SECTION ===================== */
+/* ===================== END SECTION ===================== */
 </script>
 </body>
 </html>
