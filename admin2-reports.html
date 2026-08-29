@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   @media print {
-    #sidebar-mount, #topbar-mount, .filter-row, .stat-grid, .saved-reports-section, .report-tabs, .preview-bar { display: none !important; }
+    #sidebar-mount, #topbar-mount, .filter-row, .stat-grid, .saved-reports-section, .report-tabs, .preview-bar, #commentsReportPreview { display: none !important; }
     .report-section { break-inside: avoid; }
   }
 
@@ -120,6 +120,27 @@
   .btn-save:disabled {
     background: #9ca3af;
     cursor: not-allowed;
+  }
+
+  .btn-print {
+    padding: 8px 14px;
+    background: #7c3aed;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .btn-print:hover {
+    background: #6d28d9;
   }
 
   /* Report tabs — kept for the saved-reports table below (only the
@@ -777,6 +798,7 @@
     <div id="reportPreview">
       <div class="preview-bar">
         <span class="preview-label" id="previewLabel">📄 Report Preview</span>
+        <button class="btn-print" onclick="printReport()">🖨️ Print</button>
         <button class="btn btn-green" onclick="exportPDF()" style="padding:8px 14px;font-size:13px;">⬇ PDF</button>
         <button class="btn-close" onclick="closeReport()">✕ Close</button>
       </div>
@@ -1495,6 +1517,25 @@ function generateReport() {
 // ======================
 window.closeReport = () => {
   document.getElementById("reportPreview").style.display = "none";
+};
+
+// ======================
+// PRINT REPORT — opens the browser's native print dialog for the
+// on-screen CER preview (#reportPreview: page 1 ratings + auto-attached
+// page 2 comments). Everything else (sidebar, topbar, filters, stat
+// cards, saved-reports table, tabs, the standalone comments preview)
+// is hidden for print via the @media print rules at the top of <style>,
+// and the two pages inside the preview always land on separate physical
+// sheets because of .page-break-sheet's page-break-before rule — so the
+// browser's own print dialog "Pages" field (e.g. "1" for CSM only, or
+// "1-2" / "All" for both) lets the admin choose what actually prints.
+// ======================
+window.printReport = () => {
+  if (document.getElementById("reportPreview").style.display === "none") {
+    alert("Please generate or view a report first.");
+    return;
+  }
+  window.print();
 };
 
 // ======================
