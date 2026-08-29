@@ -80,11 +80,11 @@
   }
 
   .btn-print {
-    padding: 10px 18px;
+    padding: 8px 14px;
     background: #0284c7;
     color: #fff;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
     font-weight: 600;
@@ -725,7 +725,7 @@
       width: 100%;
     }
 
-    .btn-generate, .btn-print {
+    .btn-generate {
       width: 100%;
       justify-content: center;
     }
@@ -786,9 +786,10 @@
            step: Page 1 is the Facilities Evaluation Report (ratings),
            Page 2 is the Comments & Suggestions Report — pulled
            automatically from the same filtered evaluations, no separate
-           button or step required. "Print" opens the browser print
-           dialog for the generated two-page report; the admin can use
-           the browser's own page-range setting there to print just
+           button or step required. The "Print" button lives in the
+           preview bar below (next to PDF/Close) and opens the browser
+           print dialog for the generated two-page report; the admin can
+           use the browser's own page-range setting there to print just
            Page 1, just Page 2, or both. -->
       <div class="filter-row">
         <input type="date" class="filter-date" id="start-date">
@@ -799,7 +800,6 @@
         </select>
 
         <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
-        <button class="btn-print" id="btn-print-report" disabled>🖨️ Print</button>
       </div>
 
       <!-- REPORT PREVIEW — page 1 (ratings) and page 2 (comments &
@@ -809,6 +809,7 @@
         <div class="preview-bar">
           <span class="preview-label" id="previewLabel">📄 Report Preview</span>
           <button class="btn btn-green" onclick="exportPDF()" style="padding:8px 14px;font-size:13px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-family:'DM Sans';font-weight:600;cursor:pointer;">⬇ PDF</button>
+          <button class="btn-print" id="btn-print-report" disabled>🖨️ Print</button>
           <button class="btn-close" onclick="closeReport()">✕ Close</button>
         </div>
         <div id="report-container"></div>
