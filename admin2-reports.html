@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   @media print {
-    #sidebar-mount, #topbar-mount, .filter-row, .stat-grid, .saved-reports-section { display: none !important; }
+    #sidebar-mount, #topbar-mount, .filter-row, .stat-grid, .saved-reports-section, .report-tabs, .preview-bar { display: none !important; }
     .report-section { break-inside: avoid; }
   }
 
@@ -122,55 +122,9 @@
     cursor: not-allowed;
   }
 
-  /* ─── Comments & Suggestions Reports (new, self-contained feature) ─── */
-  .btn-generate-comments {
-    padding: 10px 18px;
-    background: #7c3aed;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-  }
-
-  .btn-generate-comments:hover {
-    background: #6d28d9;
-  }
-
-  .btn-save-comments {
-    padding: 10px 18px;
-    background: #9333ea;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-  }
-
-  .btn-save-comments:hover {
-    background: #7e22ce;
-  }
-
-  .btn-save-comments:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-  }
-
-  /* Ratings / Comments tab switcher above the saved-reports tables */
+  /* Report tabs — kept for the saved-reports table below (only the
+     Ratings tab is wired up now; comments are auto-attached to the
+     ratings report instead of living behind a separate tab). */
   .report-tabs {
     display: flex;
     gap: 8px;
@@ -336,18 +290,22 @@
     }
   }
 
-  /* Report Preview Wrapper */
+  /* Report Preview Wrapper — transparent/borderless like Admin 1, so the
+     individual "sheets" (.official-report) read as separate bond-paper
+     pages sitting on the page background, not one bordered card. */
   #reportPreview {
     display: none;
-    background: #fff;
-    border: 1px solid #bae6fd;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+    margin-bottom: 18px;
   }
 
-  /* New, separate preview wrapper for the Comments & Suggestions
-     report — same look, own ID, never shared with #reportPreview. */
+  /* Comments & Suggestions standalone preview wrapper — kept for the
+     underlying data plumbing (savedCommentsReports collection, etc.)
+     but no longer reachable from the UI; Generate Report now attaches
+     comments automatically as page 2 of the same report. */
   #commentsReportPreview {
     display: none;
     background: #fff;
@@ -364,6 +322,8 @@
     gap: 10px;
     padding: 12px 18px;
     background: #f8fafc;
+    border: 1px solid #bae6fd;
+    border-radius: 14px 14px 0 0;
     border-bottom: 1px solid #bae6fd;
     flex-wrap: wrap;
   }
@@ -389,130 +349,6 @@
 
   .btn-close:hover {
     background: #cbd5e1;
-  }
-
-  /* Report Section */
-  .report-section {
-    background: #fff;
-    border-radius: 12px;
-    padding: 32px;
-    margin-bottom: 32px;
-    border: 1px solid #bae6fd;
-  }
-
-  .report-header {
-    margin-bottom: 28px;
-  }
-
-  .report-office-name {
-    font-family: 'Syne', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: #0f1b32;
-    margin-bottom: 8px;
-  }
-
-  .report-meta {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    color: #64748b;
-  }
-
-  .meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .meta-label {
-    font-weight: 600;
-    color: #475569;
-  }
-
-  .meta-value {
-    color: #64748b;
-  }
-
-  /* Summary Table */
-  .report-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  .report-table thead {
-    background: #dbeafe;
-    color: #1e40af;
-  }
-
-  .report-table th {
-    padding: 14px 16px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .report-table td {
-    padding: 14px 16px;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 13px;
-  }
-
-  .report-table tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  .report-table tbody tr:hover {
-    background: #f8fafc;
-  }
-
-  .dimension-name {
-    font-weight: 600;
-    color: #0f1b32;
-  }
-
-  .percentage {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    color: #0f1b32;
-  }
-
-  .rating-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-
-  .rating-outstanding {
-    background: #d1fae5;
-    color: #065f46;
-  }
-
-  .rating-very-satisfactory {
-    background: #dbeafe;
-    color: #1e40af;
-  }
-
-  .rating-satisfactory {
-    background: #fef3c7;
-    color: #92400e;
-  }
-
-  .rating-poor {
-    background: #fee2e2;
-    color: #991b1b;
   }
 
   .no-data-message {
@@ -638,44 +474,9 @@
     background: #fecaca;
   }
 
-  /* Report Header & Footer */
-  .report-header-box {
-    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
-    color: #fff;
-    padding: 24px 32px;
-    margin-bottom: 24px;
-    border-radius: 8px;
-  }
-
-  .report-header-box h1 {
-    margin: 0 0 8px 0;
-    font-family: 'Syne', sans-serif;
-    font-size: 24px;
-    font-weight: 800;
-  }
-
-  .report-header-box p {
-    margin: 4px 0;
-    font-size: 13px;
-    opacity: 0.95;
-  }
-
-  .report-footer-box {
-    background: #f8fafc;
-    border-top: 2px solid #e2e8f0;
-    padding: 20px 32px;
-    margin-top: 24px;
-    border-radius: 8px;
-    font-size: 12px;
-    color: #64748b;
-    text-align: center;
-  }
-
-  .report-footer-box p {
-    margin: 4px 0;
-  }
-
-  /* Official Document Style (like Admin 1) */
+  /* Official Document Style (like Admin 1) — each generated page is a
+     distinct "sheet of bond paper": white background, subtle border and
+     drop shadow, so page 1 and page 2 read as two separate pages. */
   .official-report {
     background: #fff;
     font-family: 'Times New Roman', Times, serif;
@@ -684,6 +485,59 @@
     max-width: 900px;
     margin: 0 auto;
     padding: 32px 40px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.10), 0 1px 2px rgba(15,23,42,0.06);
+    border: 1px solid #e2e8f0;
+  }
+
+  /* A visually distinct "next sheet" — separated by real blank space plus
+     a torn-paper style divider, so it reads as page 2, not a
+     continuation of page 1's content. Mirrors Admin 1's report layout. */
+  .page-break-sheet {
+    margin-top: 44px;
+    padding-top: 32px;
+    border-top: none;
+    position: relative;
+  }
+  .page-break-sheet::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: repeating-linear-gradient(
+      90deg,
+      #cbd5e1 0px, #cbd5e1 8px,
+      transparent 8px, transparent 16px
+    );
+  }
+  .page-break-sheet::after {
+    content: "— New Page —";
+    position: absolute;
+    top: -9px; left: 50%; transform: translateX(-50%);
+    background: #f7fafc;
+    padding: 0 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: .5px;
+    color: #94a3b8; text-transform: uppercase;
+  }
+
+  /* Ensures the comments sheet always starts on its own page when the
+     browser's native print / "Save as PDF" is used too. */
+  @media print {
+    .page-break-sheet {
+      page-break-before: always;
+      break-before: page;
+      margin-top: 0;
+      padding-top: 0;
+    }
+    .page-break-sheet::before,
+    .page-break-sheet::after {
+      display: none;
+    }
+  }
+
+  .page-number-tag {
+    text-align: center; font-size: 9pt; color: #94a3b8;
+    margin-bottom: 6px; font-family: 'DM Sans', sans-serif; letter-spacing: .5px;
   }
 
   /* Letterhead */
@@ -895,7 +749,9 @@
          Management); the Category selection here drives which office
          list populates the "Select Office" dropdown, and the report is
          only generated once a category, an office, and both dates are
-         set. -->
+         set. Generate Report now automatically pulls the matching
+         Comments & Suggestions too and attaches them as page 2 of the
+         same report — see generateReport(). -->
     <div class="filter-row">
       <input type="date" class="filter-date" id="start-date">
       <input type="date" class="filter-date" id="end-date">
@@ -912,11 +768,12 @@
 
       <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
       <button class="btn-save" id="btn-save-report" disabled>💾 Save Report</button>
-      <button class="btn-generate-comments" id="btn-generate-comments-report">💬 Generate Comments Report</button>
-      <button class="btn-save-comments" id="btn-save-comments-report" disabled>💾 Save Comments Report</button>
     </div>
 
-    <!-- REPORT PREVIEW (shown/hidden like Admin 1) -->
+    <!-- REPORT PREVIEW (shown/hidden like Admin 1). Contains the CER
+         report (page 1, #csmPage) followed immediately by the
+         auto-attached Comments & Suggestions sheet (page 2,
+         #csmCommentsPage) — see renderCombinedReport(). -->
     <div id="reportPreview">
       <div class="preview-bar">
         <span class="preview-label" id="previewLabel">📄 Report Preview</span>
@@ -924,12 +781,13 @@
         <button class="btn-close" onclick="closeReport()">✕ Close</button>
       </div>
       <div id="report-container"></div>
-      <div id="officialDocument" style="display:none;"></div>
     </div>
 
-    <!-- COMMENTS & SUGGESTIONS REPORT PREVIEW — separate panel, mirrors
-         #reportPreview but is entirely new markup/IDs so the ratings
-         preview above is never touched. -->
+    <!-- COMMENTS & SUGGESTIONS REPORT PREVIEW — the underlying
+         standalone-report plumbing (Firestore collection, PDF export,
+         etc.) is kept intact but is no longer wired to any button in
+         the UI, since Generate Report above now attaches comments
+         automatically. -->
     <div id="commentsReportPreview">
       <div class="preview-bar">
         <span class="preview-label" id="commentsPreviewLabel">💬 Comments Report Preview</span>
@@ -940,13 +798,12 @@
       <div id="officialCommentsDocument" style="display:none;"></div>
     </div>
 
-    <!-- Tab switcher — decides which of the two saved-reports tables
-         below is visible. Purely a display toggle; does not touch the
-         Firestore listeners or generate/save logic for either report
-         type. -->
+    <!-- Tab switcher — only the Ratings tab is wired up now (the
+         Comments tab button was removed since comments no longer get
+         saved as a separate report). The saved-comments table/panel
+         below is kept in the DOM but unreachable via the UI. -->
     <div class="report-tabs">
       <button class="report-tab active" id="tab-ratings-reports">📊 Ratings Reports</button>
-      <button class="report-tab comments-tab" id="tab-comments-reports">💬 Comments Reports</button>
     </div>
 
     <div id="ratingsTabPanel">
@@ -959,9 +816,8 @@
       </div>
     </div>
 
-    <!-- NEW saved-reports table, entirely separate from the ratings one
-         above: own container, own count badge, own Firestore-backed
-         data (savedCommentsReports collection). -->
+    <!-- Saved comments-reports table, kept for data continuity but
+         hidden/unreachable since the Comments tab button was removed. -->
     <div id="commentsTabPanel" style="display:none;">
       <div class="saved-reports-section">
         <div class="saved-reports-header">
@@ -1030,9 +886,8 @@ const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved
 const EVAL_HISTORY_COLLECTION = "evaluation_history";
 const SAVED_REPORTS_COLLECTION = "savedReports";
 
-// NEW, self-contained collection for the Comments & Suggestions
-// feature. Entirely separate from SAVED_REPORTS_COLLECTION — reading,
-// writing, or deleting here never touches a ratings-report document.
+// Kept for the (now UI-unreachable) standalone Comments & Suggestions
+// report feature — see the note near generateCommentsReport() below.
 const SAVED_COMMENTS_REPORTS_COLLECTION = "savedCommentsReports";
 
 // ComfortRoomEvalActivity / SurroundingsEvalActivity both set
@@ -1052,12 +907,12 @@ let selectedOffice = "";
 let startDate = "";
 let endDate = "";
 let savedReports = [];
-let currentReport = null; // snapshot of the last generated report, ready to save
+let currentReport = null; // snapshot of the last generated report (ratings + attached comments), ready to save
 
-// NEW state for the Comments & Suggestions feature — kept fully
-// separate from savedReports/currentReport above.
+// Kept for the (now UI-unreachable) standalone Comments & Suggestions
+// report feature.
 let savedCommentsReports = [];
-let currentCommentsReport = null; // snapshot of the last generated comments report, ready to save
+let currentCommentsReport = null;
 
 // Per-category question labels. The two 5-question Android forms
 // (ComfortRoomEvalActivity / SurroundingsEvalActivity) were split out of
@@ -1293,12 +1148,43 @@ function generateNarrative(office, respondents, overallPct, dimensionAverages) {
 }
 
 // ======================
-// CREATE OFFICIAL DOCUMENT (like Admin 1)
+// PULLS A COMMENT/SUGGESTION STRING out of an evaluation record, trying
+// a handful of likely field names so it keeps working even if the
+// Firestore field name ever changes. `comments` is the one confirmed
+// field on evaluation_history records; the rest are just safety nets.
+// ======================
+function getCommentText(item) {
+  const candidates = [
+    item.comments, item.comment,
+    item.suggestion, item.suggestions,
+    item.commentsSuggestions, item.commentSuggestion,
+    item.feedback, item.remarks, item.message
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string" && c.trim()) return c.trim();
+  }
+  return "";
+}
+
+// Given the same filteredEvals used to build the ratings report, builds
+// the comments payload (count + chronologically sorted list) that gets
+// auto-attached as page 2 of the report.
+function buildCommentsPayload(filteredEvals) {
+  const comments = filteredEvals
+    .map(e => ({ text: getCommentText(e), timestamp: e.timestamp }))
+    .filter(c => c.text)
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  return { commentsCount: comments.length, comments };
+}
+
+// ======================
+// CREATE OFFICIAL DOCUMENT (page 1 — CER ratings report, like Admin 1's
+// CSM page)
 // ======================
 function createOfficialDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const generatedDate = new Date(report.generatedAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const category = report.category || DEFAULT_CATEGORY;
 
   const narrative = generateNarrative(report.office, report.respondents, parseFloat(report.avgSatisfaction), report.dimensionAverages);
@@ -1381,6 +1267,121 @@ function createOfficialDocument(report) {
 }
 
 // ======================
+// CREATE COMMENTS ATTACHMENT DOCUMENT (page 2 — auto-attached Comments &
+// Suggestions sheet, like Admin 1's #csmCommentsPage). Repeats the
+// letterhead/signatures/footer, same as Admin 1, and is wrapped in
+// ".page-break-sheet" so it always reads/visually separates/prints as a
+// distinct second page.
+// ======================
+function createCommentsAttachmentDocument(report) {
+  const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const category = report.category || DEFAULT_CATEGORY;
+  const comments = report.comments || [];
+  const commentsCount = report.commentsCount ?? comments.length;
+
+  const rowsHtml = comments.length
+    ? comments.map(c => `
+        <tr>
+          <td style="text-align:center;white-space:nowrap;">${new Date(c.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+          <td style="padding-left:10px;">${c.text.replace(/</g, "&lt;")}</td>
+        </tr>
+      `).join('')
+    : `<tr><td colspan="2" style="text-align:center;color:#777;font-style:italic;padding:18px;">No comments or suggestions were submitted for this period.</td></tr>`;
+
+  const summaryLine = commentsCount
+    ? `During the covered period, the <strong>${report.office}</strong> received <strong>${commentsCount}</strong> written comment(s) and suggestion(s) out of <strong>${report.respondents}</strong> total respondent(s). These qualitative responses provide additional context to the quantitative ratings and are provided here to support the office in identifying areas for continuous improvement.`
+    : `No written comments or suggestions were submitted by respondents of the <strong>${report.office}</strong> during the covered period.`;
+
+  const officialHTML = `
+    <div class="official-report page-break-sheet" id="csmCommentsPage">
+
+      <div class="page-number-tag">— Page 2 of 2 —</div>
+
+      <!-- LETTERHEAD WITH LOGOS (repeated, same as page 1) -->
+      <div class="lh-row">
+        <div class="lh-logo-box" style="width:150px; height:90px;">
+          <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+        <div class="lh-text">
+          <div class="rep">Republic of the Philippines</div>
+          <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
+          <div class="dept">General Services Office</div>
+          <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
+          <div class="addr">Website: www.isufst.edu.ph</div>
+        </div>
+        <div class="lh-seal-box" style="width:100px; height:100px;">
+          <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+      </div>
+
+      <hr class="lh-divider">
+
+      <div class="official-title">Comments &amp; Suggestions</div>
+
+      <div class="official-meta">
+        <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
+        <b>Category:</b> ${category}<br>
+        <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
+        <b>No. of Respondents:</b> ${report.respondents}<br>
+        <b>No. of Comments/Suggestions Received:</b> ${commentsCount}
+      </div>
+
+      <table class="official-table">
+        <thead>
+          <tr>
+            <th style="width:18%;">Date</th>
+            <th style="width:82%;text-align:left;padding-left:10px;">Comment / Suggestion</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+
+      <div class="official-narrative">
+        <p>${summaryLine}</p>
+      </div>
+
+      <div class="official-signatures">
+        <div class="sig-block">
+          <div class="sig-label">Prepared by:</div>
+          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
+          <span class="sig-name">Melby P. Parreno,Ed.D</span>
+          <div class="sig-title">General Services Office</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-label">Noted by:</div>
+          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
+          <span class="sig-name">MICHAEL B. DIZON, EDD, PHD</span>
+          <div class="sig-title">Campus Administrator</div>
+        </div>
+      </div>
+
+      <!-- FOOTER WITH ACCREDITATIONS -->
+      <div class="official-footer">
+        <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
+      </div>
+    </div>
+  `;
+
+  return officialHTML;
+}
+
+// ======================
+// RENDER COMBINED REPORT — draws page 1 (CER, #csmPage) immediately
+// followed by page 2 (auto-attached Comments & Suggestions,
+// #csmCommentsPage) into #report-container. Used by both
+// generateReport() and viewSavedReport() so both entry points always
+// render identically.
+// ======================
+function renderCombinedReport(report) {
+  const page1Html = createOfficialDocument(report);
+  const page2Html = createCommentsAttachmentDocument(report);
+  document.getElementById("report-container").innerHTML = page1Html + page2Html;
+}
+
+// ======================
 // GENERATE REPORT
 // ======================
 function generateReport() {
@@ -1434,7 +1435,7 @@ function generateReport() {
     currentReport = null;
     document.getElementById("btn-save-report").disabled = true;
     document.getElementById("reportPreview").style.display = "block";
-    switchToRatingsTab(); // COMMENTS TAB AUTO-SWITCH HOOK
+    switchToRatingsTab();
     return;
   }
 
@@ -1459,7 +1460,11 @@ function generateReport() {
   const overallPct = dimensionAverages.reduce((sum, d) => sum + parseFloat(d.percentage), 0) / dimensionAverages.length;
   const overallRating = getRatingLabel(overallPct);
 
-  // Snapshot ready to be saved
+  // Automatically gather the Comments & Suggestions for the same
+  // office/category/date-range so they can be attached as page 2 below.
+  const commentsPayload = buildCommentsPayload(filteredEvals);
+
+  // Snapshot ready to be saved — ratings AND comments together, in one document.
   currentReport = {
     office: selectedOffice,
     category: selectedCategory,
@@ -1470,19 +1475,19 @@ function generateReport() {
     ratingLabel: overallRating.label,
     ratingClass: overallRating.class,
     dimensionAverages,
+    commentsCount: commentsPayload.commentsCount,
+    comments: commentsPayload.comments,
     generatedAt: new Date().toISOString()
   };
 
-  // Create official document (with letterhead, narrative, signatures, footer)
-  const officialDoc = createOfficialDocument(currentReport);
-  document.getElementById("report-container").innerHTML = officialDoc;
+  renderCombinedReport(currentReport);
 
   document.getElementById("previewLabel").textContent = `📄 Report Preview — ${selectedOffice} (${selectedCategory})  (${startDate} → ${endDate})`;
   document.getElementById("reportPreview").style.display = "block";
   document.getElementById("reportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
 
   document.getElementById("btn-save-report").disabled = false;
-  switchToRatingsTab(); // COMMENTS TAB AUTO-SWITCH HOOK
+  switchToRatingsTab();
 }
 
 // ======================
@@ -1493,7 +1498,39 @@ window.closeReport = () => {
 };
 
 // ======================
-// EXPORT PDF (like Admin 1)
+// SHARED PDF HELPER — draws one html2canvas canvas onto a jsPDF
+// document, slicing it across multiple A4 pages if it's taller than one
+// sheet, and adding a fresh PDF page beforehand when `addPageBefore` is
+// true. This is what guarantees the comments sheet is exported as a
+// real, separate PDF page — same approach as Admin 1.
+// ======================
+async function renderElementToPdf(pdf, element, { margin, usableW, usableH, addPageBefore }) {
+  const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+  const scale = usableW / canvas.width;
+  const pdfH = canvas.height * scale;
+
+  if (addPageBefore) pdf.addPage();
+
+  if (pdfH <= usableH) {
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, usableW, pdfH);
+  } else {
+    const slicePx = Math.floor(usableH / scale);
+    let offset = 0;
+    while (offset < canvas.height) {
+      const sc = document.createElement("canvas");
+      sc.width = canvas.width;
+      sc.height = Math.min(slicePx, canvas.height - offset);
+      sc.getContext("2d").drawImage(canvas, 0, -offset);
+      pdf.addImage(sc.toDataURL("image/png"), "PNG", margin, margin, usableW, sc.height * scale);
+      offset += slicePx;
+      if (offset < canvas.height) pdf.addPage();
+    }
+  }
+}
+
+// ======================
+// EXPORT PDF — exports the CER report as page 1 and the auto-attached
+// Comments & Suggestions sheet as page 2 of the same standard-A4 PDF.
 // ======================
 window.exportPDF = async () => {
   if (document.getElementById("reportPreview").style.display === "none" || !currentReport) {
@@ -1501,43 +1538,34 @@ window.exportPDF = async () => {
     return;
   }
 
-  const officialDoc = createOfficialDocument(currentReport);
-  document.getElementById("officialDocument").innerHTML = officialDoc;
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: "mm", format: "a4" });
+  const margin = 10;
+  const usableW = pdf.internal.pageSize.getWidth() - margin * 2;
+  const usableH = pdf.internal.pageSize.getHeight() - margin * 2;
 
-  let canvas;
   try {
-    canvas = await html2canvas(document.getElementById("csmPage"), {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff"
-    });
-    var img = canvas.toDataURL("image/png");
+    // Page 1: CER ratings page
+    await renderElementToPdf(pdf, document.getElementById("csmPage"), { margin, usableW, usableH, addPageBefore: false });
+    // Page 2 (separate sheet): auto-attached Comments & Suggestions page
+    const commentsEl = document.getElementById("csmCommentsPage");
+    if (commentsEl) {
+      await renderElementToPdf(pdf, commentsEl, { margin, usableW, usableH, addPageBefore: true });
+    }
   } catch (err) {
     console.error(err);
     alert("⚠ PDF export blocked by the browser.\n\nPlease serve this page over HTTP instead of opening it directly from disk.");
     return;
   }
 
-  const { jsPDF } = window.jspdf;
-  const margin = 10;
-  const pageWidthMM = 210; // A4 width, kept for a familiar page width
-  const usableW = pageWidthMM - margin * 2;
-  const scale = usableW / canvas.width;
-  const pdfH = canvas.height * scale;
-  const pageHeightMM = pdfH + margin * 2; // page height hugs the content instead of a fixed A4 length
-
-  const pdf = new jsPDF({ unit: "mm", format: [pageWidthMM, pageHeightMM] });
-  pdf.addImage(img, "PNG", margin, margin, usableW, pdfH);
-
   const name = (currentReport?.office || "report").replace(/\s+/g, "_");
   pdf.save(`CER_Report_${name}.pdf`);
-  
-  document.getElementById("officialDocument").innerHTML = "";
 };
 
 
 // ======================
-// SAVE REPORT
+// SAVE REPORT — saves the ratings + attached comments together, as one
+// document.
 // ======================
 function saveReport() {
   if (!currentReport) return;
@@ -1623,8 +1651,7 @@ function viewSavedReport(id) {
   document.getElementById("category-filter").value = category;
   populateLocationFilter();
 
-  const officialDoc = createOfficialDocument(r);
-  document.getElementById("report-container").innerHTML = officialDoc;
+  renderCombinedReport(r);
 
   document.getElementById("previewLabel").textContent = `📄 Report Preview — ${r.office} (${category})  (${r.startDate} → ${r.endDate})`;
   document.getElementById("reportPreview").style.display = "block";
@@ -1641,7 +1668,7 @@ function viewSavedReport(id) {
   document.getElementById("btn-save-report").disabled = true;
 
   renderStats();
-  switchToRatingsTab(); // COMMENTS TAB AUTO-SWITCH HOOK
+  switchToRatingsTab();
 }
 
 function deleteSavedReport(id) {
@@ -1652,33 +1679,11 @@ function deleteSavedReport(id) {
 }
 
 // ======================================================================
-// COMMENTS & SUGGESTIONS REPORTS — NEW, SELF-CONTAINED FEATURE
-// Everything below reads the same in-memory `evaluations` array and the
-// same filter state (selectedCategory / selectedOffice / startDate /
-// endDate) the ratings report already tracks, but writes to its own
-// Firestore collection (SAVED_COMMENTS_REPORTS_COLLECTION) and renders
-// into its own DOM containers. Nothing above this block is modified by
-// this section other than two tiny one-line hooks (search
-// "COMMENTS TAB AUTO-SWITCH HOOK") that jump the tab switcher over to
-// Ratings whenever a ratings report is generated or viewed.
+// STANDALONE COMMENTS & SUGGESTIONS REPORT — kept for data continuity
+// (savedCommentsReports collection, PDF export, etc.) but no longer
+// wired to any button, since Generate Report above now attaches
+// comments automatically as page 2 of the same report.
 // ======================================================================
-
-// Pulls a comment/suggestion string out of an evaluation record, trying
-// a handful of likely field names so it keeps working even if the
-// Firestore field name ever changes. `comments` is the one confirmed
-// field on evaluation_history records; the rest are just safety nets.
-function getCommentText(item) {
-  const candidates = [
-    item.comments, item.comment,
-    item.suggestion, item.suggestions,
-    item.commentsSuggestions, item.commentSuggestion,
-    item.feedback, item.remarks, item.message
-  ];
-  for (const c of candidates) {
-    if (typeof c === "string" && c.trim()) return c.trim();
-  }
-  return "";
-}
 
 // ======================
 // LOAD SAVED COMMENTS REPORTS (Firestore: savedCommentsReports)
@@ -1694,10 +1699,8 @@ onSnapshot(savedCommentsReportsQuery, (snapshot) => {
 });
 
 // ======================
-// CREATE COMMENTS DOCUMENT — same letterhead system as
-// createOfficialDocument(), but lists individual comments/suggestions
-// instead of dimension percentages. Uses its own page id ("ccsPage")
-// so PDF export never collides with the ratings report's "csmPage".
+// CREATE COMMENTS DOCUMENT (standalone report — own page id "ccsPage"
+// so it never collides with the auto-attached "csmCommentsPage").
 // ======================
 function createCommentsDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1790,10 +1793,10 @@ function createCommentsDocument(report) {
 }
 
 // ======================
-// GENERATE COMMENTS REPORT — reuses the same filter-bar selections
-// (category / office / date range) as the ratings report, but pulls
-// the `comments` field instead of rating1-5 and never writes into
-// currentReport / dimensionAverages.
+// GENERATE COMMENTS REPORT (standalone) — no longer reachable from the
+// UI (its button was removed since Generate Report auto-attaches
+// comments), kept only so the underlying data plumbing still works if
+// re-wired in the future.
 // ======================
 function generateCommentsReport() {
   if (!startDate || !endDate) {
@@ -1834,16 +1837,11 @@ function generateCommentsReport() {
       <div class="empty-state">No evaluations found for the selected category, office, and date range.</div>
     `;
     currentCommentsReport = null;
-    document.getElementById("btn-save-comments-report").disabled = true;
     document.getElementById("commentsReportPreview").style.display = "block";
-    switchToCommentsTab();
     return;
   }
 
-  const comments = filteredEvals
-    .map(e => ({ text: getCommentText(e), timestamp: e.timestamp }))
-    .filter(c => c.text)
-    .sort((a, b) => a.timestamp - b.timestamp);
+  const commentsPayload = buildCommentsPayload(filteredEvals);
 
   currentCommentsReport = {
     office: selectedOffice,
@@ -1851,8 +1849,8 @@ function generateCommentsReport() {
     startDate,
     endDate,
     respondents: filteredEvals.length,
-    commentsCount: comments.length,
-    comments,
+    commentsCount: commentsPayload.commentsCount,
+    comments: commentsPayload.comments,
     generatedAt: new Date().toISOString()
   };
 
@@ -1862,12 +1860,6 @@ function generateCommentsReport() {
   document.getElementById("commentsPreviewLabel").textContent = `💬 Comments Report Preview — ${selectedOffice} (${selectedCategory})  (${startDate} → ${endDate})`;
   document.getElementById("commentsReportPreview").style.display = "block";
   document.getElementById("commentsReportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
-
-  document.getElementById("btn-save-comments-report").disabled = false;
-
-  // Land on the Comments tab so the saved-comments table below is
-  // immediately visible after generating.
-  switchToCommentsTab();
 }
 
 // ======================
@@ -1878,7 +1870,7 @@ window.closeCommentsReport = () => {
 };
 
 // ======================
-// EXPORT COMMENTS PDF
+// EXPORT COMMENTS PDF (standalone comments-only report)
 // ======================
 window.exportCommentsPDF = async () => {
   if (document.getElementById("commentsReportPreview").style.display === "none" || !currentCommentsReport) {
@@ -1921,30 +1913,15 @@ window.exportCommentsPDF = async () => {
 };
 
 // ======================
-// SAVE COMMENTS REPORT
-// ======================
-function saveCommentsReport() {
-  if (!currentCommentsReport) return;
-
-  const payload = { ...currentCommentsReport, savedOn: Date.now() };
-  addDoc(collection(db, SAVED_COMMENTS_REPORTS_COLLECTION), payload)
-    .then(() => {
-      document.getElementById("btn-save-comments-report").disabled = true;
-    })
-    .catch(err => {
-      alert("Could not save comments report: " + err.message);
-    });
-}
-
-// ======================
-// SAVED COMMENTS REPORTS TABLE
+// SAVED COMMENTS REPORTS TABLE (still rendered into the DOM, just
+// unreachable from the UI now)
 // ======================
 function renderSavedCommentsReports() {
   const container = document.getElementById("saved-comments-reports-container");
   document.getElementById("saved-comments-reports-count").textContent = `${savedCommentsReports.length} report${savedCommentsReports.length === 1 ? "" : "s"}`;
 
   if (savedCommentsReports.length === 0) {
-    container.innerHTML = `<div class="empty-state">No saved comments reports yet. Generate a comments report and hit "Save Comments Report".</div>`;
+    container.innerHTML = `<div class="empty-state">No saved comments reports yet.</div>`;
     return;
   }
 
@@ -2018,12 +1995,8 @@ function viewSavedCommentsReport(id) {
   startDate = r.startDate;
   endDate = r.endDate;
   currentCommentsReport = r;
-  document.getElementById("btn-save-comments-report").disabled = true;
 
   renderStats();
-
-  // Land on the Comments tab whenever a saved comments report is opened.
-  switchToCommentsTab();
 }
 
 function deleteSavedCommentsReport(id) {
@@ -2034,29 +2007,16 @@ function deleteSavedCommentsReport(id) {
 }
 
 // ======================
-// TAB SWITCHER — toggles which of the two saved-reports tables is
-// visible. Purely a display concern; touches no Firestore listeners
-// or generate/save logic on either side.
+// TAB SWITCHER — only the Ratings tab is wired to a button now; the
+// Comments-tab switch function is kept in case it's re-wired later.
 // ======================
 function switchToRatingsTab() {
   document.getElementById("ratingsTabPanel").style.display = "block";
   document.getElementById("commentsTabPanel").style.display = "none";
   document.getElementById("tab-ratings-reports").classList.add("active");
-  document.getElementById("tab-comments-reports").classList.remove("active");
-}
-
-function switchToCommentsTab() {
-  document.getElementById("ratingsTabPanel").style.display = "none";
-  document.getElementById("commentsTabPanel").style.display = "block";
-  document.getElementById("tab-comments-reports").classList.add("active");
-  document.getElementById("tab-ratings-reports").classList.remove("active");
 }
 
 document.getElementById("tab-ratings-reports").addEventListener("click", switchToRatingsTab);
-document.getElementById("tab-comments-reports").addEventListener("click", switchToCommentsTab);
-
-document.getElementById("btn-generate-comments-report").addEventListener("click", generateCommentsReport);
-document.getElementById("btn-save-comments-report").addEventListener("click", saveCommentsReport);
 
 // ======================
 // EVENT LISTENERS
