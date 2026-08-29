@@ -12,6 +12,8 @@
   @media print {
     #sidebar-mount, #topbar-mount, .filter-row, .stats-row, .saved-reports-section { display: none !important; }
     .report-section { break-inside: avoid; }
+    .report-page-2 { border-top: none !important; margin-top: 0 !important; padding-top: 0 !important; }
+    .page-break-label { display: none !important; }
   }
 
   /* Filter Bar */
@@ -100,109 +102,33 @@
     cursor: not-allowed;
   }
 
-  /* ─── Comments & Suggestions Reports (new, self-contained feature,
-       mirrors Admin 2's implementation) ─── */
-  .btn-generate-comments {
-    padding: 10px 18px;
-    background: #7c3aed;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-  }
-
-  .btn-generate-comments:hover {
-    background: #6d28d9;
-  }
-
-  .btn-save-comments {
-    padding: 10px 18px;
-    background: #9333ea;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-  }
-
-  .btn-save-comments:hover {
-    background: #7e22ce;
-  }
-
-  .btn-save-comments:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-  }
-
-  /* Ratings / Comments tab switcher above the saved-reports tables */
-  .report-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .report-tab {
-    padding: 10px 18px;
-    background: #fff;
-    color: #64748b;
-    border: 1px solid #bae6fd;
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .report-tab:hover {
-    background: #f0f9ff;
-  }
-
-  .report-tab.active {
-    background: #0f1b32;
-    color: #fff;
-    border-color: #0f1b32;
-  }
-
-  .report-tab.comments-tab.active {
-    background: #6d28d9;
-    border-color: #6d28d9;
-  }
-
-  /* Separate preview wrapper for the Comments & Suggestions report —
-     same look as #reportPreview, own ID, never shared with it. */
-  #commentsReportPreview {
-    display: none;
-    background: #fff;
-    border: 1px solid #bae6fd;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 32px;
-  }
-
   .empty-state {
     text-align: center;
     color: #94a3b8;
     padding: 40px 0;
     font-family: 'DM Sans', sans-serif;
+  }
+
+  /* Marks the start of the second page (Comments & Suggestions) within
+     the same report preview / PDF export. On screen it's a dashed
+     divider + label; in print/PDF it forces an actual page break and
+     the label/divider are hidden (see @media print above). */
+  .page-break-label {
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 8px 0;
+  }
+
+  .report-page-2 {
+    page-break-before: always;
+    border-top: 2px dashed #bae6fd;
+    padding-top: 24px;
+    margin-top: 8px;
   }
 
   /* Stat Cards Grid */
@@ -512,6 +438,12 @@
     font-weight: 700;
   }
 
+  .saved-comments-count {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: #7c3aed;
+  }
+
   .action-btns {
     display: flex;
     gap: 8px;
@@ -790,7 +722,7 @@
       width: 100%;
     }
 
-    .btn-generate, .btn-save, .btn-generate-comments, .btn-save-comments {
+    .btn-generate, .btn-save {
       width: 100%;
       justify-content: center;
     }
@@ -847,6 +779,12 @@
         </div>
       </div>
 
+      <!-- "Generate Report" now builds BOTH pages of the report in one
+           step: Page 1 is the Facilities Evaluation Report (ratings),
+           Page 2 is the Comments & Suggestions Report — pulled
+           automatically from the same filtered evaluations, no separate
+           button or step required. "Save Report" saves the whole
+           two-page report (ratings + comments) as a single record. -->
       <div class="filter-row">
         <input type="date" class="filter-date" id="start-date">
         <input type="date" class="filter-date" id="end-date">
@@ -857,11 +795,11 @@
 
         <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
         <button class="btn-save" id="btn-save-report" disabled>💾 Save Report</button>
-        <button class="btn-generate-comments" id="btn-generate-comments-report">💬 Generate Comments Report</button>
-        <button class="btn-save-comments" id="btn-save-comments-report" disabled>💾 Save Comments Report</button>
       </div>
 
-      <!-- REPORT PREVIEW (shown/hidden like Admin 1) -->
+      <!-- REPORT PREVIEW — page 1 (ratings) and page 2 (comments &
+           suggestions) are both rendered into #report-container, one
+           after another, separated by a page-break divider. -->
       <div id="reportPreview">
         <div class="preview-bar">
           <span class="preview-label" id="previewLabel">📄 Report Preview</span>
@@ -869,52 +807,14 @@
           <button class="btn-close" onclick="closeReport()">✕ Close</button>
         </div>
         <div id="report-container"></div>
-        <div id="officialDocument" style="display:none;"></div>
       </div>
 
-      <!-- COMMENTS & SUGGESTIONS REPORT PREVIEW — separate panel, mirrors
-           #reportPreview but is entirely new markup/IDs so the ratings
-           preview above is never touched. -->
-      <div id="commentsReportPreview">
-        <div class="preview-bar">
-          <span class="preview-label" id="commentsPreviewLabel">💬 Comments Report Preview</span>
-          <button class="btn btn-green" onclick="exportCommentsPDF()" style="padding:8px 14px;font-size:13px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-family:'DM Sans';font-weight:600;cursor:pointer;">⬇ PDF</button>
-          <button class="btn-close" onclick="closeCommentsReport()">✕ Close</button>
+      <div class="saved-reports-section">
+        <div class="saved-reports-header">
+          <h2>📋 Saved Reports</h2>
+          <span class="saved-reports-count" id="saved-reports-count">0 reports</span>
         </div>
-        <div id="comments-report-container"></div>
-        <div id="officialCommentsDocument" style="display:none;"></div>
-      </div>
-
-      <!-- Tab switcher — decides which of the two saved-reports tables
-           below is visible. Purely a display toggle; does not touch the
-           Firestore listeners or generate/save logic for either report
-           type. -->
-      <div class="report-tabs">
-        <button class="report-tab active" id="tab-ratings-reports">📊 Ratings Reports</button>
-        <button class="report-tab comments-tab" id="tab-comments-reports">💬 Comments Reports</button>
-      </div>
-
-      <div id="ratingsTabPanel">
-        <div class="saved-reports-section">
-          <div class="saved-reports-header">
-            <h2>📋 Saved Reports</h2>
-            <span class="saved-reports-count" id="saved-reports-count">0 reports</span>
-          </div>
-          <div id="saved-reports-container"></div>
-        </div>
-      </div>
-
-      <!-- NEW saved-reports table, entirely separate from the ratings one
-           above: own container, own count badge, own Firestore-backed
-           data (facility_saved_comments_reports collection). -->
-      <div id="commentsTabPanel" style="display:none;">
-        <div class="saved-reports-section">
-          <div class="saved-reports-header">
-            <h2>💬 Saved Comments &amp; Suggestions Reports</h2>
-            <span class="saved-reports-count" id="saved-comments-reports-count">0 reports</span>
-          </div>
-          <div id="saved-comments-reports-container"></div>
-        </div>
+        <div id="saved-reports-container"></div>
       </div>
     </div>
   </main>
@@ -952,19 +852,11 @@ const db = getFirestore(app);
 // - "facility_evaluations" is what FacilitiesEvalActivity.kt writes to
 // - "offices" confirmed via Firestore console (each doc has a "name"
 //   field, e.g. "Cashier")
-// - "facility_saved_reports" is new — there's no existing Firestore
-//   collection for saved reports yet, so this mirrors the old RTDB
-//   path "facilities/savedReports" as a Firestore collection. Rename
-//   this constant if you'd rather use something else.
+// - "facility_saved_reports" holds the whole two-page report (ratings
+//   + comments) as a single document per save.
 const EVAL_COLLECTION = "facility_evaluations";
 const OFFICE_COLLECTION = "offices";
 const SAVED_REPORTS_COLLECTION = "facility_saved_reports";
-
-// NEW, self-contained collection for the Comments & Suggestions
-// feature (mirrors Admin 2's SAVED_COMMENTS_REPORTS_COLLECTION).
-// Entirely separate from SAVED_REPORTS_COLLECTION — reading, writing,
-// or deleting here never touches a ratings-report document.
-const SAVED_COMMENTS_REPORTS_COLLECTION = "facility_saved_comments_reports";
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin3", "reports");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Reports", "admin3");
@@ -978,12 +870,7 @@ let selectedOffice = "";
 let startDate = "";
 let endDate = "";
 let savedReports = [];
-let currentReport = null; // snapshot of the last generated report, ready to save
-
-// NEW state for the Comments & Suggestions feature — kept fully
-// separate from savedReports/currentReport above.
-let savedCommentsReports = [];
-let currentCommentsReport = null; // snapshot of the last generated comments report, ready to save
+let currentReport = null; // snapshot of the last generated report (both pages), ready to save
 
 // Dimension definitions — matches the 10 questions on the actual
 // Facilities Evaluation Form (rating1 -> rating10, in order).
@@ -1051,6 +938,23 @@ function parseDateOnly(value) {
   const parsed = new Date(str);
   if (isNaN(parsed.getTime())) return null;
   return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+}
+
+// Pulls a comment/suggestion string out of an evaluation record, trying
+// a handful of likely field names so it keeps working even if the
+// Firestore field name ever changes. `comments` is the confirmed field
+// on facility_evaluations records; the rest are just safety nets.
+function getCommentText(item) {
+  const candidates = [
+    item.comments, item.comment,
+    item.suggestion, item.suggestions,
+    item.commentsSuggestions, item.commentSuggestion,
+    item.feedback, item.remarks, item.message
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string" && c.trim()) return c.trim();
+  }
+  return "";
 }
 
 // ======================
@@ -1121,19 +1025,6 @@ onSnapshot(collection(db, SAVED_REPORTS_COLLECTION), (snapshot) => {
 });
 
 // ======================
-// LOAD SAVED COMMENTS REPORTS -> facility_saved_comments_reports
-// collection. Entirely separate listener from the one above; never
-// touches savedReports or the ratings stat-saved counter.
-// ======================
-onSnapshot(collection(db, SAVED_COMMENTS_REPORTS_COLLECTION), (snapshot) => {
-  savedCommentsReports = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
-  savedCommentsReports.sort((a, b) => (b.savedOn || 0) - (a.savedOn || 0));
-  renderSavedCommentsReports();
-}, (err) => {
-  console.error("Failed to load saved comments reports:", err);
-});
-
-// ======================
 // HELPERS
 // ======================
 function getRatingLabel(percentage) {
@@ -1167,24 +1058,6 @@ function formatDateShort(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
 }
 
-// Pulls a comment/suggestion string out of an evaluation record, trying
-// a handful of likely field names so it keeps working even if the
-// Firestore field name ever changes. `comments` is the confirmed field
-// on facility_evaluations records; the rest are just safety nets
-// (mirrors Admin 2's getCommentText).
-function getCommentText(item) {
-  const candidates = [
-    item.comments, item.comment,
-    item.suggestion, item.suggestions,
-    item.commentsSuggestions, item.commentSuggestion,
-    item.feedback, item.remarks, item.message
-  ];
-  for (const c of candidates) {
-    if (typeof c === "string" && c.trim()) return c.trim();
-  }
-  return "";
-}
-
 // ======================
 // STATS — Calculate from ALL evaluations (like Admin 1)
 // ======================
@@ -1206,7 +1079,7 @@ function renderStats(filteredEvals) {
 }
 
 // ======================
-// GENERATE NARRATIVE (like Admin 1)
+// GENERATE NARRATIVE (page 1 — ratings, like Admin 1)
 // ======================
 function generateNarrative(office, respondents, overallPct, dimensionAverages) {
   const perfWord = overallPct >= 90 ? "outstanding" : overallPct >= 75 ? "very satisfactory" : overallPct >= 60 ? "satisfactory" : "needs improvement";
@@ -1227,7 +1100,7 @@ function generateNarrative(office, respondents, overallPct, dimensionAverages) {
 }
 
 // ======================
-// CREATE OFFICIAL DOCUMENT (like Admin 1)
+// CREATE OFFICIAL DOCUMENT — PAGE 1 (ratings, like Admin 1)
 // ======================
 function createOfficialDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1313,19 +1186,20 @@ function createOfficialDocument(report) {
 }
 
 // ======================
-// CREATE COMMENTS DOCUMENT — same letterhead system as
-// createOfficialDocument(), but lists individual comments/suggestions
-// instead of dimension percentages. Uses its own page id ("ccsPage")
-// so PDF export never collides with the ratings report's "csmPage".
-// Mirrors Admin 2's createCommentsDocument, minus the category field
-// (Admin 3 has no cleanliness category concept).
+// CREATE COMMENTS DOCUMENT — PAGE 2 (comments & suggestions).
+// Same letterhead system as createOfficialDocument(), but lists
+// individual comments/suggestions instead of dimension percentages.
+// Uses its own page id ("ccsPage") so PDF export/print can target it
+// separately from page 1's "csmPage".
 // ======================
 function createCommentsDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const comments = report.comments || [];
+  const commentsCount = report.commentsCount ?? comments.length;
 
-  const rowsHtml = report.comments.length
-    ? report.comments.map(c => `
+  const rowsHtml = comments.length
+    ? comments.map(c => `
         <tr>
           <td style="text-align:center;white-space:nowrap;">${c.timestamp ? new Date(c.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "-"}</td>
           <td style="padding-left:10px;">${c.text.replace(/</g, "&lt;")}</td>
@@ -1333,8 +1207,8 @@ function createCommentsDocument(report) {
       `).join('')
     : `<tr><td colspan="2" style="text-align:center;color:#777;font-style:italic;padding:18px;">No comments or suggestions were submitted for this period.</td></tr>`;
 
-  const summaryLine = report.commentsCount
-    ? `During the covered period, the <strong>${report.office}</strong> received <strong>${report.commentsCount}</strong> written comment(s) and suggestion(s) out of <strong>${report.respondents}</strong> total respondent(s). These qualitative responses provide additional context to the quantitative ratings and are provided here to support the office in identifying areas for continuous improvement.`
+  const summaryLine = commentsCount
+    ? `During the covered period, the <strong>${report.office}</strong> received <strong>${commentsCount}</strong> written comment(s) and suggestion(s) out of <strong>${report.respondents}</strong> total respondent(s). These qualitative responses provide additional context to the quantitative ratings in the preceding page and are provided here to support the office in identifying areas for continuous improvement.`
     : `No written comments or suggestions were submitted by respondents of the <strong>${report.office}</strong> during the covered period.`;
 
   const officialHTML = `
@@ -1364,7 +1238,7 @@ function createCommentsDocument(report) {
         <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
         <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
         <b>No. of Respondents:</b> ${report.respondents}<br>
-        <b>No. of Comments/Suggestions Received:</b> ${report.commentsCount}
+        <b>No. of Comments/Suggestions Received:</b> ${commentsCount}
       </div>
 
       <table class="official-table">
@@ -1409,7 +1283,24 @@ function createCommentsDocument(report) {
 }
 
 // ======================
-// GENERATE REPORT
+// BUILD THE FULL TWO-PAGE PREVIEW HTML — page 1 (ratings) immediately
+// followed by page 2 (comments & suggestions), separated by a
+// page-break divider so print/PDF land each on its own page.
+// ======================
+function buildReportPreviewHtml(report) {
+  const page1 = createOfficialDocument(report);
+  const page2 = createCommentsDocument(report);
+  return `
+    ${page1}
+    <div class="page-break-label">— Page 2: Comments &amp; Suggestions —</div>
+    <div class="report-page-2">${page2}</div>
+  `;
+}
+
+// ======================
+// GENERATE REPORT — builds page 1 (ratings) AND page 2 (comments &
+// suggestions) together from the same filtered evaluations, then
+// renders both into the single report preview.
 // ======================
 function generateReport() {
   if (!selectedOffice) {
@@ -1452,11 +1343,11 @@ function generateReport() {
     currentReport = null;
     document.getElementById("btn-save-report").disabled = true;
     document.getElementById("reportPreview").style.display = "block";
-    switchToRatingsTab(); // COMMENTS TAB AUTO-SWITCH HOOK
     return;
   }
 
-  // Calculate averages for each dimension (rating1 -> rating10)
+  // Calculate averages for each dimension (rating1 -> rating10). This
+  // is Page 1.
   const dimensionAverages = [];
 
   DIMENSIONS.forEach(dim => {
@@ -1476,7 +1367,14 @@ function generateReport() {
   const overallPct = dimensionAverages.reduce((sum, d) => sum + parseFloat(d.percentage), 0) / dimensionAverages.length;
   const overallRating = getRatingLabel(overallPct);
 
-  // Snapshot ready to be saved
+  // Pull comments & suggestions from the same filtered evaluations.
+  // This is Page 2 — generated automatically, no separate step.
+  const comments = filteredEvals
+    .map(e => ({ text: getCommentText(e), timestamp: e.timestamp }))
+    .filter(c => c.text)
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  // Snapshot ready to be saved — carries both pages' data.
   currentReport = {
     office: selectedOffice,
     startDate,
@@ -1486,30 +1384,31 @@ function generateReport() {
     ratingLabel: overallRating.label,
     ratingClass: overallRating.class,
     dimensionAverages,
+    commentsCount: comments.length,
+    comments,
     generatedAt: new Date().toISOString()
   };
 
-  // Create official document (with letterhead, narrative, signatures, footer)
-  const officialDoc = createOfficialDocument(currentReport);
-  document.getElementById("report-container").innerHTML = officialDoc;
+  document.getElementById("report-container").innerHTML = buildReportPreviewHtml(currentReport);
 
   document.getElementById("previewLabel").textContent = `📄 Report Preview — ${selectedOffice}  (${startDate} → ${endDate})`;
   document.getElementById("reportPreview").style.display = "block";
   document.getElementById("reportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
 
   document.getElementById("btn-save-report").disabled = false;
-  switchToRatingsTab(); // COMMENTS TAB AUTO-SWITCH HOOK
 }
 
 // ======================
-// CLOSE REPORT (new function like Admin 1)
+// CLOSE REPORT
 // ======================
 window.closeReport = () => {
   document.getElementById("reportPreview").style.display = "none";
 };
 
 // ======================
-// EXPORT PDF (like Admin 1)
+// EXPORT PDF — captures page 1 (#csmPage) and page 2 (#ccsPage), each
+// as its own PDF page, from the live preview already rendered in
+// #report-container.
 // ======================
 window.exportPDF = async () => {
   if (document.getElementById("reportPreview").style.display === "none" || !currentReport) {
@@ -1517,43 +1416,62 @@ window.exportPDF = async () => {
     return;
   }
 
-  const officialDoc = createOfficialDocument(currentReport);
-  document.getElementById("officialDocument").innerHTML = officialDoc;
-
-  let canvas;
-  try {
-    canvas = await html2canvas(document.getElementById("csmPage"), {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff"
-    });
-    var img = canvas.toDataURL("image/png");
-  } catch (err) {
-    console.error(err);
-    alert("⚠ PDF export blocked by the browser.\n\nPlease serve this page over HTTP instead of opening it directly from disk.");
-    return;
-  }
-
-  const { jsPDF } = window.jspdf;
   const margin = 10;
   const pageWidthMM = 210; // A4 width, kept for a familiar page width
   const usableW = pageWidthMM - margin * 2;
-  const scale = usableW / canvas.width;
-  const pdfH = canvas.height * scale;
-  const pageHeightMM = pdfH + margin * 2; // page height hugs the content instead of a fixed A4 length
+  const { jsPDF } = window.jspdf;
+  let pdf = null;
 
-  const pdf = new jsPDF({ unit: "mm", format: [pageWidthMM, pageHeightMM] });
-  pdf.addImage(img, "PNG", margin, margin, usableW, pdfH);
+  async function addCanvasPage(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    let canvas;
+    try {
+      canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+      });
+    } catch (err) {
+      console.error(err);
+      alert("⚠ PDF export blocked by the browser.\n\nPlease serve this page over HTTP instead of opening it directly from disk.");
+      throw err;
+    }
+
+    const img = canvas.toDataURL("image/png");
+    const scale = usableW / canvas.width;
+    const pdfH = canvas.height * scale;
+    const pageHeightMM = pdfH + margin * 2; // page height hugs the content instead of a fixed A4 length
+
+    if (!pdf) {
+      pdf = new jsPDF({ unit: "mm", format: [pageWidthMM, pageHeightMM] });
+    } else {
+      pdf.addPage([pageWidthMM, pageHeightMM]);
+    }
+    pdf.addImage(img, "PNG", margin, margin, usableW, pdfH);
+  }
+
+  try {
+    await addCanvasPage("csmPage"); // Page 1 — ratings
+    await addCanvasPage("ccsPage"); // Page 2 — comments & suggestions
+  } catch (err) {
+    return; // error already alerted inside addCanvasPage
+  }
+
+  if (!pdf) {
+    alert("Nothing to export.");
+    return;
+  }
 
   const name = (currentReport?.office || "report").replace(/\s+/g, "_");
   pdf.save(`FER_Report_${name}.pdf`);
-  
-  document.getElementById("officialDocument").innerHTML = "";
 };
 
 
 // ======================
-// SAVE REPORT
+// SAVE REPORT — saves the whole two-page report (ratings + comments)
+// as a single facility_saved_reports document.
 // ======================
 function saveReport() {
   if (!currentReport) return;
@@ -1590,6 +1508,7 @@ function renderSavedReports() {
           <th>Respondents</th>
           <th>Avg Satisfaction</th>
           <th>Rating</th>
+          <th>Comments</th>
           <th>Saved On</th>
           <th>Actions</th>
         </tr>
@@ -1603,6 +1522,7 @@ function renderSavedReports() {
             <td>${r.respondents}</td>
             <td class="saved-avg">${r.avgSatisfaction}%</td>
             <td><span class="rating-badge ${r.ratingClass}">${r.ratingLabel}</span></td>
+            <td class="saved-comments-count">${r.commentsCount ?? (r.comments || []).length}</td>
             <td>${r.savedOn ? new Date(r.savedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "-"}</td>
             <td>
               <div class="action-btns">
@@ -1628,12 +1548,7 @@ function viewSavedReport(id) {
   const r = savedReports.find(sr => sr.id === id);
   if (!r) return;
 
-  const reportStart = new Date(r.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const reportEnd = new Date(r.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const generatedDate = new Date(r.savedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-  const officialDoc = createOfficialDocument(r);
-  document.getElementById("report-container").innerHTML = officialDoc;
+  document.getElementById("report-container").innerHTML = buildReportPreviewHtml(r);
 
   document.getElementById("previewLabel").textContent = `📄 Report Preview — ${r.office}  (${r.startDate} → ${r.endDate})`;
   document.getElementById("reportPreview").style.display = "block";
@@ -1648,7 +1563,6 @@ function viewSavedReport(id) {
   endDate = r.endDate;
   currentReport = r;  // Set to enable PDF export
   document.getElementById("btn-save-report").disabled = true;
-  switchToRatingsTab(); // COMMENTS TAB AUTO-SWITCH HOOK
 }
 
 function deleteSavedReport(id) {
@@ -1657,271 +1571,6 @@ function deleteSavedReport(id) {
     alert("Could not delete report: " + err.message);
   });
 }
-
-// ======================================================================
-// COMMENTS & SUGGESTIONS REPORTS — NEW, SELF-CONTAINED FEATURE
-// Everything below reads the same in-memory `evaluations` array and the
-// same filter state (selectedOffice / startDate / endDate) the ratings
-// report already tracks, but writes to its own Firestore collection
-// (SAVED_COMMENTS_REPORTS_COLLECTION) and renders into its own DOM
-// containers. Nothing above this block is modified by this section
-// other than two tiny one-line hooks (search "COMMENTS TAB AUTO-SWITCH
-// HOOK") that jump the tab switcher over to Ratings whenever a ratings
-// report is generated or viewed. Mirrors Admin 2's implementation.
-// ======================================================================
-
-// ======================
-// GENERATE COMMENTS REPORT — reuses the same filter-bar selections
-// (office / date range) as the ratings report, but pulls the
-// `comments` field instead of rating1-10 and never writes into
-// currentReport / dimensionAverages.
-// ======================
-function generateCommentsReport() {
-  if (!selectedOffice) {
-    alert("Please select an office");
-    return;
-  }
-
-  if (!startDate || !endDate) {
-    alert("Please select both start and end dates");
-    return;
-  }
-
-  const officeEvals = evaluations.filter(e => e.officeName === selectedOffice);
-
-  const start = parseDateOnly(startDate);
-  const end = parseDateOnly(endDate);
-
-  if (!start || !end) {
-    alert("Invalid date range selected.");
-    return;
-  }
-
-  start.setHours(0, 0, 0, 0);
-  end.setHours(23, 59, 59, 999);
-
-  const startTs = start.getTime();
-  const endTs = end.getTime();
-
-  const filteredEvals = officeEvals.filter(e => e.timestamp >= startTs && e.timestamp <= endTs);
-
-  if (filteredEvals.length === 0) {
-    document.getElementById("comments-report-container").innerHTML = `
-      <div class="empty-state">No evaluations found for the selected office and date range.</div>
-    `;
-    currentCommentsReport = null;
-    document.getElementById("btn-save-comments-report").disabled = true;
-    document.getElementById("commentsReportPreview").style.display = "block";
-    switchToCommentsTab();
-    return;
-  }
-
-  const comments = filteredEvals
-    .map(e => ({ text: getCommentText(e), timestamp: e.timestamp }))
-    .filter(c => c.text)
-    .sort((a, b) => a.timestamp - b.timestamp);
-
-  currentCommentsReport = {
-    office: selectedOffice,
-    startDate,
-    endDate,
-    respondents: filteredEvals.length,
-    commentsCount: comments.length,
-    comments,
-    generatedAt: new Date().toISOString()
-  };
-
-  const officialDoc = createCommentsDocument(currentCommentsReport);
-  document.getElementById("comments-report-container").innerHTML = officialDoc;
-
-  document.getElementById("commentsPreviewLabel").textContent = `💬 Comments Report Preview — ${selectedOffice}  (${startDate} → ${endDate})`;
-  document.getElementById("commentsReportPreview").style.display = "block";
-  document.getElementById("commentsReportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
-
-  document.getElementById("btn-save-comments-report").disabled = false;
-
-  // Land on the Comments tab so the saved-comments table below is
-  // immediately visible after generating.
-  switchToCommentsTab();
-}
-
-// ======================
-// CLOSE COMMENTS REPORT
-// ======================
-window.closeCommentsReport = () => {
-  document.getElementById("commentsReportPreview").style.display = "none";
-};
-
-// ======================
-// EXPORT COMMENTS PDF
-// ======================
-window.exportCommentsPDF = async () => {
-  if (document.getElementById("commentsReportPreview").style.display === "none" || !currentCommentsReport) {
-    alert("Please generate or view a comments report first.");
-    return;
-  }
-
-  const officialDoc = createCommentsDocument(currentCommentsReport);
-  document.getElementById("officialCommentsDocument").innerHTML = officialDoc;
-
-  let canvas;
-  try {
-    canvas = await html2canvas(document.getElementById("ccsPage"), {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: "#ffffff"
-    });
-    var img = canvas.toDataURL("image/png");
-  } catch (err) {
-    console.error(err);
-    alert("⚠ PDF export blocked by the browser.\n\nPlease serve this page over HTTP instead of opening it directly from disk.");
-    return;
-  }
-
-  const { jsPDF } = window.jspdf;
-  const margin = 10;
-  const pageWidthMM = 210;
-  const usableW = pageWidthMM - margin * 2;
-  const scale = usableW / canvas.width;
-  const pdfH = canvas.height * scale;
-  const pageHeightMM = pdfH + margin * 2;
-
-  const pdf = new jsPDF({ unit: "mm", format: [pageWidthMM, pageHeightMM] });
-  pdf.addImage(img, "PNG", margin, margin, usableW, pdfH);
-
-  const name = (currentCommentsReport?.office || "report").replace(/\s+/g, "_");
-  pdf.save(`CSR_Comments_Report_${name}.pdf`);
-
-  document.getElementById("officialCommentsDocument").innerHTML = "";
-};
-
-// ======================
-// SAVE COMMENTS REPORT
-// ======================
-function saveCommentsReport() {
-  if (!currentCommentsReport) return;
-
-  const payload = { ...currentCommentsReport, savedOn: Date.now() };
-  addDoc(collection(db, SAVED_COMMENTS_REPORTS_COLLECTION), payload)
-    .then(() => {
-      document.getElementById("btn-save-comments-report").disabled = true;
-    })
-    .catch(err => {
-      alert("Could not save comments report: " + err.message);
-    });
-}
-
-// ======================
-// SAVED COMMENTS REPORTS TABLE
-// ======================
-function renderSavedCommentsReports() {
-  const container = document.getElementById("saved-comments-reports-container");
-  document.getElementById("saved-comments-reports-count").textContent = `${savedCommentsReports.length} report${savedCommentsReports.length === 1 ? "" : "s"}`;
-
-  if (savedCommentsReports.length === 0) {
-    container.innerHTML = `<div class="empty-state">No saved comments reports yet. Generate a comments report and hit "Save Comments Report".</div>`;
-    return;
-  }
-
-  container.innerHTML = `
-    <table class="saved-reports-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Office</th>
-          <th>Date Range</th>
-          <th>Respondents</th>
-          <th>Comments</th>
-          <th>Saved On</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${savedCommentsReports.map((r, idx) => `
-          <tr>
-            <td>${idx + 1}</td>
-            <td class="saved-office-name">${r.office}</td>
-            <td>${r.startDate} → ${r.endDate}</td>
-            <td>${r.respondents}</td>
-            <td>${r.commentsCount ?? (r.comments || []).length}</td>
-            <td>${r.savedOn ? new Date(r.savedOn).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "-"}</td>
-            <td>
-              <div class="action-btns">
-                <button class="btn-view-comments" data-id="${r.id}">👁 View</button>
-                <button class="btn-delete-comments" data-id="${r.id}">🗑</button>
-              </div>
-            </td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-  `;
-
-  container.querySelectorAll(".btn-view-comments").forEach(btn => {
-    btn.classList.add("btn-view");
-    btn.addEventListener("click", () => viewSavedCommentsReport(btn.dataset.id));
-  });
-  container.querySelectorAll(".btn-delete-comments").forEach(btn => {
-    btn.classList.add("btn-delete");
-    btn.addEventListener("click", () => deleteSavedCommentsReport(btn.dataset.id));
-  });
-}
-
-function viewSavedCommentsReport(id) {
-  const r = savedCommentsReports.find(sr => sr.id === id);
-  if (!r) return;
-
-  const officialDoc = createCommentsDocument(r);
-  document.getElementById("comments-report-container").innerHTML = officialDoc;
-
-  document.getElementById("commentsPreviewLabel").textContent = `💬 Comments Report Preview — ${r.office}  (${r.startDate} → ${r.endDate})`;
-  document.getElementById("commentsReportPreview").style.display = "block";
-  document.getElementById("commentsReportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
-
-  document.getElementById("location-filter").value = r.office;
-  document.getElementById("start-date").value = r.startDate;
-  document.getElementById("end-date").value = r.endDate;
-  selectedOffice = r.office;
-  startDate = r.startDate;
-  endDate = r.endDate;
-  currentCommentsReport = r;
-  document.getElementById("btn-save-comments-report").disabled = true;
-
-  // Land on the Comments tab whenever a saved comments report is opened.
-  switchToCommentsTab();
-}
-
-function deleteSavedCommentsReport(id) {
-  if (!confirm("Delete this saved comments report? This cannot be undone.")) return;
-  deleteDoc(doc(db, SAVED_COMMENTS_REPORTS_COLLECTION, id)).catch(err => {
-    alert("Could not delete comments report: " + err.message);
-  });
-}
-
-// ======================
-// TAB SWITCHER — toggles which of the two saved-reports tables is
-// visible. Purely a display concern; touches no Firestore listeners
-// or generate/save logic on either side.
-// ======================
-function switchToRatingsTab() {
-  document.getElementById("ratingsTabPanel").style.display = "block";
-  document.getElementById("commentsTabPanel").style.display = "none";
-  document.getElementById("tab-ratings-reports").classList.add("active");
-  document.getElementById("tab-comments-reports").classList.remove("active");
-}
-
-function switchToCommentsTab() {
-  document.getElementById("ratingsTabPanel").style.display = "none";
-  document.getElementById("commentsTabPanel").style.display = "block";
-  document.getElementById("tab-comments-reports").classList.add("active");
-  document.getElementById("tab-ratings-reports").classList.remove("active");
-}
-
-document.getElementById("tab-ratings-reports").addEventListener("click", switchToRatingsTab);
-document.getElementById("tab-comments-reports").addEventListener("click", switchToCommentsTab);
-
-document.getElementById("btn-generate-comments-report").addEventListener("click", generateCommentsReport);
-document.getElementById("btn-save-comments-report").addEventListener("click", saveCommentsReport);
 
 // ======================
 // EVENT LISTENERS
