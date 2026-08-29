@@ -79,6 +79,32 @@
     background: #1d4ed8;
   }
 
+  .btn-save {
+    padding: 10px 18px;
+    background: #16a34a;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .btn-save:hover {
+    background: #15803d;
+  }
+
+  .btn-save:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
+
   .btn-print {
     padding: 8px 14px;
     background: #0284c7;
@@ -725,7 +751,7 @@
       width: 100%;
     }
 
-    .btn-generate {
+    .btn-generate, .btn-save {
       width: 100%;
       justify-content: center;
     }
@@ -786,11 +812,13 @@
            step: Page 1 is the Facilities Evaluation Report (ratings),
            Page 2 is the Comments & Suggestions Report — pulled
            automatically from the same filtered evaluations, no separate
-           button or step required. The "Print" button lives in the
-           preview bar below (next to PDF/Close) and opens the browser
-           print dialog for the generated two-page report; the admin can
-           use the browser's own page-range setting there to print just
-           Page 1, just Page 2, or both. -->
+           button or step required. "Save Report" saves the whole
+           two-page report (ratings + comments) as a single record. The
+           "Print" button lives in the preview bar below (next to
+           PDF/Close) and opens the browser print dialog for the
+           generated two-page report; the admin can use the browser's
+           own page-range setting there to print just Page 1, just
+           Page 2, or both. -->
       <div class="filter-row">
         <input type="date" class="filter-date" id="start-date">
         <input type="date" class="filter-date" id="end-date">
@@ -800,6 +828,7 @@
         </select>
 
         <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
+        <button class="btn-save" id="btn-save-report" disabled>💾 Save Report</button>
       </div>
 
       <!-- REPORT PREVIEW — page 1 (ratings) and page 2 (comments &
@@ -833,6 +862,7 @@ import {
   getFirestore,
   collection,
   onSnapshot,
+  addDoc,
   deleteDoc,
   doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -875,7 +905,7 @@ let selectedOffice = "";
 let startDate = "";
 let endDate = "";
 let savedReports = [];
-let currentReport = null; // snapshot of the last generated report (both pages), ready to print
+let currentReport = null; // snapshot of the last generated report (both pages), ready to save/print
 
 // Dimension definitions — matches the 10 questions on the actual
 // Facilities Evaluation Form (rating1 -> rating10, in order).
@@ -1346,6 +1376,7 @@ function generateReport() {
       <div class="empty-state">No evaluations found for the selected office and date range.</div>
     `;
     currentReport = null;
+    document.getElementById("btn-save-report").disabled = true;
     document.getElementById("btn-print-report").disabled = true;
     document.getElementById("reportPreview").style.display = "block";
     return;
@@ -1400,6 +1431,7 @@ function generateReport() {
   document.getElementById("reportPreview").style.display = "block";
   document.getElementById("reportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
 
+  document.getElementById("btn-save-report").disabled = false;
   document.getElementById("btn-print-report").disabled = false;
 }
 
@@ -1472,6 +1504,23 @@ window.exportPDF = async () => {
   const name = (currentReport?.office || "report").replace(/\s+/g, "_");
   pdf.save(`FER_Report_${name}.pdf`);
 };
+
+// ======================
+// SAVE REPORT — saves the whole two-page report (ratings + comments)
+// as a single facility_saved_reports document.
+// ======================
+function saveReport() {
+  if (!currentReport) return;
+
+  const payload = { ...currentReport, savedOn: Date.now() };
+  addDoc(collection(db, SAVED_REPORTS_COLLECTION), payload)
+    .then(() => {
+      document.getElementById("btn-save-report").disabled = true;
+    })
+    .catch(err => {
+      alert("Could not save report: " + err.message);
+    });
+}
 
 // ======================
 // PRINT REPORT — opens the browser's native print dialog for the
@@ -1565,6 +1614,7 @@ function viewSavedReport(id) {
   startDate = r.startDate;
   endDate = r.endDate;
   currentReport = r;  // Set to enable printing
+  document.getElementById("btn-save-report").disabled = true;
   document.getElementById("btn-print-report").disabled = false;
 }
 
@@ -1591,6 +1641,7 @@ document.getElementById("end-date").addEventListener("change", (e) => {
 });
 
 document.getElementById("btn-generate-report").addEventListener("click", generateReport);
+document.getElementById("btn-save-report").addEventListener("click", saveReport);
 document.getElementById("btn-print-report").addEventListener("click", printReport);
 </script>
 </body>
