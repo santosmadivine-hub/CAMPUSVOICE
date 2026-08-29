@@ -280,50 +280,6 @@ select { min-width:180px; }
   }
 }
 
-/* ===================== Print button / browser print dialog =====================
-   Scoped to body.print-report-mode, which printReport() toggles on right
-   before calling window.print() (see script below) and removes again on
-   the browser's "afterprint" event. This guarantees that ONLY the CSM
-   report preview (page 1 + auto-attached comments page 2) is sent to the
-   printer/print-preview — everything else on the page (sidebar, topbar,
-   KPI cards, filters, saved-report tables, the separate standalone
-   Comments Report preview) is hidden for that print job only, and the
-   normal on-screen layout is completely unaffected. Because the report
-   preview always renders as exactly two physical sheets (page-break-sheet
-   above forces page 2 onto its own page), the browser's native print
-   dialog page-range field lets the admin type "1" to print only the CSM
-   page, or "1-2" (or leave it on "All") to include the Comments &
-   Suggestions page too. */
-@media print {
-  body.print-report-mode #sidebar-mount,
-  body.print-report-mode #topbar-mount,
-  body.print-report-mode .kpi-grid,
-  body.print-report-mode .config-card,
-  body.print-report-mode .card,
-  body.print-report-mode #commentsPreview,
-  body.print-report-mode .preview-bar {
-    display: none !important;
-  }
-
-  body.print-report-mode .layout,
-  body.print-report-mode .main {
-    display: block !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  body.print-report-mode #reportPreview {
-    display: block !important;
-    margin: 0 !important;
-  }
-
-  body.print-report-mode .csm-page {
-    box-shadow: none !important;
-    border: none !important;
-    max-width: 100% !important;
-  }
-}
-
 .page-number-tag {
   text-align:center; font-size:9pt; color:#94a3b8;
   margin-bottom:6px; font-family:'DM Sans',sans-serif; letter-spacing:.5px;
@@ -434,7 +390,7 @@ select { min-width:180px; }
     <div id="reportPreview">
       <div class="preview-bar">
         <span class="preview-label" id="previewLabel">📄 CSM Report Preview</span>
-        <button class="btn btn-purple" onclick="printReport()">🖨️ Print</button>
+        <button class="btn btn-green"  onclick="saveReport()">💾 Save to DB</button>
         <button class="btn btn-blue"   onclick="exportPDF()">⬇ PDF</button>
         <button class="btn btn-gray"   onclick="closePreview()">✕ Close</button>
       </div>
@@ -1117,30 +1073,6 @@ function renderReportCommentsPage(r) {
 window.closePreview = () => {
   document.getElementById("reportPreview").style.display = "none";
 };
-
-// ===================== Print (replaces the old "Save to DB" button in
-// the CSM report preview bar) =====================
-// Toggles body.print-report-mode on so the @media print rules above hide
-// everything except #reportPreview (page 1 = CSM ratings, page 2 = the
-// auto-attached Comments & Suggestions sheet), then opens the browser's
-// native print dialog. Because those two pages are forced onto separate
-// physical sheets by .page-break-sheet's page-break-before rule, the
-// admin can use the print dialog's own "Pages" field (e.g. "1" for just
-// the CSM report, "1-2" or "All" for both) to choose what gets printed —
-// no extra UI needed here. The class is removed again once the print
-// dialog closes so the on-screen layout is unaffected either way.
-window.printReport = () => {
-  if (document.getElementById("reportPreview").style.display === "none") {
-    alert("Please generate or view a report first.");
-    return;
-  }
-  document.body.classList.add("print-report-mode");
-  window.print();
-};
-
-window.addEventListener("afterprint", () => {
-  document.body.classList.remove("print-report-mode");
-});
 
 
 window.saveReport = async () => {
