@@ -381,57 +381,118 @@ select { min-width:180px; }
   }
 }
 
-.lh-row { display:flex; align-items:center; gap:9px; margin-bottom:1px; }
-.lh-logo-box, .lh-seal-box {
-  width:100px; height:100px; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-}
-.lh-logo-box img, .lh-seal-box img {
-  width:100%; height:100%; object-fit:contain;
-}
-.lh-text { flex:1; text-align:center; line-height:1.4; }
-.lh-text .rep  { font-size:8.5pt; }
-.lh-text .uni  { font-size:10.5pt; font-weight:bold; text-transform:uppercase; letter-spacing:.1px; }
-.lh-text .dept { font-size:10pt; font-weight:bold; text-transform:uppercase; }
-.lh-text .addr { font-size:7.5pt; color:#444; }
-.lh-divider { border:none; border-top:2.5px solid #1a3a6b; margin:4px 0 10px; }
+/* ===================== HEADER ===================== */
 
-.csm-doc-title {
-  text-align:center; font-size:11.5pt; font-weight:bold;
-  text-transform:uppercase; letter-spacing:.8px; margin-bottom:12px;
+.lh-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 1px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.csm-meta { font-size:10.5pt; line-height:1.8; margin-bottom:10px; }
-.csm-meta b { font-weight:bold; }
+.lh-logo-box,
+.lh-seal-box {
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
 
-.csm-table { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:10pt; }
-.csm-table th {
-  background:#1a3a6b; color:#fff; padding:6px 8px;
-  border:1px solid #1a3a6b; text-align:center; font-weight:bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.csm-table td { border:1px solid #aaa; padding:5px 8px; }
-.csm-table tr:nth-child(even) td { background:#eef2f9; }
 
-.csm-narrative { font-size:10.5pt; line-height:1.7; text-align:justify; margin-bottom:16px; }
-.csm-narrative p { margin-bottom:10px; }
+.lh-logo-box img,
+.lh-seal-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
-.csm-sigs { display:flex; gap:40px; margin-top:24px; font-size:10.5pt; }
-.csm-sig-block { flex:1; }
-.csm-sig-label { color:#555; font-size:9.5pt; margin-bottom:30px; }
-.csm-sig-name  { font-weight:bold; text-transform:uppercase; border-top:1px solid #000; padding-top:4px; display:inline-block; }
-.csm-sig-title { font-size:9.5pt; font-style:italic; color:#333; margin-top:2px; }
+.lh-text {
+  flex: 1;
+  text-align: center;
+  line-height: 1.4;
+}
+
+
+/* ===================== FOOTER ===================== */
 
 .csm-footer {
-  margin-top:20px;
-  padding-top:8px;
-  display:block;
-  width:100%;
+  width: 100%;
+  margin-top: 20px;
+  padding-top: 8px;
+  box-sizing: border-box;
 }
+
 .csm-footer img {
-  display:block;
-  width:100%;
-  height:auto;
-  object-fit:contain;
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+
+/* ===================== PRINT ===================== */
+
+@media print {
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body.print-report-mode .csm-page,
+  body.print-comments-mode .csm-page {
+    position: relative !important;
+
+    box-sizing: border-box !important;
+
+    width: 210mm !important;
+    min-height: 297mm !important;
+
+    max-width: none !important;
+
+    margin: 0 !important;
+
+    padding: 15mm !important;
+    padding-bottom: 45mm !important;
+
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* FOOTER */
+  body.print-report-mode .csm-page > .csm-footer,
+  body.print-comments-mode .csm-page > .csm-footer {
+    position: absolute !important;
+
+    left: 15mm !important;
+    right: 15mm !important;
+    bottom: 12mm !important;
+
+    width: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    box-sizing: border-box !important;
+  }
+
+  body.print-report-mode .csm-page > .csm-footer img,
+  body.print-comments-mode .csm-page > .csm-footer img {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+  }
 }
 </style>
 </head>
