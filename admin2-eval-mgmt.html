@@ -821,7 +821,7 @@
         <div class="submissions-filter-row">
           <div class="search-input-wrap">
             <span>🔍</span>
-            <input type="text" id="search-input" placeholder="Search by office or comments…">
+            <input type="text" id="search-input" placeholder="Search by office, evaluator, or comments…">
           </div>
           <select class="office-filter-select" id="office-filter">
             <option value="">All Offices</option>
@@ -833,10 +833,11 @@
           <table class="submissions-table">
             <thead>
               <tr id="submissions-thead-row">
-                <!-- #, Office, Category, Q1..Q5, Comments, Evidence, Status,
-                     Date, Action are built dynamically in JS so the number
-                     of rating columns (TOTAL_RATING_QUESTIONS) only needs
-                     to be changed in one place. -->
+                <!-- #, Office, Category, Evaluator, Q1..Q5, Comments,
+                     Evidence, Status, Date, Action are built dynamically
+                     in JS so the number of rating columns
+                     (TOTAL_RATING_QUESTIONS) only needs to be changed in
+                     one place. -->
               </tr>
             </thead>
             <tbody id="submissions-tbody"></tbody>
@@ -1043,6 +1044,7 @@ function renderTableHeader() {
     <th>#</th>
     <th>Office</th>
     <th>Category</th>
+    <th>Evaluator</th>
     ${questionHeaders}
     <th>Comments</th>
     <th>Evidence</th>
@@ -1098,6 +1100,7 @@ onSnapshot(evalQuery, (snapshot) => {
       sex: data.sex || "-",
       userCategory: data.userCategory || "-",
       userId: data.userId || "-",
+      evaluatorName: data.evaluatorName || data.userName || data.name || data.fullName || "-",
       evaluationId: data.evaluationId || doc.id
     };
 
@@ -1182,7 +1185,8 @@ function getFilteredSubmissions() {
       if (!term) return true;
       return (
         e.officeName.toLowerCase().includes(term) ||
-        e.comments.toLowerCase().includes(term)
+        e.comments.toLowerCase().includes(term) ||
+        (e.evaluatorName || "").toLowerCase().includes(term)
       );
     })
     .sort((a, b) => b.timestamp - a.timestamp);
@@ -1236,7 +1240,7 @@ function renderSubmissions() {
 
   const tbody = document.getElementById("submissions-tbody");
 
-  const colCount = 3 + TOTAL_RATING_QUESTIONS + 5;
+  const colCount = 4 + TOTAL_RATING_QUESTIONS + 5;
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="${colCount}">No submissions found.</td></tr>`;
@@ -1258,6 +1262,7 @@ function renderSubmissions() {
         <td class="row-index">${i + 1}</td>
         <td>${e.officeName}</td>
         <td>${categoryPillHtml(e.cleanlinessCategory)}</td>
+        <td>${e.evaluatorName || "-"}</td>
         ${ratingCellsHtml(e)}
         <td>${e.comments || "-"}</td>
         <td>${evidenceCellHtml(e)}</td>
@@ -1325,11 +1330,12 @@ document.getElementById("btn-export").addEventListener("click", () => {
     questionHeaders.push("Q" + i);
   }
 
-  const header = ["#", "Office", "Category", ...questionHeaders, "Avg", "Comments", "Sex", "Respondent Type", "User ID", "Evaluation ID", "Image URLs", "Video URLs", "Status", "Date"];
+  const header = ["#", "Office", "Category", "Evaluator", ...questionHeaders, "Avg", "Comments", "Sex", "Respondent Type", "User ID", "Evaluation ID", "Image URLs", "Video URLs", "Status", "Date"];
 
   const rows = filtered.map((e, i) => {
     const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString() : "-";
     const comments = `"${(e.comments || "").replace(/"/g, '""')}"`;
+    const evaluatorName = `"${(e.evaluatorName || "-").replace(/"/g, '""')}"`;
     const status = (STATUS_META[e.status] || STATUS_META.pending).label;
 
     const ratingValues = [];
@@ -1344,6 +1350,7 @@ document.getElementById("btn-export").addEventListener("click", () => {
       i + 1,
       e.officeName,
       e.cleanlinessCategory,
+      evaluatorName,
       ...ratingValues,
       e.avgRating.toFixed(1),
       comments,
@@ -1392,6 +1399,7 @@ function openDetailModal(evalId) {
   detailModalBody.innerHTML = `
     <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
     <div class="modal-row"><span>Category</span><span>${categoryPillHtml(e.cleanlinessCategory)}</span></div>
+    <div class="modal-row"><span>Evaluator</span><span>${e.evaluatorName || "-"}</span></div>
     <div class="modal-row"><span>Avg Rating</span><span>${e.avgRating.toFixed(1)} / 5</span></div>
     ${questionRows}
     <div class="modal-row"><span>Comments</span><span>${e.comments || "-"}</span></div>
@@ -1460,6 +1468,7 @@ function openEditModal(evalId) {
   editModalMeta.innerHTML = `
     <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
     <div class="modal-row"><span>Category</span><span>${categoryPillHtml(e.cleanlinessCategory)}</span></div>
+    <div class="modal-row"><span>Evaluator</span><span>${e.evaluatorName || "-"}</span></div>
     <div class="modal-row"><span>ID</span><span>${e.id}</span></div>
     <div class="modal-row"><span>Avg Rating</span><span>${e.avgRating.toFixed(1)} / 5</span></div>
     <div class="modal-row"><span>Date</span><span>${date}</span></div>
@@ -1585,6 +1594,7 @@ function openDeleteModal(evalId) {
   deleteModalMeta.innerHTML = `
     <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
     <div class="modal-row"><span>Category</span><span>${categoryPillHtml(e.cleanlinessCategory)}</span></div>
+    <div class="modal-row"><span>Evaluator</span><span>${e.evaluatorName || "-"}</span></div>
     <div class="modal-row"><span>Status</span><span>${meta.label}</span></div>
     <div class="modal-row"><span>Date</span><span>${date}</span></div>
   `;
