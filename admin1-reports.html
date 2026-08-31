@@ -356,24 +356,28 @@ select { min-width:180px; }
     border: none !important;
     max-width: 100% !important;
     margin: 0 auto !important;
-    padding: 15mm !important;
-    /* Each .csm-page becomes one full physical A4 sheet: 297mm tall minus
-       the 15mm top + 15mm bottom padding above = 267mm of content box.
-       display:flex + flex-direction:column keeps the letterhead in its
-       normal spot at the top of THIS SAME page (so the second sheet
-       keeps its own header — nothing is hidden/shared between pages),
-       while the footer image below gets margin-top:auto, which in a
-       flex column absorbs all the leftover vertical space and pushes
-       that footer down to the true bottom edge of the sheet instead of
-       sitting right under whatever the narrative/table ends on. */
-    display: flex !important;
-    flex-direction: column !important;
+    /* position:relative turns THIS page into the positioning context for
+       its own footer below — each .csm-page is exactly one physical A4
+       sheet (297mm), so anchoring the footer to bottom:0 of this element
+       pins it to the true bottom edge of that same sheet. The header
+       above is left completely untouched in normal flow at the top, so
+       page 1 and the auto-attached page 2 each keep their own identical
+       letterhead, aligned the same way, at the same 15mm top/side
+       margins. Extra bottom padding reserves clear space so the
+       ratings/comments/narrative content never runs under the footer. */
+    position: relative !important;
+    padding: 15mm 15mm 45mm !important;
     min-height: 267mm !important;
   }
 
   body.print-report-mode .csm-page > .csm-footer,
   body.print-comments-mode .csm-page > .csm-footer {
-    margin-top: auto !important;
+    position: absolute !important;
+    left: 15mm !important;
+    right: 15mm !important;
+    bottom: 12mm !important;
+    width: auto !important;
+    margin-top: 0 !important;
   }
 }
 
