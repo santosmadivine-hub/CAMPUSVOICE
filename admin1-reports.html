@@ -296,8 +296,27 @@ select { min-width:180px; }
    Either class hides everything else on the page (sidebar, topbar, KPI
    cards, filters, saved-report tables, and the other preview panel) for
    that print job only, and is removed again on the browser's "afterprint"
-   event — the normal on-screen layout is completely unaffected. */
+   event — the normal on-screen layout is completely unaffected.
+
+   FIX: Chrome/Edge normally stamp their own header (URL/title/date) and
+   footer (page number/URL) onto every printed page whenever the page has
+   margin to draw them in — that's the "31/08/2026, 11:52 ... 1/2" text
+   that was showing up. Chrome only draws that header/footer strip inside
+   the @page margin area, so setting @page { margin: 0 } removes it
+   automatically, without needing the user to open "More settings" and
+   uncheck "Headers and footers". Since @page margin also controls the
+   printed content's margin, we add that spacing back as real CSS padding
+   on .csm-page (print-mode only) so the content still isn't flush against
+   the paper edge. */
 @media print {
+  @page {
+    margin: 0;
+  }
+
+  html, body {
+    margin: 0 !important;
+  }
+
   body.print-report-mode #sidebar-mount,
   body.print-report-mode #topbar-mount,
   body.print-report-mode .kpi-grid,
@@ -336,6 +355,14 @@ select { min-width:180px; }
     box-shadow: none !important;
     border: none !important;
     max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 15mm !important;
+  }
+
+  body.print-report-mode .page-break-sheet,
+  body.print-comments-mode .page-break-sheet {
+    margin-top: 0 !important;
+    padding-top: 15mm !important;
   }
 }
 
