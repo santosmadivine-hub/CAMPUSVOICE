@@ -234,6 +234,15 @@ select { min-width:180px; }
   border:1px solid #e2e8f0;
 }
 
+/* Single fixed letterhead/footer pair used ONLY when printing (see the
+   @media print rules below). Hidden on screen at all times — the normal
+   preview keeps showing the letterhead/footer that live inside each
+   .csm-page as before. */
+.print-fixed-header,
+.print-fixed-footer {
+  display:none;
+}
+
 /* A visually distinct "next sheet" — separated by real blank space plus a
    torn-paper style divider, so it reads as page 2, not a continuation
    of page 1's content. */
@@ -356,13 +365,64 @@ select { min-width:180px; }
     border: none !important;
     max-width: 100% !important;
     margin: 0 auto !important;
-    padding: 15mm !important;
+    /* top/bottom padding leaves room to clear the fixed header/footer
+       below on every page; left/right stays 15mm to match their side
+       padding so everything lines up on the same margins */
+    padding: 40mm 15mm 25mm !important;
   }
 
-  body.print-report-mode .page-break-sheet,
-  body.print-comments-mode .page-break-sheet {
-    margin-top: 0 !important;
-    padding-top: 15mm !important;
+  /* The letterhead + footer image that live inside each .csm-page are
+     only needed for the on-screen preview. In print we hide those
+     per-page copies and rely on the single .print-fixed-header /
+     .print-fixed-footer pair below instead — position:fixed repeats an
+     element on every physical page when printing, so this keeps the
+     letterhead pinned exactly to the top edge of each sheet and the
+     accreditation footer pinned exactly to the bottom edge of each
+     sheet, regardless of how much ratings/comments content is on that
+     page (instead of the footer just trailing wherever the text ends). */
+  body.print-report-mode .csm-page > .lh-row,
+  body.print-report-mode .csm-page > .lh-divider,
+  body.print-report-mode .csm-page > .csm-footer,
+  body.print-comments-mode .csm-page > .lh-row,
+  body.print-comments-mode .csm-page > .lh-divider,
+  body.print-comments-mode .csm-page > .csm-footer {
+    display: none !important;
+  }
+
+  body.print-report-mode .print-fixed-header,
+  body.print-comments-mode .print-fixed-header {
+    display: block !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 10mm 15mm 0;
+    background: #fff;
+  }
+
+  body.print-report-mode .print-fixed-header .lh-divider,
+  body.print-comments-mode .print-fixed-header .lh-divider {
+    margin: 4px 0 0;
+  }
+
+  body.print-report-mode .print-fixed-footer,
+  body.print-comments-mode .print-fixed-footer {
+    display: block !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 15mm 6mm;
+    background: #fff;
+  }
+
+  body.print-report-mode .print-fixed-footer img,
+  body.print-comments-mode .print-fixed-footer img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 20mm;
+    object-fit: contain;
   }
 }
 
@@ -426,6 +486,40 @@ select { min-width:180px; }
 </style>
 </head>
 <body>
+
+<!-- ===================== Fixed Print Header & Footer (print only) =====================
+     Not shown on screen (see .print-fixed-header/.print-fixed-footer
+     default display:none above). When printReport()/printCommentsReport()
+     add the print-report-mode / print-comments-mode class to <body>, the
+     @media print rules turn these on with position:fixed, which the
+     browser repeats at the exact same spot on every physical page of the
+     print job. That pins the letterhead to the true top edge of each
+     bond-paper sheet and the accreditation footer to the true bottom
+     edge, on both the CSM page and the auto-attached Comments page,
+     instead of the footer image just landing wherever the text ends. -->
+<div class="print-fixed-header" id="printFixedHeader">
+  <div class="lh-row">
+    <div class="lh-logo-box" style="width:150px; height:90px;">
+      <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+    </div>
+    <div class="lh-text">
+      <div class="rep">Republic of the Philippines</div>
+      <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
+      <div class="dept">Research &amp; Development Office</div>
+      <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
+      <div class="addr">Website: www.isufst.edu.ph</div>
+    </div>
+    <div class="lh-seal-box">
+      <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous">
+    </div>
+  </div>
+  <hr class="lh-divider">
+</div>
+
+<div class="print-fixed-footer" id="printFixedFooter">
+  <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
+</div>
+<!-- ===================== END SECTION ===================== -->
 
 <div class="layout">
   <div id="sidebar-mount"></div>
