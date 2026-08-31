@@ -964,6 +964,7 @@ const STATUS_META = {
 let evaluations = [];
 let comfortOffices = {};
 let surroundingsOffices = {};
+let usersMap = {};          // userId -> display name, loaded from `users` collection
 let searchTerm = "";
 let officeFilter = "";
 let categoryFilter = "all";
@@ -1030,6 +1031,19 @@ function categoryPillHtml(category) {
   return `<span class="category-pill ${cls}">${category}</span>`;
 }
 
+// Resolves the evaluator's display name, preferring a live lookup in the
+// `users` collection by userId (users/{userId}.name). Falls back to
+// whatever name was stored directly on the evaluation document
+// (evaluatorName / userName / name / fullName) if there's no userId
+// match — e.g. the user account was deleted, or the doc predates the
+// userId field.
+function getEvaluatorName(e) {
+  if (e.userId && e.userId !== "-" && usersMap[e.userId]) {
+    return usersMap[e.userId];
+  }
+  return e.evaluatorName || "-";
+}
+
 // ======================
 // BUILD TABLE HEADER
 // ======================
@@ -1075,6 +1089,20 @@ onSnapshot(collection(db, OFFICE_COLLECTIONS["Surroundings"]), (snapshot) => {
     surroundingsOffices[doc.id] = data.name || data.officeName || doc.id;
   });
   populateOfficeFilter();
+});
+
+// ======================
+// LOAD USERS (for evaluator name lookup by userId)
+// ======================
+onSnapshot(collection(db, USERS_COLLECTION), (snapshot) => {
+  usersMap = {};
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    usersMap[doc.id] = data.name || data.fullName || data.email || doc.id;
+  });
+  // Names may resolve after evaluations already rendered — re-render
+  // so the Evaluator column updates once users have loaded.
+  renderSubmissions();
 });
 
 // ======================
@@ -1187,7 +1215,7 @@ function getFilteredSubmissions() {
       return (
         e.officeName.toLowerCase().includes(term) ||
         e.comments.toLowerCase().includes(term) ||
-        (e.evaluatorName || "").toLowerCase().includes(term)
+        (getEvaluatorName(e) || "").toLowerCase().includes(term)
       );
     })
     .sort((a, b) => b.timestamp - a.timestamp);
@@ -1263,7 +1291,7 @@ function renderSubmissions() {
         <td class="row-index">${i + 1}</td>
         <td>${e.officeName}</td>
         <td>${categoryPillHtml(e.cleanlinessCategory)}</td>
-        <td>${e.evaluatorName || "-"}</td>
+        <td>${getEvaluatorName(e)}</td>
         ${ratingCellsHtml(e)}
         <td>${e.comments || "-"}</td>
         <td>${evidenceCellHtml(e)}</td>
@@ -1336,7 +1364,7 @@ document.getElementById("btn-export").addEventListener("click", () => {
   const rows = filtered.map((e, i) => {
     const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString() : "-";
     const comments = `"${(e.comments || "").replace(/"/g, '""')}"`;
-    const evaluatorName = `"${(e.evaluatorName || "-").replace(/"/g, '""')}"`;
+    const evaluatorName = `"${getEvaluatorName(e).replace(/"/g, '""')}"`;
     const status = (STATUS_META[e.status] || STATUS_META.pending).label;
 
     const ratingValues = [];
@@ -1400,7 +1428,7 @@ function openDetailModal(evalId) {
   detailModalBody.innerHTML = `
     <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
     <div class="modal-row"><span>Category</span><span>${categoryPillHtml(e.cleanlinessCategory)}</span></div>
-    <div class="modal-row"><span>Evaluator</span><span>${e.evaluatorName || "-"}</span></div>
+    <div class="modal-row"><span>Evaluator</span><span>${getEvaluatorName(e)}</span></div>
     <div class="modal-row"><span>Avg Rating</span><span>${e.avgRating.toFixed(1)} / 5</span></div>
     ${questionRows}
     <div class="modal-row"><span>Comments</span><span>${e.comments || "-"}</span></div>
@@ -1469,7 +1497,7 @@ function openEditModal(evalId) {
   editModalMeta.innerHTML = `
     <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
     <div class="modal-row"><span>Category</span><span>${categoryPillHtml(e.cleanlinessCategory)}</span></div>
-    <div class="modal-row"><span>Evaluator</span><span>${e.evaluatorName || "-"}</span></div>
+    <div class="modal-row"><span>Evaluator</span><span>${getEvaluatorName(e)}</span></div>
     <div class="modal-row"><span>ID</span><span>${e.id}</span></div>
     <div class="modal-row"><span>Avg Rating</span><span>${e.avgRating.toFixed(1)} / 5</span></div>
     <div class="modal-row"><span>Date</span><span>${date}</span></div>
@@ -1595,7 +1623,7 @@ function openDeleteModal(evalId) {
   deleteModalMeta.innerHTML = `
     <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
     <div class="modal-row"><span>Category</span><span>${categoryPillHtml(e.cleanlinessCategory)}</span></div>
-    <div class="modal-row"><span>Evaluator</span><span>${e.evaluatorName || "-"}</span></div>
+    <div class="modal-row"><span>Evaluator</span><span>${getEvaluatorName(e)}</span></div>
     <div class="modal-row"><span>Status</span><span>${meta.label}</span></div>
     <div class="modal-row"><span>Date</span><span>${date}</span></div>
   `;
