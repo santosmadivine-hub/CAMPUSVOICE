@@ -715,7 +715,7 @@
         <div class="submissions-filter-row">
           <div class="search-input-wrap">
             <span>🔍</span>
-            <input type="text" id="search-input" placeholder="Search by office, code, or comments…">
+            <input type="text" id="search-input" placeholder="Search by office, evaluator, code, or comments…">
           </div>
           <select class="office-filter-select" id="office-filter">
             <option value="">All Offices</option>
@@ -729,6 +729,7 @@
               <tr>
                 <th>#</th>
                 <th>Office</th>
+                <th>Evaluator</th>
                 <th>Q1</th>
                 <th>Q2</th>
                 <th>Q3</th>
@@ -815,6 +816,7 @@ const db = getFirestore(app);
 const EVAL_COLLECTION = "facility_evaluations";
 const HISTORY_COLLECTION = "evaluation_history";
 const OFFICE_COLLECTION = "offices";
+const USERS_COLLECTION = "users";
 const LOW_RATING_THRESHOLD = 3;
 const STATUS_META = {
   pending: { label: "Pending", icon: "⏳" },
@@ -834,6 +836,7 @@ document.getElementById("topbar-mount").innerHTML =
 // ======================
 let evaluations = [];   // [{id, code, officeName, rating1..10, comments, date, status, evidence}]
 let offices = {};       // { officeKey: officeName }
+let usersMap = {};      // userId -> display name, loaded from `users` collection
 let searchTerm = "";
 let officeFilter = "";
 let currentTab = "recent"; // "recent" | "pending" | "no_action" | "resolved"
@@ -926,6 +929,19 @@ function evalAvg(ev) {
   return ratings.reduce((sum, r) => sum + r, 0) / ratings.length;
 }
 
+// Resolves the evaluator's display name, preferring a live lookup in the
+// `users` collection by userId (users/{userId}.name). Falls back to
+// whatever name was stored directly on the evaluation document
+// (evaluatorName / userName / name / fullName) if there's no userId
+// match — e.g. the user account was deleted, or the doc predates the
+// userId field.
+function getEvaluatorName(e) {
+  if (e.userId && e.userId !== "-" && usersMap[e.userId]) {
+    return usersMap[e.userId];
+  }
+  return e.evaluatorName || "-";
+}
+
 // ======================
 // LOAD OFFICES -> office-names collection
 // ======================
@@ -944,6 +960,22 @@ onSnapshot(officeCollRef, (snapshot) => {
   console.error("Failed to load offices:", err);
 });
 
+
+// ======================
+// LOAD USERS (for evaluator name lookup by userId)
+// ======================
+onSnapshot(collection(db, USERS_COLLECTION), (snapshot) => {
+  usersMap = {};
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    usersMap[docSnap.id] = data.name || data.fullName || data.email || docSnap.id;
+  });
+  // Names may resolve after evaluations already rendered — re-render
+  // so the Evaluator column updates once users have loaded.
+  renderSubmissions();
+}, (err) => {
+  console.error("Failed to load users:", err);
+});
 
 const evalCollRef = collection(db, EVAL_COLLECTION);
 
@@ -965,6 +997,7 @@ onSnapshot(evalCollRef, (snapshot) => {
       sex: ev.sex || "",
       userCategory: ev.userCategory || "",
       userId: ev.userId || "",
+      evaluatorName: ev.evaluatorName || ev.userName || ev.name || ev.fullName || "",
       evidence: parseEvidence(ev),
       transactionCode: ev.transactionCode || "",
       rawStatus: ev.status || "",
@@ -1029,7 +1062,8 @@ function getFilteredSubmissions() {
       return (
         e.code.toLowerCase().includes(term) ||
         e.officeName.toLowerCase().includes(term) ||
-        e.comments.toLowerCase().includes(term)
+        e.comments.toLowerCase().includes(term) ||
+        (getEvaluatorName(e) || "").toLowerCase().includes(term)
       );
     })
     .sort((a, b) => b.date - a.date);
@@ -1073,8 +1107,8 @@ function renderSubmissions() {
   const tbody = document.getElementById("submissions-tbody");
   const showActionColumn = currentTab !== "recent";
   document.getElementById("action-col-header").style.display = showActionColumn ? "" : "none";
-  // #, Office, Q1-Q8, Comments, Evidence, Status, Date [, Action]
-  const colCount = showActionColumn ? 15 : 14;
+  // #, Office, Evaluator, Q1-Q8, Comments, Evidence, Status, Date [, Action]
+  const colCount = showActionColumn ? 16 : 15;
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="${colCount}">No submissions found.</td></tr>`;
@@ -1099,6 +1133,7 @@ function renderSubmissions() {
       <tr>
         <td class="row-index">${i + 1}</td>
         <td>${e.officeName}</td>
+        <td>${getEvaluatorName(e)}</td>
         ${ratingCells}
         <td>${e.comments || "-"}</td>
         <td>${evidenceCellHtml(e)}</td>
