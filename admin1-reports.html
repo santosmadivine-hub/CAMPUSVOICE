@@ -280,41 +280,90 @@ select { min-width:180px; }
   }
 }
 
-/* ===================== Print buttons / browser print dialog =====================
-   Two separate body-class scopes, one per preview panel:
+/* ===================== HEADER ===================== */
+.lh-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 1px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.lh-logo-box,
+.lh-seal-box {
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lh-logo-box img,
+.lh-seal-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.lh-text {
+  flex: 1;
+  text-align: center;
+  line-height: 1.4;
+}
+.lh-text .rep  { font-size:8.5pt; }
+.lh-text .uni  { font-size:10.5pt; font-weight:bold; text-transform:uppercase; letter-spacing:.1px; }
+.lh-text .dept { font-size:10pt; font-weight:bold; text-transform:uppercase; }
+.lh-text .addr { font-size:7.5pt; color:#444; }
+.lh-divider { border:none; border-top:2.5px solid #1a3a6b; margin:4px 0 10px; }
 
-   - body.print-report-mode — toggled by printReport(), for the main CSM
-     report preview (#reportPreview: page 1 ratings + auto-attached page 2
-     comments). Because those two pages are forced onto separate physical
-     sheets by .page-break-sheet's page-break-before rule, the browser's
-     native print dialog page-range field lets the admin type "1" to print
-     only the CSM page, or "1-2" (or leave it on "All") to include the
-     Comments & Suggestions page too.
-   - body.print-comments-mode — toggled by printCommentsReport(), for the
-     standalone Comments & Suggestions Report preview (#commentsPreview).
+.csm-doc-title {
+  text-align:center; font-size:11.5pt; font-weight:bold;
+  text-transform:uppercase; letter-spacing:.8px; margin-bottom:12px;
+}
 
-   Either class hides everything else on the page (sidebar, topbar, KPI
-   cards, filters, saved-report tables, and the other preview panel) for
-   that print job only, and is removed again on the browser's "afterprint"
-   event — the normal on-screen layout is completely unaffected.
+.csm-meta { font-size:10.5pt; line-height:1.8; margin-bottom:10px; }
+.csm-meta b { font-weight:bold; }
 
-   FIX: Chrome/Edge normally stamp their own header (URL/title/date) and
-   footer (page number/URL) onto every printed page whenever the page has
-   margin to draw them in — that's the "31/08/2026, 11:52 ... 1/2" text
-   that was showing up. Chrome only draws that header/footer strip inside
-   the @page margin area, so setting @page { margin: 0 } removes it
-   automatically, without needing the user to open "More settings" and
-   uncheck "Headers and footers". Since @page margin also controls the
-   printed content's margin, we add that spacing back as real CSS padding
-   on .csm-page (print-mode only) so the content still isn't flush against
-   the paper edge. */
+.csm-table { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:10pt; }
+.csm-table th {
+  background:#1a3a6b; color:#fff; padding:6px 8px;
+  border:1px solid #1a3a6b; text-align:center; font-weight:bold;
+}
+.csm-table td { border:1px solid #aaa; padding:5px 8px; }
+.csm-table tr:nth-child(even) td { background:#eef2f9; }
+
+.csm-narrative { font-size:10.5pt; line-height:1.7; text-align:justify; margin-bottom:16px; }
+.csm-narrative p { margin-bottom:10px; }
+
+.csm-sigs { display:flex; gap:40px; margin-top:24px; font-size:10.5pt; }
+.csm-sig-block { flex:1; }
+.csm-sig-label { color:#555; font-size:9.5pt; margin-bottom:30px; }
+.csm-sig-name  { font-weight:bold; text-transform:uppercase; border-top:1px solid #000; padding-top:4px; display:inline-block; }
+.csm-sig-title { font-size:9.5pt; font-style:italic; color:#333; margin-top:2px; }
+
+/* ===================== FOOTER ===================== */
+.csm-footer {
+  width: 100%;
+  margin-top: 20px;
+  padding-top: 8px;
+  box-sizing: border-box;
+}
+.csm-footer img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* ===================== PRINT ===================== */
 @media print {
   @page {
+    size: A4;
     margin: 0;
   }
 
   html, body {
     margin: 0 !important;
+    padding: 0 !important;
   }
 
   body.print-report-mode #sidebar-mount,
@@ -352,137 +401,27 @@ select { min-width:180px; }
 
   body.print-report-mode .csm-page,
   body.print-comments-mode .csm-page {
-    box-shadow: none !important;
-    border: none !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
-    /* position:relative turns THIS page into the positioning context for
-       its own footer below — each .csm-page is exactly one physical A4
-       sheet (297mm), so anchoring the footer to bottom:0 of this element
-       pins it to the true bottom edge of that same sheet. The header
-       above is left completely untouched in normal flow at the top, so
-       page 1 and the auto-attached page 2 each keep their own identical
-       letterhead, aligned the same way, at the same 15mm top/side
-       margins. Extra bottom padding reserves clear space so the
-       ratings/comments/narrative content never runs under the footer. */
     position: relative !important;
-    padding: 15mm 15mm 45mm !important;
-    min-height: 237mm !important;
-  }
-
-  body.print-report-mode .csm-page > .csm-footer,
-  body.print-comments-mode .csm-page > .csm-footer {
-    position: absolute !important;
-    left: 15mm !important;
-    right: 15mm !important;
-    bottom: 12mm !important;
-    width: auto !important;
-    margin-top: 0 !important;
-  }
-}
-
-/* ===================== HEADER ===================== */
-
-.lh-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-bottom: 1px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.lh-logo-box,
-.lh-seal-box {
-  width: 100px;
-  height: 100px;
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.lh-logo-box img,
-.lh-seal-box img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.lh-text {
-  flex: 1;
-  text-align: center;
-  line-height: 1.4;
-}
-
-
-/* ===================== FOOTER ===================== */
-
-.csm-footer {
-  width: 100%;
-  margin-top: 20px;
-  padding-top: 8px;
-  box-sizing: border-box;
-}
-
-.csm-footer img {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-}
-
-
-/* ===================== PRINT ===================== */
-
-@media print {
-
-  @page {
-    size: A4;
-    margin: 0;
-  }
-
-  html,
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  body.print-report-mode .csm-page,
-  body.print-comments-mode .csm-page {
-    position: relative !important;
-
     box-sizing: border-box !important;
-
     width: 210mm !important;
     min-height: 297mm !important;
-
     max-width: none !important;
-
     margin: 0 !important;
-
     padding: 15mm !important;
     padding-bottom: 45mm !important;
-
     border: none !important;
     box-shadow: none !important;
   }
 
-  /* FOOTER */
   body.print-report-mode .csm-page > .csm-footer,
   body.print-comments-mode .csm-page > .csm-footer {
     position: absolute !important;
-
     left: 15mm !important;
     right: 15mm !important;
     bottom: 12mm !important;
-
     width: auto !important;
-
     margin: 0 !important;
     padding: 0 !important;
-
     box-sizing: border-box !important;
   }
 
