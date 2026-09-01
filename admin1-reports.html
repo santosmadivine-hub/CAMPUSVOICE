@@ -233,41 +233,26 @@ select { min-width:180px; }
    FIXED full A4 page (on screen, in print, and in the html2canvas/jsPDF
    export — all of which render this exact element).
 
-   IMPORTANT: this is `height`, not `min-height`. A min-height only sets
-   a floor — browsers (especially when paginating for print, and
-   html2canvas when rasterizing for the PDF export) will happily size
-   the flex column down to fit its content instead of stretching it to
-   fill the minimum, which leaves margin-top:auto on the footer with no
-   extra space to push into, so the footer ends up sitting right under
-   the content instead of at the bottom of the sheet. A fixed `height`
-   guarantees the box is always exactly one A4 page tall, so the footer
-   (flex, margin-top:auto) is always pushed all the way down to the true
-   bottom of the page — consistently on screen, in print, and in the
-   exported PDF.
+   FOOTER POSITIONING (fixed):
+   The footer is now positioned with `position:absolute; bottom:0` inside
+   this `position:relative` container, rather than relying on a flexbox
+   `margin-top:auto`. Flex auto-margins are NOT reliably respected by
+   html2canvas (used for the PDF export) and can behave inconsistently
+   across browser print engines, which is why the footer was sometimes
+   landing right under the content instead of at the true bottom of the
+   page. Absolute positioning pins it to the exact same spot on screen,
+   in print, and in the exported PDF — regardless of how much content is
+   above it.
 
-   .generated-report-header, .generated-report-content and
-   .generated-report-footer are direct children, each given the SAME
-   box-sizing + the SAME left/right padding, so they always share the
-   exact same horizontal boundaries as each other. The column is a flex
-   column with the footer pinned down via margin-top:auto, so header
-   stays flush at the top, content sizes to itself, and footer is always
-   flush at the bottom of the page — no matter how long or short the
-   report content is, and with no position:absolute or fixed pixel
-   heights involved for the footer itself.
-
-   NOTE: because height is now fixed (not a minimum), content that would
-   overflow one page is clipped by overflow:hidden below rather than
-   silently growing the sheet. For this report's typical content (a
-   9-row SQD table + narrative, or a comments table) that fits
-   comfortably on one A4 page. If a specific report ever has enough
-   comments/rows to overflow, that content should be paginated onto an
-   additional .page-break-sheet rather than left to overflow this box. */
+   `.generated-report-content` reserves bottom padding equal to the
+   footer's height so body text/table rows never run underneath the
+   absolutely-positioned footer. Adjust that padding value if the footer
+   image's height ever changes noticeably. */
 .generated-report {
-  display:flex;
-  flex-direction:column;
+  position:relative;     /* anchors the absolutely-positioned footer */
   width:100%;
   max-width:780px;
-  height:297mm;         /* fixed A4 height (not min-height) — see note above */
+  height:297mm;           /* fixed A4 height (not min-height) */
   margin:0 auto;
   box-sizing:border-box;
   background:#fff;
@@ -275,12 +260,11 @@ select { min-width:180px; }
   font-size:11pt; color:#000;
   box-shadow:0 1px 3px rgba(15,23,42,0.10), 0 1px 2px rgba(15,23,42,0.06);
   border:1px solid #e2e8f0;
-  overflow:hidden;       /* keeps content within the fixed-height page box */
+  overflow:hidden;        /* keeps content within the fixed-height page box */
 }
 
 .generated-report-header,
-.generated-report-content,
-.generated-report-footer {
+.generated-report-content {
   width:100%;
   box-sizing:border-box;
   padding-left:40px;
@@ -290,25 +274,27 @@ select { min-width:180px; }
 .generated-report-header {
   padding-top:32px;
   padding-bottom:0;
-  flex:0 0 auto;
 }
 
 .generated-report-content {
-  flex:0 1 auto; /* content only takes the space it needs, it does not
-                     force-grow to fill the page */
   padding-top:0;
-  padding-bottom:0;
-  overflow:hidden; /* extra safety: never lets content push the footer
-                       out of the fixed-height page */
+  /* Reserves space so text never runs under the absolutely-positioned
+     footer. Increase this if the footer image is taller than expected. */
+  padding-bottom:130px;
+  overflow:hidden;         /* extra safety within the fixed-height page */
 }
 
 .generated-report-footer {
-  flex:0 0 auto;
-  padding-top:16px;
-  padding-bottom:32px;
-  margin-top:auto; /* auto margin pushes the footer all the way down to
-                       the bottom of the fixed-height A4 sheet */
+  position:absolute;       /* pinned to the exact bottom of every page,
+                               independent of how much content is above it */
+  left:0;
+  right:0;
+  bottom:0;
+  width:100%;
+  box-sizing:border-box;
+  padding:16px 40px 32px;
   border-top:1px solid #e2e8f0;
+  background:#fff;
 }
 
 /* A visually distinct "next sheet" — separated by real blank space plus a
@@ -387,7 +373,8 @@ select { min-width:180px; }
    content still isn't flush against the paper edge — and because ALL
    THREE sections receive the exact same left/right padding value, the
    header and footer stay aligned with the report content on every page,
-   in a plain top-to-bottom flow with no position:absolute involved. */
+   with the footer pinned via position:absolute so it sits in the exact
+   same spot regardless of content length. */
 @media print {
   @page {
     margin: 0;
@@ -459,11 +446,17 @@ select { min-width:180px; }
     padding-top: 15mm !important;
   }
 
+  body.print-report-mode .generated-report-content,
+  body.print-comments-mode .generated-report-content {
+    padding-bottom: 45mm !important; /* reserve room above the absolutely-positioned footer in print/export too */
+  }
+
   body.print-report-mode .generated-report-footer,
   body.print-comments-mode .generated-report-footer {
     padding-top: 10mm !important;
     padding-bottom: 15mm !important;
-    margin-top: auto !important; /* keeps footer pinned to the bottom in print/export too */
+    /* position:absolute + bottom:0 (inherited from the base rule) keeps
+       the footer pinned to the true bottom of the page in print/export too */
   }
 }
 
