@@ -228,20 +228,28 @@ select { min-width:180px; }
    GENERATED REPORT — container + header/content/footer alignment
    =====================================================================
    .generated-report is the single source of truth for the report's
-   left/right boundaries (width + max-width + margin auto, centered).
+   left/right boundaries (width + max-width + margin auto, centered) AND
+   now also its vertical size: min-height:297mm makes every sheet a full
+   A4 page (on screen, in print, and in the html2canvas/jsPDF export —
+   all of which render this exact element), so the footer has a real
+   "bottom of the page" to sit at instead of just trailing the content.
+
    .generated-report-header, .generated-report-content and
    .generated-report-footer are direct children, each given the SAME
    box-sizing + the SAME left/right padding, so they always share the
-   exact same horizontal boundaries as each other — on screen, in print,
-   and in the html2canvas/jsPDF export — no matter how long or short the
-   report content is. A flex column keeps content free to grow while
-   header/footer simply bracket it in normal document flow (no
-   position:absolute, no negative margins, no fixed pixel widths). */
+   exact same horizontal boundaries as each other. The column is a flex
+   column with the footer pinned down via margin-top:auto (see below),
+   so header stays flush at the top, content sizes to itself, and footer
+   is always flush at the bottom of the page — no matter how long or
+   short the report content is, and with no position:absolute or fixed
+   pixel heights involved. */
 .generated-report {
   display:flex;
   flex-direction:column;
   width:100%;
   max-width:780px;
+  min-height:297mm; /* NEW: forces a full A4-height sheet so the footer
+                        anchors to the true bottom of the page */
   margin:0 auto;
   box-sizing:border-box;
   background:#fff;
@@ -267,7 +275,8 @@ select { min-width:180px; }
 }
 
 .generated-report-content {
-  flex:1 0 auto;
+  flex:0 1 auto; /* was 1 0 auto — content only takes the space it needs,
+                     it no longer force-grows to fill the page */
   padding-top:0;
   padding-bottom:0;
 }
@@ -276,7 +285,8 @@ select { min-width:180px; }
   flex:0 0 auto;
   padding-top:16px;
   padding-bottom:32px;
-  margin-top:20px;
+  margin-top:auto; /* was a fixed 20px — auto margin pushes the footer
+                       all the way down to the bottom of the A4 sheet */
   border-top:1px solid #e2e8f0;
 }
 
@@ -406,6 +416,7 @@ select { min-width:180px; }
     max-width: 100% !important;
     width: 100% !important;
     margin: 0 auto !important;
+    min-height: 297mm !important; /* keep the full-page footer anchor in print too */
   }
 
   /* Same left/right padding on header, content AND footer in print mode
@@ -430,7 +441,7 @@ select { min-width:180px; }
   body.print-comments-mode .generated-report-footer {
     padding-top: 10mm !important;
     padding-bottom: 15mm !important;
-    margin-top: 10mm !important;
+    margin-top: auto !important; /* was a fixed 10mm — keep footer pinned to the bottom in print/export too */
   }
 }
 
