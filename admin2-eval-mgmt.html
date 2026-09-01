@@ -1116,8 +1116,15 @@ onSnapshot(evalQuery, (snapshot) => {
   snapshot.forEach((doc) => {
     const data = doc.data();
 
+    // Guard against non-cleanliness docs (e.g. Services evaluations)
+    // that also get written into evaluation_history. Only accept docs
+    // that actually declare a valid cleanlinessCategory — everything
+    // else is skipped instead of silently defaulted into "Comfort Room".
     const rawCategory = data.cleanlinessCategory;
-    const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+    if (!CLEANLINESS_CATEGORIES.includes(rawCategory)) {
+      return;
+    }
+    const category = rawCategory;
 
     const record = {
       id: doc.id,
@@ -1142,7 +1149,6 @@ onSnapshot(evalQuery, (snapshot) => {
 
     evaluations.push(record);
   });
-
   evaluations.forEach(ev => {
     ev.code = makeCode(ev.officeName, ev.id);
   });
