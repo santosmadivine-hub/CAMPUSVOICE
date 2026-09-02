@@ -517,6 +517,42 @@
     text-decoration: none;
   }
 
+  /* Message User button + unread badge */
+  .btn-message {
+    position: relative;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    margin-right: 14px;
+  }
+
+  .btn-message:hover {
+    background: #dbeafe;
+  }
+
+  .btn-message .unread-dot {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+  }
+
   /* Modals */
   .modal-overlay {
     display: none;
@@ -732,6 +768,154 @@
     color: #94a3b8;
   }
 
+  /* Chat Modal */
+  .chat-modal-content {
+    background: #ffffff;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 20px 60px rgba(15, 27, 50, 0.15);
+    display: flex;
+    flex-direction: column;
+    height: 640px;
+    max-height: 85vh;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid #edf2f7;
+    flex-shrink: 0;
+  }
+
+  .chat-header h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 3px 0;
+  }
+
+  .chat-header p {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #f8fafc;
+  }
+
+  .chat-bubble-row {
+    display: flex;
+    flex-direction: column;
+    max-width: 78%;
+  }
+
+  .chat-bubble-row.admin {
+    align-self: flex-end;
+    align-items: flex-end;
+  }
+
+  .chat-bubble-row.user {
+    align-self: flex-start;
+    align-items: flex-start;
+  }
+
+  .chat-bubble {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    line-height: 1.4;
+    padding: 9px 13px;
+    border-radius: 14px;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  .chat-bubble-row.admin .chat-bubble {
+    background: #2563eb;
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+  }
+
+  .chat-bubble-row.user .chat-bubble {
+    background: #e2e8f0;
+    color: #0f172a;
+    border-bottom-left-radius: 4px;
+  }
+
+  .chat-meta {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10.5px;
+    color: #94a3b8;
+    margin-top: 3px;
+    padding: 0 3px;
+  }
+
+  .chat-empty-note {
+    margin: auto;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: #94a3b8;
+    text-align: center;
+  }
+
+  .chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 14px 16px;
+    border-top: 1px solid #edf2f7;
+    flex-shrink: 0;
+    background: #ffffff;
+  }
+
+  .chat-input-row textarea {
+    flex: 1;
+    resize: none;
+    border: 1px solid #dbe4ee;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    color: #0f172a;
+    max-height: 90px;
+    background: #f8fafc;
+  }
+
+  .chat-input-row textarea:focus {
+    outline: none;
+    border-color: #0284c7;
+  }
+
+  .chat-send-btn {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .chat-send-btn:hover:not(:disabled) {
+    background: #1d4ed8;
+  }
+
+  .chat-send-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
   @media (max-width: 768px) {
     .submissions-filter-row {
       flex-direction: column;
@@ -749,6 +933,12 @@
 
     .table-wrap {
       max-height: 480px;
+    }
+
+    .chat-modal-content {
+      height: 100%;
+      max-height: 100%;
+      border-radius: 0;
     }
   }
 </style>
@@ -893,6 +1083,21 @@
   </div>
 </div>
 
+<!-- MESSAGE / CHAT MODAL -->
+<div class="modal-overlay" id="chat-modal">
+  <div class="chat-modal-content">
+    <div class="chat-header">
+      <h3 id="chat-header-title">💬 Message User</h3>
+      <p id="chat-header-sub"></p>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" rows="1" placeholder="Type a message…"></textarea>
+      <button class="chat-send-btn" id="chat-send-btn">Send</button>
+    </div>
+  </div>
+</div>
+
 <script src="shared.js"></script>
 
 <script type="module">
@@ -907,7 +1112,10 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  addDoc
+  addDoc,
+  setDoc,
+  increment,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase Configuration
@@ -939,6 +1147,8 @@ const EVAL_HISTORY_COLLECTION = "evaluation_history";
 const NESTED_EVAL_ROOT = "cleanliness_evaluations";
 const NOTIFICATIONS_COLLECTION = "notifications";
 const USERS_COLLECTION = "users";
+const CONVERSATIONS_COLLECTION = "conversations";
+const ADMIN_SENDER_ID = "cleanliness_admin";
 
 const OFFICE_COLLECTIONS = {
   "Comfort Room": "office-names-comfort-room",
@@ -965,12 +1175,17 @@ let evaluations = [];
 let comfortOffices = {};
 let surroundingsOffices = {};
 let usersMap = {};          // userId -> display name, loaded from `users` collection
+let conversationsMap = {};  // evaluationId -> conversation doc data (unread counts, last message, etc.)
 let searchTerm = "";
 let officeFilter = "";
 let categoryFilter = "all";
 let currentTab = "recent";
 let editingId = null;
 let deletingId = null;
+
+// Chat modal state
+let activeChatEvalId = null;
+let chatMessagesUnsub = null;
 
 // ======================
 // HELPERS
@@ -1103,6 +1318,19 @@ onSnapshot(collection(db, USERS_COLLECTION), (snapshot) => {
   // Names may resolve after evaluations already rendered — re-render
   // so the Evaluator column updates once users have loaded.
   renderSubmissions();
+});
+
+// ======================
+// LOAD CONVERSATIONS (for unread-message badges on the Message button)
+// ======================
+onSnapshot(collection(db, CONVERSATIONS_COLLECTION), (snapshot) => {
+  conversationsMap = {};
+  snapshot.forEach((docSnap) => {
+    conversationsMap[docSnap.id] = docSnap.data();
+  });
+  renderSubmissions();
+}, (err) => {
+  console.error("Failed to load conversations:", err);
 });
 
 // ======================
@@ -1250,6 +1478,16 @@ function evidenceCellHtml(e) {
   return `<span class="evidence-badge evidence-cell" data-eval-id="${e.id}">${parts.join("  ")}</span>`;
 }
 
+// Builds the "💬 Message" button, with a small red unread-count badge
+// when the conversation for this evaluation has unread messages
+// waiting on the admin's side.
+function messageCellHtml(e) {
+  const convo = conversationsMap[e.id];
+  const unread = convo ? (Number(convo.unreadForAdmin) || 0) : 0;
+  const dot = unread > 0 ? `<span class="unread-dot">${unread > 9 ? "9+" : unread}</span>` : "";
+  return `<button class="btn-message" data-eval-id="${e.id}">💬 Message${dot}</button>`;
+}
+
 function renderSubmissions() {
   const categoryScoped = getCategoryFilteredSubmissions();
   const filtered = getFilteredSubmissions();
@@ -1288,6 +1526,7 @@ function renderSubmissions() {
     const showEditButton = e.status !== "no_action";
     const actionCell = `
         <td>
+          ${messageCellHtml(e)}
           <button class="btn-view" data-eval-id="${e.id}">View</button>
           ${showEditButton ? `<button class="btn-edit" data-eval-id="${e.id}">Edit</button>` : ""}
           <button class="btn-delete" data-eval-id="${e.id}">Delete</button>
@@ -1318,6 +1557,9 @@ function renderSubmissions() {
   });
   tbody.querySelectorAll(".evidence-cell").forEach(badge => {
     badge.addEventListener("click", () => openDetailModal(badge.getAttribute("data-eval-id")));
+  });
+  tbody.querySelectorAll(".btn-message").forEach(btn => {
+    btn.addEventListener("click", () => openChatModal(btn.getAttribute("data-eval-id")));
   });
 }
 
@@ -1685,6 +1927,165 @@ deleteConfirmBtn.addEventListener("click", async () => {
   } finally {
     deleteConfirmBtn.disabled = false;
     deleteConfirmBtn.textContent = "Delete";
+  }
+});
+
+// ======================
+// MESSAGE / CHAT MODAL
+// ======================
+// Conversations live in `conversations/{evaluationId}`, one document per
+// evaluation, with a `messages` subcollection underneath. evaluationId
+// here is the evaluation_history doc id — the same id the Kotlin app
+// writes as both the evaluation_history doc id AND data["evaluationId"],
+// so this stays consistent with the mobile app's ConversationDialog.
+const chatModal = document.getElementById("chat-modal");
+const chatHeaderTitle = document.getElementById("chat-header-title");
+const chatHeaderSub = document.getElementById("chat-header-sub");
+const chatMessagesEl = document.getElementById("chat-messages");
+const chatInput = document.getElementById("chat-input");
+const chatSendBtn = document.getElementById("chat-send-btn");
+
+function formatChatTimestamp(ms) {
+  if (!ms) return "";
+  const d = new Date(ms);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const timePart = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  if (sameDay) return timePart;
+  return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}, ${timePart}`;
+}
+
+function renderChatMessages(messages) {
+  if (!messages.length) {
+    chatMessagesEl.innerHTML = `<div class="chat-empty-note">No messages yet. Say hello 👋</div>`;
+    return;
+  }
+
+  chatMessagesEl.innerHTML = messages.map(m => {
+    const role = m.senderRole === "admin" ? "admin" : "user";
+    const text = (m.text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return `
+      <div class="chat-bubble-row ${role}">
+        <div class="chat-bubble">${text}</div>
+        <div class="chat-meta">${role === "admin" ? "You" : "User"} · ${formatChatTimestamp(m.timestamp)}</div>
+      </div>
+    `;
+  }).join("");
+
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+}
+
+// Marks every unread user-sent message as read, and zeroes the admin's
+// unread counter on the conversation doc, so the badge on the row
+// clears the moment the admin opens the thread.
+async function markMessagesReadForAdmin(evalId, messages) {
+  const unreadFromUser = messages.filter(m => m.senderRole === "user" && m.read === false);
+
+  if (unreadFromUser.length === 0) return;
+
+  try {
+    const batch = writeBatch(db);
+    unreadFromUser.forEach(m => {
+      batch.update(doc(db, CONVERSATIONS_COLLECTION, evalId, "messages", m.id), { read: true });
+    });
+    batch.update(doc(db, CONVERSATIONS_COLLECTION, evalId), { unreadForAdmin: 0 });
+    await batch.commit();
+  } catch (err) {
+    console.warn("Failed to mark messages as read:", err);
+  }
+}
+
+function openChatModal(evalId) {
+  const e = evaluations.find(item => item.id === evalId);
+  if (!e) return;
+
+  activeChatEvalId = evalId;
+  chatHeaderTitle.textContent = `💬 ${getEvaluatorName(e)}`;
+  chatHeaderSub.textContent = `${e.officeName} · ${e.cleanlinessCategory} Evaluation`;
+  chatMessagesEl.innerHTML = `<div class="chat-empty-note">Loading conversation…</div>`;
+  chatInput.value = "";
+
+  chatModal.classList.add("open");
+  chatInput.focus();
+
+  if (chatMessagesUnsub) {
+    chatMessagesUnsub();
+    chatMessagesUnsub = null;
+  }
+
+  const messagesRef = collection(db, CONVERSATIONS_COLLECTION, evalId, "messages");
+  const messagesQuery = query(messagesRef, orderBy("timestamp", "asc"));
+
+  chatMessagesUnsub = onSnapshot(messagesQuery, (snapshot) => {
+    const messages = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderChatMessages(messages);
+    markMessagesReadForAdmin(evalId, messages);
+  }, (err) => {
+    console.error("Failed to load conversation messages:", err);
+    chatMessagesEl.innerHTML = `<div class="chat-empty-note">Couldn't load messages.</div>`;
+  });
+}
+
+function closeChatModal() {
+  chatModal.classList.remove("open");
+  if (chatMessagesUnsub) {
+    chatMessagesUnsub();
+    chatMessagesUnsub = null;
+  }
+  activeChatEvalId = null;
+}
+
+chatModal.addEventListener("click", (ev) => {
+  if (ev.target === chatModal) closeChatModal();
+});
+
+async function sendChatMessage() {
+  const text = chatInput.value.trim();
+  if (!text || !activeChatEvalId) return;
+
+  const e = evaluations.find(item => item.id === activeChatEvalId);
+  if (!e) return;
+
+  chatSendBtn.disabled = true;
+
+  try {
+    const convoRef = doc(db, CONVERSATIONS_COLLECTION, activeChatEvalId);
+
+    await setDoc(convoRef, {
+      evaluationId: activeChatEvalId,
+      userId: e.userId || "",
+      officeName: e.officeName || "",
+      category: "Cleanliness",
+      lastMessage: text,
+      lastMessageAt: Date.now(),
+      lastSenderRole: "admin",
+      unreadForAdmin: 0,
+      unreadForUser: increment(1)
+    }, { merge: true });
+
+    await addDoc(collection(db, CONVERSATIONS_COLLECTION, activeChatEvalId, "messages"), {
+      senderRole: "admin",
+      senderId: ADMIN_SENDER_ID,
+      text,
+      timestamp: Date.now(),
+      read: false
+    });
+
+    chatInput.value = "";
+  } catch (err) {
+    console.error("Failed to send message:", err);
+    alert("Failed to send message. Please try again.");
+  } finally {
+    chatSendBtn.disabled = false;
+    chatInput.focus();
+  }
+}
+
+chatSendBtn.addEventListener("click", sendChatMessage);
+chatInput.addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter" && !ev.shiftKey) {
+    ev.preventDefault();
+    sendChatMessage();
   }
 });
 
