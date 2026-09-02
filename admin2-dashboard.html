@@ -1183,6 +1183,7 @@ function renderStatCards() {
 
 // ======================
 // WEEKLY REPORTS — LINE CHART (last 7 days)
+// Y-AXIS: Fixed 0-100 scale
 // ======================
 function renderLineChart() {
   const svg = document.getElementById("line-chart-svg");
@@ -1219,9 +1220,8 @@ function renderLineChart() {
     surroundingsCounts.push(dayEvals.filter(e => e.cleanlinessCategory === "Surroundings").length);
   }
 
-  // Keep the same Firestore-derived values. The scale is visual only.
-  const maxCount = Math.max(1, ...comfortCounts, ...surroundingsCounts);
-  const yMax = Math.max(10, Math.ceil(maxCount / 10) * 10);
+  // Fixed y-axis scale: 0-100
+  const yMax = 100;
   const xStep = chartW / Math.max(1, days.length - 1);
 
   function toPoints(counts) {
@@ -1249,7 +1249,7 @@ function renderLineChart() {
     svg.appendChild(line);
   }
 
-  // Small y-axis labels, matching the clean reference style.
+  // Y-axis labels from 0 to 100 in increments of 25
   for (let g = 0; g <= gridCount; g++) {
     const value = Math.round(yMax - (yMax / gridCount) * g);
     const y = padding.top + (chartH / gridCount) * g + 3;
@@ -1549,7 +1549,7 @@ function renderStatusBreakdown() {
   const legend = cats.map(c => `
     <div class="status-vbar-legend-item">
       <span class="status-vbar-legend-swatch" style="background:${STATUS_CATEGORY_META[c].color};"></span>
-      <span>${STATUS_CATEGORY_META[c].icon} ${STATUS_CATEGORY_META[c].label}</span>
+      <span>${STATUS_CATEGORY_META[c].label}</span>
     </div>
   `).join("");
 
