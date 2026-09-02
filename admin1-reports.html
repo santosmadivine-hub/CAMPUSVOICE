@@ -239,13 +239,20 @@ select { min-width:180px; }
   border:1px solid #e2e8f0;
 }
 
+/*
+  FIX: header/content/footer now use a single 15mm horizontal inset
+  on screen AND in print/PDF, instead of 40px on screen and 15mm only
+  in print. This makes the on-screen preview (which html2canvas
+  captures for the PDF export) match the printed/reference layout
+  exactly, with no double-margin drift in the exported PDF.
+*/
 .generated-report-header,
 .generated-report-content,
 .generated-report-footer {
   width:100%;
   box-sizing:border-box;
-  padding-left:40px;
-  padding-right:40px;
+  padding-left:15mm;
+  padding-right:15mm;
 }
 
 .generated-report-header {
@@ -361,6 +368,12 @@ select { min-width:180px; }
     min-height: var(--page-height, 297mm) !important;
   }
 
+  /*
+    Header/content/footer padding is now already 15mm at the base
+    rule (see above), so print no longer needs to override it —
+    kept here explicitly (same 15mm value) so print behavior is
+    unaffected even if the base rule ever changes.
+  */
   body.print-report-mode .generated-report-header,
   body.print-report-mode .generated-report-content,
   body.print-report-mode .generated-report-footer,
@@ -1250,7 +1263,15 @@ window.deleteSavedReport = async (key) => {
   }
 };
 
-async function renderElementToPdf(pdf, element, { margin, usableW, usableH, addPageBefore }) {
+/*
+  FIX: exportPDF / renderElementToPdf no longer add an extra
+  jsPDF-side margin. The 15mm inset now lives entirely in the
+  on-screen .generated-report-* padding (captured by html2canvas),
+  so the exported image is placed edge-to-edge across the full
+  page — matching the printed layout with a single source of truth
+  for the margin instead of a doubled one.
+*/
+async function renderElementToPdf(pdf, element, { usableW, usableH, addPageBefore }) {
   const canvas = await html2canvas(element, { scale:2, useCORS:true, backgroundColor:"#ffffff" });
   const scale  = usableW / canvas.width;
   const pdfH   = canvas.height * scale;
@@ -1258,7 +1279,7 @@ async function renderElementToPdf(pdf, element, { margin, usableW, usableH, addP
   if (addPageBefore) pdf.addPage();
 
   if (pdfH <= usableH) {
-    pdf.addImage(canvas.toDataURL("image/png"),"PNG",margin,margin,usableW,pdfH);
+    pdf.addImage(canvas.toDataURL("image/png"),"PNG",0,0,usableW,pdfH);
   } else {
     const slicePx = Math.floor(usableH / scale);
     let offset = 0;
@@ -1267,7 +1288,7 @@ async function renderElementToPdf(pdf, element, { margin, usableW, usableH, addP
       sc.width  = canvas.width;
       sc.height = Math.min(slicePx, canvas.height - offset);
       sc.getContext("2d").drawImage(canvas,0,-offset);
-      pdf.addImage(sc.toDataURL("image/png"),"PNG",margin,margin,usableW,sc.height*scale);
+      pdf.addImage(sc.toDataURL("image/png"),"PNG",0,0,usableW,sc.height*scale);
       offset += slicePx;
       if (offset < canvas.height) pdf.addPage();
     }
@@ -1284,13 +1305,12 @@ window.exportPDF = async () => {
 
   const { jsPDF } = window.jspdf;
   const pdf     = new jsPDF({ unit:"mm", format: (PAPER_SIZES[currentPaperSizeKey] || PAPER_SIZES.a4).jspdf });
-  const margin  = 10;
-  const usableW = pdf.internal.pageSize.getWidth()  - margin*2;
-  const usableH = pdf.internal.pageSize.getHeight() - margin*2;
+  const usableW = pdf.internal.pageSize.getWidth();
+  const usableH = pdf.internal.pageSize.getHeight();
 
   try {
-    await renderElementToPdf(pdf, document.getElementById("csmPage"), { margin, usableW, usableH, addPageBefore:false });
-    await renderElementToPdf(pdf, document.getElementById("csmCommentsPage"), { margin, usableW, usableH, addPageBefore:true });
+    await renderElementToPdf(pdf, document.getElementById("csmPage"), { usableW, usableH, addPageBefore:false });
+    await renderElementToPdf(pdf, document.getElementById("csmCommentsPage"), { usableW, usableH, addPageBefore:true });
   } catch (err) {
     console.error(err);
     alert("⚠ PDF export blocked by the browser.\n\nThis page is being opened directly from disk (file://...), and Chrome blocks exporting images of canvases in that mode for security reasons.\n\nFix: serve this folder over local HTTP instead of double-clicking the file, e.g. run:\n  python -m http.server 5500\nthen open http://localhost:5500/admin1-reports.html");
@@ -1505,6 +1525,11 @@ onSnapshot(commentReportsCol, (snapshot) => {
   }).join("");
 });
 
+/*
+  FIX: exportCommentsPDF now places the html2canvas screenshot
+  edge-to-edge (no extra jsPDF margin), matching the single 15mm
+  inset baked into the on-screen element itself.
+*/
 window.exportCommentsPDF = async () => {
   if (document.getElementById("commentsPreview").style.display === "none") {
     alert("Please generate or view a comments report first.");
@@ -1526,14 +1551,13 @@ window.exportCommentsPDF = async () => {
   }
   const { jsPDF } = window.jspdf;
   const pdf     = new jsPDF({ unit:"mm", format: (PAPER_SIZES[currentPaperSizeKey] || PAPER_SIZES.a4).jspdf });
-  const margin  = 10;
-  const usableW = pdf.internal.pageSize.getWidth()  - margin*2;
-  const usableH = pdf.internal.pageSize.getHeight() - margin*2;
+  const usableW = pdf.internal.pageSize.getWidth();
+  const usableH = pdf.internal.pageSize.getHeight();
   const scale   = usableW / canvas.width;
   const pdfH    = canvas.height * scale;
 
   if (pdfH <= usableH) {
-    pdf.addImage(img,"PNG",margin,margin,usableW,pdfH);
+    pdf.addImage(img,"PNG",0,0,usableW,pdfH);
   } else {
     const slicePx = Math.floor(usableH / scale);
     let offset = 0;
@@ -1542,7 +1566,7 @@ window.exportCommentsPDF = async () => {
       sc.width  = canvas.width;
       sc.height = Math.min(slicePx, canvas.height - offset);
       sc.getContext("2d").drawImage(canvas,0,-offset);
-      pdf.addImage(sc.toDataURL("image/png"),"PNG",margin,margin,usableW,sc.height*scale);
+      pdf.addImage(sc.toDataURL("image/png"),"PNG",0,0,usableW,sc.height*scale);
       offset += slicePx;
       if (offset < canvas.height) pdf.addPage();
     }
