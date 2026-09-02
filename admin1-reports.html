@@ -229,21 +229,23 @@ select { min-width:180px; }
    =====================================================================
    .generated-report is the single source of truth for the report's
    left/right boundaries (width + max-width + margin auto, centered) AND
-   its vertical size: height:297mm forces every sheet to be a true,
-   FIXED full A4 page (on screen, in print, and in the html2canvas/jsPDF
-   export — all of which render this exact element).
+   its vertical size.
 
-   IMPORTANT: this is `height`, not `min-height`. A min-height only sets
-   a floor — browsers (especially when paginating for print, and
-   html2canvas when rasterizing for the PDF export) will happily size
-   the flex column down to fit its content instead of stretching it to
-   fill the minimum, which leaves margin-top:auto on the footer with no
-   extra space to push into, so the footer ends up sitting right under
-   the content instead of at the bottom of the sheet. A fixed `height`
-   guarantees the box is always exactly one A4 page tall, so the footer
-   (flex, margin-top:auto) is always pushed all the way down to the true
-   bottom of the page — consistently on screen, in print, and in the
-   exported PDF.
+   FIXED (previous version used a rigid `height:297mm` + `overflow:hidden`
+   on this box, which is what was silently clipping the signature block
+   whenever the narrative ran a line or two longer than usual — the box
+   physically could not grow, so anything past 297mm of content, including
+   "Prepared by / Noted by" names, was cut off by overflow:hidden).
+
+   Now this box uses `min-height:297mm` instead of a fixed `height`.
+   min-height still guarantees the box is *at least* one full A4 page
+   tall — so on the normal case (content shorter than a page) the footer
+   (flex, margin-top:auto) is still pushed all the way down to the true
+   bottom of the page, exactly as before. The difference is that if
+   content ever runs long, the box is now allowed to grow taller instead
+   of clipping — so the signature block and names always stay visible,
+   and the footer always stays *below* the content with real spacing
+   rather than being crushed up against it.
 
    .generated-report-header, .generated-report-content and
    .generated-report-footer are direct children, each given the SAME
@@ -251,23 +253,15 @@ select { min-width:180px; }
    exact same horizontal boundaries as each other. The column is a flex
    column with the footer pinned down via margin-top:auto, so header
    stays flush at the top, content sizes to itself, and footer is always
-   flush at the bottom of the page — no matter how long or short the
-   report content is, and with no position:absolute or fixed pixel
-   heights involved for the footer itself.
-
-   NOTE: because height is now fixed (not a minimum), content that would
-   overflow one page is clipped by overflow:hidden below rather than
-   silently growing the sheet. For this report's typical content (a
-   9-row SQD table + narrative, or a comments table) that fits
-   comfortably on one A4 page. If a specific report ever has enough
-   comments/rows to overflow, that content should be paginated onto an
-   additional .page-break-sheet rather than left to overflow this box. */
+   flush at the bottom of the page (or below all content, if content
+   happens to exceed one page) — with no position:absolute or fixed
+   pixel heights involved for the footer itself. */
 .generated-report {
   display:flex;
   flex-direction:column;
   width:100%;
   max-width:780px;
-  height:297mm;         /* fixed A4 height (not min-height) — see note above */
+  min-height:297mm;     /* at least one full A4 page tall — grows instead of clipping if content is long */
   margin:0 auto;
   box-sizing:border-box;
   background:#fff;
@@ -275,7 +269,6 @@ select { min-width:180px; }
   font-size:11pt; color:#000;
   box-shadow:0 1px 3px rgba(15,23,42,0.10), 0 1px 2px rgba(15,23,42,0.06);
   border:1px solid #e2e8f0;
-  overflow:hidden;       /* keeps content within the fixed-height page box */
 }
 
 .generated-report-header,
@@ -298,8 +291,8 @@ select { min-width:180px; }
                      force-grow to fill the page */
   padding-top:0;
   padding-bottom:0;
-  overflow:hidden; /* extra safety: never lets content push the footer
-                       out of the fixed-height page */
+  /* no overflow:hidden here anymore — content (including the signature
+     block) is always fully visible, never clipped */
 }
 
 .generated-report-footer {
@@ -307,7 +300,7 @@ select { min-width:180px; }
   padding-top:16px;
   padding-bottom:32px;
   margin-top:auto; /* auto margin pushes the footer all the way down to
-                       the bottom of the fixed-height A4 sheet */
+                       the bottom of the (at-least-297mm-tall) sheet */
   border-top:1px solid #e2e8f0;
 }
 
@@ -437,8 +430,7 @@ select { min-width:180px; }
     max-width: 100% !important;
     width: 100% !important;
     margin: 0 auto !important;
-    height: 297mm !important;     /* fixed A4 height in print too — keeps the footer anchored to the true bottom of the page */
-    overflow: hidden !important;
+    min-height: 297mm !important;   /* at least one full A4 page in print too — footer still anchors to the true bottom, and content is never clipped */
   }
 
   /* Same left/right padding on header, content AND footer in print mode
