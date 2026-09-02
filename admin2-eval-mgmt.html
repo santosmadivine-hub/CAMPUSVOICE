@@ -1280,7 +1280,8 @@ function renderTableHeader() {
     <th>Evidence</th>
     <th>Status</th>
     <th>Date</th>
-    <th>Action</th>
+    <th>Message</th>
+    <th id="action-col-header">Action</th>
   `;
 }
 renderTableHeader();
@@ -1513,25 +1514,28 @@ function renderSubmissions() {
 
   const tbody = document.getElementById("submissions-tbody");
 
-  const colCount = 4 + TOTAL_RATING_QUESTIONS + 5;
+  const showActionColumn = currentTab !== "recent";
+  document.getElementById("action-col-header").style.display = showActionColumn ? "" : "none";
+
+  const colCount = showActionColumn ? 4 + TOTAL_RATING_QUESTIONS + 6 : 4 + TOTAL_RATING_QUESTIONS + 5;
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="${colCount}">No submissions found.</td></tr>`;
     return;
   }
 
+  const showEditButtonForTab = showActionColumn && currentTab !== "no_action";
+
   tbody.innerHTML = filtered.map((e, i) => {
     const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-";
     const meta = STATUS_META[e.status] || STATUS_META.pending;
-    const showEditButton = e.status !== "no_action";
-    const isRecentTab = currentTab === "recent";
-    const actionCell = `
+    const messageCell = `<td>${messageCellHtml(e)}</td>`;
+    const actionCell = showActionColumn ? `
         <td>
-          ${messageCellHtml(e)}
-          ${!isRecentTab ? `<button class="btn-view" data-eval-id="${e.id}">View</button>` : ""}
-          ${!isRecentTab && showEditButton ? `<button class="btn-edit" data-eval-id="${e.id}">Edit</button>` : ""}
-          ${!isRecentTab ? `<button class="btn-delete" data-eval-id="${e.id}">Delete</button>` : ""}
-        </td>`;
+          <button class="btn-view" data-eval-id="${e.id}">View</button>
+          ${showEditButtonForTab ? `<button class="btn-edit" data-eval-id="${e.id}">Edit</button>` : ""}
+          <button class="btn-delete" data-eval-id="${e.id}">Delete</button>
+        </td>` : "";
     return `
       <tr>
         <td class="row-index">${i + 1}</td>
@@ -1542,7 +1546,7 @@ function renderSubmissions() {
         <td>${e.comments || "-"}</td>
         <td>${evidenceCellHtml(e)}</td>
         <td><span class="status-badge ${e.status}">${meta.label}</span></td>
-        <td>${date}</td>${actionCell}
+        <td>${date}</td>${messageCell}${actionCell}
       </tr>
     `;
   }).join("");
