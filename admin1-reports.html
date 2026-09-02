@@ -237,15 +237,26 @@ select { min-width:180px; }
    physically could not grow, so anything past 297mm of content, including
    "Prepared by / Noted by" names, was cut off by overflow:hidden).
 
-   Now this box uses `min-height:297mm` instead of a fixed `height`.
-   min-height still guarantees the box is *at least* one full A4 page
-   tall — so on the normal case (content shorter than a page) the footer
-   (flex, margin-top:auto) is still pushed all the way down to the true
-   bottom of the page, exactly as before. The difference is that if
+   Now this box uses `min-height:var(--page-height)` instead of a fixed
+   `height`. min-height still guarantees the box is *at least* one full
+   page tall — so on the normal case (content shorter than a page) the
+   footer (flex, margin-top:auto) is still pushed all the way down to the
+   true bottom of the page, exactly as before. The difference is that if
    content ever runs long, the box is now allowed to grow taller instead
    of clipping — so the signature block and names always stay visible,
    and the footer always stays *below* the content with real spacing
    rather than being crushed up against it.
+
+   PAPER SIZE: `--page-width` / `--page-height` are CSS custom properties
+   set on <html> by setPaperSize() in the script below, driven by the
+   "Paper Size" dropdown (A4 / Letter / Legal / Long). Changing the
+   dropdown updates these two variables (plus a dynamically injected
+   `@page { size: ... }` rule used only at print time), so every
+   .generated-report box — on screen, in the native print dialog, and in
+   the exported PDF — resizes to match, with the header staying flush at
+   the top and the footer staying flush at the bottom automatically,
+   because both rely on this same box's actual height rather than a
+   hardcoded number. Defaults to A4 if nothing has set the variables yet.
 
    .generated-report-header, .generated-report-content and
    .generated-report-footer are direct children, each given the SAME
@@ -260,8 +271,8 @@ select { min-width:180px; }
   display:flex;
   flex-direction:column;
   width:100%;
-  max-width:780px;
-  min-height:297mm;     /* at least one full A4 page tall — grows instead of clipping if content is long */
+  max-width:var(--page-width, 210mm);   /* driven by the selected paper size — see PAPER_SIZES in the script */
+  min-height:var(--page-height, 297mm); /* at least one full page of the selected size tall — grows instead of clipping if content is long */
   margin:0 auto;
   box-sizing:border-box;
   background:#fff;
@@ -300,7 +311,8 @@ select { min-width:180px; }
   padding-top:10px;
   padding-bottom:10px;
   margin-top:auto; /* auto margin pushes the footer all the way down to
-                       the bottom of the (at-least-297mm-tall) sheet */
+                       the bottom of the (at-least-one-full-page-tall) sheet,
+                       whichever paper size is currently selected */
   border-top:1px solid #e2e8f0;
 }
 
@@ -430,7 +442,7 @@ select { min-width:180px; }
     max-width: 100% !important;
     width: 100% !important;
     margin: 0 auto !important;
-    min-height: 297mm !important;   /* at least one full A4 page in print too — footer still anchors to the true bottom, and content is never clipped */
+    min-height: var(--page-height, 297mm) !important;   /* at least one full page of the selected size in print too — footer still anchors to the true bottom, and content is never clipped */
   }
 
   /* Same left/right padding on header, content AND footer in print mode
@@ -552,6 +564,13 @@ select { min-width:180px; }
 
         <select id="officeFilter">
           <option value="">Select Office…</option>
+        </select>
+
+        <select id="paperSizeFilter" title="Paper size for preview, print, and PDF export" onchange="setPaperSize(this.value)">
+          <option value="a4">Paper: A4 (210 × 297 mm)</option>
+          <option value="letter">Paper: Letter (8.5 × 11 in)</option>
+          <option value="legal">Paper: Legal (8.5 × 14 in)</option>
+          <option value="long">Paper: Long / Folio (8.5 × 13 in)</option>
         </select>
 
         <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
@@ -878,6 +897,62 @@ const commentReportsCol = collection(db, "services", "commentReports", "records"
 
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','reports');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Reports','admin1');
+
+/* ===================== Paper size support (A4 / Letter / Legal / Long) =====================
+   Every .generated-report box (on screen, in the native print dialog, and
+   in the html2canvas/jsPDF export) sizes itself off two CSS custom
+   properties, --page-width / --page-height, set on <html> here. Because
+   .generated-report-footer is pinned with margin-top:auto inside that
+   flex column (see the CSS comment above .generated-report), changing
+   these two variables is enough to keep the header flush at the top and
+   the footer flush at the bottom automatically for whichever size is
+   selected — no separate per-size header/footer rules are needed.
+
+   width/height below are in millimetres (mm), used for both the CSS
+   variables and the dynamically injected @page rule. `jspdf` is the
+   matching format value passed straight to jsPDF's `format` option
+   (a preset string, or a [width, height] array in "mm" units for sizes
+   jsPDF doesn't have a named preset for, e.g. Long/Folio). */
+const PAPER_SIZES = {
+  a4:     { width: 210,   height: 297,   jspdf: "a4" },
+  letter: { width: 215.9, height: 279.4, jspdf: "letter" },
+  legal:  { width: 215.9, height: 355.6, jspdf: "legal" },
+  long:   { width: 215.9, height: 330.2, jspdf: [215.9, 330.2] } // 8.5" x 13", common for PH gov't bond paper
+};
+
+let currentPaperSizeKey = "a4";
+
+// Updates --page-width / --page-height on <html> (which every
+// .generated-report box reads via var(...) in its CSS), and refreshes a
+// dynamically injected <style> tag providing the matching `@page { size }`
+// for the browser's native print dialog / "Save as PDF". Called on load
+// with the default, and again whenever the Paper Size dropdown changes.
+window.setPaperSize = (key) => {
+  const size = PAPER_SIZES[key] || PAPER_SIZES.a4;
+  currentPaperSizeKey = PAPER_SIZES[key] ? key : "a4";
+
+  document.documentElement.style.setProperty("--page-width",  size.width  + "mm");
+  document.documentElement.style.setProperty("--page-height", size.height + "mm");
+
+  let pageSizeTag = document.getElementById("dynamicPageSize");
+  if (!pageSizeTag) {
+    pageSizeTag = document.createElement("style");
+    pageSizeTag.id = "dynamicPageSize";
+    document.head.appendChild(pageSizeTag);
+  }
+  // Appended after the main stylesheet, so this wins over the plain
+  // `@page { margin:0; }` fallback declared in the <style> block above —
+  // it keeps that same margin:0 (still needed to suppress the browser's
+  // own printed header/footer strip) while also fixing the physical
+  // sheet size to match the dropdown.
+  pageSizeTag.textContent =
+    `@media print { @page { size: ${size.width}mm ${size.height}mm; margin: 0; } }`;
+};
+
+// Apply the default (A4) as soon as the script runs, so the very first
+// preview/print/export before the user touches the dropdown is already
+// consistent with it.
+setPaperSize(currentPaperSizeKey);
 
 const SQD_LABELS = [
   { key:"sq0", label:"SQD0 – Overall Satisfaction"  },
@@ -1354,7 +1429,10 @@ window.exportPDF = async () => {
   }
 
   const { jsPDF } = window.jspdf;
-  const pdf     = new jsPDF({ unit:"mm", format:"a4" });
+  // format follows the Paper Size dropdown (see PAPER_SIZES / setPaperSize
+  // above) instead of being hardcoded to "a4", so the exported PDF's
+  // physical page size always matches what's shown in the preview.
+  const pdf     = new jsPDF({ unit:"mm", format: (PAPER_SIZES[currentPaperSizeKey] || PAPER_SIZES.a4).jspdf });
   const margin  = 10;
   const usableW = pdf.internal.pageSize.getWidth()  - margin*2;
   const usableH = pdf.internal.pageSize.getHeight() - margin*2;
@@ -1598,7 +1676,8 @@ window.exportCommentsPDF = async () => {
     return;
   }
   const { jsPDF } = window.jspdf;
-  const pdf     = new jsPDF({ unit:"mm", format:"a4" });
+  // format follows the Paper Size dropdown, same as exportPDF() above.
+  const pdf     = new jsPDF({ unit:"mm", format: (PAPER_SIZES[currentPaperSizeKey] || PAPER_SIZES.a4).jspdf });
   const margin  = 10;
   const usableW = pdf.internal.pageSize.getWidth()  - margin*2;
   const usableH = pdf.internal.pageSize.getHeight() - margin*2;
