@@ -1524,12 +1524,13 @@ function renderSubmissions() {
     const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-";
     const meta = STATUS_META[e.status] || STATUS_META.pending;
     const showEditButton = e.status !== "no_action";
+    const isRecentTab = currentTab === "recent";
     const actionCell = `
         <td>
           ${messageCellHtml(e)}
-          <button class="btn-view" data-eval-id="${e.id}">View</button>
-          ${showEditButton ? `<button class="btn-edit" data-eval-id="${e.id}">Edit</button>` : ""}
-          <button class="btn-delete" data-eval-id="${e.id}">Delete</button>
+          ${!isRecentTab ? `<button class="btn-view" data-eval-id="${e.id}">View</button>` : ""}
+          ${!isRecentTab && showEditButton ? `<button class="btn-edit" data-eval-id="${e.id}">Edit</button>` : ""}
+          ${!isRecentTab ? `<button class="btn-delete" data-eval-id="${e.id}">Delete</button>` : ""}
         </td>`;
     return `
       <tr>
