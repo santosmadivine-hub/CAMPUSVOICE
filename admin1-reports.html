@@ -1349,6 +1349,15 @@ window.printReport = () => {
     alert("Please generate or view a report first.");
     return;
   }
+  // Re-sync the paper size from the dropdown right before printing. This
+  // covers the exact scenario of picking a bond paper size *before*
+  // generating the report: setPaperSize() already ran on that dropdown
+  // change and set --page-width/--page-height globally, so the preview
+  // was already correct — this call just guarantees the print job can
+  // never drift from whatever the dropdown currently shows.
+  const paperSelect = document.getElementById("paperSizeFilter");
+  if (paperSelect) setPaperSize(paperSelect.value);
+
   document.body.classList.add("print-report-mode");
   window.print();
 };
@@ -1427,6 +1436,10 @@ window.exportPDF = async () => {
     alert("Please generate or view a report first.");
     return;
   }
+  // Re-sync from the dropdown before building the PDF, same reasoning as
+  // in printReport() above.
+  const paperSelect = document.getElementById("paperSizeFilter");
+  if (paperSelect) setPaperSize(paperSelect.value);
 
   const { jsPDF } = window.jspdf;
   // format follows the Paper Size dropdown (see PAPER_SIZES / setPaperSize
@@ -1574,6 +1587,11 @@ window.printCommentsReport = () => {
     alert("Please generate or view a comments report first.");
     return;
   }
+  // Re-sync from the dropdown before printing, same reasoning as
+  // printReport() above.
+  const paperSelect = document.getElementById("paperSizeFilter");
+  if (paperSelect) setPaperSize(paperSelect.value);
+
   document.body.classList.add("print-comments-mode");
   window.print();
 };
@@ -1664,6 +1682,11 @@ window.exportCommentsPDF = async () => {
     alert("Please generate or view a comments report first.");
     return;
   }
+  // Re-sync from the dropdown before building the PDF, same reasoning as
+  // printReport() above.
+  const paperSelect = document.getElementById("paperSizeFilter");
+  if (paperSelect) setPaperSize(paperSelect.value);
+
   let canvas;
   try {
     canvas = await html2canvas(document.getElementById("commentsPage"),{
