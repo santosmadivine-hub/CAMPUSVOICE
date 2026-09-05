@@ -1287,14 +1287,26 @@ async function migrateTransactionCodes(oldName, newName, officeId) {
 }
 
 window.deleteOffice = async function(office) {
-  if(!confirm(`Delete "${office}"? This action cannot be undone.`)) return;
-  
+  const key = officeKeys[office];
+  if (!key) {
+    showToast("Could not find this office's record. Please refresh and try again.", true);
+    return;
+  }
+
+  const confirmed = await openConfirmModal({
+    title: "Delete Office?",
+    icon: "🗑",
+    tone: "warn",
+    confirmText: "Delete Office",
+    message: `Remove "<strong>${escapeHtml(office)}</strong>" from the office list? This action cannot be undone.`
+  });
+  if (!confirmed) return;
+
   try {
-    const key = officeKeys[office];
     await deleteDoc(doc(db, "services", "offices", "records", key));
-    alert("✓ Office deleted successfully!");
+    showToast("✓ Office deleted successfully!");
   } catch (error) {
-    alert("Error deleting office: " + error.message);
+    showToast("Error deleting office: " + error.message, true);
   }
 };
 </script>
