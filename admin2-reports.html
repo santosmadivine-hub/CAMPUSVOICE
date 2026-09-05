@@ -13,15 +13,6 @@
     #sidebar-mount, #topbar-mount, .filter-row, .stat-grid, .saved-reports-section, .report-tabs, .preview-bar, #commentsReportPreview { display: none !important; }
     .report-section { break-inside: avoid; }
 
-    /*
-      FIX: paper-size aware print alignment (ported from Admin 1).
-      @page margin is zeroed out so the printed sheet has no browser
-      margin of its own — all spacing instead comes from the
-      .cvr-inner-header / .cvr-inner-content / .cvr-inner-footer padding
-      below, which keeps the header pinned to the top of the page and
-      the footer pinned to the bottom regardless of which paper size
-      (A3/A4/A5/A6, B4/B5, Letter, Legal, Long/Folio, Statement, Executive, Tabloid) is selected.
-    */
     @page { margin: 0; }
     html, body { margin: 0 !important; }
 
@@ -38,20 +29,6 @@
       min-height: var(--page-height, 297mm) !important;
     }
 
-    /*
-      FIX: repeat the header and footer on EVERY physical page, not just
-      the first one, when a page's content is too long to fit on a
-      single sheet (e.g. an office with a long list of comments).
-      Giving the page 'display:table', the header
-      'display:table-header-group', the content
-      'display:table-row-group', and the footer
-      'display:table-footer-group' is the standard CSS technique for
-      repeating table headers/footers across print pages — the
-      browser's print engine reproduces the header at the top and the
-      footer at the bottom of every page it has to create, for
-      whichever paper size is selected, exactly like a real
-      <table>/<thead>/<tfoot> would.
-    */
     .cvr-page {
       display: table !important;
       table-layout: fixed !important;
@@ -66,21 +43,6 @@
       display: table-footer-group !important;
     }
 
-    /*
-      FIX: padding/border on table-header-group, table-row-group, and
-      table-footer-group boxes is ignored by the CSS table layout model
-      (per spec, only 'table' and 'table-cell' boxes render padding and
-      border). That's why, before this fix, switching .cvr-page to
-      display:table for print silently collapsed the header's top
-      inset, the 15mm left/right margins, and the footer's top border +
-      padding to zero — the header ended up flush with the very top of
-      the sheet and the footer flush with the very bottom edge, instead
-      of matching the reference report's spacing. The .cvr-inner-*
-      wrappers below are plain block boxes nested *inside* each
-      table-role element, so their padding renders correctly in print
-      while the outer elements keep doing their job of repeating on
-      every page.
-    */
     .cvr-inner-header,
     .cvr-inner-content,
     .cvr-inner-footer {
@@ -105,8 +67,6 @@
     }
   }
 
-  /* Category pill — used in the saved-reports table to label which
-     category (Comfort Room / Surroundings) each saved report belongs to */
   .category-pill {
     display: inline-flex;
     align-items: center;
@@ -128,7 +88,6 @@
     color: #15803d;
   }
 
-  /* Filter Bar */
   .filter-row {
     display: flex;
     gap: 12px;
@@ -234,9 +193,6 @@
     background: #6d28d9;
   }
 
-  /* Report tabs — kept for the saved-reports table below (only the
-     Ratings tab is wired up now; comments are auto-attached to the
-     ratings report instead of living behind a separate tab). */
   .report-tabs {
     display: flex;
     gap: 8px;
@@ -281,7 +237,6 @@
     font-family: 'DM Sans', sans-serif;
   }
 
-  /* ─── Summary stat cards — identical to Admin 1's stat-card system ─── */
   .stat-grid{
     display:grid;
     grid-template-columns:repeat(4, 1fr);
@@ -402,10 +357,6 @@
     }
   }
 
-  /* Report Preview Wrapper — transparent/borderless like Admin 1, so the
-     individual "sheets" (.cvr-page / .official-report) read as separate
-     bond-paper pages sitting on the page background, not one bordered
-     card. */
   #reportPreview {
     display: none;
     background: transparent;
@@ -415,10 +366,6 @@
     margin-bottom: 18px;
   }
 
-  /* Comments & Suggestions standalone preview wrapper — kept for the
-     underlying data plumbing (savedCommentsReports collection, etc.)
-     but no longer reachable from the UI; Generate Report now attaches
-     comments automatically as page 2 of the same report. */
   #commentsReportPreview {
     display: none;
     background: #fff;
@@ -428,7 +375,6 @@
     margin-bottom: 32px;
   }
 
-  /* Preview Bar */
   .preview-bar {
     display: flex;
     align-items: center;
@@ -471,7 +417,6 @@
     font-style: italic;
   }
 
-  /* Saved Reports */
   .saved-reports-section {
     background: #fff;
     border-radius: 14px;
@@ -587,14 +532,6 @@
     background: #fecaca;
   }
 
-  /* Official Document Style (like Admin 1) — each generated page is a
-     distinct "sheet of bond paper": white background, subtle border and
-     drop shadow, so page 1 and page 2 read as two separate pages.
-     Used by the legacy standalone Comments & Suggestions report
-     (#ccsPage), which is no longer reachable from the UI. The main
-     Generate Report / Print / PDF flow (page 1 + auto-attached page 2)
-     uses the paper-size aware .cvr-page system below instead — see the
-     note above .cvr-page. */
   .official-report {
     background: #fff;
     font-family: 'Times New Roman', Times, serif;
@@ -607,33 +544,6 @@
     border: 1px solid #e2e8f0;
   }
 
-  /*
-    Paper-size aware report page (ported from Admin 1's
-    .generated-report system). Used only by the main Generate Report /
-    Print / PDF flow (#csmPage and #csmCommentsPage) so that the
-    on-screen preview, the printed page, and the exported PDF all use
-    the same paper size (A3/A4/A5/A6, B4/B5, Letter, Legal, Long/Folio, Statement, Executive, Tabloid) chosen in the
-    "Paper" dropdown, with the header pinned to the top of the sheet and
-    the footer pinned to the bottom via margin-top:auto on the footer.
-    The legacy standalone Comments & Suggestions report (#ccsPage) is
-    left untouched and keeps using the fixed .official-report layout
-    above.
-
-    NOTE ON THE .cvr-inner-* WRAPPERS BELOW: .cvr-page-header,
-    .cvr-page-content and .cvr-page-footer are kept free of any
-    padding/border of their own. That styling instead lives on a plain
-    block <div> nested just inside each of them (.cvr-inner-header /
-    .cvr-inner-content / .cvr-inner-footer). This is required because
-    in print, .cvr-page switches to display:table and these three
-    elements become table-header-group / table-row-group /
-    table-footer-group (see the @media print block above) so the
-    browser repeats them on every physical page — and padding/border on
-    those table-role boxes is ignored by the CSS table layout model. By
-    keeping the actual spacing on an ordinary block element inside them
-    instead, the 15mm side margins, the header's top inset, and the
-    footer's top border + padding render correctly in BOTH the on-screen
-    preview and the print/PDF output, on every paper size.
-  */
   .cvr-page {
     display:flex;
     flex-direction:column;
@@ -666,12 +576,6 @@
     margin-top:auto;
   }
 
-  /* Inner wrappers — see the note above .cvr-page for why the padding
-     and border live here instead of on .cvr-page-header/-content/-footer
-     directly. On screen these behave exactly like the old padded
-     elements did; in print they're what actually keeps the header
-     pinned to the top and the footer pinned to the bottom of every
-     page. */
   .cvr-inner-header,
   .cvr-inner-content,
   .cvr-inner-footer {
@@ -697,18 +601,11 @@
     border-top:1px solid #e2e8f0;
   }
 
-  /* Neutralize the legacy .official-footer spacing when it's nested
-     inside the new .cvr-inner-footer wrapper, since the wrapper already
-     provides its own top padding — avoids doubled spacing above the
-     accreditations footer image. */
   .cvr-inner-footer .official-footer {
     margin-top: 0;
     padding-top: 0;
   }
 
-  /* A visually distinct "next sheet" — separated by real blank space plus
-     a torn-paper style divider, so it reads as page 2, not a
-     continuation of page 1's content. Mirrors Admin 1's report layout. */
   .page-break-sheet {
     margin-top: 44px;
     padding-top: 32px;
@@ -737,8 +634,6 @@
     color: #94a3b8; text-transform: uppercase;
   }
 
-  /* Ensures the comments sheet always starts on its own page when the
-     browser's native print / "Save as PDF" is used too. */
   @media print {
     .page-break-sheet {
       page-break-before: always;
@@ -752,7 +647,6 @@
     }
   }
 
-  /* Letterhead */
   .lh-row {
     display: flex;
     align-items: center;
@@ -767,13 +661,6 @@
     justify-content: center;
   }
 
-  /* Sized from --lh-logo-w/-h and --lh-seal-w/-h (computed in
-     setPaperSize()), which scale proportionally to the selected paper's
-     width. Fixed-pixel logo/seal boxes ate a huge share of a small
-     sheet (A6, Statement) and looked lost on a large one (A3,
-     Tabloid) — scaling them with the page is what keeps the whole
-     letterhead, and therefore the header, properly aligned on every
-     paper size. */
   .lh-logo-box {
     width: var(--lh-logo-w, 40mm);
     height: var(--lh-logo-h, 24mm);
@@ -834,10 +721,22 @@
     margin-bottom: 12px;
   }
 
+  /*
+    SHRINK-TO-FIT: the body content below the header (meta / table /
+    narrative / signatures) reads its font-size and vertical spacing
+    from --cvr-content-scale (default 1, i.e. unchanged full size).
+    buildPaginatedSectionPages() in the script below sets this variable
+    on the content wrapper of each generated page: it first tries scale
+    1, then shrinks in small steps if that's what it takes to fit ALL
+    of a section's content onto a single physical sheet, before ever
+    falling back to a second page. The letterhead header and the
+    accreditations footer intentionally do NOT read this variable, so
+    they always render at their normal, fixed size.
+  */
   .official-meta {
-    font-size: 13pt;
+    font-size: calc(13pt * var(--cvr-content-scale, 1));
     line-height: 1.9;
-    margin-bottom: 10px;
+    margin-bottom: calc(10px * var(--cvr-content-scale, 1));
   }
 
   .official-meta b {
@@ -847,14 +746,14 @@
   .official-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 14px;
-    font-size: 14pt;
+    margin-bottom: calc(14px * var(--cvr-content-scale, 1));
+    font-size: calc(14pt * var(--cvr-content-scale, 1));
   }
 
   .official-table th {
     background: #1a3a6b;
     color: #fff;
-    padding: 10px 11px;
+    padding: calc(10px * var(--cvr-content-scale, 1)) calc(11px * var(--cvr-content-scale, 1));
     border: 1px solid #1a3a6b;
     text-align: center;
     font-weight: bold;
@@ -862,7 +761,7 @@
 
   .official-table td {
     border: 1px solid #aaa;
-    padding: 9px 11px;
+    padding: calc(9px * var(--cvr-content-scale, 1)) calc(11px * var(--cvr-content-scale, 1));
   }
 
   .official-table tr:nth-child(even) td {
@@ -870,21 +769,21 @@
   }
 
   .official-narrative {
-    font-size: 13pt;
+    font-size: calc(13pt * var(--cvr-content-scale, 1));
     line-height: 1.8;
     text-align: justify;
-    margin-bottom: 16px;
+    margin-bottom: calc(16px * var(--cvr-content-scale, 1));
   }
 
   .official-narrative p {
-    margin-bottom: 10px;
+    margin-bottom: calc(10px * var(--cvr-content-scale, 1));
   }
 
   .official-signatures {
     display: flex;
-    gap: 40px;
-    margin-top: 24px;
-    font-size: 12pt;
+    gap: calc(40px * var(--cvr-content-scale, 1));
+    margin-top: calc(24px * var(--cvr-content-scale, 1));
+    font-size: calc(12pt * var(--cvr-content-scale, 1));
   }
 
   .sig-block {
@@ -893,8 +792,8 @@
 
   .sig-label {
     color: #555;
-    font-size: 11pt;
-    margin-bottom: 30px;
+    font-size: calc(11pt * var(--cvr-content-scale, 1));
+    margin-bottom: calc(30px * var(--cvr-content-scale, 1));
   }
 
   .sig-line {
@@ -911,7 +810,7 @@
   }
 
   .sig-title {
-    font-size: 11pt;
+    font-size: calc(11pt * var(--cvr-content-scale, 1));
     font-style: italic;
     color: #333;
     margin-top: 2px;
@@ -969,18 +868,6 @@
       </div>
     </div>
 
-    <!-- Filter order matches the intended admin workflow: Start Date →
-         End Date → Category → Office → Paper size → Generate Report.
-         Comfort Room and Surroundings each keep their own office list
-         and their own 5-question evaluation form (see Office Management
-         / Evaluation Management); the Category selection here drives
-         which office list populates the "Select Office" dropdown, and
-         the report is only generated once a category, an office, and
-         both dates are set. Generate Report now automatically pulls the
-         matching Comments & Suggestions too and attaches them as page 2
-         of the same report — see generateReport(). The "Paper" dropdown
-         controls the paper size used for the on-screen preview, Print,
-         and PDF export — see setPaperSize(). -->
     <div class="filter-row">
       <input type="date" class="filter-date" id="start-date">
       <input type="date" class="filter-date" id="end-date">
@@ -1018,13 +905,6 @@
       <button class="btn-save" id="btn-save-report" disabled>💾 Save Report</button>
     </div>
 
-    <!-- REPORT PREVIEW (shown/hidden like Admin 1). Contains the CER
-         report (page 1, #csmPage) followed immediately by the
-         auto-attached Comments & Suggestions sheet (page 2,
-         #csmCommentsPage) — see renderCombinedReport(). Both pages use
-         the paper-size aware .cvr-page layout so Print/PDF align the
-         header at the top and the footer at the bottom regardless of
-         the selected paper size. -->
     <div id="reportPreview">
       <div class="preview-bar">
         <span class="preview-label" id="previewLabel">📄 Report Preview</span>
@@ -1035,11 +915,6 @@
       <div id="report-container"></div>
     </div>
 
-    <!-- COMMENTS & SUGGESTIONS REPORT PREVIEW — the underlying
-         standalone-report plumbing (Firestore collection, PDF export,
-         etc.) is kept intact but is no longer wired to any button in
-         the UI, since Generate Report above now attaches comments
-         automatically. -->
     <div id="commentsReportPreview">
       <div class="preview-bar">
         <span class="preview-label" id="commentsPreviewLabel">💬 Comments Report Preview</span>
@@ -1050,10 +925,6 @@
       <div id="officialCommentsDocument" style="display:none;"></div>
     </div>
 
-    <!-- Tab switcher — only the Ratings tab is wired up now (the
-         Comments tab button was removed since comments no longer get
-         saved as a separate report). The saved-comments table/panel
-         below is kept in the DOM but unreachable via the UI. -->
     <div class="report-tabs">
       <button class="report-tab active" id="tab-ratings-reports">📊 Ratings Reports</button>
     </div>
@@ -1068,8 +939,6 @@
       </div>
     </div>
 
-    <!-- Saved comments-reports table, kept for data continuity but
-         hidden/unreachable since the Comments tab button was removed. -->
     <div id="commentsTabPanel" style="display:none;">
       <div class="saved-reports-section">
         <div class="saved-reports-header">
@@ -1096,7 +965,6 @@ import {
   doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
@@ -1113,44 +981,24 @@ const db = getFirestore(app);
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin2", "reports");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Reports", "admin2");
 
-// ======================
-// PAPER SIZE SELECTION (ported from Admin 1) — drives the on-screen
-// preview size via the --page-width/--page-height CSS vars (consumed
-// by .cvr-page), the print @page size (via the injected
-// #dynamicPageSize <style> tag), and the jsPDF export format/page
-// dimensions used in exportPDF(). Does not touch any Cleanliness data
-// or evaluation logic below.
-// ======================
 const PAPER_SIZES = {
-  // ISO A series
   a3:        { width: 297,   height: 420   },
   a4:        { width: 210,   height: 297   },
   a5:        { width: 148,   height: 210   },
   a6:        { width: 105,   height: 148   },
-  // ISO/JIS B series
   b4:        { width: 257,   height: 364   },
   b5:        { width: 182,   height: 257   },
-  // US / ANSI sizes
   letter:    { width: 215.9, height: 279.4 },
   legal:     { width: 215.9, height: 355.6 },
-  long:      { width: 215.9, height: 330.2 }, // Long / Folio (8.5 x 13 in)
+  long:      { width: 215.9, height: 330.2 },
   statement: { width: 139.7, height: 215.9 },
   executive: { width: 184.15,height: 266.7 },
-  tabloid:   { width: 279.4, height: 431.8 }  // Tabloid / Ledger
+  tabloid:   { width: 279.4, height: 431.8 }
 };
 
 let currentPaperSizeKey = "a4";
 
-// The letterhead (margins + logo/seal boxes) was designed and measured
-// against A4 (210mm wide). Scaling every dimension by the ratio of the
-// selected paper's width to that reference width keeps the header and
-// footer looking like the SAME document — just printed smaller or
-// larger — instead of a fixed A4 layout that overflows a small sheet
-// (A6, Statement) or leaves oddly cramped margins on a big one (A3,
-// Tabloid). The scale is clamped so extreme paper sizes still get a
-// legible, properly-proportioned header/footer rather than shrinking
-// or growing without limit.
-const CVR_REFERENCE_WIDTH_MM = 210; // A4
+const CVR_REFERENCE_WIDTH_MM = 210;
 const CVR_MIN_SCALE = 0.6;
 const CVR_MAX_SCALE = 1.5;
 
@@ -1185,65 +1033,33 @@ window.setPaperSize = (key) => {
 
 setPaperSize(currentPaperSizeKey);
 
-// ======================
-// FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
-// (matches Evaluation Management / Office Management exactly)
-// ======================
-
-// Each cleanliness category keeps its own office list, in a separately
-// named Firestore collection (mirrors
-// CleanOfficeSelectActivity.officeCollectionName() and Office
-// Management's OFFICE_COLLECTIONS). Kept exactly as named in the app,
-// including the differing hyphen vs underscore convention.
 const OFFICE_COLLECTIONS = {
   "Comfort Room": "office-names-comfort-room",
   "Surroundings": "office_names_surroundings"
 };
 const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
-const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved before cleanlinessCategory existed
+const DEFAULT_CATEGORY = "Comfort Room";
 
-// Read from the flat evaluation_history mirror — the same source
-// Evaluation Management and Office Management read from — instead of
-// the raw nested cleanliness_evaluations tree, so Reports always
-// matches what those pages show (including status edits/deletes made
-// there).
 const EVAL_HISTORY_COLLECTION = "evaluation_history";
 const SAVED_REPORTS_COLLECTION = "savedReports";
 
-// Kept for the (now UI-unreachable) standalone Comments & Suggestions
-// report feature — see the note near generateCommentsReport() below.
 const SAVED_COMMENTS_REPORTS_COLLECTION = "savedCommentsReports";
 
-// ComfortRoomEvalActivity / SurroundingsEvalActivity both set
-// TOTAL_QUESTIONS = 5 and only ever write rating1...rating5 (confirmed
-// directly from the submission code — see Evaluation Management). Every
-// place that loops over the rating questions drives off this constant.
 const TOTAL_RATING_QUESTIONS = 5;
 
-// ======================
-// STATE
-// ======================
 let evaluations = [];
-let comfortOffices = {};      // name -> name, from office-names-comfort-room
-let surroundingsOffices = {}; // name -> name, from office_names_surroundings
-let selectedCategory = "";    // "" | "Comfort Room" | "Surroundings" — from the Category dropdown
+let comfortOffices = {};
+let surroundingsOffices = {};
+let selectedCategory = "";
 let selectedOffice = "";
 let startDate = "";
 let endDate = "";
 let savedReports = [];
-let currentReport = null; // snapshot of the last generated report (ratings + attached comments), ready to save
+let currentReport = null;
 
-// Kept for the (now UI-unreachable) standalone Comments & Suggestions
-// report feature.
 let savedCommentsReports = [];
 let currentCommentsReport = null;
 
-// Per-category question labels. The two 5-question Android forms
-// (ComfortRoomEvalActivity / SurroundingsEvalActivity) were split out of
-// the old single 15-question form; these labels are carried over from
-// the matching old dimensions (old Q11-15 -> Comfort Room, old Q1-5 ->
-// Surroundings). Confirm against the actual Android form copy and
-// adjust here if the wording has since changed.
 const DIMENSION_LABELS_BY_CATEGORY = {
   "Comfort Room": {
     1: "The comfort room floor is clean and dry.",
@@ -1281,15 +1097,6 @@ const RATING_SCALE = [
   { min: 0, label: "Needs Improvement", class: "rating-poor" }
 ];
 
-// ======================
-// HELPERS (safe, timezone-consistent date-only parsing)
-// ======================
-// The date filters (#start-date / #end-date) are <input type="date">,
-// which give "YYYY-MM-DD" strings. new Date("YYYY-MM-DD") parses that
-// as UTC midnight, which can silently shift to the previous/next local
-// day depending on timezone and drop evaluations on the boundary dates.
-// This parses the Y/M/D components directly as LOCAL midnight instead,
-// so the comparison against evaluation timestamps lines up correctly.
 function parseDateOnly(value) {
   if (!value) return null;
   const str = String(value).trim();
@@ -1312,10 +1119,6 @@ function categoryPillHtml(category) {
   return `<span class="category-pill ${cls}">${icon} ${category}</span>`;
 }
 
-// ======================
-// LOAD OFFICES (both category collections, always on — used to build the
-// office dropdown once a category is picked)
-// ======================
 onSnapshot(collection(db, OFFICE_COLLECTIONS["Comfort Room"]), (snapshot) => {
   comfortOffices = {};
   snapshot.forEach((docSnap) => {
@@ -1340,9 +1143,6 @@ function currentOffices() {
   return selectedCategory === "Comfort Room" ? comfortOffices : surroundingsOffices;
 }
 
-// ======================
-// LOAD EVALUATIONS (Firestore: evaluation_history)
-// ======================
 const evalQuery = query(collection(db, EVAL_HISTORY_COLLECTION), orderBy("timestamp", "desc"));
 
 onSnapshot(evalQuery, (snapshot) => {
@@ -1366,13 +1166,9 @@ onSnapshot(evalQuery, (snapshot) => {
     }
     evaluations.push(record);
   });
-  // Auto-render stats whenever evaluations load
   renderStats();
 });
 
-// ======================
-// LOAD SAVED REPORTS (Firestore: savedReports)
-// ======================
 const savedReportsQuery = query(collection(db, SAVED_REPORTS_COLLECTION), orderBy("savedOn", "desc"));
 
 onSnapshot(savedReportsQuery, (snapshot) => {
@@ -1384,9 +1180,6 @@ onSnapshot(savedReportsQuery, (snapshot) => {
   document.getElementById("stat-saved").textContent = savedReports.length;
 });
 
-// ======================
-// HELPERS
-// ======================
 function getRatingLabel(percentage) {
   for (const rating of RATING_SCALE) {
     if (percentage >= rating.min) {
@@ -1424,20 +1217,12 @@ function populateLocationFilter() {
   selectedOffice = select.value;
 }
 
-// ======================
-// CATEGORY DROPDOWN
-// ======================
 document.getElementById("category-filter").addEventListener("change", (ev) => {
   selectedCategory = ev.target.value;
-
-  // Switching (or clearing) category invalidates the previously selected office
   selectedOffice = "";
   populateLocationFilter();
 });
 
-// ======================
-// STATS — combined across both categories (Comfort Room + Surroundings)
-// ======================
 function renderStats() {
   const total = evaluations.length;
 
@@ -1450,9 +1235,6 @@ function renderStats() {
   document.getElementById("stat-negative").textContent = negative;
 }
 
-// ======================
-// GENERATE NARRATIVE (like Admin 1)
-// ======================
 function generateNarrative(office, respondents, overallPct, dimensionAverages) {
   const perfWord = overallPct >= 90 ? "outstanding" : overallPct >= 75 ? "very satisfactory" : overallPct >= 60 ? "satisfactory" : "needs improvement";
   const topDims = dimensionAverages.filter(d => parseFloat(d.percentage) >= 90).map(d => d.dimension);
@@ -1471,12 +1253,6 @@ function generateNarrative(office, respondents, overallPct, dimensionAverages) {
   return [p1, p2, p3];
 }
 
-// ======================
-// PULLS A COMMENT/SUGGESTION STRING out of an evaluation record, trying
-// a handful of likely field names so it keeps working even if the
-// Firestore field name ever changes. `comments` is the one confirmed
-// field on evaluation_history records; the rest are just safety nets.
-// ======================
 function getCommentText(item) {
   const candidates = [
     item.comments, item.comment,
@@ -1490,9 +1266,6 @@ function getCommentText(item) {
   return "";
 }
 
-// Given the same filteredEvals used to build the ratings report, builds
-// the comments payload (count + chronologically sorted list) that gets
-// auto-attached as page 2 of the report.
 function buildCommentsPayload(filteredEvals) {
   const comments = filteredEvals
     .map(e => ({ text: getCommentText(e), timestamp: e.timestamp }))
@@ -1506,21 +1279,30 @@ function buildCommentsPayload(filteredEvals) {
 // DOM-MEASURED PAGINATION HELPERS
 //
 // The report content (evaluation table rows, comment rows, narrative
-// paragraphs, the signature block) is now paginated by ACTUALLY
-// MEASURING each piece in the live document (off-screen), instead of
-// relying on a fixed single-page template or on rasterized image
-// slicing. This guarantees content "flows" onto a second (or third...)
-// page whenever it doesn't fit, without ever cutting a table row or a
-// paragraph in half, overlapping the footer, or landing in the wrong
-// spot — because a block is only ever placed on a page if it fully
-// fits in the space still available on that page; otherwise the whole
-// block (never a fraction of it) moves to the next page, which gets
-// its own copy of the same header (pinned to the top) and the same
-// footer (pinned to the bottom), sized for whichever paper is selected.
+// paragraphs, the signature block) is paginated by ACTUALLY MEASURING
+// each piece in the live document (off-screen), instead of relying on
+// a fixed single-page template or on rasterized image slicing.
+//
+// SHRINK-TO-FIT: before falling back to a second physical sheet, each
+// section first tries to fit ALL of its content (the meta block, the
+// table rows, the narrative paragraphs, and the signature block) onto
+// ONE page by proportionally shrinking the body text size and vertical
+// spacing (via the --cvr-content-scale CSS variable, consumed by
+// .official-meta / .official-table / .official-narrative /
+// .official-signatures in the stylesheet). The letterhead header and
+// the accreditations footer are always rendered at full, fixed size —
+// only the body content between them shrinks. A second sheet is only
+// ever produced when the content still doesn't fit at the smallest
+// readable scale (CVR_CONTENT_MIN_SCALE), i.e. when it genuinely can't
+// fit on one page — in which case the (already-shrunk) content is
+// greedily packed across as few extra sheets as needed, each with the
+// same header pinned to the top and the same footer pinned to the
+// bottom.
 // ======================
 
-// Resolves a CSS length like "210mm" to real on-screen pixels by
-// letting the browser lay out a hidden element at that width.
+const CVR_CONTENT_MIN_SCALE = 0.62;
+const CVR_CONTENT_SCALE_STEP = 0.04;
+
 function mmStringToPx(mmStr) {
   const probe = document.createElement("div");
   probe.style.position = "fixed";
@@ -1534,9 +1316,6 @@ function mmStringToPx(mmStr) {
   return px || 0;
 }
 
-// Measures how tall a piece of report HTML would render at a given
-// pixel width, by rendering it off-screen (not display:none, so real
-// layout/line-wrapping still happens) and reading its height back.
 function measureBlockHeightPx(html, widthPx) {
   const probe = document.createElement("div");
   probe.style.position = "fixed";
@@ -1555,34 +1334,14 @@ function measureBlockHeightPx(html, widthPx) {
   return h || 0;
 }
 
-// Builds one or more complete ".cvr-page" sheets (each with its own
-// header + content + footer) for a report section (the CER ratings
-// section, or the Comments & Suggestions section), automatically
-// spilling content onto additional sheets whenever it doesn't fit.
-//
-//   domId            - element id to stamp on the section's very first
-//                       physical page (e.g. "csmPage"); export/print
-//                       code looks these up. Continuation pages get no id.
-//   headerInnerHtml   - letterhead + divider + title, identical on every
-//                       physical page this section produces.
-//   footerInnerHtml   - accreditations footer, identical on every page.
-//   tableHeadHtml     - "<tr>...</tr>" for the table's <thead>, reprinted
-//                       at the top of the table portion on every page
-//                       that ends up containing at least one row.
-//   metaHtml          - the "Office/Area / Category / ..." block, always
-//                       placed first (only ever needs one page's worth).
-//   rowsHtml          - array of "<tr>...</tr>" strings, one per row —
-//                       each row is atomic and is never split mid-row.
-//   narrativeParas    - array of "<p>...</p>" strings — each paragraph
-//                       is atomic.
-//   signaturesHtml    - the signature block, atomic, placed last.
-//   forceNewSheet     - true if this section's very first page must
-//                       start on a fresh sheet (used for the Comments
-//                       section, so it never shares a sheet with the
-//                       CER ratings section).
-//
-// Returns a single HTML string containing every physical page this
-// section needed, concatenated in order.
+// Measures the same HTML as measureBlockHeightPx, but with the given
+// --cvr-content-scale value applied on a wrapping element, so the
+// scaled font-size/margin/padding calc() rules in the stylesheet take
+// effect for the measurement (mirrors what will actually be rendered).
+function measureScaledBlockHeightPx(html, widthPx, scale) {
+  return measureBlockHeightPx(`<div style="--cvr-content-scale:${scale};">${html}</div>`, widthPx);
+}
+
 function buildPaginatedSectionPages(section) {
   const {
     domId, headerInnerHtml, footerInnerHtml, tableHeadHtml,
@@ -1594,63 +1353,56 @@ function buildPaginatedSectionPages(section) {
   const pageWidthPx = mmStringToPx(pageWidthMm);
   const pageHeightPx = mmStringToPx(pageHeightMm);
 
+  // Header and footer always render at full, fixed size (never
+  // affected by content shrink-to-fit), so their measured height is
+  // scale-independent.
   const headerHeightPx = measureBlockHeightPx(`<div class="cvr-inner-header">${headerInnerHtml}</div>`, pageWidthPx);
   const footerHeightPx = measureBlockHeightPx(`<div class="cvr-inner-footer">${footerInnerHtml}</div>`, pageWidthPx);
-  // Guard against a degenerate paper size where header+footer alone
-  // would already exceed the sheet height.
   const availablePx = Math.max(pageHeightPx - headerHeightPx - footerHeightPx, 40);
 
-  const theadHeightPx = tableHeadHtml
-    ? measureBlockHeightPx(`<table class="official-table"><thead>${tableHeadHtml}</thead></table>`, pageWidthPx)
-    : 0;
+  const rawBlocks = [];
+  if (metaHtml) rawBlocks.push({ kind: "meta", html: `<div class="official-meta">${metaHtml}</div>` });
+  (rowsHtml || []).forEach(r => rawBlocks.push({ kind: "row", html: r }));
+  (narrativeParas || []).forEach(p => rawBlocks.push({ kind: "narrative", html: p }));
+  if (signaturesHtml) rawBlocks.push({ kind: "signatures", html: signaturesHtml });
 
-  // Every atomic unit of content that must never be split mid-block.
-  const blocks = [];
-  if (metaHtml) blocks.push({ kind: "meta", html: `<div class="official-meta">${metaHtml}</div>` });
-  (rowsHtml || []).forEach(r => blocks.push({ kind: "row", html: r }));
-  (narrativeParas || []).forEach(p => blocks.push({ kind: "narrative", html: p }));
-  if (signaturesHtml) blocks.push({ kind: "signatures", html: signaturesHtml });
-
-  const measured = blocks.map(b => {
-    const wrapped = b.kind === "row"
-      ? `<table class="official-table"><tbody>${b.html}</tbody></table>`
-      : b.kind === "narrative"
-        ? `<div class="official-narrative">${b.html}</div>`
-        : b.html;
-    return { ...b, height: measureBlockHeightPx(wrapped, pageWidthPx) };
-  });
-
-  // A page that contains any row block also has to pay for a fresh
-  // <thead> at the top of its table.
-  function pageBlockHeight(list) {
-    const hasRow = list.some(b => b.kind === "row");
-    const sum = list.reduce((s, b) => s + b.height, 0);
-    return sum + (hasRow ? theadHeightPx : 0);
+  function theadHeightAtScale(scale) {
+    if (!tableHeadHtml) return 0;
+    return measureScaledBlockHeightPx(`<table class="official-table"><thead>${tableHeadHtml}</thead></table>`, pageWidthPx, scale);
   }
 
-  // Greedily pack blocks onto pages: a block only moves to the next
-  // page if it genuinely doesn't fit in the space left on the current
-  // one. A single block taller than a whole page (an extremely long
-  // comment) is still placed alone on its own page rather than looping
-  // forever — that one block may overflow, but nothing else does.
-  const pages = [];
-  let current = [];
-  measured.forEach(block => {
-    const projected = [...current, block];
-    if (current.length > 0 && pageBlockHeight(projected) > availablePx) {
-      pages.push(current);
-      current = [block];
-    } else {
-      current = projected;
-    }
-  });
-  if (current.length > 0) pages.push(current);
-  if (pages.length === 0) pages.push([]);
+  function measureBlocksAtScale(scale) {
+    return rawBlocks.map(b => {
+      const wrapped = b.kind === "row"
+        ? `<table class="official-table"><tbody>${b.html}</tbody></table>`
+        : b.kind === "narrative"
+          ? `<div class="official-narrative">${b.html}</div>`
+          : b.html;
+      return { ...b, height: measureScaledBlockHeightPx(wrapped, pageWidthPx, scale) };
+    });
+  }
 
-  return pages.map((pageBlocks, idx) => {
-    // Re-assemble this page's blocks in their original order, grouping
-    // any consecutive row blocks back into one <table> (with its own
-    // <thead>) so multi-row pages still read as a single table.
+  function pageBlockHeight(list, theadH) {
+    const hasRow = list.some(b => b.kind === "row");
+    const sum = list.reduce((s, b) => s + b.height, 0);
+    return sum + (hasRow ? theadH : 0);
+  }
+
+  // ---- SHRINK-TO-FIT: try to place everything on ONE sheet first ----
+  let fitScale = null;
+  let fitMeasured = null;
+  for (let scale = 1; scale >= CVR_CONTENT_MIN_SCALE - 1e-9; scale -= CVR_CONTENT_SCALE_STEP) {
+    const roundedScale = Math.round(scale * 100) / 100;
+    const measured = measureBlocksAtScale(roundedScale);
+    const theadH = theadHeightAtScale(roundedScale);
+    if (pageBlockHeight(measured, theadH) <= availablePx) {
+      fitScale = roundedScale;
+      fitMeasured = measured;
+      break;
+    }
+  }
+
+  function renderPageHtml(pageBlocks, scale, isFirst) {
     let bodyHtml = "";
     let i = 0;
     while (i < pageBlocks.length) {
@@ -1671,34 +1423,47 @@ function buildPaginatedSectionPages(section) {
       }
     }
 
-    const isFirst = idx === 0;
     const idAttr = isFirst && domId ? ` id="${domId}"` : "";
-    // Every page after the section's first one — and the section's
-    // first page too, when forceNewSheet is set — starts on a brand
-    // new physical sheet (matches .page-break-sheet's existing
-    // page-break-before rule for print, and its visual "— New Page —"
-    // divider on screen).
     const sheetClass = (!isFirst || forceNewSheet) ? " page-break-sheet" : "";
 
     return `
       <div class="cvr-page${sheetClass}"${idAttr}>
         <div class="cvr-page-header"><div class="cvr-inner-header">${headerInnerHtml}</div></div>
-        <div class="cvr-page-content"><div class="cvr-inner-content">${bodyHtml}</div></div>
+        <div class="cvr-page-content"><div class="cvr-inner-content" style="--cvr-content-scale:${scale};">${bodyHtml}</div></div>
         <div class="cvr-page-footer"><div class="cvr-inner-footer">${footerInnerHtml}</div></div>
       </div>
     `;
-  }).join("");
+  }
+
+  if (fitScale !== null) {
+    // Everything fits on a single sheet at fitScale — no second page needed.
+    return renderPageHtml(fitMeasured, fitScale, true);
+  }
+
+  // Content genuinely doesn't fit on one sheet even at the minimum
+  // readable scale — fall back to greedy multi-page packing at that
+  // minimum scale.
+  const fallbackScale = CVR_CONTENT_MIN_SCALE;
+  const measured = measureBlocksAtScale(fallbackScale);
+  const theadH = theadHeightAtScale(fallbackScale);
+
+  const pages = [];
+  let current = [];
+  measured.forEach(block => {
+    const projected = [...current, block];
+    if (current.length > 0 && pageBlockHeight(projected, theadH) > availablePx) {
+      pages.push(current);
+      current = [block];
+    } else {
+      current = projected;
+    }
+  });
+  if (current.length > 0) pages.push(current);
+  if (pages.length === 0) pages.push([]);
+
+  return pages.map((pageBlocks, idx) => renderPageHtml(pageBlocks, fallbackScale, idx === 0)).join("");
 }
 
-// ======================
-// CREATE OFFICIAL DOCUMENT (CER ratings section, like Admin 1's CSM
-// page). Builds the letterhead/meta/table/narrative/signatures content
-// and hands it to buildPaginatedSectionPages(), which spills it onto as
-// many physical sheets as it needs — each with the same header pinned
-// to the top and the same footer pinned to the bottom, for whichever
-// paper size is selected. Returns the resulting HTML for all of this
-// section's pages, concatenated.
-// ======================
 function createOfficialDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1707,7 +1472,6 @@ function createOfficialDocument(report) {
   const narrative = generateNarrative(report.office, report.respondents, parseFloat(report.avgSatisfaction), report.dimensionAverages);
 
   const headerInnerHtml = `
-    <!-- LETTERHEAD WITH LOGOS -->
     <div class="lh-row">
       <div class="lh-logo-box">
         <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
@@ -1730,7 +1494,6 @@ function createOfficialDocument(report) {
   `;
 
   const footerInnerHtml = `
-    <!-- FOOTER WITH ACCREDITATIONS -->
     <div class="official-footer">
       <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
     </div>
@@ -1791,17 +1554,6 @@ function createOfficialDocument(report) {
   });
 }
 
-// ======================
-// CREATE COMMENTS ATTACHMENT DOCUMENT (Comments & Suggestions section,
-// auto-attached after the CER ratings section, like Admin 1's
-// #csmCommentsPage). Builds the same kind of letterhead/meta/table/
-// narrative/signatures content — with one row per comment, which is
-// exactly where this section is most likely to run long — and hands it
-// to buildPaginatedSectionPages(), which spills it onto as many
-// physical sheets as it needs. forceNewSheet is set so this section
-// always starts on its own fresh sheet, never sharing one with the CER
-// ratings section above it. No page-number text is rendered anywhere.
-// ======================
 function createCommentsAttachmentDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1823,7 +1575,6 @@ function createCommentsAttachmentDocument(report) {
     : `No written comments or suggestions were submitted by respondents of the <strong>${report.office}</strong> during the covered period.`;
 
   const headerInnerHtml = `
-    <!-- LETTERHEAD WITH LOGOS (repeated, same as the CER section) -->
     <div class="lh-row">
       <div class="lh-logo-box">
         <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
@@ -1846,7 +1597,6 @@ function createCommentsAttachmentDocument(report) {
   `;
 
   const footerInnerHtml = `
-    <!-- FOOTER WITH ACCREDITATIONS -->
     <div class="official-footer">
       <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
     </div>
@@ -1899,25 +1649,13 @@ function createCommentsAttachmentDocument(report) {
   });
 }
 
-// ======================
-// RENDER COMBINED REPORT — draws page 1 (CER, #csmPage) immediately
-// followed by page 2 (auto-attached Comments & Suggestions,
-// #csmCommentsPage) into #report-container. Used by both
-// generateReport() and viewSavedReport() so both entry points always
-// render identically.
-// ======================
 function renderCombinedReport(report) {
   const page1Html = createOfficialDocument(report);
   const page2Html = createCommentsAttachmentDocument(report);
   document.getElementById("report-container").innerHTML = page1Html + page2Html;
 }
 
-// ======================
-// GENERATE REPORT
-// ======================
 function generateReport() {
-  // Validated in the same order as the filter bar: Start Date → End Date
-  // → Category → Office.
   if (!startDate || !endDate) {
     alert("Please select both start and end dates");
     return;
@@ -1933,14 +1671,8 @@ function generateReport() {
     return;
   }
 
-  // Scope to the selected category AND the selected office — a name
-  // could in theory appear in both office lists, so the category match
-  // matters, not just the office name.
   const officeEvals = evaluations.filter(e => e.cleanlinessCategory === selectedCategory && e.officeName === selectedOffice);
 
-  // Normalize the picked range to LOCAL start-of-day / end-of-day so
-  // evaluations dated on either boundary are always included, without
-  // any UTC/timezone shift and without requiring leading-zero dates.
   const start = parseDateOnly(startDate);
   const end = parseDateOnly(endDate);
 
@@ -1970,15 +1702,13 @@ function generateReport() {
     return;
   }
 
-  // Calculate averages for each dimension (rating1 -> rating5), using
-  // the question labels for the selected category.
   const dimensionAverages = [];
 
   dimensionsForCategory(selectedCategory).forEach(dim => {
     const values = filteredEvals.map(e => e[dim.field]).filter(v => v > 0);
     if (values.length > 0) {
       const avg = values.reduce((a, b) => a + b, 0) / values.length;
-      const percentage = (avg / 5) * 100; // Convert 1-5 scale to 0-100%
+      const percentage = (avg / 5) * 100;
       const rating = getRatingLabel(percentage);
       dimensionAverages.push({
         dimension: dim.label,
@@ -1991,11 +1721,8 @@ function generateReport() {
   const overallPct = dimensionAverages.reduce((sum, d) => sum + parseFloat(d.percentage), 0) / dimensionAverages.length;
   const overallRating = getRatingLabel(overallPct);
 
-  // Automatically gather the Comments & Suggestions for the same
-  // office/category/date-range so they can be attached as page 2 below.
   const commentsPayload = buildCommentsPayload(filteredEvals);
 
-  // Snapshot ready to be saved — ratings AND comments together, in one document.
   currentReport = {
     office: selectedOffice,
     category: selectedCategory,
@@ -2021,33 +1748,10 @@ function generateReport() {
   switchToRatingsTab();
 }
 
-// ======================
-// CLOSE REPORT (new function like Admin 1)
-// ======================
 window.closeReport = () => {
   document.getElementById("reportPreview").style.display = "none";
 };
 
-// ======================
-// PRINT REPORT — opens the browser's native print dialog for the
-// on-screen CER preview (#reportPreview: page 1 ratings + auto-attached
-// page 2 comments). Everything else (sidebar, topbar, filters, stat
-// cards, saved-reports table, tabs, the standalone comments preview)
-// is hidden for print via the @media print rules at the top of <style>,
-// and any page (page 1 or page 2) that runs long automatically
-// continues onto additional physical sheets, repeating the same
-// header/footer on each one, because of the display:table technique in
-// the @media print block; the comments page additionally always starts
-// on its own fresh sheet via .page-break-sheet's page-break-before
-// rule. Before printing, the currently selected "Paper" dropdown value
-// is re-applied via setPaperSize() so the injected @page size rule (and
-// the --page-width/--page-height vars driving .cvr-page) match what's
-// showing on screen, keeping the header pinned to the top and the
-// footer pinned to the bottom for whichever paper size is selected —
-// then the browser's own print dialog "Pages" field (e.g. "1" for CER
-// only, or "1-2" / "All" for both) lets the admin choose what actually
-// prints. No page-number text is printed anywhere.
-// ======================
 window.printReport = () => {
   if (document.getElementById("reportPreview").style.display === "none") {
     alert("Please generate or view a report first.");
@@ -2059,14 +1763,6 @@ window.printReport = () => {
   window.print();
 };
 
-// ======================
-// SHARED PDF HELPER (legacy, single-canvas slice) — draws one
-// html2canvas canvas onto a jsPDF document, slicing it across multiple
-// pages if it's taller than one sheet, and adding a fresh PDF page
-// beforehand when `addPageBefore` is true. Kept as-is; exportPDF() now
-// uses renderCvrPageToPdf() below instead, which slices only the
-// *content* region and re-draws the header/footer on every page.
-// ======================
 async function renderElementToPdf(pdf, element, { usableW, usableH, addPageBefore }) {
   const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
   const scale = usableW / canvas.width;
@@ -2091,30 +1787,6 @@ async function renderElementToPdf(pdf, element, { usableW, usableH, addPageBefor
   }
 }
 
-// ======================
-// PAGINATION-AWARE PDF HELPER — renders one .cvr-page element (e.g.
-// #csmPage or #csmCommentsPage) into the given jsPDF document, and
-// AUTOMATICALLY CONTINUES the content onto as many additional physical
-// pages as it needs instead of cutting it off or letting it overlap the
-// footer. Unlike renderElementToPdf() above (which screenshots the
-// whole page as one flat image and blindly slices it into equal-height
-// chunks — which would slice straight through the header/footer and
-// never repeat them), this captures the header, content, and footer
-// regions of the page SEPARATELY:
-//   - the header image is redrawn at the very top of every physical
-//     page this element spans,
-//   - the footer image is redrawn pinned to the very bottom of every
-//     physical page this element spans (matching how the on-screen
-//     .cvr-page-footer's margin-top:auto pins it to the bottom when the
-//     content is short),
-//   - the content image is sliced into page-sized chunks and placed in
-//     the space between the header and footer on each page, continuing
-//     seamlessly from where the previous page's slice left off.
-// This mirrors, for the PDF/export path, the same "repeat header and
-// footer on every physical page" behavior the @media print CSS already
-// gives native browser Print for free. No page-number text is drawn
-// anywhere by this function.
-// ======================
 async function renderCvrPageToPdf(pdf, pageEl, { usableW, usableH, addPageBefore }) {
   const headerEl = pageEl.querySelector(".cvr-page-header");
   const contentEl = pageEl.querySelector(".cvr-page-content");
@@ -2127,17 +1799,11 @@ async function renderCvrPageToPdf(pdf, pageEl, { usableW, usableH, addPageBefore
     html2canvas(footerEl, captureOpts)
   ]);
 
-  // mm-per-pixel conversion, based on the page's rendered width mapping
-  // onto the selected paper's usable width (header/content/footer all
-  // share that same rendered width since they're full-width sections of
-  // the same .cvr-page).
   const scale = usableW / headerCanvas.width;
   const headerHmm = headerCanvas.height * scale;
   const footerHmm = footerCanvas.height * scale;
   const contentHmm = contentCanvas.height * scale;
 
-  // Guard against a degenerate paper size where the header+footer alone
-  // would already exceed the sheet height.
   const availableContentHmm = Math.max(usableH - headerHmm - footerHmm, 10);
   const contentPxPerPage = Math.max(1, Math.floor(availableContentHmm / scale));
   const totalPages = Math.max(1, Math.ceil(contentCanvas.height / contentPxPerPage));
@@ -2147,12 +1813,8 @@ async function renderCvrPageToPdf(pdf, pageEl, { usableW, usableH, addPageBefore
   for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
     if (pageIdx > 0) pdf.addPage();
 
-    // Header — repeated at the top of every physical page this element spans.
     pdf.addImage(headerCanvas.toDataURL("image/png"), "PNG", 0, 0, usableW, headerHmm);
 
-    // This page's slice of the content, continuing on immediately from
-    // where the previous page's slice ended — nothing is skipped or
-    // overlapped.
     const offsetPx = pageIdx * contentPxPerPage;
     const sliceHeightPx = Math.min(contentPxPerPage, contentCanvas.height - offsetPx);
     if (sliceHeightPx > 0) {
@@ -2164,24 +1826,10 @@ async function renderCvrPageToPdf(pdf, pageEl, { usableW, usableH, addPageBefore
       pdf.addImage(sliceCanvas.toDataURL("image/png"), "PNG", 0, headerHmm, usableW, sliceHmm);
     }
 
-    // Footer — repeated pinned to the bottom of every physical page this
-    // element spans.
     pdf.addImage(footerCanvas.toDataURL("image/png"), "PNG", 0, usableH - footerHmm, usableW, footerHmm);
   }
 }
 
-// ======================
-// EXPORT PDF — exports the CER report as page 1 and the auto-attached
-// Comments & Suggestions sheet as page 2+ of the same PDF, using
-// whichever paper size is currently selected in the "Paper" dropdown
-// (A3/A4/A5/A6, B4/B5, Letter, Legal, Long/Folio, Statement, Executive,
-// Tabloid). Each of the two report sections is rendered through
-// renderCvrPageToPdf(), so if either one's content is too long for a
-// single sheet, it automatically continues onto additional pages with
-// the same repeated header and footer instead of being cut off or
-// overlapping — the comments section always starts on its own fresh
-// page regardless (addPageBefore: true), same as before.
-// ======================
 window.exportPDF = async () => {
   if (document.getElementById("reportPreview").style.display === "none" || !currentReport) {
     alert("Please generate or view a report first.");
@@ -2198,10 +1846,7 @@ window.exportPDF = async () => {
   const usableH = pdf.internal.pageSize.getHeight();
 
   try {
-    // Page 1 (+ overflow pages, if needed): CER ratings page
     await renderCvrPageToPdf(pdf, document.getElementById("csmPage"), { usableW, usableH, addPageBefore: false });
-    // Page 2+ (always a fresh sheet, + its own overflow pages if
-    // needed): auto-attached Comments & Suggestions page
     const commentsEl = document.getElementById("csmCommentsPage");
     if (commentsEl) {
       await renderCvrPageToPdf(pdf, commentsEl, { usableW, usableH, addPageBefore: true });
@@ -2216,11 +1861,6 @@ window.exportPDF = async () => {
   pdf.save(`CER_Report_${name}.pdf`);
 };
 
-
-// ======================
-// SAVE REPORT — saves the ratings + attached comments together, as one
-// document.
-// ======================
 function saveReport() {
   if (!currentReport) return;
 
@@ -2234,9 +1874,6 @@ function saveReport() {
     });
 }
 
-// ======================
-// SAVED REPORTS TABLE
-// ======================
 function renderSavedReports() {
   const container = document.getElementById("saved-reports-container");
   document.getElementById("saved-reports-count").textContent = `${savedReports.length} report${savedReports.length === 1 ? "" : "s"}`;
@@ -2298,9 +1935,6 @@ function viewSavedReport(id) {
 
   const category = CLEANLINESS_CATEGORIES.includes(r.category) ? r.category : DEFAULT_CATEGORY;
 
-  // Switch the Category dropdown to the saved report's category first, so
-  // the office dropdown is rebuilt from the right collection before we
-  // set its value.
   selectedCategory = category;
   document.getElementById("category-filter").value = category;
   populateLocationFilter();
@@ -2311,14 +1945,13 @@ function viewSavedReport(id) {
   document.getElementById("reportPreview").style.display = "block";
   document.getElementById("reportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
 
-  // Reflect the saved report's filters back into the filter bar
   document.getElementById("location-filter").value = r.office;
   document.getElementById("start-date").value = r.startDate;
   document.getElementById("end-date").value = r.endDate;
   selectedOffice = r.office;
   startDate = r.startDate;
   endDate = r.endDate;
-  currentReport = r;  // Set to enable PDF export
+  currentReport = r;
   document.getElementById("btn-save-report").disabled = true;
 
   renderStats();
@@ -2332,16 +1965,6 @@ function deleteSavedReport(id) {
   });
 }
 
-// ======================================================================
-// STANDALONE COMMENTS & SUGGESTIONS REPORT — kept for data continuity
-// (savedCommentsReports collection, PDF export, etc.) but no longer
-// wired to any button, since Generate Report above now attaches
-// comments automatically as page 2 of the same report.
-// ======================================================================
-
-// ======================
-// LOAD SAVED COMMENTS REPORTS (Firestore: savedCommentsReports)
-// ======================
 const savedCommentsReportsQuery = query(collection(db, SAVED_COMMENTS_REPORTS_COLLECTION), orderBy("savedOn", "desc"));
 
 onSnapshot(savedCommentsReportsQuery, (snapshot) => {
@@ -2352,12 +1975,6 @@ onSnapshot(savedCommentsReportsQuery, (snapshot) => {
   renderSavedCommentsReports();
 });
 
-// ======================
-// CREATE COMMENTS DOCUMENT (standalone report — own page id "ccsPage"
-// so it never collides with the auto-attached "csmCommentsPage"). Left
-// untouched on the original fixed .official-report layout, since this
-// standalone feature is no longer reachable from the UI.
-// ======================
 function createCommentsDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -2378,7 +1995,6 @@ function createCommentsDocument(report) {
 
   const officialHTML = `
     <div class="official-report" id="ccsPage">
-      <!-- LETTERHEAD WITH LOGOS -->
       <div class="lh-row">
         <div class="lh-logo-box" style="width:150px; height:90px;">
           <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
@@ -2438,7 +2054,6 @@ function createCommentsDocument(report) {
         </div>
       </div>
 
-      <!-- FOOTER WITH ACCREDITATIONS -->
       <div class="official-footer">
         <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
       </div>
@@ -2448,12 +2063,6 @@ function createCommentsDocument(report) {
   return officialHTML;
 }
 
-// ======================
-// GENERATE COMMENTS REPORT (standalone) — no longer reachable from the
-// UI (its button was removed since Generate Report auto-attaches
-// comments), kept only so the underlying data plumbing still works if
-// re-wired in the future.
-// ======================
 function generateCommentsReport() {
   if (!startDate || !endDate) {
     alert("Please select both start and end dates");
@@ -2518,16 +2127,10 @@ function generateCommentsReport() {
   document.getElementById("commentsReportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-// ======================
-// CLOSE COMMENTS REPORT
-// ======================
 window.closeCommentsReport = () => {
   document.getElementById("commentsReportPreview").style.display = "none";
 };
 
-// ======================
-// EXPORT COMMENTS PDF (standalone comments-only report)
-// ======================
 window.exportCommentsPDF = async () => {
   if (document.getElementById("commentsReportPreview").style.display === "none" || !currentCommentsReport) {
     alert("Please generate or view a comments report first.");
@@ -2568,10 +2171,6 @@ window.exportCommentsPDF = async () => {
   document.getElementById("officialCommentsDocument").innerHTML = "";
 };
 
-// ======================
-// SAVED COMMENTS REPORTS TABLE (still rendered into the DOM, just
-// unreachable from the UI now)
-// ======================
 function renderSavedCommentsReports() {
   const container = document.getElementById("saved-comments-reports-container");
   document.getElementById("saved-comments-reports-count").textContent = `${savedCommentsReports.length} report${savedCommentsReports.length === 1 ? "" : "s"}`;
@@ -2662,10 +2261,6 @@ function deleteSavedCommentsReport(id) {
   });
 }
 
-// ======================
-// TAB SWITCHER — only the Ratings tab is wired to a button now; the
-// Comments-tab switch function is kept in case it's re-wired later.
-// ======================
 function switchToRatingsTab() {
   document.getElementById("ratingsTabPanel").style.display = "block";
   document.getElementById("commentsTabPanel").style.display = "none";
@@ -2674,9 +2269,6 @@ function switchToRatingsTab() {
 
 document.getElementById("tab-ratings-reports").addEventListener("click", switchToRatingsTab);
 
-// ======================
-// EVENT LISTENERS
-// ======================
 document.getElementById("location-filter").addEventListener("change", (e) => {
   selectedOffice = e.target.value;
 });
@@ -2693,4 +2285,4 @@ document.getElementById("btn-generate-report").addEventListener("click", generat
 document.getElementById("btn-save-report").addEventListener("click", saveReport);
 </script>
 </body>
-</html>[
+</html>
