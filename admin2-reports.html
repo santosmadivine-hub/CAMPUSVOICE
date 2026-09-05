@@ -882,7 +882,7 @@
         <option value="">Select Category First</option>
       </select>
 
-      <select class="filter-select" id="paperSizeFilter" title="Paper size for preview, print, and PDF export" onchange="setPaperSize(this.value)">
+      <select class="filter-select" id="paperSizeFilter" title="Paper size for preview, print, and PDF export" onchange="onPaperSizeChange(this.value)">
         <optgroup label="ISO / International">
           <option value="a3">Paper: A3 (297 × 420 mm)</option>
           <option value="a4" selected>Paper: A4 (210 × 297 mm)</option>
@@ -1059,6 +1059,39 @@ let currentReport = null;
 
 let savedCommentsReports = [];
 let currentCommentsReport = null;
+
+// ======================
+// PAPER-SIZE RESYNC
+//
+// generateReport()/viewSavedReport() compute the report's page-by-page
+// layout (buildPaginatedSectionPages) using whatever --page-width /
+// --page-height / --cvr-* values are active on the document AT THE
+// MOMENT they run. If the person changes the paper size selector, or
+// prints/exports, AFTER a report is already on screen, those already
+// generated .cvr-page elements still reflect the OLD paper size — the
+// header/footer would then no longer line up with the new page
+// dimensions. regenerateCurrentPreviews() re-runs the same pagination
+// against whatever paper size is active right now, so the header
+// stays pinned to the top, the footer stays pinned to the bottom, and
+// overflow content is re-flowed onto additional pages (with the same
+// header/footer) for the size actually being used.
+// ======================
+function regenerateCurrentPreviews() {
+  const reportPreviewEl = document.getElementById("reportPreview");
+  if (currentReport && reportPreviewEl && reportPreviewEl.style.display === "block") {
+    renderCombinedReport(currentReport);
+  }
+
+  const commentsPreviewEl = document.getElementById("commentsReportPreview");
+  if (currentCommentsReport && commentsPreviewEl && commentsPreviewEl.style.display === "block") {
+    document.getElementById("comments-report-container").innerHTML = createCommentsDocument(currentCommentsReport);
+  }
+}
+
+window.onPaperSizeChange = (key) => {
+  setPaperSize(key);
+  regenerateCurrentPreviews();
+};
 
 const DIMENSION_LABELS_BY_CATEGORY = {
   "Comfort Room": {
@@ -1760,6 +1793,11 @@ window.printReport = () => {
   const paperSelect = document.getElementById("paperSizeFilter");
   if (paperSelect) setPaperSize(paperSelect.value);
 
+  // Re-run pagination against the paper size that is about to be
+  // printed, so the header/footer and page breaks in the printout
+  // match the selected paper size exactly (see regenerateCurrentPreviews).
+  regenerateCurrentPreviews();
+
   window.print();
 };
 
@@ -1838,6 +1876,15 @@ window.exportPDF = async () => {
 
   const paperSelect = document.getElementById("paperSizeFilter");
   if (paperSelect) setPaperSize(paperSelect.value);
+
+  // Re-run pagination against the paper size that is about to be
+  // exported, so the .cvr-page elements captured below already match
+  // the target PDF page dimensions (see regenerateCurrentPreviews).
+  renderCombinedReport(currentReport);
+  // Give the browser a couple of frames to finish laying out / painting
+  // the freshly-regenerated pages (and any cached images) before we
+  // start rasterizing them with html2canvas.
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
   const { jsPDF } = window.jspdf;
   const activeSize = PAPER_SIZES[currentPaperSizeKey] || PAPER_SIZES.a4;
