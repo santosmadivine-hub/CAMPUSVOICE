@@ -1103,15 +1103,25 @@ async function migrateOfficeEvaluations(oldName, newName) {
   }
 }
 
+/* ---------- Delete Office (ported from Admin 2: styled confirm modal + toast) ---------- */
+
 async function deleteOffice(docId) {
   const name = offices[docId] || "this office";
-  if (!confirm(`Remove "${name}" from the office list?`)) return;
+
+  const confirmed = await openConfirmModal({
+    title: "Delete Office?",
+    icon: "🗑",
+    tone: "warn",
+    confirmText: "Delete Office",
+    message: `Remove "<strong>${escapeHtml(name)}</strong>" from the office list? This action cannot be undone.`
+  });
+  if (!confirmed) return;
 
   try {
     await deleteDoc(doc(db, "offices", docId));
+    showToast("✓ Office deleted successfully!");
   } catch (err) {
-    alert("Couldn't remove office: " + err.message);
-    console.error(err);
+    showToast("Couldn't remove office: " + err.message, true);
   }
 }
 
