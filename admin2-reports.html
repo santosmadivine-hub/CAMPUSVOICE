@@ -84,12 +84,12 @@
     .cvr-inner-header,
     .cvr-inner-content,
     .cvr-inner-footer {
-      padding-left: 15mm !important;
-      padding-right: 15mm !important;
+      padding-left: var(--cvr-margin-x, 15mm) !important;
+      padding-right: var(--cvr-margin-x, 15mm) !important;
     }
 
     .cvr-inner-header {
-      padding-top: 3mm !important;
+      padding-top: var(--cvr-header-pad-top, 4mm) !important;
       padding-bottom: 0 !important;
     }
 
@@ -99,8 +99,8 @@
     }
 
     .cvr-inner-footer {
-      padding-top: 6mm !important;
-      padding-bottom: 6mm !important;
+      padding-top: var(--cvr-footer-pad-y, 6mm) !important;
+      padding-bottom: var(--cvr-footer-pad-y, 6mm) !important;
       border-top: 1px solid #e2e8f0 !important;
     }
   }
@@ -677,12 +677,12 @@
   .cvr-inner-footer {
     width:100%;
     box-sizing:border-box;
-    padding-left:15mm;
-    padding-right:15mm;
+    padding-left: var(--cvr-margin-x, 15mm);
+    padding-right: var(--cvr-margin-x, 15mm);
   }
 
   .cvr-inner-header {
-    padding-top:6px;
+    padding-top: var(--cvr-header-pad-top, 4mm);
     padding-bottom:0;
   }
 
@@ -692,8 +692,8 @@
   }
 
   .cvr-inner-footer {
-    padding-top:10px;
-    padding-bottom:10px;
+    padding-top: var(--cvr-footer-pad-y, 6mm);
+    padding-bottom: var(--cvr-footer-pad-y, 6mm);
     border-top:1px solid #e2e8f0;
   }
 
@@ -766,12 +766,27 @@
   }
 
   .lh-logo-box, .lh-seal-box {
-    width: 150px;
-    height: 90px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* Sized from --lh-logo-w/-h and --lh-seal-w/-h (computed in
+     setPaperSize()), which scale proportionally to the selected paper's
+     width. Fixed-pixel logo/seal boxes ate a huge share of a small
+     sheet (A6, Statement) and looked lost on a large one (A3,
+     Tabloid) — scaling them with the page is what keeps the whole
+     letterhead, and therefore the header, properly aligned on every
+     paper size. */
+  .lh-logo-box {
+    width: var(--lh-logo-w, 40mm);
+    height: var(--lh-logo-h, 24mm);
+  }
+
+  .lh-seal-box {
+    width: var(--lh-seal-w, 26mm);
+    height: var(--lh-seal-h, 26mm);
   }
 
   .lh-logo-box img, .lh-seal-box img {
@@ -1131,12 +1146,37 @@ const PAPER_SIZES = {
 
 let currentPaperSizeKey = "a4";
 
+// The letterhead (margins + logo/seal boxes) was designed and measured
+// against A4 (210mm wide). Scaling every dimension by the ratio of the
+// selected paper's width to that reference width keeps the header and
+// footer looking like the SAME document — just printed smaller or
+// larger — instead of a fixed A4 layout that overflows a small sheet
+// (A6, Statement) or leaves oddly cramped margins on a big one (A3,
+// Tabloid). The scale is clamped so extreme paper sizes still get a
+// legible, properly-proportioned header/footer rather than shrinking
+// or growing without limit.
+const CVR_REFERENCE_WIDTH_MM = 210; // A4
+const CVR_MIN_SCALE = 0.6;
+const CVR_MAX_SCALE = 1.5;
+
 window.setPaperSize = (key) => {
   const size = PAPER_SIZES[key] || PAPER_SIZES.a4;
   currentPaperSizeKey = PAPER_SIZES[key] ? key : "a4";
 
   document.documentElement.style.setProperty("--page-width",  size.width  + "mm");
   document.documentElement.style.setProperty("--page-height", size.height + "mm");
+
+  const rawScale = size.width / CVR_REFERENCE_WIDTH_MM;
+  const scale = Math.max(CVR_MIN_SCALE, Math.min(rawScale, CVR_MAX_SCALE));
+
+  const root = document.documentElement.style;
+  root.setProperty("--cvr-margin-x",       (15 * scale).toFixed(2) + "mm");
+  root.setProperty("--cvr-header-pad-top", (4  * scale).toFixed(2) + "mm");
+  root.setProperty("--cvr-footer-pad-y",   (6  * scale).toFixed(2) + "mm");
+  root.setProperty("--lh-logo-w",          (40 * scale).toFixed(2) + "mm");
+  root.setProperty("--lh-logo-h",          (24 * scale).toFixed(2) + "mm");
+  root.setProperty("--lh-seal-w",          (26 * scale).toFixed(2) + "mm");
+  root.setProperty("--lh-seal-h",          (26 * scale).toFixed(2) + "mm");
 
   let pageSizeTag = document.getElementById("dynamicPageSize");
   if (!pageSizeTag) {
@@ -1489,7 +1529,7 @@ function createOfficialDocument(report) {
       <div class="cvr-page-header"><div class="cvr-inner-header">
         <!-- LETTERHEAD WITH LOGOS -->
         <div class="lh-row">
-          <div class="lh-logo-box" style="width:150px; height:90px;">
+          <div class="lh-logo-box">
             <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
           </div>
           <div class="lh-text">
@@ -1499,7 +1539,7 @@ function createOfficialDocument(report) {
             <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
             <div class="addr">Website: www.isufst.edu.ph</div>
           </div>
-          <div class="lh-seal-box" style="width:100px; height:100px;">
+          <div class="lh-seal-box">
             <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
           </div>
         </div>
@@ -1607,7 +1647,7 @@ function createCommentsAttachmentDocument(report) {
 
         <!-- LETTERHEAD WITH LOGOS (repeated, same as page 1) -->
         <div class="lh-row">
-          <div class="lh-logo-box" style="width:150px; height:90px;">
+          <div class="lh-logo-box">
             <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
           </div>
           <div class="lh-text">
@@ -1617,7 +1657,7 @@ function createCommentsAttachmentDocument(report) {
             <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
             <div class="addr">Website: www.isufst.edu.ph</div>
           </div>
-          <div class="lh-seal-box" style="width:100px; height:100px;">
+          <div class="lh-seal-box">
             <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
           </div>
         </div>
