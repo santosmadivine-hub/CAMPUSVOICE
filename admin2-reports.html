@@ -17,7 +17,7 @@
       FIX: paper-size aware print alignment (ported from Admin 1).
       @page margin is zeroed out so the printed sheet has no browser
       margin of its own — all spacing instead comes from the
-      .cvr-page-header / .cvr-page-content / .cvr-page-footer padding
+      .cvr-inner-header / .cvr-inner-content / .cvr-inner-footer padding
       below, which keeps the header pinned to the top of the page and
       the footer pinned to the bottom regardless of which paper size
       (A3/A4/A5/A6, B4/B5, Letter, Legal, Long/Folio, Statement, Executive, Tabloid) is selected.
@@ -36,23 +36,6 @@
       width: 100% !important;
       margin: 0 auto !important;
       min-height: var(--page-height, 297mm) !important;
-    }
-
-    .cvr-page-header,
-    .cvr-page-content,
-    .cvr-page-footer {
-      padding-left: 15mm !important;
-      padding-right: 15mm !important;
-    }
-
-    .cvr-page-header {
-      padding-top: 3mm !important;
-    }
-
-    .cvr-page-footer {
-      padding-top: 6mm !important;
-      padding-bottom: 6mm !important;
-      margin-top: auto !important;
     }
 
     /*
@@ -81,6 +64,44 @@
     }
     .cvr-page-footer {
       display: table-footer-group !important;
+    }
+
+    /*
+      FIX: padding/border on table-header-group, table-row-group, and
+      table-footer-group boxes is ignored by the CSS table layout model
+      (per spec, only 'table' and 'table-cell' boxes render padding and
+      border). That's why, before this fix, switching .cvr-page to
+      display:table for print silently collapsed the header's top
+      inset, the 15mm left/right margins, and the footer's top border +
+      padding to zero — the header ended up flush with the very top of
+      the sheet and the footer flush with the very bottom edge, instead
+      of matching the reference report's spacing. The .cvr-inner-*
+      wrappers below are plain block boxes nested *inside* each
+      table-role element, so their padding renders correctly in print
+      while the outer elements keep doing their job of repeating on
+      every page.
+    */
+    .cvr-inner-header,
+    .cvr-inner-content,
+    .cvr-inner-footer {
+      padding-left: 15mm !important;
+      padding-right: 15mm !important;
+    }
+
+    .cvr-inner-header {
+      padding-top: 3mm !important;
+      padding-bottom: 0 !important;
+    }
+
+    .cvr-inner-content {
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .cvr-inner-footer {
+      padding-top: 6mm !important;
+      padding-bottom: 6mm !important;
+      border-top: 1px solid #e2e8f0 !important;
     }
   }
 
@@ -597,6 +618,21 @@
     The legacy standalone Comments & Suggestions report (#ccsPage) is
     left untouched and keeps using the fixed .official-report layout
     above.
+
+    NOTE ON THE .cvr-inner-* WRAPPERS BELOW: .cvr-page-header,
+    .cvr-page-content and .cvr-page-footer are kept free of any
+    padding/border of their own. That styling instead lives on a plain
+    block <div> nested just inside each of them (.cvr-inner-header /
+    .cvr-inner-content / .cvr-inner-footer). This is required because
+    in print, .cvr-page switches to display:table and these three
+    elements become table-header-group / table-row-group /
+    table-footer-group (see the @media print block above) so the
+    browser repeats them on every physical page — and padding/border on
+    those table-role boxes is ignored by the CSS table layout model. By
+    keeping the actual spacing on an ordinary block element inside them
+    instead, the 15mm side margins, the header's top inset, and the
+    footer's top border + padding render correctly in BOTH the on-screen
+    preview and the print/PDF output, on every paper size.
   */
   .cvr-page {
     display:flex;
@@ -614,40 +650,58 @@
     border:1px solid #e2e8f0;
   }
 
-  .cvr-page-header,
-  .cvr-page-content,
+  .cvr-page-header {
+    width:100%;
+    flex:0 0 auto;
+  }
+
+  .cvr-page-content {
+    width:100%;
+    flex:0 1 auto;
+  }
+
   .cvr-page-footer {
+    width:100%;
+    flex:0 0 auto;
+    margin-top:auto;
+  }
+
+  /* Inner wrappers — see the note above .cvr-page for why the padding
+     and border live here instead of on .cvr-page-header/-content/-footer
+     directly. On screen these behave exactly like the old padded
+     elements did; in print they're what actually keeps the header
+     pinned to the top and the footer pinned to the bottom of every
+     page. */
+  .cvr-inner-header,
+  .cvr-inner-content,
+  .cvr-inner-footer {
     width:100%;
     box-sizing:border-box;
     padding-left:15mm;
     padding-right:15mm;
   }
 
-  .cvr-page-header {
+  .cvr-inner-header {
     padding-top:6px;
     padding-bottom:0;
-    flex:0 0 auto;
   }
 
-  .cvr-page-content {
-    flex:0 1 auto;
+  .cvr-inner-content {
     padding-top:0;
     padding-bottom:0;
   }
 
-  .cvr-page-footer {
-    flex:0 0 auto;
+  .cvr-inner-footer {
     padding-top:10px;
     padding-bottom:10px;
-    margin-top:auto;
     border-top:1px solid #e2e8f0;
   }
 
   /* Neutralize the legacy .official-footer spacing when it's nested
-     inside the new .cvr-page-footer wrapper, since the wrapper already
+     inside the new .cvr-inner-footer wrapper, since the wrapper already
      provides its own top padding — avoids doubled spacing above the
      accreditations footer image. */
-  .cvr-page-footer .official-footer {
+  .cvr-inner-footer .official-footer {
     margin-top: 0;
     padding-top: 0;
   }
@@ -1416,9 +1470,12 @@ function buildCommentsPayload(filteredEvals) {
 // ======================
 // CREATE OFFICIAL DOCUMENT (page 1 — CER ratings report, like Admin 1's
 // CSM page). Uses the paper-size aware .cvr-page / .cvr-page-header /
-// .cvr-page-content / .cvr-page-footer structure (ported from Admin 1)
-// so the letterhead stays pinned to the top and the accreditations
-// footer stays pinned to the bottom of the selected paper size.
+// .cvr-page-content / .cvr-page-footer structure (ported from Admin 1),
+// with the actual padding/border living on the nested .cvr-inner-*
+// wrappers (see the note above .cvr-page in <style>), so the letterhead
+// stays pinned to the top and the accreditations footer stays pinned to
+// the bottom of the selected paper size — in the on-screen preview AND
+// in print.
 // ======================
 function createOfficialDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1429,7 +1486,7 @@ function createOfficialDocument(report) {
   const officialHTML = `
     <div class="cvr-page" id="csmPage">
 
-      <div class="cvr-page-header">
+      <div class="cvr-page-header"><div class="cvr-inner-header">
         <!-- LETTERHEAD WITH LOGOS -->
         <div class="lh-row">
           <div class="lh-logo-box" style="width:150px; height:90px;">
@@ -1450,9 +1507,9 @@ function createOfficialDocument(report) {
         <hr class="lh-divider">
 
         <div class="official-title">Cleanliness Evaluation Report (CER)</div>
-      </div>
+      </div></div>
 
-      <div class="cvr-page-content">
+      <div class="cvr-page-content"><div class="cvr-inner-content">
         <div class="official-meta">
           <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
           <b>Category:</b> ${category}<br>
@@ -1497,14 +1554,14 @@ function createOfficialDocument(report) {
             <div class="sig-title">Campus Administrator</div>
           </div>
         </div>
-      </div>
+      </div></div>
 
-      <div class="cvr-page-footer">
+      <div class="cvr-page-footer"><div class="cvr-inner-footer">
         <!-- FOOTER WITH ACCREDITATIONS -->
         <div class="official-footer">
           <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
         </div>
-      </div>
+      </div></div>
     </div>
   `;
 
@@ -1517,8 +1574,10 @@ function createOfficialDocument(report) {
 // letterhead/signatures/footer, same as Admin 1, and is wrapped in
 // ".page-break-sheet" so it always reads/visually separates/prints as a
 // distinct second page. Also uses the paper-size aware .cvr-page /
-// .cvr-page-header / .cvr-page-content / .cvr-page-footer structure so
-// this page's header/footer align the same way as page 1.
+// .cvr-page-header / .cvr-page-content / .cvr-page-footer structure
+// (with the .cvr-inner-* padding wrappers — see the note above
+// .cvr-page in <style>) so this page's header/footer align the same way
+// as page 1, on screen and in print.
 // ======================
 function createCommentsAttachmentDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1543,7 +1602,7 @@ function createCommentsAttachmentDocument(report) {
   const officialHTML = `
     <div class="cvr-page page-break-sheet" id="csmCommentsPage">
 
-      <div class="cvr-page-header">
+      <div class="cvr-page-header"><div class="cvr-inner-header">
         <div class="page-number-tag">— Page 2 of 2 —</div>
 
         <!-- LETTERHEAD WITH LOGOS (repeated, same as page 1) -->
@@ -1566,9 +1625,9 @@ function createCommentsAttachmentDocument(report) {
         <hr class="lh-divider">
 
         <div class="official-title">Comments &amp; Suggestions</div>
-      </div>
+      </div></div>
 
-      <div class="cvr-page-content">
+      <div class="cvr-page-content"><div class="cvr-inner-content">
         <div class="official-meta">
           <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
           <b>Category:</b> ${category}<br>
@@ -1607,14 +1666,14 @@ function createCommentsAttachmentDocument(report) {
             <div class="sig-title">Campus Administrator</div>
           </div>
         </div>
-      </div>
+      </div></div>
 
-      <div class="cvr-page-footer">
+      <div class="cvr-page-footer"><div class="cvr-inner-footer">
         <!-- FOOTER WITH ACCREDITATIONS -->
         <div class="official-footer">
           <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
         </div>
-      </div>
+      </div></div>
     </div>
   `;
 
@@ -1784,7 +1843,7 @@ window.printReport = () => {
 // sheet, and adding a fresh PDF page beforehand when `addPageBefore` is
 // true. The image is placed edge-to-edge (no extra jsPDF-side margin)
 // because the 15mm inset already lives entirely in the on-screen
-// .cvr-page-header / .cvr-page-content / .cvr-page-footer padding
+// .cvr-inner-header / .cvr-inner-content / .cvr-inner-footer padding
 // (captured by html2canvas) — same approach as Admin 1 — which is what
 // guarantees the comments sheet is exported as a real, separate PDF
 // page with the header/footer aligned correctly for the selected paper
