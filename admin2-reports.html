@@ -12,6 +12,48 @@
   @media print {
     #sidebar-mount, #topbar-mount, .filter-row, .stat-grid, .saved-reports-section, .report-tabs, .preview-bar, #commentsReportPreview { display: none !important; }
     .report-section { break-inside: avoid; }
+
+    /*
+      FIX: paper-size aware print alignment (ported from Admin 1).
+      @page margin is zeroed out so the printed sheet has no browser
+      margin of its own — all spacing instead comes from the
+      .cvr-page-header / .cvr-page-content / .cvr-page-footer padding
+      below, which keeps the header pinned to the top of the page and
+      the footer pinned to the bottom regardless of which paper size
+      (A4 / Letter / Legal / Long) is selected.
+    */
+    @page { margin: 0; }
+    html, body { margin: 0 !important; }
+
+    .layout, .main { display: block !important; padding: 0 !important; margin: 0 !important; }
+
+    #reportPreview { display: block !important; margin: 0 !important; }
+
+    .cvr-page {
+      box-shadow: none !important;
+      border: none !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      margin: 0 auto !important;
+      min-height: var(--page-height, 297mm) !important;
+    }
+
+    .cvr-page-header,
+    .cvr-page-content,
+    .cvr-page-footer {
+      padding-left: 15mm !important;
+      padding-right: 15mm !important;
+    }
+
+    .cvr-page-header {
+      padding-top: 3mm !important;
+    }
+
+    .cvr-page-footer {
+      padding-top: 6mm !important;
+      padding-bottom: 6mm !important;
+      margin-top: auto !important;
+    }
   }
 
   /* Category pill — used in the saved-reports table to label which
@@ -312,8 +354,9 @@
   }
 
   /* Report Preview Wrapper — transparent/borderless like Admin 1, so the
-     individual "sheets" (.official-report) read as separate bond-paper
-     pages sitting on the page background, not one bordered card. */
+     individual "sheets" (.cvr-page / .official-report) read as separate
+     bond-paper pages sitting on the page background, not one bordered
+     card. */
   #reportPreview {
     display: none;
     background: transparent;
@@ -497,7 +540,12 @@
 
   /* Official Document Style (like Admin 1) — each generated page is a
      distinct "sheet of bond paper": white background, subtle border and
-     drop shadow, so page 1 and page 2 read as two separate pages. */
+     drop shadow, so page 1 and page 2 read as two separate pages.
+     Used by the legacy standalone Comments & Suggestions report
+     (#ccsPage), which is no longer reachable from the UI. The main
+     Generate Report / Print / PDF flow (page 1 + auto-attached page 2)
+     uses the paper-size aware .cvr-page system below instead — see the
+     note above .cvr-page. */
   .official-report {
     background: #fff;
     font-family: 'Times New Roman', Times, serif;
@@ -508,6 +556,72 @@
     padding: 32px 40px;
     box-shadow: 0 1px 3px rgba(15,23,42,0.10), 0 1px 2px rgba(15,23,42,0.06);
     border: 1px solid #e2e8f0;
+  }
+
+  /*
+    Paper-size aware report page (ported from Admin 1's
+    .generated-report system). Used only by the main Generate Report /
+    Print / PDF flow (#csmPage and #csmCommentsPage) so that the
+    on-screen preview, the printed page, and the exported PDF all use
+    the same paper size (A4 / Letter / Legal / Long) chosen in the
+    "Paper" dropdown, with the header pinned to the top of the sheet and
+    the footer pinned to the bottom via margin-top:auto on the footer.
+    The legacy standalone Comments & Suggestions report (#ccsPage) is
+    left untouched and keeps using the fixed .official-report layout
+    above.
+  */
+  .cvr-page {
+    display:flex;
+    flex-direction:column;
+    width:100%;
+    max-width:var(--page-width, 210mm);
+    min-height:var(--page-height, 297mm);
+    margin:0 auto;
+    box-sizing:border-box;
+    background:#fff;
+    font-family:'Times New Roman', Times, serif;
+    color:#000;
+    line-height:1.6;
+    box-shadow:0 1px 3px rgba(15,23,42,0.10), 0 1px 2px rgba(15,23,42,0.06);
+    border:1px solid #e2e8f0;
+  }
+
+  .cvr-page-header,
+  .cvr-page-content,
+  .cvr-page-footer {
+    width:100%;
+    box-sizing:border-box;
+    padding-left:15mm;
+    padding-right:15mm;
+  }
+
+  .cvr-page-header {
+    padding-top:6px;
+    padding-bottom:0;
+    flex:0 0 auto;
+  }
+
+  .cvr-page-content {
+    flex:0 1 auto;
+    padding-top:0;
+    padding-bottom:0;
+  }
+
+  .cvr-page-footer {
+    flex:0 0 auto;
+    padding-top:10px;
+    padding-bottom:10px;
+    margin-top:auto;
+    border-top:1px solid #e2e8f0;
+  }
+
+  /* Neutralize the legacy .official-footer spacing when it's nested
+     inside the new .cvr-page-footer wrapper, since the wrapper already
+     provides its own top padding — avoids doubled spacing above the
+     accreditations footer image. */
+  .cvr-page-footer .official-footer {
+    margin-top: 0;
+    padding-top: 0;
   }
 
   /* A visually distinct "next sheet" — separated by real blank space plus
@@ -764,15 +878,17 @@
     </div>
 
     <!-- Filter order matches the intended admin workflow: Start Date →
-         End Date → Category → Office → Generate Report. Comfort Room and
-         Surroundings each keep their own office list and their own
-         5-question evaluation form (see Office Management / Evaluation
-         Management); the Category selection here drives which office
-         list populates the "Select Office" dropdown, and the report is
-         only generated once a category, an office, and both dates are
-         set. Generate Report now automatically pulls the matching
-         Comments & Suggestions too and attaches them as page 2 of the
-         same report — see generateReport(). -->
+         End Date → Category → Office → Paper size → Generate Report.
+         Comfort Room and Surroundings each keep their own office list
+         and their own 5-question evaluation form (see Office Management
+         / Evaluation Management); the Category selection here drives
+         which office list populates the "Select Office" dropdown, and
+         the report is only generated once a category, an office, and
+         both dates are set. Generate Report now automatically pulls the
+         matching Comments & Suggestions too and attaches them as page 2
+         of the same report — see generateReport(). The "Paper" dropdown
+         controls the paper size used for the on-screen preview, Print,
+         and PDF export — see setPaperSize(). -->
     <div class="filter-row">
       <input type="date" class="filter-date" id="start-date">
       <input type="date" class="filter-date" id="end-date">
@@ -787,6 +903,13 @@
         <option value="">Select Category First</option>
       </select>
 
+      <select class="filter-select" id="paperSizeFilter" title="Paper size for preview, print, and PDF export" onchange="setPaperSize(this.value)">
+        <option value="a4">Paper: A4 (210 × 297 mm)</option>
+        <option value="letter">Paper: Letter (8.5 × 11 in)</option>
+        <option value="legal">Paper: Legal (8.5 × 14 in)</option>
+        <option value="long">Paper: Long / Folio (8.5 × 13 in)</option>
+      </select>
+
       <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
       <button class="btn-save" id="btn-save-report" disabled>💾 Save Report</button>
     </div>
@@ -794,7 +917,10 @@
     <!-- REPORT PREVIEW (shown/hidden like Admin 1). Contains the CER
          report (page 1, #csmPage) followed immediately by the
          auto-attached Comments & Suggestions sheet (page 2,
-         #csmCommentsPage) — see renderCombinedReport(). -->
+         #csmCommentsPage) — see renderCombinedReport(). Both pages use
+         the paper-size aware .cvr-page layout so Print/PDF align the
+         header at the top and the footer at the bottom regardless of
+         the selected paper size. -->
     <div id="reportPreview">
       <div class="preview-bar">
         <span class="preview-label" id="previewLabel">📄 Report Preview</span>
@@ -882,6 +1008,42 @@ const db = getFirestore(app);
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin2", "reports");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Reports", "admin2");
+
+// ======================
+// PAPER SIZE SELECTION (ported from Admin 1) — drives the on-screen
+// preview size via the --page-width/--page-height CSS vars (consumed
+// by .cvr-page), the print @page size (via the injected
+// #dynamicPageSize <style> tag), and the jsPDF export format/page
+// dimensions used in exportPDF(). Does not touch any Cleanliness data
+// or evaluation logic below.
+// ======================
+const PAPER_SIZES = {
+  a4:     { width: 210,   height: 297,   jspdf: "a4" },
+  letter: { width: 215.9, height: 279.4, jspdf: "letter" },
+  legal:  { width: 215.9, height: 355.6, jspdf: "legal" },
+  long:   { width: 215.9, height: 330.2, jspdf: [215.9, 330.2] }
+};
+
+let currentPaperSizeKey = "a4";
+
+window.setPaperSize = (key) => {
+  const size = PAPER_SIZES[key] || PAPER_SIZES.a4;
+  currentPaperSizeKey = PAPER_SIZES[key] ? key : "a4";
+
+  document.documentElement.style.setProperty("--page-width",  size.width  + "mm");
+  document.documentElement.style.setProperty("--page-height", size.height + "mm");
+
+  let pageSizeTag = document.getElementById("dynamicPageSize");
+  if (!pageSizeTag) {
+    pageSizeTag = document.createElement("style");
+    pageSizeTag.id = "dynamicPageSize";
+    document.head.appendChild(pageSizeTag);
+  }
+  pageSizeTag.textContent =
+    `@media print { @page { size: ${size.width}mm ${size.height}mm; margin: 0; } }`;
+};
+
+setPaperSize(currentPaperSizeKey);
 
 // ======================
 // FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
@@ -1202,7 +1364,10 @@ function buildCommentsPayload(filteredEvals) {
 
 // ======================
 // CREATE OFFICIAL DOCUMENT (page 1 — CER ratings report, like Admin 1's
-// CSM page)
+// CSM page). Uses the paper-size aware .cvr-page / .cvr-page-header /
+// .cvr-page-content / .cvr-page-footer structure (ported from Admin 1)
+// so the letterhead stays pinned to the top and the accreditations
+// footer stays pinned to the bottom of the selected paper size.
 // ======================
 function createOfficialDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1211,76 +1376,83 @@ function createOfficialDocument(report) {
 
   const narrative = generateNarrative(report.office, report.respondents, parseFloat(report.avgSatisfaction), report.dimensionAverages);
   const officialHTML = `
-    <div class="official-report" id="csmPage">
-      <!-- LETTERHEAD WITH LOGOS -->
-      <div class="lh-row">
-        <div class="lh-logo-box" style="width:150px; height:90px;">
-          <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+    <div class="cvr-page" id="csmPage">
+
+      <div class="cvr-page-header">
+        <!-- LETTERHEAD WITH LOGOS -->
+        <div class="lh-row">
+          <div class="lh-logo-box" style="width:150px; height:90px;">
+            <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+          </div>
+          <div class="lh-text">
+            <div class="rep">Republic of the Philippines</div>
+            <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
+            <div class="dept">General Services Office</div>
+            <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
+            <div class="addr">Website: www.isufst.edu.ph</div>
+          </div>
+          <div class="lh-seal-box" style="width:100px; height:100px;">
+            <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+          </div>
         </div>
-        <div class="lh-text">
-          <div class="rep">Republic of the Philippines</div>
-          <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
-          <div class="dept">General Services Office</div>
-          <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
-          <div class="addr">Website: www.isufst.edu.ph</div>
-        </div>
-        <div class="lh-seal-box" style="width:100px; height:100px;">
-          <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
-        </div>
+
+        <hr class="lh-divider">
+
+        <div class="official-title">Cleanliness Evaluation Report (CER)</div>
       </div>
 
-      <hr class="lh-divider">
+      <div class="cvr-page-content">
+        <div class="official-meta">
+          <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
+          <b>Category:</b> ${category}<br>
+          <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
+          <b>No. of Respondents:</b> ${report.respondents}
+        </div>
 
-      <div class="official-title">Cleanliness Evaluation Report (CER)</div>
-
-      <div class="official-meta">
-        <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
-        <b>Category:</b> ${category}<br>
-        <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
-        <b>No. of Respondents:</b> ${report.respondents}
-      </div>
-
-      <table class="official-table">
-        <thead>
-          <tr>
-            <th style="width:50%;text-align:left;padding-left:10px;">Evaluation Question</th>
-            <th style="width:25%;">Percentage (%)</th>
-            <th style="width:25%;">Rating</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${report.dimensionAverages.map(d => `
+        <table class="official-table">
+          <thead>
             <tr>
-              <td style="padding-left:10px;">${d.dimension}</td>
-              <td style="text-align:center;">${d.percentage}</td>
-              <td style="text-align:center;">${d.rating.label}</td>
+              <th style="width:50%;text-align:left;padding-left:10px;">Evaluation Question</th>
+              <th style="width:25%;">Percentage (%)</th>
+              <th style="width:25%;">Rating</th>
             </tr>
-          `).join('')}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            ${report.dimensionAverages.map(d => `
+              <tr>
+                <td style="padding-left:10px;">${d.dimension}</td>
+                <td style="text-align:center;">${d.percentage}</td>
+                <td style="text-align:center;">${d.rating.label}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
 
-      <div class="official-narrative">
-        ${narrative.map(p => `<p>${p}</p>`).join('')}
+        <div class="official-narrative">
+          ${narrative.map(p => `<p>${p}</p>`).join('')}
+        </div>
+
+        <div class="official-signatures">
+          <div class="sig-block">
+            <div class="sig-label">Prepared by:</div>
+            <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
+            <span class="sig-name">Melby P. Parreno,Ed.D</span>
+            <div class="sig-title">General Services Office</div>
+          </div>
+          <div class="sig-block">
+            <div class="sig-label">Noted by:</div>
+            <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
+            <span class="sig-name">MICHAEL B. DIZON, EDD, PHD</span>
+            <div class="sig-title">Campus Administrator</div>
+          </div>
+        </div>
       </div>
 
-      <div class="official-signatures">
-        <div class="sig-block">
-          <div class="sig-label">Prepared by:</div>
-          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-          <span class="sig-name">Melby P. Parreno,Ed.D</span>
-          <div class="sig-title">General Services Office</div>
+      <div class="cvr-page-footer">
+        <!-- FOOTER WITH ACCREDITATIONS -->
+        <div class="official-footer">
+          <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
         </div>
-        <div class="sig-block">
-          <div class="sig-label">Noted by:</div>
-          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-          <span class="sig-name">MICHAEL B. DIZON, EDD, PHD</span>
-          <div class="sig-title">Campus Administrator</div>
-        </div>
-      </div>
-
-      <!-- FOOTER WITH ACCREDITATIONS -->
-      <div class="official-footer">
-        <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
       </div>
     </div>
   `;
@@ -1293,7 +1465,9 @@ function createOfficialDocument(report) {
 // Suggestions sheet, like Admin 1's #csmCommentsPage). Repeats the
 // letterhead/signatures/footer, same as Admin 1, and is wrapped in
 // ".page-break-sheet" so it always reads/visually separates/prints as a
-// distinct second page.
+// distinct second page. Also uses the paper-size aware .cvr-page /
+// .cvr-page-header / .cvr-page-content / .cvr-page-footer structure so
+// this page's header/footer align the same way as page 1.
 // ======================
 function createCommentsAttachmentDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1316,73 +1490,79 @@ function createCommentsAttachmentDocument(report) {
     : `No written comments or suggestions were submitted by respondents of the <strong>${report.office}</strong> during the covered period.`;
 
   const officialHTML = `
-    <div class="official-report page-break-sheet" id="csmCommentsPage">
+    <div class="cvr-page page-break-sheet" id="csmCommentsPage">
 
-      <div class="page-number-tag">— Page 2 of 2 —</div>
+      <div class="cvr-page-header">
+        <div class="page-number-tag">— Page 2 of 2 —</div>
 
-      <!-- LETTERHEAD WITH LOGOS (repeated, same as page 1) -->
-      <div class="lh-row">
-        <div class="lh-logo-box" style="width:150px; height:90px;">
-          <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+        <!-- LETTERHEAD WITH LOGOS (repeated, same as page 1) -->
+        <div class="lh-row">
+          <div class="lh-logo-box" style="width:150px; height:90px;">
+            <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+          </div>
+          <div class="lh-text">
+            <div class="rep">Republic of the Philippines</div>
+            <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
+            <div class="dept">General Services Office</div>
+            <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
+            <div class="addr">Website: www.isufst.edu.ph</div>
+          </div>
+          <div class="lh-seal-box" style="width:100px; height:100px;">
+            <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+          </div>
         </div>
-        <div class="lh-text">
-          <div class="rep">Republic of the Philippines</div>
-          <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
-          <div class="dept">General Services Office</div>
-          <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
-          <div class="addr">Website: www.isufst.edu.ph</div>
+
+        <hr class="lh-divider">
+
+        <div class="official-title">Comments &amp; Suggestions</div>
+      </div>
+
+      <div class="cvr-page-content">
+        <div class="official-meta">
+          <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
+          <b>Category:</b> ${category}<br>
+          <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
+          <b>No. of Respondents:</b> ${report.respondents}<br>
+          <b>No. of Comments/Suggestions Received:</b> ${commentsCount}
         </div>
-        <div class="lh-seal-box" style="width:100px; height:100px;">
-          <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
+
+        <table class="official-table">
+          <thead>
+            <tr>
+              <th style="width:18%;">Date</th>
+              <th style="width:82%;text-align:left;padding-left:10px;">Comment / Suggestion</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+
+        <div class="official-narrative">
+          <p>${summaryLine}</p>
+        </div>
+
+        <div class="official-signatures">
+          <div class="sig-block">
+            <div class="sig-label">Prepared by:</div>
+            <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
+            <span class="sig-name">Melby P. Parreno,Ed.D</span>
+            <div class="sig-title">General Services Office</div>
+          </div>
+          <div class="sig-block">
+            <div class="sig-label">Noted by:</div>
+            <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
+            <span class="sig-name">MICHAEL B. DIZON, EDD, PHD</span>
+            <div class="sig-title">Campus Administrator</div>
+          </div>
         </div>
       </div>
 
-      <hr class="lh-divider">
-
-      <div class="official-title">Comments &amp; Suggestions</div>
-
-      <div class="official-meta">
-        <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
-        <b>Category:</b> ${category}<br>
-        <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
-        <b>No. of Respondents:</b> ${report.respondents}<br>
-        <b>No. of Comments/Suggestions Received:</b> ${commentsCount}
-      </div>
-
-      <table class="official-table">
-        <thead>
-          <tr>
-            <th style="width:18%;">Date</th>
-            <th style="width:82%;text-align:left;padding-left:10px;">Comment / Suggestion</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-      </table>
-
-      <div class="official-narrative">
-        <p>${summaryLine}</p>
-      </div>
-
-      <div class="official-signatures">
-        <div class="sig-block">
-          <div class="sig-label">Prepared by:</div>
-          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-          <span class="sig-name">Melby P. Parreno,Ed.D</span>
-          <div class="sig-title">General Services Office</div>
+      <div class="cvr-page-footer">
+        <!-- FOOTER WITH ACCREDITATIONS -->
+        <div class="official-footer">
+          <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
         </div>
-        <div class="sig-block">
-          <div class="sig-label">Noted by:</div>
-          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-          <span class="sig-name">MICHAEL B. DIZON, EDD, PHD</span>
-          <div class="sig-title">Campus Administrator</div>
-        </div>
-      </div>
-
-      <!-- FOOTER WITH ACCREDITATIONS -->
-      <div class="official-footer">
-        <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
       </div>
     </div>
   `;
@@ -1526,26 +1706,40 @@ window.closeReport = () => {
 // cards, saved-reports table, tabs, the standalone comments preview)
 // is hidden for print via the @media print rules at the top of <style>,
 // and the two pages inside the preview always land on separate physical
-// sheets because of .page-break-sheet's page-break-before rule — so the
-// browser's own print dialog "Pages" field (e.g. "1" for CSM only, or
-// "1-2" / "All" for both) lets the admin choose what actually prints.
+// sheets because of .page-break-sheet's page-break-before rule. Before
+// printing, the currently selected "Paper" dropdown value is re-applied
+// via setPaperSize() so the injected @page size rule (and the
+// --page-width/--page-height vars driving .cvr-page) match what's
+// showing on screen, keeping the header pinned to the top and the
+// footer pinned to the bottom for whichever paper size is selected —
+// then the browser's own print dialog "Pages" field (e.g. "1" for CER
+// only, or "1-2" / "All" for both) lets the admin choose what actually
+// prints.
 // ======================
 window.printReport = () => {
   if (document.getElementById("reportPreview").style.display === "none") {
     alert("Please generate or view a report first.");
     return;
   }
+  const paperSelect = document.getElementById("paperSizeFilter");
+  if (paperSelect) setPaperSize(paperSelect.value);
+
   window.print();
 };
 
 // ======================
 // SHARED PDF HELPER — draws one html2canvas canvas onto a jsPDF
-// document, slicing it across multiple A4 pages if it's taller than one
+// document, slicing it across multiple pages if it's taller than one
 // sheet, and adding a fresh PDF page beforehand when `addPageBefore` is
-// true. This is what guarantees the comments sheet is exported as a
-// real, separate PDF page — same approach as Admin 1.
+// true. The image is placed edge-to-edge (no extra jsPDF-side margin)
+// because the 15mm inset already lives entirely in the on-screen
+// .cvr-page-header / .cvr-page-content / .cvr-page-footer padding
+// (captured by html2canvas) — same approach as Admin 1 — which is what
+// guarantees the comments sheet is exported as a real, separate PDF
+// page with the header/footer aligned correctly for the selected paper
+// size.
 // ======================
-async function renderElementToPdf(pdf, element, { margin, usableW, usableH, addPageBefore }) {
+async function renderElementToPdf(pdf, element, { usableW, usableH, addPageBefore }) {
   const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
   const scale = usableW / canvas.width;
   const pdfH = canvas.height * scale;
@@ -1553,7 +1747,7 @@ async function renderElementToPdf(pdf, element, { margin, usableW, usableH, addP
   if (addPageBefore) pdf.addPage();
 
   if (pdfH <= usableH) {
-    pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, usableW, pdfH);
+    pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, usableW, pdfH);
   } else {
     const slicePx = Math.floor(usableH / scale);
     let offset = 0;
@@ -1562,7 +1756,7 @@ async function renderElementToPdf(pdf, element, { margin, usableW, usableH, addP
       sc.width = canvas.width;
       sc.height = Math.min(slicePx, canvas.height - offset);
       sc.getContext("2d").drawImage(canvas, 0, -offset);
-      pdf.addImage(sc.toDataURL("image/png"), "PNG", margin, margin, usableW, sc.height * scale);
+      pdf.addImage(sc.toDataURL("image/png"), "PNG", 0, 0, usableW, sc.height * scale);
       offset += slicePx;
       if (offset < canvas.height) pdf.addPage();
     }
@@ -1571,7 +1765,9 @@ async function renderElementToPdf(pdf, element, { margin, usableW, usableH, addP
 
 // ======================
 // EXPORT PDF — exports the CER report as page 1 and the auto-attached
-// Comments & Suggestions sheet as page 2 of the same standard-A4 PDF.
+// Comments & Suggestions sheet as page 2 of the same PDF, using
+// whichever paper size is currently selected in the "Paper" dropdown
+// (A4 / Letter / Legal / Long) — mirrors Admin 1's exportPDF().
 // ======================
 window.exportPDF = async () => {
   if (document.getElementById("reportPreview").style.display === "none" || !currentReport) {
@@ -1579,19 +1775,21 @@ window.exportPDF = async () => {
     return;
   }
 
+  const paperSelect = document.getElementById("paperSizeFilter");
+  if (paperSelect) setPaperSize(paperSelect.value);
+
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ unit: "mm", format: "a4" });
-  const margin = 10;
-  const usableW = pdf.internal.pageSize.getWidth() - margin * 2;
-  const usableH = pdf.internal.pageSize.getHeight() - margin * 2;
+  const pdf = new jsPDF({ unit: "mm", format: (PAPER_SIZES[currentPaperSizeKey] || PAPER_SIZES.a4).jspdf });
+  const usableW = pdf.internal.pageSize.getWidth();
+  const usableH = pdf.internal.pageSize.getHeight();
 
   try {
     // Page 1: CER ratings page
-    await renderElementToPdf(pdf, document.getElementById("csmPage"), { margin, usableW, usableH, addPageBefore: false });
+    await renderElementToPdf(pdf, document.getElementById("csmPage"), { usableW, usableH, addPageBefore: false });
     // Page 2 (separate sheet): auto-attached Comments & Suggestions page
     const commentsEl = document.getElementById("csmCommentsPage");
     if (commentsEl) {
-      await renderElementToPdf(pdf, commentsEl, { margin, usableW, usableH, addPageBefore: true });
+      await renderElementToPdf(pdf, commentsEl, { usableW, usableH, addPageBefore: true });
     }
   } catch (err) {
     console.error(err);
@@ -1741,7 +1939,9 @@ onSnapshot(savedCommentsReportsQuery, (snapshot) => {
 
 // ======================
 // CREATE COMMENTS DOCUMENT (standalone report — own page id "ccsPage"
-// so it never collides with the auto-attached "csmCommentsPage").
+// so it never collides with the auto-attached "csmCommentsPage"). Left
+// untouched on the original fixed .official-report layout, since this
+// standalone feature is no longer reachable from the UI.
 // ======================
 function createCommentsDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
