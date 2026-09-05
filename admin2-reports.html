@@ -20,7 +20,7 @@
       .cvr-page-header / .cvr-page-content / .cvr-page-footer padding
       below, which keeps the header pinned to the top of the page and
       the footer pinned to the bottom regardless of which paper size
-      (A4 / Letter / Legal / Long) is selected.
+      (A3/A4/A5/A6, B4/B5, Letter, Legal, Long/Folio, Statement, Executive, Tabloid) is selected.
     */
     @page { margin: 0; }
     html, body { margin: 0 !important; }
@@ -563,7 +563,7 @@
     .generated-report system). Used only by the main Generate Report /
     Print / PDF flow (#csmPage and #csmCommentsPage) so that the
     on-screen preview, the printed page, and the exported PDF all use
-    the same paper size (A4 / Letter / Legal / Long) chosen in the
+    the same paper size (A3/A4/A5/A6, B4/B5, Letter, Legal, Long/Folio, Statement, Executive, Tabloid) chosen in the
     "Paper" dropdown, with the header pinned to the top of the sheet and
     the footer pinned to the bottom via margin-top:auto on the footer.
     The legacy standalone Comments & Suggestions report (#ccsPage) is
@@ -904,10 +904,22 @@
       </select>
 
       <select class="filter-select" id="paperSizeFilter" title="Paper size for preview, print, and PDF export" onchange="setPaperSize(this.value)">
-        <option value="a4">Paper: A4 (210 × 297 mm)</option>
-        <option value="letter">Paper: Letter (8.5 × 11 in)</option>
-        <option value="legal">Paper: Legal (8.5 × 14 in)</option>
-        <option value="long">Paper: Long / Folio (8.5 × 13 in)</option>
+        <optgroup label="ISO / International">
+          <option value="a3">Paper: A3 (297 × 420 mm)</option>
+          <option value="a4" selected>Paper: A4 (210 × 297 mm)</option>
+          <option value="a5">Paper: A5 (148 × 210 mm)</option>
+          <option value="a6">Paper: A6 (105 × 148 mm)</option>
+          <option value="b4">Paper: B4 (257 × 364 mm)</option>
+          <option value="b5">Paper: B5 (182 × 257 mm)</option>
+        </optgroup>
+        <optgroup label="US / ANSI">
+          <option value="letter">Paper: Letter (8.5 × 11 in)</option>
+          <option value="legal">Paper: Legal (8.5 × 14 in)</option>
+          <option value="long">Paper: Long / Folio (8.5 × 13 in)</option>
+          <option value="statement">Paper: Statement (5.5 × 8.5 in)</option>
+          <option value="executive">Paper: Executive (7.25 × 10.5 in)</option>
+          <option value="tabloid">Paper: Tabloid / Ledger (11 × 17 in)</option>
+        </optgroup>
       </select>
 
       <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
@@ -1018,10 +1030,21 @@ document.getElementById("topbar-mount").innerHTML = buildTopbar("Reports", "admi
 // or evaluation logic below.
 // ======================
 const PAPER_SIZES = {
-  a4:     { width: 210,   height: 297,   jspdf: "a4" },
-  letter: { width: 215.9, height: 279.4, jspdf: "letter" },
-  legal:  { width: 215.9, height: 355.6, jspdf: "legal" },
-  long:   { width: 215.9, height: 330.2, jspdf: [215.9, 330.2] }
+  // ISO A series
+  a3:        { width: 297,   height: 420   },
+  a4:        { width: 210,   height: 297   },
+  a5:        { width: 148,   height: 210   },
+  a6:        { width: 105,   height: 148   },
+  // ISO/JIS B series
+  b4:        { width: 257,   height: 364   },
+  b5:        { width: 182,   height: 257   },
+  // US / ANSI sizes
+  letter:    { width: 215.9, height: 279.4 },
+  legal:     { width: 215.9, height: 355.6 },
+  long:      { width: 215.9, height: 330.2 }, // Long / Folio (8.5 x 13 in)
+  statement: { width: 139.7, height: 215.9 },
+  executive: { width: 184.15,height: 266.7 },
+  tabloid:   { width: 279.4, height: 431.8 }  // Tabloid / Ledger
 };
 
 let currentPaperSizeKey = "a4";
@@ -1767,7 +1790,7 @@ async function renderElementToPdf(pdf, element, { usableW, usableH, addPageBefor
 // EXPORT PDF — exports the CER report as page 1 and the auto-attached
 // Comments & Suggestions sheet as page 2 of the same PDF, using
 // whichever paper size is currently selected in the "Paper" dropdown
-// (A4 / Letter / Legal / Long) — mirrors Admin 1's exportPDF().
+// (A3/A4/A5/A6, B4/B5, Letter, Legal, Long/Folio, Statement, Executive, Tabloid) — mirrors Admin 1's exportPDF().
 // ======================
 window.exportPDF = async () => {
   if (document.getElementById("reportPreview").style.display === "none" || !currentReport) {
@@ -1779,7 +1802,8 @@ window.exportPDF = async () => {
   if (paperSelect) setPaperSize(paperSelect.value);
 
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ unit: "mm", format: (PAPER_SIZES[currentPaperSizeKey] || PAPER_SIZES.a4).jspdf });
+  const activeSize = PAPER_SIZES[currentPaperSizeKey] || PAPER_SIZES.a4;
+  const pdf = new jsPDF({ unit: "mm", format: [activeSize.width, activeSize.height] });
   const usableW = pdf.internal.pageSize.getWidth();
   const usableH = pdf.internal.pageSize.getHeight();
 
