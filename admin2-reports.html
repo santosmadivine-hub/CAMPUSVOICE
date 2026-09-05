@@ -752,11 +752,6 @@
     }
   }
 
-  .page-number-tag {
-    text-align: center; font-size: 9pt; color: #94a3b8;
-    margin-bottom: 6px; font-family: 'DM Sans', sans-serif; letter-spacing: .5px;
-  }
-
   /* Letterhead */
   .lh-row {
     display: flex;
@@ -1515,7 +1510,12 @@ function buildCommentsPayload(filteredEvals) {
 // wrappers (see the note above .cvr-page in <style>), so the letterhead
 // stays pinned to the top and the accreditations footer stays pinned to
 // the bottom of the selected paper size — in the on-screen preview AND
-// in print.
+// in print. If this page's content is taller than one physical sheet,
+// native browser Print/Save-as-PDF already repeats this same header and
+// footer on every extra physical page via the display:table technique
+// in the @media print block above; exportPDF() below applies the same
+// "repeat header + footer, paginate the content" idea for the
+// html2canvas/jsPDF export path (see renderCvrPageToPdf()).
 // ======================
 function createOfficialDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1617,7 +1617,10 @@ function createOfficialDocument(report) {
 // .cvr-page-header / .cvr-page-content / .cvr-page-footer structure
 // (with the .cvr-inner-* padding wrappers — see the note above
 // .cvr-page in <style>) so this page's header/footer align the same way
-// as page 1, on screen and in print.
+// as page 1, on screen and in print. No page-number text is rendered
+// anywhere on this sheet (or page 1) — the report simply continues onto
+// as many physical pages as its content needs, with the header/footer
+// repeating on each one.
 // ======================
 function createCommentsAttachmentDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1643,8 +1646,6 @@ function createCommentsAttachmentDocument(report) {
     <div class="cvr-page page-break-sheet" id="csmCommentsPage">
 
       <div class="cvr-page-header"><div class="cvr-inner-header">
-        <div class="page-number-tag">— Page 2 of 2 —</div>
-
         <!-- LETTERHEAD WITH LOGOS (repeated, same as page 1) -->
         <div class="lh-row">
           <div class="lh-logo-box">
@@ -1855,16 +1856,19 @@ window.closeReport = () => {
 // page 2 comments). Everything else (sidebar, topbar, filters, stat
 // cards, saved-reports table, tabs, the standalone comments preview)
 // is hidden for print via the @media print rules at the top of <style>,
-// and the two pages inside the preview always land on separate physical
-// sheets because of .page-break-sheet's page-break-before rule. Before
-// printing, the currently selected "Paper" dropdown value is re-applied
-// via setPaperSize() so the injected @page size rule (and the
-// --page-width/--page-height vars driving .cvr-page) match what's
+// and any page (page 1 or page 2) that runs long automatically
+// continues onto additional physical sheets, repeating the same
+// header/footer on each one, because of the display:table technique in
+// the @media print block; the comments page additionally always starts
+// on its own fresh sheet via .page-break-sheet's page-break-before
+// rule. Before printing, the currently selected "Paper" dropdown value
+// is re-applied via setPaperSize() so the injected @page size rule (and
+// the --page-width/--page-height vars driving .cvr-page) match what's
 // showing on screen, keeping the header pinned to the top and the
 // footer pinned to the bottom for whichever paper size is selected —
 // then the browser's own print dialog "Pages" field (e.g. "1" for CER
 // only, or "1-2" / "All" for both) lets the admin choose what actually
-// prints.
+// prints. No page-number text is printed anywhere.
 // ======================
 window.printReport = () => {
   if (document.getElementById("reportPreview").style.display === "none") {
@@ -1878,16 +1882,12 @@ window.printReport = () => {
 };
 
 // ======================
-// SHARED PDF HELPER — draws one html2canvas canvas onto a jsPDF
-// document, slicing it across multiple pages if it's taller than one
-// sheet, and adding a fresh PDF page beforehand when `addPageBefore` is
-// true. The image is placed edge-to-edge (no extra jsPDF-side margin)
-// because the 15mm inset already lives entirely in the on-screen
-// .cvr-inner-header / .cvr-inner-content / .cvr-inner-footer padding
-// (captured by html2canvas) — same approach as Admin 1 — which is what
-// guarantees the comments sheet is exported as a real, separate PDF
-// page with the header/footer aligned correctly for the selected paper
-// size.
+// SHARED PDF HELPER (legacy, single-canvas slice) — draws one
+// html2canvas canvas onto a jsPDF document, slicing it across multiple
+// pages if it's taller than one sheet, and adding a fresh PDF page
+// beforehand when `addPageBefore` is true. Kept as-is; exportPDF() now
+// uses renderCvrPageToPdf() below instead, which slices only the
+// *content* region and re-draws the header/footer on every page.
 // ======================
 async function renderElementToPdf(pdf, element, { usableW, usableH, addPageBefore }) {
   const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
@@ -1914,10 +1914,95 @@ async function renderElementToPdf(pdf, element, { usableW, usableH, addPageBefor
 }
 
 // ======================
+// PAGINATION-AWARE PDF HELPER — renders one .cvr-page element (e.g.
+// #csmPage or #csmCommentsPage) into the given jsPDF document, and
+// AUTOMATICALLY CONTINUES the content onto as many additional physical
+// pages as it needs instead of cutting it off or letting it overlap the
+// footer. Unlike renderElementToPdf() above (which screenshots the
+// whole page as one flat image and blindly slices it into equal-height
+// chunks — which would slice straight through the header/footer and
+// never repeat them), this captures the header, content, and footer
+// regions of the page SEPARATELY:
+//   - the header image is redrawn at the very top of every physical
+//     page this element spans,
+//   - the footer image is redrawn pinned to the very bottom of every
+//     physical page this element spans (matching how the on-screen
+//     .cvr-page-footer's margin-top:auto pins it to the bottom when the
+//     content is short),
+//   - the content image is sliced into page-sized chunks and placed in
+//     the space between the header and footer on each page, continuing
+//     seamlessly from where the previous page's slice left off.
+// This mirrors, for the PDF/export path, the same "repeat header and
+// footer on every physical page" behavior the @media print CSS already
+// gives native browser Print for free. No page-number text is drawn
+// anywhere by this function.
+// ======================
+async function renderCvrPageToPdf(pdf, pageEl, { usableW, usableH, addPageBefore }) {
+  const headerEl = pageEl.querySelector(".cvr-page-header");
+  const contentEl = pageEl.querySelector(".cvr-page-content");
+  const footerEl = pageEl.querySelector(".cvr-page-footer");
+
+  const captureOpts = { scale: 2, useCORS: true, backgroundColor: "#ffffff" };
+  const [headerCanvas, contentCanvas, footerCanvas] = await Promise.all([
+    html2canvas(headerEl, captureOpts),
+    html2canvas(contentEl, captureOpts),
+    html2canvas(footerEl, captureOpts)
+  ]);
+
+  // mm-per-pixel conversion, based on the page's rendered width mapping
+  // onto the selected paper's usable width (header/content/footer all
+  // share that same rendered width since they're full-width sections of
+  // the same .cvr-page).
+  const scale = usableW / headerCanvas.width;
+  const headerHmm = headerCanvas.height * scale;
+  const footerHmm = footerCanvas.height * scale;
+  const contentHmm = contentCanvas.height * scale;
+
+  // Guard against a degenerate paper size where the header+footer alone
+  // would already exceed the sheet height.
+  const availableContentHmm = Math.max(usableH - headerHmm - footerHmm, 10);
+  const contentPxPerPage = Math.max(1, Math.floor(availableContentHmm / scale));
+  const totalPages = Math.max(1, Math.ceil(contentCanvas.height / contentPxPerPage));
+
+  if (addPageBefore) pdf.addPage();
+
+  for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+    if (pageIdx > 0) pdf.addPage();
+
+    // Header — repeated at the top of every physical page this element spans.
+    pdf.addImage(headerCanvas.toDataURL("image/png"), "PNG", 0, 0, usableW, headerHmm);
+
+    // This page's slice of the content, continuing on immediately from
+    // where the previous page's slice ended — nothing is skipped or
+    // overlapped.
+    const offsetPx = pageIdx * contentPxPerPage;
+    const sliceHeightPx = Math.min(contentPxPerPage, contentCanvas.height - offsetPx);
+    if (sliceHeightPx > 0) {
+      const sliceCanvas = document.createElement("canvas");
+      sliceCanvas.width = contentCanvas.width;
+      sliceCanvas.height = sliceHeightPx;
+      sliceCanvas.getContext("2d").drawImage(contentCanvas, 0, -offsetPx);
+      const sliceHmm = sliceHeightPx * scale;
+      pdf.addImage(sliceCanvas.toDataURL("image/png"), "PNG", 0, headerHmm, usableW, sliceHmm);
+    }
+
+    // Footer — repeated pinned to the bottom of every physical page this
+    // element spans.
+    pdf.addImage(footerCanvas.toDataURL("image/png"), "PNG", 0, usableH - footerHmm, usableW, footerHmm);
+  }
+}
+
+// ======================
 // EXPORT PDF — exports the CER report as page 1 and the auto-attached
-// Comments & Suggestions sheet as page 2 of the same PDF, using
+// Comments & Suggestions sheet as page 2+ of the same PDF, using
 // whichever paper size is currently selected in the "Paper" dropdown
-// (A3/A4/A5/A6, B4/B5, Letter, Legal, Long/Folio, Statement, Executive, Tabloid) — mirrors Admin 1's exportPDF().
+// (A3/A4/A5/A6, B4/B5, Letter, Legal, Long/Folio, Statement, Executive,
+// Tabloid). Each of the two report sections is rendered through
+// renderCvrPageToPdf(), so if either one's content is too long for a
+// single sheet, it automatically continues onto additional pages with
+// the same repeated header and footer instead of being cut off or
+// overlapping — the comments section always starts on its own fresh
+// page regardless (addPageBefore: true), same as before.
 // ======================
 window.exportPDF = async () => {
   if (document.getElementById("reportPreview").style.display === "none" || !currentReport) {
@@ -1935,12 +2020,13 @@ window.exportPDF = async () => {
   const usableH = pdf.internal.pageSize.getHeight();
 
   try {
-    // Page 1: CER ratings page
-    await renderElementToPdf(pdf, document.getElementById("csmPage"), { usableW, usableH, addPageBefore: false });
-    // Page 2 (separate sheet): auto-attached Comments & Suggestions page
+    // Page 1 (+ overflow pages, if needed): CER ratings page
+    await renderCvrPageToPdf(pdf, document.getElementById("csmPage"), { usableW, usableH, addPageBefore: false });
+    // Page 2+ (always a fresh sheet, + its own overflow pages if
+    // needed): auto-attached Comments & Suggestions page
     const commentsEl = document.getElementById("csmCommentsPage");
     if (commentsEl) {
-      await renderElementToPdf(pdf, commentsEl, { usableW, usableH, addPageBefore: true });
+      await renderCvrPageToPdf(pdf, commentsEl, { usableW, usableH, addPageBefore: true });
     }
   } catch (err) {
     console.error(err);
