@@ -786,6 +786,14 @@
     padding: 18px 20px;
     border-bottom: 1px solid #edf2f7;
     flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .chat-header-text {
+    min-width: 0;
   }
 
   .chat-header h3 {
@@ -801,6 +809,28 @@
     font-size: 12px;
     color: #64748b;
     margin: 0;
+  }
+
+  .chat-close-btn {
+    background: #f1f5f9;
+    border: none;
+    color: #64748b;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s, color .2s;
+  }
+
+  .chat-close-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
   }
 
   .chat-messages {
@@ -1087,8 +1117,11 @@
 <div class="modal-overlay" id="chat-modal">
   <div class="chat-modal-content">
     <div class="chat-header">
-      <h3 id="chat-header-title">💬 Message User</h3>
-      <p id="chat-header-sub"></p>
+      <div class="chat-header-text">
+        <h3 id="chat-header-title">💬 Message User</h3>
+        <p id="chat-header-sub"></p>
+      </div>
+      <button class="chat-close-btn" id="chat-modal-close" aria-label="Close chat" title="Close">✕</button>
     </div>
     <div class="chat-messages" id="chat-messages"></div>
     <div class="chat-input-row">
@@ -1949,6 +1982,7 @@ const chatHeaderSub = document.getElementById("chat-header-sub");
 const chatMessagesEl = document.getElementById("chat-messages");
 const chatInput = document.getElementById("chat-input");
 const chatSendBtn = document.getElementById("chat-send-btn");
+const chatCloseBtn = document.getElementById("chat-modal-close");
 
 function formatChatTimestamp(ms) {
   if (!ms) return "";
@@ -2039,6 +2073,8 @@ function closeChatModal() {
   }
   activeChatEvalId = null;
 }
+
+chatCloseBtn.addEventListener("click", closeChatModal);
 
 chatModal.addEventListener("click", (ev) => {
   if (ev.target === chatModal) closeChatModal();
