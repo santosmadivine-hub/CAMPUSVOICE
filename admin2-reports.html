@@ -54,6 +54,34 @@
       padding-bottom: 6mm !important;
       margin-top: auto !important;
     }
+
+    /*
+      FIX: repeat the header and footer on EVERY physical page, not just
+      the first one, when a page's content is too long to fit on a
+      single sheet (e.g. an office with a long list of comments).
+      Giving the page 'display:table', the header
+      'display:table-header-group', the content
+      'display:table-row-group', and the footer
+      'display:table-footer-group' is the standard CSS technique for
+      repeating table headers/footers across print pages — the
+      browser's print engine reproduces the header at the top and the
+      footer at the bottom of every page it has to create, for
+      whichever paper size is selected, exactly like a real
+      <table>/<thead>/<tfoot> would.
+    */
+    .cvr-page {
+      display: table !important;
+      table-layout: fixed !important;
+    }
+    .cvr-page-header {
+      display: table-header-group !important;
+    }
+    .cvr-page-content {
+      display: table-row-group !important;
+    }
+    .cvr-page-footer {
+      display: table-footer-group !important;
+    }
   }
 
   /* Category pill — used in the saved-reports table to label which
