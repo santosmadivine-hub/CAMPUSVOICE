@@ -1163,13 +1163,13 @@ function generateNarrative(office, respondents, overallPct, dimensionAverages) {
 // PAGINATION HELPERS
 // ======================
 // Splits a table + trailing content (narrative/signatures) across as
-// many physical A4 pages as needed, so long tables or comment lists
-// never get cut off or overlap the footer. Every generated page
-// repeats the same letterhead header at the top, and the accreditation
-// footer stays pinned to the exact bottom of every page (the existing
-// .official-report flex-column + .official-footer{margin-top:auto}
-// CSS already does this per page — this just decides how much content
-// belongs on each page).
+// many physical A4 pages as needed, so long tables, long narrative
+// text, or comment lists never get cut off or overlap the footer.
+// Every generated page repeats the same letterhead header at the top,
+// and the accreditation footer stays pinned to the exact bottom of
+// every page (the existing .official-report flex-column +
+// .official-footer{margin-top:auto} CSS already does this per page —
+// this just decides how much content belongs on each page).
 const MM_TO_PX = 96 / 25.4;
 const A4_HEIGHT_PX = 297 * MM_TO_PX;
 const PAGE_V_PADDING_PX = 32 * 2; // matches .official-report's 32px top/bottom padding
@@ -1216,52 +1216,74 @@ function measureRowHeights(page, theadHtml, rowHtmls) {
 
 /**
  * Lays out a table (with a repeating header/thead) plus a trailing
- * block (narrative + signatures) across one or more A4 pages.
+ * body of content (narrative paragraphs + signatures) across one or
+ * more A4 pages.
+ *
+ * The trailing content is treated as a sequence of independent,
+ * atomic BLOCKS (one per narrative paragraph, plus one final block for
+ * the signatures) rather than a single indivisible chunk. Blocks are
+ * packed greedily: as many as fit are placed directly under the table
+ * on the same page (in the leftover space after the last row), and
+ * only the true overflow — whatever didn't fit — flows onto the next
+ * page(s), which repeat the letterhead but omit the table. This is
+ * what lets a short report's summary/conclusion sit fully on Page 1
+ * right under the table, while a longer one spills only its excess
+ * onto Page 2, instead of the whole block jumping pages together.
+ *
+ * `trailing` may be a single HTML string (treated as one atomic
+ * block — preserves old all-or-nothing behavior for callers that
+ * don't need paragraph-level splitting) or an array of HTML strings
+ * (each its own block, packed independently).
  *
  * @param {string} idPrefix     id used for page 1; further pages get `${idPrefix}_2`, `_3`, ...
  * @param {(isContinuation:boolean) => string} buildChrome  returns the letterhead + title + meta HTML for a page
  * @param {string} theadHtml    the <thead>...</thead> markup (identical on every page)
  * @param {string[]} rowHtmls   array of <tr>...</tr> strings (at least one row)
- * @param {string} trailingHtml narrative + signatures HTML, kept together, placed once after the table
+ * @param {string|string[]} trailing  narrative/signature content, as one blob or an array of blocks
  * @param {string} footerInnerHtml the accreditation footer's inner HTML (repeated on every page)
  * @returns {{id:string, html:string}[]}
  */
-function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trailingHtml, footerInnerHtml) {
+function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trailing, footerInnerHtml) {
   return withMeasuringPage((page) => {
+    const trailingBlocks = Array.isArray(trailing) ? trailing.filter(Boolean) : (trailing ? [trailing] : []);
     const footerHtml = `<div class="official-footer">${footerInnerHtml}</div>`;
-    const chromeHeight = measureFragmentHeight(page, buildChrome(false) + `<table class="official-table">${theadHtml}<tbody></tbody></table>`);
+
+    // Chrome height on a page that also carries the table (letterhead
+    // + title + meta + empty table shell).
+    const chromeWithTableHeight = measureFragmentHeight(page, buildChrome(false) + `<table class="official-table">${theadHtml}<tbody></tbody></table>`);
+    // Chrome height on a continuation page that carries ONLY trailing
+    // blocks (no table) — e.g. a page that's just the tail end of the
+    // narrative and the signatures.
+    const chromeOnlyHeight = measureFragmentHeight(page, buildChrome(true));
     const footerHeight = measureFragmentHeight(page, footerHtml) || 60;
-    const trailingHeight = trailingHtml ? measureFragmentHeight(page, trailingHtml) : 0;
+    const blockHeights = trailingBlocks.map(b => measureFragmentHeight(page, b));
     const rowHeights = measureRowHeights(page, theadHtml, rowHtmls);
 
-    const capacity = Math.max(A4_HEIGHT_PX - PAGE_V_PADDING_PX - chromeHeight - footerHeight - PAGE_SAFETY_BUFFER_PX, 0);
+    const capacityWithTable = Math.max(A4_HEIGHT_PX - PAGE_V_PADDING_PX - chromeWithTableHeight - footerHeight - PAGE_SAFETY_BUFFER_PX, 0);
+    const capacityNoTable = Math.max(A4_HEIGHT_PX - PAGE_V_PADDING_PX - chromeOnlyHeight - footerHeight - PAGE_SAFETY_BUFFER_PX, 0);
 
-    // Bucket rows into pages that fit within `capacity`.
+    // Bucket table rows into pages that fit within capacityWithTable,
+    // tracking each bucket's total row height alongside it (avoids any
+    // ambiguity from duplicate row HTML when rows repeat).
     const pagesRows = [];
-    let current = [];
-    let currentHeight = 0;
+    let current = { rows: [], height: 0 };
     rowHtmls.forEach((rowHtml, i) => {
       const h = rowHeights[i] || 0;
-      if (current.length > 0 && currentHeight + h > capacity) {
+      if (current.rows.length > 0 && current.height + h > capacityWithTable) {
         pagesRows.push(current);
-        current = [];
-        currentHeight = 0;
+        current = { rows: [], height: 0 };
       }
-      current.push(rowHtml);
-      currentHeight += h;
+      current.rows.push(rowHtml);
+      current.height += h;
     });
     pagesRows.push(current);
 
-    // Does the trailing content (narrative + signatures) fit on the
-    // same page as the last batch of rows, or does it need its own page?
-    const lastPageRowsHeight = rowHeights.slice(rowHtmls.length - pagesRows[pagesRows.length - 1].length).reduce((a, b) => a + b, 0);
-    const trailingFitsLastPage = (lastPageRowsHeight + trailingHeight) <= capacity;
-
     const pages = [];
-    pagesRows.forEach((rows, idx) => {
+
+    // Render every table page EXCEPT the last one with just its rows —
+    // there's no room to consider trailing content on these yet.
+    pagesRows.slice(0, -1).forEach((bucket, idx) => {
       const isContinuation = idx > 0;
-      const isLastTablePage = idx === pagesRows.length - 1;
-      const includeTrailing = isLastTablePage && trailingFitsLastPage;
       const id = idx === 0 ? idPrefix : `${idPrefix}_${idx + 1}`;
       pages.push({
         id,
@@ -1270,23 +1292,65 @@ function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trai
             ${buildChrome(isContinuation)}
             <table class="official-table">
               ${theadHtml}
-              <tbody>${rows.join("")}</tbody>
+              <tbody>${bucket.rows.join("")}</tbody>
             </table>
-            ${includeTrailing ? trailingHtml : ""}
             ${footerHtml}
           </div>
         `
       });
     });
 
-    if (!trailingFitsLastPage) {
+    // On the LAST table page, pack as many trailing blocks as fit into
+    // the leftover space directly under the table's rows.
+    const lastPageIdx = pagesRows.length - 1;
+    const lastBucket = pagesRows[lastPageIdx];
+    let blockIdx = 0;
+    let leftover = capacityWithTable - lastBucket.height;
+    const blocksOnLastTablePage = [];
+    while (blockIdx < blockHeights.length && blockHeights[blockIdx] <= leftover) {
+      blocksOnLastTablePage.push(trailingBlocks[blockIdx]);
+      leftover -= blockHeights[blockIdx];
+      blockIdx++;
+    }
+
+    const lastTablePageId = lastPageIdx === 0 ? idPrefix : `${idPrefix}_${lastPageIdx + 1}`;
+    pages.push({
+      id: lastTablePageId,
+      html: `
+        <div class="official-report" id="${lastTablePageId}">
+          ${buildChrome(lastPageIdx > 0)}
+          <table class="official-table">
+            ${theadHtml}
+            <tbody>${lastBucket.rows.join("")}</tbody>
+          </table>
+          ${blocksOnLastTablePage.join("")}
+          ${footerHtml}
+        </div>
+      `
+    });
+
+    // Whatever trailing blocks didn't fit (the true overflow) continue
+    // onto as many additional pages as needed. Each of these pages
+    // repeats the letterhead (marked "(Continued)") but has no table,
+    // and the footer still pins to the bottom of each one. A block
+    // that alone is too tall even for a fresh empty page is still
+    // placed (rather than silently dropped) so nothing is ever lost —
+    // this only matters for pathologically long single paragraphs.
+    while (blockIdx < blockHeights.length) {
+      const pageBlocks = [];
+      let remaining = capacityNoTable;
+      while (blockIdx < blockHeights.length && (pageBlocks.length === 0 || blockHeights[blockIdx] <= remaining)) {
+        pageBlocks.push(trailingBlocks[blockIdx]);
+        remaining -= blockHeights[blockIdx];
+        blockIdx++;
+      }
       const id = `${idPrefix}_${pages.length + 1}`;
       pages.push({
         id,
         html: `
           <div class="official-report" id="${id}">
             ${buildChrome(true)}
-            ${trailingHtml}
+            ${pageBlocks.join("")}
             ${footerHtml}
           </div>
         `
@@ -1356,11 +1420,16 @@ function createOfficialDocument(report) {
             </tr>
   `);
 
-  const trailingHtml = `
-      <div class="official-narrative">
-        ${narrative.map(p => `<p>${p}</p>`).join('')}
-      </div>
+  // Trailing content is a sequence of independent blocks: one per
+  // narrative paragraph, then the signatures block. paginateReportDocument
+  // packs as many of these as fit directly under the table on Page 1,
+  // and only the true overflow continues onto Page 2 (or beyond) — the
+  // signatures always stay right after whatever narrative text lands
+  // on the same page as them, without ever pushing the footer off the
+  // sheet.
+  const narrativeBlocks = narrative.map(p => `<div class="official-narrative"><p>${p}</p></div>`);
 
+  const signaturesBlock = `
       <div class="official-signatures">
         <div class="sig-block">
           <div class="sig-label">Prepared by:</div>
@@ -1377,9 +1446,11 @@ function createOfficialDocument(report) {
       </div>
   `;
 
+  const trailingBlocks = [...narrativeBlocks, signaturesBlock];
+
   const footerInnerHtml = `<img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">`;
 
-  return paginateReportDocument("csmPage", buildChrome, theadHtml, rowHtmls, trailingHtml, footerInnerHtml);
+  return paginateReportDocument("csmPage", buildChrome, theadHtml, rowHtmls, trailingBlocks, footerInnerHtml);
 }
 
 // ======================
@@ -1480,9 +1551,10 @@ function createCommentsDocument(report) {
 // onward) immediately followed by the comments & suggestions document,
 // each separated by a page-break divider so print/PDF land every
 // physical page on its own sheet. Either document may now expand into
-// several physical pages on its own (e.g. a long comments list), and
-// each additional page repeats the same letterhead header and pins
-// the same footer to its bottom — see paginateReportDocument() above.
+// several physical pages on its own (e.g. a long narrative or a long
+// comments list), and each additional page repeats the same letterhead
+// header and pins the same footer to its bottom — see
+// paginateReportDocument() above.
 // ======================
 function buildReportPreviewHtml(report) {
   const ratingsPages = createOfficialDocument(report);
