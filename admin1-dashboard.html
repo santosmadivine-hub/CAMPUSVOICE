@@ -1056,12 +1056,12 @@ function renderLineChart(){
     counts.push(dayCount);
   }
 
-  const maxCount = Math.max(1, ...counts);
+  const yMax = 100;
   const xStep = counts.length > 1 ? chartW / (counts.length - 1) : 0;
 
   const points = counts.map((c, i) => ({
     x: padding.left + i * xStep,
-    y: padding.top + chartH - (c / maxCount) * chartH,
+    y: padding.top + chartH - (c / yMax) * chartH,
     c
   }));
 
@@ -1078,7 +1078,7 @@ function renderLineChart(){
     line.setAttribute("stroke-width", "1");
     svg.appendChild(line);
 
-    const value = Math.round(maxCount - (maxCount / gridCount) * g);
+    const value = Math.round(yMax - (yMax / gridCount) * g);
     const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
     label.setAttribute("x", padding.left - 7);
     label.setAttribute("y", y + 3);
