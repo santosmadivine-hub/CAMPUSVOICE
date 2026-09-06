@@ -1194,9 +1194,19 @@ function withMeasuringPage(fn) {
   }
 }
 
+// Measures the height a fragment of content actually takes up, EXCLUDING
+// the .official-report page div's own fixed 32px top/bottom padding.
+// getBoundingClientRect() on `page` always includes that padding (it's a
+// constant part of the box regardless of how little content is inside),
+// so every fragment measurement here would otherwise silently carry an
+// extra PAGE_V_PADDING_PX. Since the capacity formula below already
+// subtracts PAGE_V_PADDING_PX once for the page as a whole, leaving it
+// in per-fragment measurements double-counts it (once per fragment
+// measured), understating how much content actually fits and forcing
+// a report that truly fits on one sheet onto a second page.
 function measureFragmentHeight(page, html) {
   page.innerHTML = html;
-  return page.getBoundingClientRect().height;
+  return Math.max(page.getBoundingClientRect().height - PAGE_V_PADDING_PX, 0);
 }
 
 function measureRowHeights(page, theadHtml, rowHtmls) {
