@@ -19,6 +19,19 @@
     .page-break-label { display: none !important; }
     .official-report { page-break-inside: avoid; }
     body, .layout, .main { margin: 0 !important; padding: 0 !important; }
+
+    /* Browsers drop background colors/shading on print by default
+       (Chrome/Edge/Firefox all do this unless told otherwise), which is
+       why the light-blue table header, rating badges, and other filled
+       backgrounds were vanishing in the printed/exported report even
+       though they render correctly on screen. This forces every
+       element to keep its actual background + text colors as printed,
+       so the printed output matches the live preview exactly. */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
   }
 
   /* Filter Bar */
