@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   @media print {
+    @page { size: A4; margin: 0; }
     #sidebar-mount, #topbar-mount, .filter-row, .stats-row, .saved-reports-section { display: none !important; }
     .preview-bar { display: none !important; }
     #reportPreview { border: none !important; border-radius: 0 !important; box-shadow: none !important; margin: 0 !important; }
@@ -549,14 +550,24 @@
     margin: 4px 0;
   }
 
-  /* Official Document Style */
+  /* Official Document Style — sized to a single A4 sheet (210mm x
+     297mm). display:flex + flex-direction:column keeps the letterhead
+     header pinned to the top (it's simply the first block of content)
+     while .official-footer (the last child) is pushed to the exact
+     bottom of the page via margin-top:auto, without overlapping the
+     table/narrative/signatures content in between. */
   .official-report {
+    display: flex;
+    flex-direction: column;
     background: #fff;
     font-family: 'Times New Roman', Times, serif;
     color: #000;
     line-height: 1.6;
-    max-width: 900px;
+    width: 100%;
+    max-width: 210mm;
+    min-height: 297mm;
     margin: 0 auto;
+    box-sizing: border-box;
     padding: 32px 40px;
   }
 
@@ -710,8 +721,12 @@
     margin-top: 2px;
   }
 
+  /* Pinned to the bottom of the A4 sheet via margin-top:auto on the
+     flex-column .official-report above, so it sits at the exact
+     bottom of the page instead of trailing directly after the
+     signatures whenever content is short. */
   .official-footer {
-    margin-top: 20px;
+    margin-top: auto;
     padding-top: 8px;
     display: block;
     width: 100%;
