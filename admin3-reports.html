@@ -640,8 +640,8 @@
   }
 
   .official-meta {
-    font-size: 13pt;
-    line-height: 1.9;
+    font-size: 11.5pt;
+    line-height: 1.7;
     margin-bottom: 10px;
   }
 
@@ -649,34 +649,43 @@
     font-weight: bold;
   }
 
+  /* Table style matches the reference CSM report layout: a soft
+     letterhead-blue header (not a solid fill) with navy text, thin
+     hairline borders throughout, and no zebra-striping — clean rows
+     that read like the University's official CSM template. */
   .official-table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 14px;
-    font-size: 14pt;
+    font-size: 11pt;
+    border: 1px solid #a9c2e0;
   }
 
   .official-table th {
-    background: #1a3a6b;
-    color: #fff;
-    padding: 10px 11px;
-    border: 1px solid #1a3a6b;
+    background: #eef4fb;
+    color: #1a3a6b;
+    padding: 9px 11px;
+    border: 1px solid #a9c2e0;
     text-align: center;
     font-weight: bold;
+    font-size: 10.5pt;
   }
 
   .official-table td {
-    border: 1px solid #aaa;
-    padding: 9px 11px;
+    border: 1px solid #cddcef;
+    padding: 8px 11px;
+    vertical-align: middle;
+    font-size: 10.5pt;
   }
 
-  .official-table tr:nth-child(even) td {
-    background: #eef2f9;
+  .official-table .dim-cell {
+    color: #1a4d8f;
+    font-weight: 500;
   }
 
   .official-narrative {
-    font-size: 13pt;
-    line-height: 1.8;
+    font-size: 11pt;
+    line-height: 1.7;
     text-align: justify;
     margin-bottom: 16px;
   }
@@ -689,7 +698,7 @@
     display: flex;
     gap: 40px;
     margin-top: 24px;
-    font-size: 12pt;
+    font-size: 11pt;
   }
 
   .sig-block {
@@ -698,7 +707,7 @@
 
   .sig-label {
     color: #555;
-    font-size: 11pt;
+    font-size: 10.5pt;
     margin-bottom: 30px;
   }
 
@@ -716,7 +725,7 @@
   }
 
   .sig-title {
-    font-size: 11pt;
+    font-size: 10pt;
     font-style: italic;
     color: #333;
     margin-top: 2px;
@@ -1313,7 +1322,7 @@ function createOfficialDocument(report) {
       <div class="official-title">Client Satisfaction Measurement (CSM) Report${isContinuation ? " (Continued)" : ""}</div>
 
       <div class="official-meta">
-        <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
+        <b>Office:</b> ${report.office}, ISUFST – San Enrique Campus<br>
         <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
         <b>No. of Respondents:</b> ${report.respondents}
       </div>
@@ -1331,7 +1340,7 @@ function createOfficialDocument(report) {
 
   const rowHtmls = report.dimensionAverages.map(d => `
             <tr>
-              <td style="padding-left:10px;">${d.dimension}</td>
+              <td class="dim-cell" style="padding-left:10px;">${d.dimension}</td>
               <td style="text-align:center;">${d.percentage}</td>
               <td style="text-align:center;">${d.rating.label}</td>
             </tr>
@@ -1414,7 +1423,7 @@ function createCommentsDocument(report) {
       <div class="official-title">Comments &amp; Suggestions Report${isContinuation ? " (Continued)" : ""}</div>
 
       <div class="official-meta">
-        <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
+        <b>Office:</b> ${report.office}, ISUFST – San Enrique Campus<br>
         <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
         <b>No. of Respondents:</b> ${report.respondents}<br>
         <b>No. of Comments/Suggestions Received:</b> ${commentsCount}
