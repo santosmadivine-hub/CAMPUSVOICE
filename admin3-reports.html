@@ -17,6 +17,7 @@
     .report-section { break-inside: avoid; }
     .report-page-2 { border-top: none !important; margin-top: 0 !important; padding-top: 0 !important; }
     .page-break-label { display: none !important; }
+    .official-report { page-break-inside: avoid; }
     body, .layout, .main { margin: 0 !important; padding: 0 !important; }
   }
 
@@ -1150,16 +1151,146 @@ function generateNarrative(office, respondents, overallPct, dimensionAverages) {
 }
 
 // ======================
+// PAGINATION HELPERS
+// ======================
+// Splits a table + trailing content (narrative/signatures) across as
+// many physical A4 pages as needed, so long tables or comment lists
+// never get cut off or overlap the footer. Every generated page
+// repeats the same letterhead header at the top, and the accreditation
+// footer stays pinned to the exact bottom of every page (the existing
+// .official-report flex-column + .official-footer{margin-top:auto}
+// CSS already does this per page — this just decides how much content
+// belongs on each page).
+const MM_TO_PX = 96 / 25.4;
+const A4_HEIGHT_PX = 297 * MM_TO_PX;
+const PAGE_V_PADDING_PX = 32 * 2; // matches .official-report's 32px top/bottom padding
+const PAGE_SAFETY_BUFFER_PX = 24; // small cushion so rounding never clips the last line
+
+// Renders HTML inside a hidden, off-screen element sized like a real
+// .official-report page (so font sizes/line-wrapping match exactly),
+// measures it, then cleans up.
+function withMeasuringPage(fn) {
+  const root = document.createElement("div");
+  root.style.cssText = "position:fixed;left:-99999px;top:0;width:210mm;visibility:hidden;pointer-events:none;";
+  const page = document.createElement("div");
+  page.className = "official-report";
+  page.style.minHeight = "0";
+  page.style.height = "auto";
+  root.appendChild(page);
+  document.body.appendChild(root);
+  try {
+    return fn(page);
+  } finally {
+    document.body.removeChild(root);
+  }
+}
+
+function measureFragmentHeight(page, html) {
+  page.innerHTML = html;
+  return page.getBoundingClientRect().height;
+}
+
+function measureRowHeights(page, theadHtml, rowHtmls) {
+  page.innerHTML = `<table class="official-table">${theadHtml}<tbody>${rowHtmls.join("")}</tbody></table>`;
+  return Array.from(page.querySelectorAll("tbody tr")).map(tr => tr.getBoundingClientRect().height);
+}
+
+/**
+ * Lays out a table (with a repeating header/thead) plus a trailing
+ * block (narrative + signatures) across one or more A4 pages.
+ *
+ * @param {string} idPrefix     id used for page 1; further pages get `${idPrefix}_2`, `_3`, ...
+ * @param {(isContinuation:boolean) => string} buildChrome  returns the letterhead + title + meta HTML for a page
+ * @param {string} theadHtml    the <thead>...</thead> markup (identical on every page)
+ * @param {string[]} rowHtmls   array of <tr>...</tr> strings (at least one row)
+ * @param {string} trailingHtml narrative + signatures HTML, kept together, placed once after the table
+ * @param {string} footerInnerHtml the accreditation footer's inner HTML (repeated on every page)
+ * @returns {{id:string, html:string}[]}
+ */
+function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trailingHtml, footerInnerHtml) {
+  return withMeasuringPage((page) => {
+    const footerHtml = `<div class="official-footer">${footerInnerHtml}</div>`;
+    const chromeHeight = measureFragmentHeight(page, buildChrome(false) + `<table class="official-table">${theadHtml}<tbody></tbody></table>`);
+    const footerHeight = measureFragmentHeight(page, footerHtml) || 60;
+    const trailingHeight = trailingHtml ? measureFragmentHeight(page, trailingHtml) : 0;
+    const rowHeights = measureRowHeights(page, theadHtml, rowHtmls);
+
+    const capacity = Math.max(A4_HEIGHT_PX - PAGE_V_PADDING_PX - chromeHeight - footerHeight - PAGE_SAFETY_BUFFER_PX, 0);
+
+    // Bucket rows into pages that fit within `capacity`.
+    const pagesRows = [];
+    let current = [];
+    let currentHeight = 0;
+    rowHtmls.forEach((rowHtml, i) => {
+      const h = rowHeights[i] || 0;
+      if (current.length > 0 && currentHeight + h > capacity) {
+        pagesRows.push(current);
+        current = [];
+        currentHeight = 0;
+      }
+      current.push(rowHtml);
+      currentHeight += h;
+    });
+    pagesRows.push(current);
+
+    // Does the trailing content (narrative + signatures) fit on the
+    // same page as the last batch of rows, or does it need its own page?
+    const lastPageRowsHeight = rowHeights.slice(rowHtmls.length - pagesRows[pagesRows.length - 1].length).reduce((a, b) => a + b, 0);
+    const trailingFitsLastPage = (lastPageRowsHeight + trailingHeight) <= capacity;
+
+    const pages = [];
+    pagesRows.forEach((rows, idx) => {
+      const isContinuation = idx > 0;
+      const isLastTablePage = idx === pagesRows.length - 1;
+      const includeTrailing = isLastTablePage && trailingFitsLastPage;
+      const id = idx === 0 ? idPrefix : `${idPrefix}_${idx + 1}`;
+      pages.push({
+        id,
+        html: `
+          <div class="official-report" id="${id}">
+            ${buildChrome(isContinuation)}
+            <table class="official-table">
+              ${theadHtml}
+              <tbody>${rows.join("")}</tbody>
+            </table>
+            ${includeTrailing ? trailingHtml : ""}
+            ${footerHtml}
+          </div>
+        `
+      });
+    });
+
+    if (!trailingFitsLastPage) {
+      const id = `${idPrefix}_${pages.length + 1}`;
+      pages.push({
+        id,
+        html: `
+          <div class="official-report" id="${id}">
+            ${buildChrome(true)}
+            ${trailingHtml}
+            ${footerHtml}
+          </div>
+        `
+      });
+    }
+
+    return pages;
+  });
+}
+
+// ======================
 // CREATE OFFICIAL DOCUMENT — PAGE 1 (ratings, like Admin 1)
 // ======================
 function createOfficialDocument(report) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const generatedDate = new Date(report.generatedAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  
+
   const narrative = generateNarrative(report.office, report.respondents, parseFloat(report.avgSatisfaction), report.dimensionAverages);
-  const officialHTML = `
-    <div class="official-report" id="csmPage">
+
+  // Letterhead + title + meta — identical on every page. A page past
+  // the first repeats this same header and appends "(Continued)" to
+  // the title so it's clear it's still the same report.
+  const buildChrome = (isContinuation) => `
       <!-- LETTERHEAD WITH LOGOS -->
       <div class="lh-row">
         <div class="lh-logo-box" style="width:150px; height:90px;">
@@ -1179,15 +1310,16 @@ function createOfficialDocument(report) {
 
       <hr class="lh-divider">
 
-      <div class="official-title">Client Satisfaction Measurement (CSM) Report</div>
+      <div class="official-title">Client Satisfaction Measurement (CSM) Report${isContinuation ? " (Continued)" : ""}</div>
 
       <div class="official-meta">
         <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
         <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
         <b>No. of Respondents:</b> ${report.respondents}
       </div>
+  `;
 
-      <table class="official-table">
+  const theadHtml = `
         <thead>
           <tr>
             <th style="width:50%;text-align:left;padding-left:10px;">Evaluation Question</th>
@@ -1195,17 +1327,17 @@ function createOfficialDocument(report) {
             <th style="width:25%;">Rating</th>
           </tr>
         </thead>
-        <tbody>
-          ${report.dimensionAverages.map(d => `
+  `;
+
+  const rowHtmls = report.dimensionAverages.map(d => `
             <tr>
               <td style="padding-left:10px;">${d.dimension}</td>
               <td style="text-align:center;">${d.percentage}</td>
               <td style="text-align:center;">${d.rating.label}</td>
             </tr>
-          `).join('')}
-        </tbody>
-      </table>
+  `);
 
+  const trailingHtml = `
       <div class="official-narrative">
         ${narrative.map(p => `<p>${p}</p>`).join('')}
       </div>
@@ -1224,15 +1356,11 @@ function createOfficialDocument(report) {
           <div class="sig-title">Campus Administrator</div>
         </div>
       </div>
-
-      <!-- FOOTER WITH ACCREDITATIONS -->
-      <div class="official-footer">
-        <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
-      </div>
-    </div>
   `;
 
-  return officialHTML;
+  const footerInnerHtml = `<img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">`;
+
+  return paginateReportDocument("csmPage", buildChrome, theadHtml, rowHtmls, trailingHtml, footerInnerHtml);
 }
 
 // ======================
@@ -1248,21 +1376,22 @@ function createCommentsDocument(report) {
   const comments = report.comments || [];
   const commentsCount = report.commentsCount ?? comments.length;
 
-  const rowsHtml = comments.length
+  const rowHtmls = comments.length
     ? comments.map(c => `
         <tr>
           <td style="text-align:center;white-space:nowrap;">${c.timestamp ? new Date(c.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "-"}</td>
           <td style="padding-left:10px;">${c.text.replace(/</g, "&lt;")}</td>
         </tr>
-      `).join('')
-    : `<tr><td colspan="2" style="text-align:center;color:#777;font-style:italic;padding:18px;">No comments or suggestions were submitted for this period.</td></tr>`;
+      `)
+    : [`<tr><td colspan="2" style="text-align:center;color:#777;font-style:italic;padding:18px;">No comments or suggestions were submitted for this period.</td></tr>`];
 
   const summaryLine = commentsCount
     ? `During the covered period, the <strong>${report.office}</strong> received <strong>${commentsCount}</strong> written comment(s) and suggestion(s) out of <strong>${report.respondents}</strong> total respondent(s). These qualitative responses provide additional context to the quantitative ratings in the preceding page and are provided here to support the office in identifying areas for continuous improvement.`
     : `No written comments or suggestions were submitted by respondents of the <strong>${report.office}</strong> during the covered period.`;
 
-  const officialHTML = `
-    <div class="official-report" id="ccsPage">
+  // Letterhead + title + meta — identical on every page, with
+  // "(Continued)" appended to the title on pages after the first.
+  const buildChrome = (isContinuation) => `
       <!-- LETTERHEAD WITH LOGOS -->
       <div class="lh-row">
         <div class="lh-logo-box" style="width:150px; height:90px;">
@@ -1282,7 +1411,7 @@ function createCommentsDocument(report) {
 
       <hr class="lh-divider">
 
-      <div class="official-title">Comments &amp; Suggestions Report</div>
+      <div class="official-title">Comments &amp; Suggestions Report${isContinuation ? " (Continued)" : ""}</div>
 
       <div class="official-meta">
         <b>Office/Area:</b> ${report.office}, ISUFST – San Enrique Campus<br>
@@ -1290,19 +1419,18 @@ function createCommentsDocument(report) {
         <b>No. of Respondents:</b> ${report.respondents}<br>
         <b>No. of Comments/Suggestions Received:</b> ${commentsCount}
       </div>
+  `;
 
-      <table class="official-table">
+  const theadHtml = `
         <thead>
           <tr>
             <th style="width:18%;">Date</th>
             <th style="width:82%;text-align:left;padding-left:10px;">Comment / Suggestion</th>
           </tr>
         </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-      </table>
+  `;
 
+  const trailingHtml = `
       <div class="official-narrative">
         <p>${summaryLine}</p>
       </div>
@@ -1321,30 +1449,40 @@ function createCommentsDocument(report) {
           <div class="sig-title">Campus Administrator</div>
         </div>
       </div>
-
-      <!-- FOOTER WITH ACCREDITATIONS -->
-      <div class="official-footer">
-        <img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">
-      </div>
-    </div>
   `;
 
-  return officialHTML;
+  const footerInnerHtml = `<img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">`;
+
+  return paginateReportDocument("ccsPage", buildChrome, theadHtml, rowHtmls, trailingHtml, footerInnerHtml);
 }
 
 // ======================
-// BUILD THE FULL TWO-PAGE PREVIEW HTML — page 1 (ratings) immediately
-// followed by page 2 (comments & suggestions), separated by a
-// page-break divider so print/PDF land each on its own page.
+// BUILD THE FULL REPORT PREVIEW HTML — the ratings document (page 1
+// onward) immediately followed by the comments & suggestions document,
+// each separated by a page-break divider so print/PDF land every
+// physical page on its own sheet. Either document may now expand into
+// several physical pages on its own (e.g. a long comments list), and
+// each additional page repeats the same letterhead header and pins
+// the same footer to its bottom — see paginateReportDocument() above.
 // ======================
 function buildReportPreviewHtml(report) {
-  const page1 = createOfficialDocument(report);
-  const page2 = createCommentsDocument(report);
-  return `
-    ${page1}
-    <div class="page-break-label">— Page 2: Comments &amp; Suggestions —</div>
-    <div class="report-page-2">${page2}</div>
-  `;
+  const ratingsPages = createOfficialDocument(report);
+  const commentsPages = createCommentsDocument(report);
+
+  let html = "";
+
+  ratingsPages.forEach((p, idx) => {
+    html += idx === 0 ? p.html : `<div class="report-page-2">${p.html}</div>`;
+  });
+
+  commentsPages.forEach((p, idx) => {
+    if (idx === 0) {
+      html += `<div class="page-break-label">— Page ${ratingsPages.length + 1}: Comments &amp; Suggestions —</div>`;
+    }
+    html += `<div class="report-page-2">${p.html}</div>`;
+  });
+
+  return html;
 }
 
 // ======================
@@ -1458,9 +1596,10 @@ window.closeReport = () => {
 };
 
 // ======================
-// EXPORT PDF — captures page 1 (#csmPage) and page 2 (#ccsPage), each
-// as its own PDF page, from the live preview already rendered in
-// #report-container.
+// EXPORT PDF — captures every generated .official-report page (there
+// may now be more than two, since either document can spill onto
+// extra pages) as its own PDF page, from the live preview already
+// rendered in #report-container, in document order.
 // ======================
 window.exportPDF = async () => {
   if (document.getElementById("reportPreview").style.display === "none" || !currentReport) {
@@ -1474,8 +1613,7 @@ window.exportPDF = async () => {
   const { jsPDF } = window.jspdf;
   let pdf = null;
 
-  async function addCanvasPage(elementId) {
-    const el = document.getElementById(elementId);
+  async function addCanvasPage(el) {
     if (!el) return;
 
     let canvas;
@@ -1504,9 +1642,12 @@ window.exportPDF = async () => {
     pdf.addImage(img, "PNG", margin, margin, usableW, pdfH);
   }
 
+  const pageElements = document.querySelectorAll("#report-container .official-report");
+
   try {
-    await addCanvasPage("csmPage"); // Page 1 — ratings
-    await addCanvasPage("ccsPage"); // Page 2 — comments & suggestions
+    for (const el of pageElements) {
+      await addCanvasPage(el);
+    }
   } catch (err) {
     return; // error already alerted inside addCanvasPage
   }
