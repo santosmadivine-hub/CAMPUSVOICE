@@ -492,13 +492,6 @@ select { min-width:180px; }
           <option value="">Select Office…</option>
         </select>
 
-        <select id="paperSizeFilter" title="Paper size for preview, print, and PDF export" onchange="setPaperSize(this.value)">
-          <option value="a4">Paper: A4 (210 × 297 mm)</option>
-          <option value="letter">Paper: Letter (8.5 × 11 in)</option>
-          <option value="legal">Paper: Legal (8.5 × 14 in)</option>
-          <option value="long">Paper: Long / Folio (8.5 × 13 in)</option>
-        </select>
-
         <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
         <button class="btn btn-green"   onclick="saveReport()">💾 Save Report</button>
       </div>
@@ -816,18 +809,15 @@ const commentReportsCol = collection(db, "services", "commentReports", "records"
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','reports');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Reports','admin1');
 
+// Paper size is fixed to A4 only.
 const PAPER_SIZES = {
-  a4:     { width: 210,   height: 297,   jspdf: "a4" },
-  letter: { width: 215.9, height: 279.4, jspdf: "letter" },
-  legal:  { width: 215.9, height: 355.6, jspdf: "legal" },
-  long:   { width: 215.9, height: 330.2, jspdf: [215.9, 330.2] }
+  a4: { width: 210, height: 297, jspdf: "a4" }
 };
 
-let currentPaperSizeKey = "a4";
+const currentPaperSizeKey = "a4";
 
 window.setPaperSize = (key) => {
-  const size = PAPER_SIZES[key] || PAPER_SIZES.a4;
-  currentPaperSizeKey = PAPER_SIZES[key] ? key : "a4";
+  const size = PAPER_SIZES.a4;
 
   document.documentElement.style.setProperty("--page-width",  size.width  + "mm");
   document.documentElement.style.setProperty("--page-height", size.height + "mm");
@@ -1215,8 +1205,7 @@ window.printReport = () => {
     alert("Please generate or view a report first.");
     return;
   }
-  const paperSelect = document.getElementById("paperSizeFilter");
-  if (paperSelect) setPaperSize(paperSelect.value);
+  setPaperSize("a4");
 
   document.body.classList.add("print-report-mode");
   window.print();
@@ -1300,11 +1289,10 @@ window.exportPDF = async () => {
     alert("Please generate or view a report first.");
     return;
   }
-  const paperSelect = document.getElementById("paperSizeFilter");
-  if (paperSelect) setPaperSize(paperSelect.value);
+  setPaperSize("a4");
 
   const { jsPDF } = window.jspdf;
-  const pdf     = new jsPDF({ unit:"mm", format: (PAPER_SIZES[currentPaperSizeKey] || PAPER_SIZES.a4).jspdf });
+  const pdf     = new jsPDF({ unit:"mm", format: PAPER_SIZES.a4.jspdf });
   const usableW = pdf.internal.pageSize.getWidth();
   const usableH = pdf.internal.pageSize.getHeight();
 
@@ -1437,8 +1425,7 @@ window.printCommentsReport = () => {
     alert("Please generate or view a comments report first.");
     return;
   }
-  const paperSelect = document.getElementById("paperSizeFilter");
-  if (paperSelect) setPaperSize(paperSelect.value);
+  setPaperSize("a4");
 
   document.body.classList.add("print-comments-mode");
   window.print();
@@ -1535,8 +1522,7 @@ window.exportCommentsPDF = async () => {
     alert("Please generate or view a comments report first.");
     return;
   }
-  const paperSelect = document.getElementById("paperSizeFilter");
-  if (paperSelect) setPaperSize(paperSelect.value);
+  setPaperSize("a4");
 
   let canvas;
   try {
@@ -1550,7 +1536,7 @@ window.exportCommentsPDF = async () => {
     return;
   }
   const { jsPDF } = window.jspdf;
-  const pdf     = new jsPDF({ unit:"mm", format: (PAPER_SIZES[currentPaperSizeKey] || PAPER_SIZES.a4).jspdf });
+  const pdf     = new jsPDF({ unit:"mm", format: PAPER_SIZES.a4.jspdf });
   const usableW = pdf.internal.pageSize.getWidth();
   const usableH = pdf.internal.pageSize.getHeight();
   const scale   = usableW / canvas.width;
