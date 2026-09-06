@@ -1395,11 +1395,13 @@ function createOfficialDocument(report) {
 
       <div class="official-title">Client Satisfaction Measurement (CSM) Report${isContinuation ? " (Continued)" : ""}</div>
 
+      ${isContinuation ? "" : `
       <div class="official-meta">
         <b>Office:</b> ${report.office}, ISUFST – San Enrique Campus<br>
         <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
         <b>No. of Respondents:</b> ${report.respondents}
       </div>
+      `}
   `;
 
   const theadHtml = `
