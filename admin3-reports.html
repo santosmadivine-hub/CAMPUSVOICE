@@ -581,8 +581,8 @@
   }
 
   .lh-logo-box, .lh-seal-box {
-    width: 150px;
-    height: 90px;
+    width: 110px;
+    height: 100px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -598,12 +598,13 @@
   .lh-text {
     flex: 1;
     text-align: center;
-    line-height: 1.4;
+    line-height: 1.35;
     font-size: 11pt;
   }
 
   .lh-text .rep {
     font-size: 9.5pt;
+    color: #7a1120;
   }
 
   .lh-text .uni {
@@ -611,12 +612,17 @@
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.1px;
+    color: #7a1120;
+    line-height: 1.25;
+    display: inline-block;
+    margin: 2px 0;
   }
 
   .lh-text .dept {
     font-size: 11pt;
     font-weight: bold;
     text-transform: uppercase;
+    color: #1a3a6b;
   }
 
   .lh-text .addr {
@@ -734,10 +740,13 @@
   /* Pinned to the bottom of the A4 sheet via margin-top:auto on the
      flex-column .official-report above, so it sits at the exact
      bottom of the page instead of trailing directly after the
-     signatures whenever content is short. */
+     signatures whenever content is short. The light top border gives
+     the accreditation graphic its own clean band, separated from the
+     signatures above it, matching the reference layout. */
   .official-footer {
     margin-top: auto;
-    padding-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #dfe6ee;
     display: block;
     width: 100%;
   }
@@ -1376,7 +1385,7 @@ function createOfficialDocument(report) {
   const buildChrome = (isContinuation) => `
       <!-- LETTERHEAD WITH LOGOS -->
       <div class="lh-row">
-        <div class="lh-logo-box" style="width:150px; height:90px;">
+        <div class="lh-logo-box" style="width:110px; height:100px;">
           <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
         </div>
         <div class="lh-text">
@@ -1386,7 +1395,7 @@ function createOfficialDocument(report) {
           <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
           <div class="addr">Website: www.isufst.edu.ph</div>
         </div>
-        <div class="lh-seal-box" style="width:100px; height:100px;">
+        <div class="lh-seal-box" style="width:110px; height:100px;">
           <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
         </div>
       </div>
@@ -1486,7 +1495,7 @@ function createCommentsDocument(report) {
   const buildChrome = (isContinuation) => `
       <!-- LETTERHEAD WITH LOGOS -->
       <div class="lh-row">
-        <div class="lh-logo-box" style="width:150px; height:90px;">
+        <div class="lh-logo-box" style="width:110px; height:100px;">
           <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
         </div>
         <div class="lh-text">
@@ -1496,7 +1505,7 @@ function createCommentsDocument(report) {
           <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
           <div class="addr">Website: www.isufst.edu.ph</div>
         </div>
-        <div class="lh-seal-box" style="width:100px; height:100px;">
+        <div class="lh-seal-box" style="width:110px; height:100px;">
           <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
         </div>
       </div>
