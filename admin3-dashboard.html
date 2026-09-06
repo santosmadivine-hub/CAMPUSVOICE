@@ -1025,9 +1025,8 @@ function renderLineChart() {
     counts.push(dayEvals.length);
   }
 
-  // Keep the same Firestore-derived values. The scale is visual only.
-  const maxCount = Math.max(1, ...counts);
-  const yMax = Math.max(10, Math.ceil(maxCount / 10) * 10);
+  // Fixed 0-100 y-axis scale (matches Admin2 styling)
+  const yMax = 100;
   const xStep = chartW / Math.max(1, days.length - 1);
 
   function toPoints(vals) {
