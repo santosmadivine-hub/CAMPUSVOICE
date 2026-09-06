@@ -569,7 +569,12 @@
      header pinned to the top (it's simply the first block of content)
      while .official-footer (the last child) is pushed to the exact
      bottom of the page via margin-top:auto, without overlapping the
-     table/narrative/signatures content in between. */
+     table/narrative/signatures content in between. Top padding is kept
+     tighter than the bottom so the letterhead sits closer to the top
+     edge, leaving more usable vertical room for the table/narrative
+     before the footer's fixed bottom padding is reached — see
+     PAGE_V_PADDING_PX below, which must stay in sync with this
+     top+bottom total. */
   .official-report {
     display: flex;
     flex-direction: column;
@@ -582,7 +587,7 @@
     min-height: 297mm;
     margin: 0 auto;
     box-sizing: border-box;
-    padding: 32px 40px;
+    padding: 20px 40px 32px;
   }
 
   /* Letterhead */
@@ -590,7 +595,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .lh-logo-box, .lh-seal-box {
@@ -646,7 +651,7 @@
   .lh-divider {
     border: none;
     border-top: 2.5px solid #1a3a6b;
-    margin: 4px 0 10px;
+    margin: 3px 0 8px;
   }
 
   .official-title {
@@ -1194,7 +1199,7 @@ function generateNarrative(office, respondents, overallPct, dimensionAverages) {
 // this just decides how much content belongs on each page).
 const MM_TO_PX = 96 / 25.4;
 const A4_HEIGHT_PX = 297 * MM_TO_PX;
-const PAGE_V_PADDING_PX = 32 * 2; // matches .official-report's 32px top/bottom padding
+const PAGE_V_PADDING_PX = 20 + 32; // matches .official-report's 20px top + 32px bottom padding
 const PAGE_SAFETY_BUFFER_PX = 24; // small cushion so rounding never clips the last line
 
 // Renders HTML inside a hidden, off-screen element sized like a real
@@ -1217,7 +1222,8 @@ function withMeasuringPage(fn) {
 }
 
 // Measures the height a fragment of content actually takes up, EXCLUDING
-// the .official-report page div's own fixed 32px top/bottom padding.
+// the .official-report page div's own fixed top+bottom padding (20px
+// top + 32px bottom, see PAGE_V_PADDING_PX above).
 // getBoundingClientRect() on `page` always includes that padding (it's a
 // constant part of the box regardless of how little content is inside),
 // so every fragment measurement here would otherwise silently carry an
