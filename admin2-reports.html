@@ -882,25 +882,6 @@
         <option value="">Select Category First</option>
       </select>
 
-      <select class="filter-select" id="paperSizeFilter" title="Paper size for preview, print, and PDF export" onchange="onPaperSizeChange(this.value)">
-        <optgroup label="ISO / International">
-          <option value="a3">Paper: A3 (297 × 420 mm)</option>
-          <option value="a4" selected>Paper: A4 (210 × 297 mm)</option>
-          <option value="a5">Paper: A5 (148 × 210 mm)</option>
-          <option value="a6">Paper: A6 (105 × 148 mm)</option>
-          <option value="b4">Paper: B4 (257 × 364 mm)</option>
-          <option value="b5">Paper: B5 (182 × 257 mm)</option>
-        </optgroup>
-        <optgroup label="US / ANSI">
-          <option value="letter">Paper: Letter (8.5 × 11 in)</option>
-          <option value="legal">Paper: Legal (8.5 × 14 in)</option>
-          <option value="long">Paper: Long / Folio (8.5 × 13 in)</option>
-          <option value="statement">Paper: Statement (5.5 × 8.5 in)</option>
-          <option value="executive">Paper: Executive (7.25 × 10.5 in)</option>
-          <option value="tabloid">Paper: Tabloid / Ledger (11 × 17 in)</option>
-        </optgroup>
-      </select>
-
       <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
       <button class="btn-save" id="btn-save-report" disabled>💾 Save Report</button>
     </div>
@@ -981,19 +962,9 @@ const db = getFirestore(app);
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin2", "reports");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Reports", "admin2");
 
+// Paper size is fixed to A4 only.
 const PAPER_SIZES = {
-  a3:        { width: 297,   height: 420   },
-  a4:        { width: 210,   height: 297   },
-  a5:        { width: 148,   height: 210   },
-  a6:        { width: 105,   height: 148   },
-  b4:        { width: 257,   height: 364   },
-  b5:        { width: 182,   height: 257   },
-  letter:    { width: 215.9, height: 279.4 },
-  legal:     { width: 215.9, height: 355.6 },
-  long:      { width: 215.9, height: 330.2 },
-  statement: { width: 139.7, height: 215.9 },
-  executive: { width: 184.15,height: 266.7 },
-  tabloid:   { width: 279.4, height: 431.8 }
+  a4: { width: 210, height: 297 }
 };
 
 let currentPaperSizeKey = "a4";
@@ -1003,8 +974,8 @@ const CVR_MIN_SCALE = 0.6;
 const CVR_MAX_SCALE = 1.5;
 
 window.setPaperSize = (key) => {
-  const size = PAPER_SIZES[key] || PAPER_SIZES.a4;
-  currentPaperSizeKey = PAPER_SIZES[key] ? key : "a4";
+  const size = PAPER_SIZES.a4;
+  currentPaperSizeKey = "a4";
 
   document.documentElement.style.setProperty("--page-width",  size.width  + "mm");
   document.documentElement.style.setProperty("--page-height", size.height + "mm");
@@ -1066,15 +1037,11 @@ let currentCommentsReport = null;
 // generateReport()/viewSavedReport() compute the report's page-by-page
 // layout (buildPaginatedSectionPages) using whatever --page-width /
 // --page-height / --cvr-* values are active on the document AT THE
-// MOMENT they run. If the person changes the paper size selector, or
-// prints/exports, AFTER a report is already on screen, those already
-// generated .cvr-page elements still reflect the OLD paper size — the
-// header/footer would then no longer line up with the new page
-// dimensions. regenerateCurrentPreviews() re-runs the same pagination
-// against whatever paper size is active right now, so the header
-// stays pinned to the top, the footer stays pinned to the bottom, and
+// MOMENT they run. regenerateCurrentPreviews() re-runs the same
+// pagination against the (fixed A4) paper size, so the header stays
+// pinned to the top, the footer stays pinned to the bottom, and
 // overflow content is re-flowed onto additional pages (with the same
-// header/footer) for the size actually being used.
+// header/footer) for A4.
 // ======================
 function regenerateCurrentPreviews() {
   const reportPreviewEl = document.getElementById("reportPreview");
@@ -1087,11 +1054,6 @@ function regenerateCurrentPreviews() {
     document.getElementById("comments-report-container").innerHTML = createCommentsDocument(currentCommentsReport);
   }
 }
-
-window.onPaperSizeChange = (key) => {
-  setPaperSize(key);
-  regenerateCurrentPreviews();
-};
 
 const DIMENSION_LABELS_BY_CATEGORY = {
   "Comfort Room": {
@@ -1790,12 +1752,11 @@ window.printReport = () => {
     alert("Please generate or view a report first.");
     return;
   }
-  const paperSelect = document.getElementById("paperSizeFilter");
-  if (paperSelect) setPaperSize(paperSelect.value);
+  setPaperSize("a4");
 
-  // Re-run pagination against the paper size that is about to be
-  // printed, so the header/footer and page breaks in the printout
-  // match the selected paper size exactly (see regenerateCurrentPreviews).
+  // Re-run pagination against the (fixed A4) paper size that is about
+  // to be printed, so the header/footer and page breaks in the
+  // printout match A4 exactly (see regenerateCurrentPreviews).
   regenerateCurrentPreviews();
 
   window.print();
@@ -1874,12 +1835,11 @@ window.exportPDF = async () => {
     return;
   }
 
-  const paperSelect = document.getElementById("paperSizeFilter");
-  if (paperSelect) setPaperSize(paperSelect.value);
+  setPaperSize("a4");
 
-  // Re-run pagination against the paper size that is about to be
-  // exported, so the .cvr-page elements captured below already match
-  // the target PDF page dimensions (see regenerateCurrentPreviews).
+  // Re-run pagination against the (fixed A4) paper size that is about
+  // to be exported, so the .cvr-page elements captured below already
+  // match the target PDF page dimensions (see regenerateCurrentPreviews).
   renderCombinedReport(currentReport);
   // Give the browser a couple of frames to finish laying out / painting
   // the freshly-regenerated pages (and any cached images) before we
@@ -1887,7 +1847,7 @@ window.exportPDF = async () => {
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
   const { jsPDF } = window.jspdf;
-  const activeSize = PAPER_SIZES[currentPaperSizeKey] || PAPER_SIZES.a4;
+  const activeSize = PAPER_SIZES.a4;
   const pdf = new jsPDF({ unit: "mm", format: [activeSize.width, activeSize.height] });
   const usableW = pdf.internal.pageSize.getWidth();
   const usableH = pdf.internal.pageSize.getHeight();
