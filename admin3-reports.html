@@ -1201,6 +1201,54 @@ const MM_TO_PX = 96 / 25.4;
 const A4_HEIGHT_PX = 297 * MM_TO_PX;
 const PAGE_V_PADDING_PX = 10 + 32; // matches .official-report's 10px top + 32px bottom padding
 const PAGE_SAFETY_BUFFER_PX = 24; // small cushion so rounding never clips the last line
+// Width available to the footer image: .official-report's content box
+// (210mm) minus its 40px left + 40px right padding. Used to turn the
+// footer image's natural aspect ratio into a fixed pixel height below.
+const PAGE_CONTENT_WIDTH_PX = 210 * MM_TO_PX - 80;
+
+// ======================
+// FOOTER IMAGE SIZING — the accreditation footer ("4.jpg") previously
+// rendered with CSS "height:auto", so its actual height depended on
+// the browser knowing the image's intrinsic dimensions. During
+// pagination, fragment heights are measured in an off-screen element
+// *before* that image is guaranteed to have finished loading/decoding,
+// so the measured footer height (a rough 60px fallback) could disagree
+// with the height the footer actually rendered at. That mismatch is
+// what allowed the footer to overlap the narrative text above it, or
+// to be pushed onto its own extra page. Preloading the image once and
+// converting its natural aspect ratio into a fixed pixel height (baked
+// into the <img> tag itself, both for measurement and for the final
+// rendered page) makes the two always match, so the footer lands
+// exactly where the pagination math expects it to.
+let footerAspectRatio = null; // naturalHeight / naturalWidth of 4.jpg, cached after first load
+
+function preloadImage(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+async function getFooterAspectRatio() {
+  if (footerAspectRatio !== null) return footerAspectRatio;
+  const dims = await preloadImage("4.jpg");
+  footerAspectRatio = (dims && dims.w) ? (dims.h / dims.w) : 0.18; // sane fallback if the image fails to load
+  return footerAspectRatio;
+}
+
+// Builds the footer's inner HTML with an explicit pixel height derived
+// from the preloaded aspect ratio, so it renders identically whether
+// it's being measured off-screen or displayed on the real page.
+function buildFooterInnerHtml(ratio) {
+  const h = Math.round(PAGE_CONTENT_WIDTH_PX * (ratio || 0.18));
+  return `<img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous" style="display:block;width:100%;height:${h}px;object-fit:contain;">`;
+}
+
+// Warm the cache as soon as the script loads, so the first "Generate
+// Report" click doesn't have to wait on the image request.
+getFooterAspectRatio();
 
 // Renders HTML inside a hidden, off-screen element sized like a real
 // .official-report page (so font sizes/line-wrapping match exactly),
@@ -1392,7 +1440,7 @@ function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trai
 // ======================
 // CREATE OFFICIAL DOCUMENT — PAGE 1 (ratings, like Admin 1)
 // ======================
-function createOfficialDocument(report) {
+function createOfficialDocument(report, footerRatio) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
@@ -1478,7 +1526,7 @@ function createOfficialDocument(report) {
 
   const trailingBlocks = [...narrativeBlocks, signaturesBlock];
 
-  const footerInnerHtml = `<img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">`;
+  const footerInnerHtml = buildFooterInnerHtml(footerRatio);
 
   return paginateReportDocument("csmPage", buildChrome, theadHtml, rowHtmls, trailingBlocks, footerInnerHtml);
 }
@@ -1490,7 +1538,7 @@ function createOfficialDocument(report) {
 // Uses its own page id ("ccsPage") so PDF export/print can target it
 // separately from page 1's "csmPage".
 // ======================
-function createCommentsDocument(report) {
+function createCommentsDocument(report, footerRatio) {
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const comments = report.comments || [];
@@ -1571,7 +1619,7 @@ function createCommentsDocument(report) {
       </div>
   `;
 
-  const footerInnerHtml = `<img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous">`;
+  const footerInnerHtml = buildFooterInnerHtml(footerRatio);
 
   return paginateReportDocument("ccsPage", buildChrome, theadHtml, rowHtmls, trailingHtml, footerInnerHtml);
 }
@@ -1586,9 +1634,10 @@ function createCommentsDocument(report) {
 // header and pins the same footer to its bottom — see
 // paginateReportDocument() above.
 // ======================
-function buildReportPreviewHtml(report) {
-  const ratingsPages = createOfficialDocument(report);
-  const commentsPages = createCommentsDocument(report);
+async function buildReportPreviewHtml(report) {
+  const footerRatio = await getFooterAspectRatio();
+  const ratingsPages = createOfficialDocument(report, footerRatio);
+  const commentsPages = createCommentsDocument(report, footerRatio);
 
   let html = "";
 
@@ -1611,7 +1660,7 @@ function buildReportPreviewHtml(report) {
 // suggestions) together from the same filtered evaluations, then
 // renders both into the single report preview.
 // ======================
-function generateReport() {
+async function generateReport() {
   if (!selectedOffice) {
     alert("Please select an office");
     return;
@@ -1699,7 +1748,7 @@ function generateReport() {
     generatedAt: new Date().toISOString()
   };
 
-  document.getElementById("report-container").innerHTML = buildReportPreviewHtml(currentReport);
+  document.getElementById("report-container").innerHTML = await buildReportPreviewHtml(currentReport);
 
   document.getElementById("previewLabel").textContent = `📄 Report Preview — ${selectedOffice}  (${startDate} → ${endDate})`;
   document.getElementById("reportPreview").style.display = "block";
@@ -1873,11 +1922,11 @@ function renderSavedReports() {
   });
 }
 
-function viewSavedReport(id) {
+async function viewSavedReport(id) {
   const r = savedReports.find(sr => sr.id === id);
   if (!r) return;
 
-  document.getElementById("report-container").innerHTML = buildReportPreviewHtml(r);
+  document.getElementById("report-container").innerHTML = await buildReportPreviewHtml(r);
 
   document.getElementById("previewLabel").textContent = `📄 Report Preview — ${r.office}  (${r.startDate} → ${r.endDate})`;
   document.getElementById("reportPreview").style.display = "block";
