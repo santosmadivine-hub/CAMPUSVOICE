@@ -2092,12 +2092,18 @@ function openChatModal(evalId) {
     // whether from the user or the admin — is placed right after it in
     // send order) even if two messages share the exact same timestamp,
     // or if a message document is briefly missing/has a null timestamp
-    // while a serverTimestamp() write is still resolving. Messages
-    // without a usable timestamp are treated as 0 so they never jump
-    // ahead of already-timestamped messages.
+    // while a serverTimestamp() write is still resolving. Uses proper
+    // timestamp normalization via getMessageMillis() to handle all
+    // timestamp formats (numeric, string, Firestore Timestamp, Date, etc.)
+    // so that Timestamp objects are not incorrectly treated as zero.
     const sortedMessages = messages.slice().sort((a, b) => {
-      const tA = Number(a.timestamp) || 0;
-      const tB = Number(b.timestamp) || 0;
+      const tA = getMessageMillis(a);
+      const tB = getMessageMillis(b);
+
+      if (tA === null && tB === null) return 0;
+      if (tA === null) return 1;
+      if (tB === null) return -1;
+
       return tA - tB;
     });
     renderChatMessages(sortedMessages);
