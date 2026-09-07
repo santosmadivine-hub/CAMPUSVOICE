@@ -1204,7 +1204,7 @@ function generateNarrative(office, respondents, overallPct, dimensionAverages) {
 const MM_TO_PX = 96 / 25.4;
 const A4_HEIGHT_PX = 297 * MM_TO_PX;
 const PAGE_V_PADDING_PX = 10 + 32; // matches .official-report's 10px top + 32px bottom padding
-const PAGE_SAFETY_BUFFER_PX = 24; // small cushion so rounding never clips the last line
+const PAGE_SAFETY_BUFFER_PX = 40; // cushion so rounding/print-engine differences never push the footer onto an extra page
 // Width available to the footer image: .official-report's content box
 // (210mm) minus its 40px left + 40px right padding. Used to turn the
 // footer image's natural aspect ratio into a fixed pixel height below.
