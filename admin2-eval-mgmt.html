@@ -1393,7 +1393,7 @@ onSnapshot(evalQuery, (snapshot) => {
       officeName: data.officeName || "Unknown",
       cleanlinessCategory: category,
       comments: data.comments || "",
-      timestamp: Number(data.timestamp) || 0,
+      timestamp: getTimestampMillis(data.timestamp) ?? 0,
       evidence: parseEvidence(data),
       sex: data.sex || "-",
       userCategory: data.userCategory || "-",
