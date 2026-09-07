@@ -566,17 +566,21 @@
 
   /* Official Document Style — sized to a single A4 sheet (210mm x
      297mm). display:flex + flex-direction:column keeps the letterhead
-     header pinned to the top (it's simply the first block of content).
-     The footer is now laid out as a normal in-flow block (see
-     .official-footer below) that sits directly after whatever content
-     precedes it, rather than being forced to the physical bottom edge
-     of the page — that's what previously caused it to jump to its own
-     page whenever the preceding content didn't leave an exact, tight
-     gap before 297mm. Top padding is kept tight (and the letterhead
-     itself trimmed — see .lh-row/.lh-divider below) so the whole
-     header sits higher on the sheet, freeing up extra vertical room
-     before the footer is reached — see PAGE_V_PADDING_PX below, which
-     must stay in sync with this top+bottom total. */
+     header pinned to the top (it's simply the first block of content)
+     while .official-footer (the last child, margin-top:auto) is
+     pushed to the exact bottom of THIS page, without overlapping the
+     table/narrative/signatures content above it. Each physical page is
+     its own separate .official-report div (see paginateReportDocument
+     below), and that function always reserves footerHeight worth of
+     space in its capacity math before deciding what content goes on a
+     given page — so the footer never gets pushed past the bottom of
+     the sheet or onto an extra page of its own; it simply fills
+     whatever gap is left after the page's content. Top padding is kept
+     tight (and the letterhead itself trimmed — see .lh-row/.lh-divider
+     below) so the whole header sits higher on the sheet, freeing up
+     extra vertical room before the footer's bottom is reached — see
+     PAGE_V_PADDING_PX below, which must stay in sync with this
+     top+bottom total. */
   .official-report {
     display: flex;
     flex-direction: column;
@@ -761,24 +765,20 @@
     margin-top: 2px;
   }
 
-  /* FIX: previously this used margin-top:auto (with the flex-column
-     .official-report above) to pin the footer to the exact bottom of
-     the page. That's what caused the footer to jump onto its own
-     blank page whenever the content above it (table + narrative +
-     signatures) didn't leave a near-exact gap before the 297mm mark —
-     the auto margin would still try to push the footer all the way
-     down to the bottom of the (now taller) box, landing it past the
-     first physical sheet.
-     Now the footer is a normal in-flow block that sits directly under
-     whatever content precedes it (e.g. right after the closing
-     paragraph / signatures), which is the behavior that was wanted:
-     "put it under this paragraph" instead of floating to the page
-     edge. The pagination logic (paginateReportDocument) still reserves
-     footerHeight worth of space per page so this normal-flow footer
-     never gets pushed past the bottom of the sheet by later content —
-     it only ever sits right after the last block placed on that page. */
+  /* The footer is pinned to the physical BOTTOM of whichever page it's
+     on, via margin-top:auto inside the flex-column .official-report
+     box (each page is rendered as its own separate .official-report
+     div by paginateReportDocument() below, so this only ever pins the
+     footer to the bottom of that single 297mm sheet — never a
+     different page). This is safe from the "footer jumps to a blank
+     extra page" bug because paginateReportDocument() already measures
+     footerHeight and subtracts it from every page's capacity BEFORE
+     deciding how many table rows / narrative blocks / signatures to
+     place on that page — so there is always exactly enough leftover
+     room on the page for the footer to sit in, and margin-top:auto
+     simply fills that reserved gap instead of overflowing past it. */
   .official-footer {
-    margin-top: 24px;
+    margin-top: auto;
     padding-top: 12px;
     border-top: 1px solid #dfe6ee;
     display: block;
@@ -1209,12 +1209,13 @@ function generateNarrative(office, respondents, overallPct, dimensionAverages) {
 // across as many physical A4 pages as needed, so long tables, long
 // narrative text, or comment lists never get cut off or overlap the
 // footer. Every generated page repeats the same letterhead header at
-// the top. The accreditation footer is now placed in NORMAL FLOW
-// directly after the last content block on each page (see the
-// .official-footer CSS fix above) rather than being pinned to the
-// exact physical bottom of the sheet — this function's job is simply
-// to make sure footerHeight worth of space is always reserved so the
-// footer never gets pushed past the bottom of a page by later content.
+// the top, and the accreditation footer stays pinned to the exact
+// bottom of every page (the .official-report flex-column +
+// .official-footer{margin-top:auto} CSS handles that per page) — this
+// function's job is to decide how much content belongs on each page
+// so that pinned footer always has its reserved footerHeight worth of
+// clear space below the content, and never has to spill onto an extra
+// page of its own.
 const MM_TO_PX = 96 / 25.4;
 const A4_HEIGHT_PX = 297 * MM_TO_PX;
 const PAGE_V_PADDING_PX = 10 + 32; // matches .official-report's 10px top + 32px bottom padding
@@ -1331,13 +1332,13 @@ function measureRowHeights(page, theadHtml, rowHtmls) {
  * right under the table, while a longer one spills only its excess
  * onto Page 2, instead of the whole block jumping pages together.
  *
- * The footer is then appended in NORMAL FLOW directly after whichever
- * blocks (table rows, narrative, signatures) land on that page — see
- * the .official-footer CSS fix (margin-top changed from `auto` to a
- * fixed value) — so it always sits right under the last paragraph on
- * that page instead of being pinned to the sheet's physical bottom
- * edge. footerHeight is still subtracted from each page's capacity so
- * there's always guaranteed room for it before the next page break.
+ * The footer stays pinned to the physical bottom of whichever page it
+ * ends up on (via .official-footer's margin-top:auto within each
+ * page's flex-column .official-report box). footerHeight is always
+ * subtracted from each page's capacity before deciding what content
+ * goes on that page, so there's always guaranteed clear room for the
+ * footer below the content — it never overlaps the text above it and
+ * never needs a page of its own.
  *
  * `trailing` may be a single HTML string (treated as one atomic
  * block — preserves old all-or-nothing behavior for callers that
@@ -1537,8 +1538,8 @@ function createOfficialDocument(report, footerRatio) {
   // packs as many of these as fit directly under the table on Page 1,
   // and only the true overflow continues onto Page 2 (or beyond) — the
   // signatures always stay right after whatever narrative text lands
-  // on the same page as them, and the footer (now normal-flow) sits
-  // directly under whichever of these is last on that page.
+  // on the same page as them, and the footer stays pinned to the
+  // bottom of that same page.
   const narrativeBlocks = narrative.map(p => `<div class="official-narrative"><p>${p}</p></div>`);
 
   const signaturesBlock = `
@@ -1665,8 +1666,8 @@ function createCommentsDocument(report, footerRatio) {
 // physical page on its own sheet. Either document may now expand into
 // several physical pages on its own (e.g. a long narrative or a long
 // comments list), and each additional page repeats the same letterhead
-// header, with the footer following in normal flow right after the
-// last content block on the page — see paginateReportDocument() above.
+// header while the footer stays pinned to the bottom of that page —
+// see paginateReportDocument() above.
 // ======================
 async function buildReportPreviewHtml(report) {
   const footerRatio = await getFooterAspectRatio();
