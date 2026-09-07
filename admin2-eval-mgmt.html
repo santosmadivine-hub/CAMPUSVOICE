@@ -1393,7 +1393,7 @@ onSnapshot(evalQuery, (snapshot) => {
       officeName: data.officeName || "Unknown",
       cleanlinessCategory: category,
       comments: data.comments || "",
-      timestamp: Number(data.timestamp) || 0,
+      timestamp: getTimestampMillis(data.timestamp) ?? 0,
       evidence: parseEvidence(data),
       sex: data.sex || "-",
       userCategory: data.userCategory || "-",
@@ -1984,30 +1984,50 @@ const chatInput = document.getElementById("chat-input");
 const chatSendBtn = document.getElementById("chat-send-btn");
 const chatCloseBtn = document.getElementById("chat-modal-close");
 
-// Normalizes a message's "timestamp" field into a plain millisecond
-// number, regardless of which shape it was written in:
-//  - a plain number (e.g. Date.now(), what the admin panel writes)
-//  - a numeric string
-//  - a Firestore Timestamp object (has .toMillis())
+// Normalizes any timestamp value into milliseconds since epoch.
+// Handles all timestamp formats:
+//  - a plain number (e.g. Date.now(), timestamps in milliseconds)
+//  - a numeric string ("1234567890123")
+//  - a Firestore Timestamp object (has .toMillis() method)
 //  - a raw {seconds, nanoseconds} timestamp map
 //  - a JS Date instance
-// Returns null when the timestamp isn't resolved/available yet (e.g. a
-// serverTimestamp() write that hasn't come back from the server), so
-// callers can tell "no timestamp yet" apart from "timestamp is 0".
-function getMessageMillis(m) {
-  const t = m && m.timestamp;
-  if (t === undefined || t === null || t === "") return null;
-  if (typeof t === "number") return t;
-  if (typeof t === "string") {
-    const n = Number(t);
-    if (!Number.isNaN(n)) return n;
-    const parsed = Date.parse(t);
+//  - ISO 8601 date strings ("2024-01-15T14:30:45.123Z")
+// Returns null when the timestamp is undefined, null, or unresolvable,
+// so callers can distinguish "no timestamp" from "timestamp is 0".
+function getTimestampMillis(value) {
+  if (value === undefined || value === null || value === "") return null;
+  
+  if (typeof value === "number") {
+    return value;
+  }
+  
+  if (typeof value === "string") {
+    const n = Number(value);
+    if (!Number.isNaN(n)) {
+      return n;
+    }
+    const parsed = Date.parse(value);
     return Number.isNaN(parsed) ? null : parsed;
   }
-  if (typeof t.toMillis === "function") return t.toMillis();
-  if (typeof t.seconds === "number") return t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6);
-  if (t instanceof Date) return t.getTime();
+  
+  if (typeof value.toMillis === "function") {
+    return value.toMillis();
+  }
+  
+  if (typeof value.seconds === "number") {
+    return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1e6);
+  }
+  
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+  
   return null;
+}
+
+// Alias for backward compatibility in chat context
+function getMessageMillis(m) {
+  return getTimestampMillis(m && m.timestamp);
 }
 
 function formatChatTimestamp(m) {
