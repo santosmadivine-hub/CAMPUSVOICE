@@ -1984,8 +1984,35 @@ const chatInput = document.getElementById("chat-input");
 const chatSendBtn = document.getElementById("chat-send-btn");
 const chatCloseBtn = document.getElementById("chat-modal-close");
 
-function formatChatTimestamp(ms) {
-  if (!ms) return "";
+// Normalizes a message's "timestamp" field into a plain millisecond
+// number, regardless of which shape it was written in:
+//  - a plain number (e.g. Date.now(), what the admin panel writes)
+//  - a numeric string
+//  - a Firestore Timestamp object (has .toMillis())
+//  - a raw {seconds, nanoseconds} timestamp map
+//  - a JS Date instance
+// Returns null when the timestamp isn't resolved/available yet (e.g. a
+// serverTimestamp() write that hasn't come back from the server), so
+// callers can tell "no timestamp yet" apart from "timestamp is 0".
+function getMessageMillis(m) {
+  const t = m && m.timestamp;
+  if (t === undefined || t === null || t === "") return null;
+  if (typeof t === "number") return t;
+  if (typeof t === "string") {
+    const n = Number(t);
+    if (!Number.isNaN(n)) return n;
+    const parsed = Date.parse(t);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  if (typeof t.toMillis === "function") return t.toMillis();
+  if (typeof t.seconds === "number") return t.seconds * 1000 + Math.floor((t.nanoseconds || 0) / 1e6);
+  if (t instanceof Date) return t.getTime();
+  return null;
+}
+
+function formatChatTimestamp(m) {
+  const ms = getMessageMillis(m);
+  if (!ms) return "Sending…";
   const d = new Date(ms);
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
@@ -2006,7 +2033,7 @@ function renderChatMessages(messages) {
     return `
       <div class="chat-bubble-row ${role}">
         <div class="chat-bubble">${text}</div>
-        <div class="chat-meta">${role === "admin" ? "You" : "User"} · ${formatChatTimestamp(m.timestamp)}</div>
+        <div class="chat-meta">${role === "admin" ? "You" : "User"} · ${formatChatTimestamp(m)}</div>
       </div>
     `;
   }).join("");
