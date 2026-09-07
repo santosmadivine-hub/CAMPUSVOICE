@@ -20,6 +20,24 @@
     .official-report { page-break-inside: avoid; }
     body, .layout, .main { margin: 0 !important; padding: 0 !important; }
 
+    /* The outer wrapper around stats-row/filter-row/reportPreview/
+       saved-reports-section carries an inline "margin-top: 28px;
+       padding: 0 20px 40px;" meant for the on-screen layout. Its
+       children that shouldn't print (.stats-row, .filter-row,
+       .saved-reports-section) are already hidden above, but the
+       wrapper's OWN margin/padding was never reset — and since it's
+       the very first thing in the print flow, that 28px top margin
+       only pushes down Page 1 (the first physical printed sheet).
+       Every later page starts fresh at the top of its own new sheet
+       via .report-page-2's page-break-before, so they were never
+       affected — which is what made Page 1's letterhead sit lower
+       than Page 3's. Zeroing it here for print only (screen layout is
+       untouched) aligns Page 1's header with every other page. */
+    .page-content-wrap {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
     /* Browsers drop background colors/shading on print by default
        (Chrome/Edge/Firefox all do this unless told otherwise), which is
        why the light-blue table header, rating badges, and other filled
@@ -855,7 +873,7 @@
   <main class="main fade-in">
     <div id="topbar-mount"></div>
 
-    <div style="margin-top: 28px; padding: 0 20px 40px;">
+    <div class="page-content-wrap" style="margin-top: 28px; padding: 0 20px 40px;">
       <!-- Stat Cards Grid -->
       <div class="stats-row">
         <div class="stat-card" data-icon="📋">
