@@ -2057,8 +2057,24 @@ function openChatModal(evalId) {
 
   chatMessagesUnsub = onSnapshot(messagesQuery, (snapshot) => {
     const messages = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderChatMessages(messages);
-    markMessagesReadForAdmin(evalId, messages);
+    // Defensive client-side sort by timestamp ascending (oldest first,
+    // newest last) — this is a belt-and-suspenders safeguard on top of
+    // the Firestore orderBy("timestamp","asc") query above. It keeps
+    // the conversation strictly in chronological order (whoever sent a
+    // message first appears first, and each following message —
+    // whether from the user or the admin — is placed right after it in
+    // send order) even if two messages share the exact same timestamp,
+    // or if a message document is briefly missing/has a null timestamp
+    // while a serverTimestamp() write is still resolving. Messages
+    // without a usable timestamp are treated as 0 so they never jump
+    // ahead of already-timestamped messages.
+    const sortedMessages = messages.slice().sort((a, b) => {
+      const tA = Number(a.timestamp) || 0;
+      const tB = Number(b.timestamp) || 0;
+      return tA - tB;
+    });
+    renderChatMessages(sortedMessages);
+    markMessagesReadForAdmin(evalId, sortedMessages);
   }, (err) => {
     console.error("Failed to load conversation messages:", err);
     chatMessagesEl.innerHTML = `<div class="chat-empty-note">Couldn't load messages.</div>`;
