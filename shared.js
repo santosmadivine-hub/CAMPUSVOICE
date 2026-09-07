@@ -17,7 +17,7 @@ function buildSidebar(role, activePage) {
   const navAdmin2 = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard', href: 'admin2-dashboard.html' },
     { id: 'office-mgmt', icon: '📑', label: 'Office Management', href: 'admin2-office-mgmt.html' },
-    { id: 'eval-mgmt', icon: '📑', label: 'Evaluation Mgmt', href: 'admin2-eval-mgmt.html' },
+    { id: 'eval-mgmt', icon: '📑', label: 'Evaluation Management', href: 'admin2-eval-mgmt.html' },
     { id: 'multimedia', icon: '🎞️', label: 'Multimedia Feedback', href: 'admin2-multimedia.html' },
     { id: 'reports', icon: '📁', label: 'Reports', href: 'admin2-reports.html' },
     { id: 'analytics', icon: '📈', label: 'Analytics', href: 'admin2-analytics.html' },
