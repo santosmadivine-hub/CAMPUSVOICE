@@ -581,7 +581,7 @@
     background: #fff;
     font-family: 'Times New Roman', Times, serif;
     color: #000;
-    line-height: 1.6;
+    line-height: 1.5;
     width: 100%;
     max-width: 210mm;
     min-height: 297mm;
@@ -599,8 +599,8 @@
   }
 
   .lh-logo-box, .lh-seal-box {
-    width: 150px;
-    height: 140px;
+    width: 110px;
+    height: 100px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -660,13 +660,13 @@
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   .official-meta {
     font-size: 11.5pt;
-    line-height: 1.7;
-    margin-bottom: 10px;
+    line-height: 1.5;
+    margin-bottom: 8px;
   }
 
   .official-meta b {
@@ -688,7 +688,7 @@
   .official-table th {
     background: #1e3a5f;
     color: #ffffff;
-    padding: 9px 11px;
+    padding: 7px 11px;
     border: 1px solid #a9c2e0;
     text-align: center;
     font-weight: bold;
@@ -697,7 +697,7 @@
 
   .official-table td {
     border: 1px solid #cddcef;
-    padding: 8px 11px;
+    padding: 6px 11px;
     vertical-align: middle;
     font-size: 10.5pt;
   }
@@ -713,19 +713,19 @@
 
   .official-narrative {
     font-size: 11pt;
-    line-height: 1.7;
+    line-height: 1.5;
     text-align: justify;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
   }
 
   .official-narrative p {
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }
 
   .official-signatures {
     display: flex;
     gap: 40px;
-    margin-top: 24px;
+    margin-top: 14px;
     font-size: 11pt;
   }
 
@@ -736,7 +736,7 @@
   .sig-label {
     color: #555;
     font-size: 10.5pt;
-    margin-bottom: 30px;
+    margin-bottom: 18px;
   }
 
   .sig-line {
@@ -1245,9 +1245,16 @@ async function getFooterAspectRatio() {
 // Builds the footer's inner HTML with an explicit pixel height derived
 // from the preloaded aspect ratio, so it renders identically whether
 // it's being measured off-screen or displayed on the real page.
+const FOOTER_MAX_HEIGHT_PX = 70; // keeps the accreditation banner compact so it always fits below the text on Page 1
+
 function buildFooterInnerHtml(ratio) {
-  const h = Math.round(PAGE_CONTENT_WIDTH_PX * (ratio || 0.18));
-  return `<img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous" style="display:block;width:100%;height:${h}px;object-fit:contain;">`;
+  const r = ratio || 0.18;
+  const naturalH = PAGE_CONTENT_WIDTH_PX * r;
+  if (naturalH <= FOOTER_MAX_HEIGHT_PX) {
+    return `<img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous" style="display:block;width:100%;height:${Math.round(naturalH)}px;object-fit:contain;">`;
+  }
+  const w = Math.round(FOOTER_MAX_HEIGHT_PX / r);
+  return `<img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous" style="display:block;width:${w}px;height:${FOOTER_MAX_HEIGHT_PX}px;object-fit:contain;margin:0 auto;">`;
 }
 
 // Warm the cache as soon as the script loads, so the first "Generate
@@ -1456,7 +1463,7 @@ function createOfficialDocument(report, footerRatio) {
   const buildChrome = (isContinuation) => `
       <!-- LETTERHEAD WITH LOGOS -->
       <div class="lh-row">
-        <div class="lh-logo-box" style="width:150px; height:140px;">
+        <div class="lh-logo-box" style="width:110px; height:100px;">
           <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
         </div>
         <div class="lh-text">
@@ -1466,7 +1473,7 @@ function createOfficialDocument(report, footerRatio) {
           <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
           <div class="addr">Website: www.isufst.edu.ph</div>
         </div>
-        <div class="lh-seal-box" style="width:150px; height:140px;">
+        <div class="lh-seal-box" style="width:110px; height:100px;">
           <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
         </div>
       </div>
@@ -1566,7 +1573,7 @@ function createCommentsDocument(report, footerRatio) {
   const buildChrome = (isContinuation) => `
       <!-- LETTERHEAD WITH LOGOS -->
       <div class="lh-row">
-        <div class="lh-logo-box" style="width:150px; height:140px;">
+        <div class="lh-logo-box" style="width:110px; height:100px;">
           <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
         </div>
         <div class="lh-text">
@@ -1576,7 +1583,7 @@ function createCommentsDocument(report, footerRatio) {
           <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
           <div class="addr">Website: www.isufst.edu.ph</div>
         </div>
-        <div class="lh-seal-box" style="width:150px; height:140px;">
+        <div class="lh-seal-box" style="width:110px; height:100px;">
           <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
         </div>
       </div>
