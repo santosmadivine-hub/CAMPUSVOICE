@@ -1844,7 +1844,20 @@ window.exportPDF = async () => {
       canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        // html2canvas captures using the page's CURRENT scroll offset by
+        // default rather than always starting fresh from the top of the
+        // target element. Since generating a report auto-scrolls the
+        // preview into view (see reportPreview.scrollIntoView() in
+        // generateReport()), the page is usually scrolled down by the
+        // time "⬇ PDF" is clicked — without this override, that leftover
+        // scroll offset gets baked into the capture, which visually
+        // pushes the letterhead down (most noticeably on whichever page
+        // sits at/near the top of the viewport). Passing the negative of
+        // the current scroll position cancels that out so every page is
+        // captured identically, matching the on-screen/print layout.
+        scrollX: 0,
+        scrollY: -window.scrollY
       });
     } catch (err) {
       console.error(err);
