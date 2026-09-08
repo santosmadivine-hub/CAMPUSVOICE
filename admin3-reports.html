@@ -274,6 +274,12 @@
     color: #0c4a6e;
   }
 
+  .preview-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
   .btn-close {
     background: #e2e8f0;
     color: #475569;
@@ -927,10 +933,12 @@
            after another, separated by a page-break divider. -->
       <div id="reportPreview">
         <div class="preview-bar">
-          <span class="preview-label" id="previewLabel">📄 Report Preview</span>
-          <button class="btn btn-green" onclick="exportPDF()" style="padding:8px 14px;font-size:13px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-family:'DM Sans';font-weight:600;cursor:pointer;">⬇ PDF</button>
           <button class="btn-print" id="btn-print-report" disabled>🖨️ Print</button>
-          <button class="btn-close" onclick="closeReport()">✕ Close</button>
+          <span class="preview-label" id="previewLabel">📄 Report Preview</span>
+          <div class="preview-bar-right">
+            <button class="btn btn-green" onclick="exportPDF()" style="padding:8px 14px;font-size:13px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-family:'DM Sans';font-weight:600;cursor:pointer;">⬇ PDF</button>
+            <button class="btn-close" onclick="closeReport()">✕ Close</button>
+          </div>
         </div>
         <div id="report-container"></div>
       </div>
