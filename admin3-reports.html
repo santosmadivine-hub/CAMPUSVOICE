@@ -274,12 +274,6 @@
     color: #0c4a6e;
   }
 
-  .preview-bar-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
   .btn-close {
     background: #e2e8f0;
     color: #475569;
@@ -930,15 +924,14 @@
 
       <!-- REPORT PREVIEW — page 1 (ratings) and page 2 (comments &
            suggestions) are both rendered into #report-container, one
-           after another, separated by a page-break divider. -->
+           after another, separated by a page-break divider. Print is
+           placed to the left, PDF to the right, both before Close. -->
       <div id="reportPreview">
         <div class="preview-bar">
-          <button class="btn-print" id="btn-print-report" disabled>🖨️ Print</button>
           <span class="preview-label" id="previewLabel">📄 Report Preview</span>
-          <div class="preview-bar-right">
-            <button class="btn btn-green" onclick="exportPDF()" style="padding:8px 14px;font-size:13px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-family:'DM Sans';font-weight:600;cursor:pointer;">⬇ PDF</button>
-            <button class="btn-close" onclick="closeReport()">✕ Close</button>
-          </div>
+          <button class="btn-print" id="btn-print-report" disabled>🖨️ Print</button>
+          <button class="btn btn-green" onclick="exportPDF()" style="padding:8px 14px;font-size:13px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-family:'DM Sans';font-weight:600;cursor:pointer;">⬇ PDF</button>
+          <button class="btn-close" onclick="closeReport()">✕ Close</button>
         </div>
         <div id="report-container"></div>
       </div>
