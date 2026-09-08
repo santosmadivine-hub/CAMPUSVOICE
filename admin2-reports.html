@@ -193,6 +193,27 @@
     background: #6d28d9;
   }
 
+  .btn-pdf {
+    padding: 8px 14px;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .btn-pdf:hover {
+    background: #1d4ed8;
+  }
+
   .report-tabs {
     display: flex;
     gap: 8px;
@@ -890,7 +911,7 @@
       <div class="preview-bar">
         <span class="preview-label" id="previewLabel">📄 Report Preview</span>
         <button class="btn-print" onclick="printReport()">🖨️ Print</button>
-        <button class="btn btn-green" onclick="exportPDF()" style="padding:8px 14px;font-size:13px;">⬇ PDF</button>
+        <button class="btn-pdf" onclick="exportPDF()">⬇ PDF</button>
         <button class="btn-close" onclick="closeReport()">✕ Close</button>
       </div>
       <div id="report-container"></div>
@@ -899,7 +920,7 @@
     <div id="commentsReportPreview">
       <div class="preview-bar">
         <span class="preview-label" id="commentsPreviewLabel">💬 Comments Report Preview</span>
-        <button class="btn btn-green" onclick="exportCommentsPDF()" style="padding:8px 14px;font-size:13px;">⬇ PDF</button>
+        <button class="btn-pdf" onclick="exportCommentsPDF()">⬇ PDF</button>
         <button class="btn-close" onclick="closeCommentsReport()">✕ Close</button>
       </div>
       <div id="comments-report-container"></div>
