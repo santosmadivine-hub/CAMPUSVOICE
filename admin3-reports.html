@@ -1835,7 +1835,8 @@ window.exportPDF = async () => {
     return;
   }
 
-  const margin = 10;
+  const margin = 10; // left/right/bottom margin
+  const marginTop = 3; // top margin only — kept small so the letterhead sits at the top of the page instead of leaving a large gap above it
   const pageWidthMM = 210; // A4 width, kept for a familiar page width
   const usableW = pageWidthMM - margin * 2;
   const { jsPDF } = window.jspdf;
@@ -1873,14 +1874,14 @@ window.exportPDF = async () => {
     const img = canvas.toDataURL("image/png");
     const scale = usableW / canvas.width;
     const pdfH = canvas.height * scale;
-    const pageHeightMM = pdfH + margin * 2; // page height hugs the content instead of a fixed A4 length
+    const pageHeightMM = pdfH + marginTop + margin; // page height hugs the content instead of a fixed A4 length (smaller top margin + normal bottom margin)
 
     if (!pdf) {
       pdf = new jsPDF({ unit: "mm", format: [pageWidthMM, pageHeightMM] });
     } else {
       pdf.addPage([pageWidthMM, pageHeightMM]);
     }
-    pdf.addImage(img, "PNG", margin, margin, usableW, pdfH);
+    pdf.addImage(img, "PNG", margin, marginTop, usableW, pdfH);
   }
 
   const pageElements = document.querySelectorAll("#report-container .official-report");
