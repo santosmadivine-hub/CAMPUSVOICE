@@ -1259,9 +1259,37 @@ window.deleteSavedReport = async (key) => {
   so the exported image is placed edge-to-edge across the full
   page — matching the printed layout with a single source of truth
   for the margin instead of a doubled one.
+
+  ADDITIONAL FIX (header alignment on page 2): .page-break-sheet
+  adds margin-top/padding-top purely so the "— New Page —" divider
+  shows correctly on screen between report pages. html2canvas
+  captures that spacing too, which shoved the second page's header
+  down relative to the first page's header inside the exported PDF.
+  We temporarily zero out that spacing right before capture (and
+  restore it right after) so both pages render their header at the
+  exact same on-canvas offset, while the live on-screen preview is
+  completely unaffected.
 */
 async function renderElementToPdf(pdf, element, { usableW, usableH, addPageBefore }) {
-  const canvas = await html2canvas(element, { scale:2, useCORS:true, backgroundColor:"#ffffff" });
+  const hadPageBreak = element.classList.contains('page-break-sheet');
+  let prevMarginTop, prevPaddingTop;
+  if (hadPageBreak) {
+    prevMarginTop  = element.style.marginTop;
+    prevPaddingTop = element.style.paddingTop;
+    element.style.marginTop  = '0px';
+    element.style.paddingTop = '0px';
+  }
+
+  let canvas;
+  try {
+    canvas = await html2canvas(element, { scale:2, useCORS:true, backgroundColor:"#ffffff" });
+  } finally {
+    if (hadPageBreak) {
+      element.style.marginTop  = prevMarginTop;
+      element.style.paddingTop = prevPaddingTop;
+    }
+  }
+
   const scale  = usableW / canvas.width;
   const pdfH   = canvas.height * scale;
 
@@ -1515,7 +1543,9 @@ onSnapshot(commentReportsCol, (snapshot) => {
 /*
   FIX: exportCommentsPDF now places the html2canvas screenshot
   edge-to-edge (no extra jsPDF margin), matching the single 15mm
-  inset baked into the on-screen element itself.
+  inset baked into the on-screen element itself. #commentsPage is
+  a single, non-page-break-sheet page (no second-page header issue
+  here), so no extra alignment fix is needed for this export path.
 */
 window.exportCommentsPDF = async () => {
   if (document.getElementById("commentsPreview").style.display === "none") {
