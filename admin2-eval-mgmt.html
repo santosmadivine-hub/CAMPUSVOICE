@@ -1148,7 +1148,8 @@ import {
   addDoc,
   setDoc,
   increment,
-  writeBatch
+  writeBatch,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase Configuration
@@ -2025,9 +2026,15 @@ function getTimestampMillis(value) {
   return null;
 }
 
-// Alias for backward compatibility in chat context
+// Resolves a message's sort key: prefers the authoritative, resolved
+// server timestamp; falls back to clientTimestamp (the device-clock
+// value written alongside it) only while the server timestamp is
+// still pending (null) on a just-sent message, or for legacy docs
+// written before clientTimestamp existed.
 function getMessageMillis(m) {
-  return getTimestampMillis(m && m.timestamp);
+  const resolved = getTimestampMillis(m && m.timestamp);
+  if (resolved !== null) return resolved;
+  return getTimestampMillis(m && m.clientTimestamp);
 }
 
 function formatChatTimestamp(m) {
@@ -2061,9 +2068,16 @@ function renderChatMessages(messages) {
   chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 }
 
-// Marks every unread user-sent message as read, and zeroes the admin's
-// unread counter on the conversation doc, so the badge on the row
-// clears the moment the admin opens the thread.
+// Marks every unread user-sent message as read, and decrements the
+// admin's unread counter on the conversation doc by exactly the
+// number just marked, so the badge on the row clears the moment the
+// admin opens the thread. Uses increment(-N) rather than a literal
+// "set to 0" so this doesn't race with a concurrent
+// FieldValue.increment(1) from the user sending a new message at
+// nearly the same moment — increment is a commutative server-side
+// op, so it composes correctly regardless of write order, whereas a
+// blind overwrite could wipe out a badge for a message the admin
+// hasn't actually seen yet.
 async function markMessagesReadForAdmin(evalId, messages) {
   const unreadFromUser = messages.filter(m => m.senderRole === "user" && m.read === false);
 
@@ -2074,7 +2088,9 @@ async function markMessagesReadForAdmin(evalId, messages) {
     unreadFromUser.forEach(m => {
       batch.update(doc(db, CONVERSATIONS_COLLECTION, evalId, "messages", m.id), { read: true });
     });
-    batch.update(doc(db, CONVERSATIONS_COLLECTION, evalId), { unreadForAdmin: 0 });
+    batch.update(doc(db, CONVERSATIONS_COLLECTION, evalId), {
+      unreadForAdmin: increment(-unreadFromUser.length)
+    });
     await batch.commit();
   } catch (err) {
     console.warn("Failed to mark messages as read:", err);
@@ -2100,31 +2116,37 @@ function openChatModal(evalId) {
   }
 
   const messagesRef = collection(db, CONVERSATIONS_COLLECTION, evalId, "messages");
-  const messagesQuery = query(messagesRef, orderBy("timestamp", "asc"));
+  // Query orderBy stays on clientTimestamp, which is always populated
+  // the instant a message doc is written (unlike "timestamp", which
+  // is a serverTimestamp() sentinel and briefly null until the write
+  // round-trips to the server). Final display order is decided
+  // client-side below, preferring the resolved, clock-skew-proof
+  // server timestamp whenever it's available.
+  const messagesQuery = query(messagesRef, orderBy("clientTimestamp", "asc"));
 
   chatMessagesUnsub = onSnapshot(messagesQuery, (snapshot) => {
     const messages = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    // Defensive client-side sort by timestamp ascending (oldest first,
-    // newest last) — this is a belt-and-suspenders safeguard on top of
-    // the Firestore orderBy("timestamp","asc") query above. It keeps
-    // the conversation strictly in chronological order (whoever sent a
-    // message first appears first, and each following message —
-    // whether from the user or the admin — is placed right after it in
-    // send order) even if two messages share the exact same timestamp,
-    // or if a message document is briefly missing/has a null timestamp
-    // while a serverTimestamp() write is still resolving. Uses proper
-    // timestamp normalization via getMessageMillis() to handle all
-    // timestamp formats (numeric, string, Firestore Timestamp, Date, etc.)
-    // so that Timestamp objects are not incorrectly treated as zero.
+    // Defensive client-side sort by resolved timestamp ascending
+    // (oldest first, newest last) — a belt-and-suspenders safeguard
+    // on top of the Firestore orderBy() above. It keeps the
+    // conversation strictly in chronological order even if a message
+    // document briefly has a null/pending server timestamp while a
+    // serverTimestamp() write is still resolving (getMessageMillis()
+    // falls back to clientTimestamp in that case), and breaks ties
+    // between messages sharing the exact same millisecond by document
+    // id, so this dashboard, Admin 3, and the mobile app all render
+    // the identical order instead of relying on incidental snapshot
+    // ordering.
     const sortedMessages = messages.slice().sort((a, b) => {
       const tA = getMessageMillis(a);
       const tB = getMessageMillis(b);
 
-      if (tA === null && tB === null) return 0;
+      if (tA === null && tB === null) return a.id.localeCompare(b.id);
       if (tA === null) return 1;
       if (tB === null) return -1;
+      if (tA !== tB) return tA - tB;
 
-      return tA - tB;
+      return a.id.localeCompare(b.id);
     });
     renderChatMessages(sortedMessages);
     markMessagesReadForAdmin(evalId, sortedMessages);
@@ -2157,19 +2179,25 @@ async function sendChatMessage() {
   if (!e) return;
 
   chatSendBtn.disabled = true;
+  const nowMillis = Date.now();
 
   try {
     const convoRef = doc(db, CONVERSATIONS_COLLECTION, activeChatEvalId);
 
+    // unreadForAdmin is intentionally left untouched here — sending a
+    // message doesn't mean the admin has read every prior message in
+    // the thread; that reset belongs exclusively in
+    // markMessagesReadForAdmin(), which fires when the thread is
+    // actually opened/observed. Blindly zeroing it here previously
+    // raced with the user's own FieldValue.increment(1) on send.
     await setDoc(convoRef, {
       evaluationId: activeChatEvalId,
       userId: e.userId || "",
       officeName: e.officeName || "",
       category: "Cleanliness",
       lastMessage: text,
-      lastMessageAt: Date.now(),
+      lastMessageAt: nowMillis,
       lastSenderRole: "admin",
-      unreadForAdmin: 0,
       unreadForUser: increment(1)
     }, { merge: true });
 
@@ -2177,7 +2205,15 @@ async function sendChatMessage() {
       senderRole: "admin",
       senderId: ADMIN_SENDER_ID,
       text,
-      timestamp: Date.now(),
+      // Authoritative, clock-skew-proof ordering key. Resolves to
+      // null in this client's own optimistic read until the write
+      // round-trips to the server, then fills in server wall-clock
+      // time — what all clients ultimately sort by once resolved.
+      timestamp: serverTimestamp(),
+      // Always-populated fallback: keeps the query's orderBy() stable
+      // and positions this message correctly on this device during
+      // the brief pending window before "timestamp" resolves.
+      clientTimestamp: nowMillis,
       read: false
     });
 
