@@ -390,12 +390,51 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 3000);
 }
 
+/**
+ * Builds a transaction code with a prefix derived from the office name,
+ * followed by a random 6-character suffix.
+ *
+ * Prefix logic (in priority order):
+ * 1. If the office name contains acronym-like tokens (2+ consecutive
+ *    uppercase letters, e.g. "BSOA", "BSIT", "OJT"), use the LAST one
+ *    found — this is usually the most specific/differentiating part
+ *    of the name (e.g. "SIPP Coodinator (OJT-BSOA)" -> "BSOA").
+ * 2. Otherwise, if the office name has multiple words, use the first
+ *    letter of each word (e.g. "Guidance Counselor" -> "GC").
+ * 3. Otherwise (single word), use the first 6 letters of that word.
+ *
+ * This avoids the old behavior where every office name sharing the
+ * same first 4 characters (e.g. all "SIPP Coodinator (...)" offices)
+ * produced identical, ambiguous prefixes.
+ */
 function makeCode(officePrefix) {
   const chars  = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const random = Array.from({ length: 6 }, () =>
     chars[Math.floor(Math.random() * chars.length)]
   ).join("");
-  const prefix = officePrefix.replace(/\s+/g, "").substring(0, 4).toUpperCase();
+
+  // Look for acronym-like tokens (2+ consecutive uppercase letters)
+  const acronyms = officePrefix.match(/\b[A-Z]{2,}\b/g) || [];
+
+  let prefix;
+  if (acronyms.length) {
+    // Prioritize the most specific acronym — typically the last one
+    // (e.g. "OJT-BSOA" -> BSOA is more specific than OJT)
+    prefix = acronyms[acronyms.length - 1].substring(0, 6);
+  } else {
+    const words = officePrefix.trim().split(/\s+/).filter(Boolean);
+    if (words.length > 1) {
+      // Multi-word name with no acronym -> use word initials
+      prefix = words.map(w => w[0]).join("").toUpperCase().substring(0, 6);
+    } else {
+      // Single word -> use its first 6 letters
+      prefix = officePrefix.replace(/\s+/g, "").substring(0, 6).toUpperCase();
+    }
+  }
+
+  // Safety fallback in case prefix ends up empty for any edge case
+  if (!prefix) prefix = "GEN";
+
   return `${prefix}-${random}`;
 }
 
