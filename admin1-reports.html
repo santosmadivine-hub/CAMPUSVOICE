@@ -846,10 +846,16 @@ const SQD_LABELS = [
   { key:"sq8", label:"SQD8 – Outcome"               }
 ];
 
+// Official CSM rating bands (per DBM/ARTA harmonized CSM form):
+//   Below 60.0%      -> Poor
+//   60.0% - 79.9%     -> Fair
+//   80.0% - 89.9%     -> Satisfactory
+//   90.0% - 94.9%     -> Very Satisfactory
+//   95.0% - 100%      -> Outstanding
 function getRating(pct) {
-  if (pct >= 90) return "Outstanding";
-  if (pct >= 80) return "Very Satisfactory";
-  if (pct >= 70) return "Satisfactory";
+  if (pct >= 95) return "Outstanding";
+  if (pct >= 90) return "Very Satisfactory";
+  if (pct >= 80) return "Satisfactory";
   if (pct >= 60) return "Fair";
   return "Poor";
 }
@@ -1068,9 +1074,18 @@ window.generateReport = () => {
     return;
   }
 
-  
-  const totals = {}, counts = {};
-  SQD_LABELS.forEach(s => { totals[s.key]=0; counts[s.key]=0; });
+  // Official CSM formula:
+  //
+  //                 No. of 'Strongly Agree' answers + No. of 'Agree' answers
+  //   Overall Score = ---------------------------------------------------------
+  //                 Total No. of Respondents - No. of 'N/A' answers
+  //
+  // Per SQD_LABELS, sq values are stored on a 1-5 scale
+  // (5 = Strongly Agree, 4 = Agree, 3 = Neither, 2 = Disagree, 1 = Strongly Disagree).
+  // A missing/unanswered value (parses to NaN) is treated as 'N/A' and excluded
+  // from both the numerator and the denominator, exactly as the formula above.
+  const agreeCounts = {}, counts = {};
+  SQD_LABELS.forEach(s => { agreeCounts[s.key]=0; counts[s.key]=0; });
 
   rows.forEach(r => {
     let sq0Found = false;
@@ -1078,21 +1093,24 @@ window.generateReport = () => {
       
       const v = parseFloat(r[s.key] ?? r["sqd"+s.key.replace("sq","")]);
       if (!isNaN(v)) {
-        totals[s.key]+=v; counts[s.key]++;
+        counts[s.key]++;
+        if (v >= 4) agreeCounts[s.key]++;   // 5 = Strongly Agree, 4 = Agree
         if (s.key === "sq0") sq0Found = true;
       }
     });
    
     if (!sq0Found) {
       const fallback = avgScore(r);
-      if (fallback) { totals["sq0"] += fallback; counts["sq0"]++; }
+      if (fallback) {
+        counts["sq0"]++;
+        if (fallback >= 4) agreeCounts["sq0"]++;
+      }
     }
   });
 
   const dims = SQD_LABELS.map(s => {
     const cnt = counts[s.key];
-    const raw = cnt ? totals[s.key]/cnt : null;
-    const pct = raw !== null ? (raw/5)*100 : null;
+    const pct = cnt ? (agreeCounts[s.key] / cnt) * 100 : null;
     return { key:s.key, label:s.label, pct, rating: pct!==null ? getRating(pct) : "N/A" };
   });
 
