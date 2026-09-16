@@ -37,18 +37,36 @@
 .search-input:focus { border-color: #0284c7; }
 .search-input::placeholder { color: #94a3b8; }
 
+/* ---------- Table wrapper: scrolls in BOTH directions now ----------
+   Previously this only allowed vertical scrolling (overflow-y:auto),
+   so on narrower effective widths (smaller windows, higher browser
+   zoom, or "zoom out" changing the CSS viewport) the table's columns
+   had nowhere to go but to squish — the rating bar would shrink to
+   nothing and the action buttons would wrap awkwardly.
+
+   Giving it overflow-x:auto + a min-width on the table itself means
+   the table always keeps its columns readable and simply grows a
+   horizontal scrollbar when there isn't enough room, exactly the way
+   the Generate Code page's card grid never breaks because it can
+   reflow/scroll instead of compressing. */
 .office-table-wrap {
   max-height: 600px;
   overflow-y: auto;
+  overflow-x: auto;
   border-radius: 12px;
   border: 1px solid #bae6fd;
 }
-.office-table-wrap::-webkit-scrollbar { width: 6px; }
+.office-table-wrap::-webkit-scrollbar { height: 6px; width: 6px; }
 .office-table-wrap::-webkit-scrollbar-thumb { background: #7dd3fc; border-radius: 999px; }
 .office-table-wrap::-webkit-scrollbar-track { background: transparent; }
+.office-table-wrap {
+  scrollbar-width: thin;
+  scrollbar-color: #7dd3fc transparent;
+}
 
 .office-table {
   width: 100%;
+  min-width: 720px; /* keeps columns legible; wrapper scrolls instead of crushing them */
   border-collapse: collapse;
   background: white;
 }
@@ -65,6 +83,7 @@
   position: sticky;
   top: 0;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .office-table td {
@@ -125,7 +144,7 @@
 .action-buttons {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* the table now scrolls horizontally, so keep these on one line */
 }
 
 .action-btn {
@@ -137,6 +156,7 @@
   font-size: 12px;
   font-family: 'DM Sans', sans-serif;
   transition: opacity .2s, transform .2s;
+  white-space: nowrap;
 }
 
 .action-btn:hover {
@@ -281,6 +301,7 @@
   display:flex;
   flex-direction:column;
   gap:6px;
+  min-width: 0; /* allow the card to shrink below its content's natural width in the grid */
 }
 
 .stat-card.blue{ border-top-color:#2563eb; }
@@ -375,12 +396,6 @@
   .header-actions button {
     flex: 1;
     min-width: 120px;
-  }
-
-  .rating-cell {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
   }
 
   .search-add-row {
