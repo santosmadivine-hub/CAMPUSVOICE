@@ -668,9 +668,7 @@
 
     <div id="topbar-mount"></div>
 
-
     <div class="an-grid">
-
       <div class="an-kpi" style="--accent:#2563eb;">
         <div class="an-kpi-icon">🗳️</div>
         <div class="an-kpi-label">Total Evaluations</div>
@@ -700,7 +698,6 @@
       </div>
 
     </div>
-
 
     <div class="an-section">
       <div class="section-eyebrow"><span>Distribution Overview</span></div>
@@ -783,7 +780,6 @@
     </div>
 
 
-    <!-- ===================== NEW: Citizen's Charter (CC1–CC3) Awareness ===================== -->
     <div class="an-section">
       <div class="section-eyebrow"><span>Citizen's Charter Awareness</span></div>
 
@@ -815,7 +811,6 @@
 
       </div>
     </div>
-    <!-- ===================== END NEW SECTION ===================== -->
 
     <div class="an-section">
       <div class="section-eyebrow"><span>Service Quality Breakdown</span></div>
@@ -996,9 +991,7 @@ function normalizeClientType(item) {
   return null;
 }
 
-// NEW: pulls a CC1/CC2/CC3 answer text out of an evaluation record.
-// Tries a few likely field-name variants (cc1, CC1, cc_1) so it works
-// regardless of exactly how the feedback form saved it.
+
 function getCCText(item, key) {
   const n = key.replace("cc", "");
   const raw = item[key] ?? item[key.toUpperCase()] ?? item["cc_" + n] ?? item["CC_" + n] ?? item["CC" + n];
@@ -1048,7 +1041,7 @@ function render() {
   renderOfficeTrend(rows);
   renderSQD(rows);
   renderRatingBreakdown(rows);
-  renderCC(rows); // NEW
+  renderCC(rows); 
 }
 
 function renderKPIs(rows) {
