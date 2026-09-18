@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-  /* --- Evaluation Management: Match Admin 1 Design --- */
+
 
   .card {
     background: #fff;
@@ -1053,11 +1053,7 @@
           <table class="submissions-table">
             <thead>
               <tr id="submissions-thead-row">
-                <!-- #, Office, Category, Evaluator, Q1..Q5, Comments,
-                     Evidence, Status, Date, Action are built dynamically
-                     in JS so the number of rating columns
-                     (TOTAL_RATING_QUESTIONS) only needs to be changed in
-                     one place. -->
+             
               </tr>
             </thead>
             <tbody id="submissions-tbody"></tbody>
@@ -1378,10 +1374,7 @@ onSnapshot(evalQuery, (snapshot) => {
   snapshot.forEach((doc) => {
     const data = doc.data();
 
-    // Guard against non-cleanliness docs (e.g. Services evaluations)
-    // that also get written into evaluation_history. Only accept docs
-    // that actually declare a valid cleanlinessCategory — everything
-    // else is skipped instead of silently defaulted into "Comfort Room".
+
     const rawCategory = data.cleanlinessCategory;
     if (!CLEANLINESS_CATEGORIES.includes(rawCategory)) {
       return;
@@ -1645,7 +1638,8 @@ document.getElementById("btn-export").addEventListener("click", () => {
     questionHeaders.push("Q" + i);
   }
 
-  const header = ["#", "Office", "Category", "Evaluator", ...questionHeaders, "Avg", "Comments", "Sex", "Respondent Type", "User ID", "Evaluation ID", "Image URLs", "Video URLs", "Status", "Date"];
+  const header = ["#", "Office", "Category", "Evaluator", ...questionHeaders, "Avg", "Comments", "Sex", "Respondent Type",
+                  "User ID", "Evaluation ID", "Image URLs", "Video URLs", "Status", "Date"];
 
   const rows = filtered.map((e, i) => {
     const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString() : "-";
@@ -1968,14 +1962,7 @@ deleteConfirmBtn.addEventListener("click", async () => {
   }
 });
 
-// ======================
-// MESSAGE / CHAT MODAL
-// ======================
-// Conversations live in `conversations/{evaluationId}`, one document per
-// evaluation, with a `messages` subcollection underneath. evaluationId
-// here is the evaluation_history doc id — the same id the Kotlin app
-// writes as both the evaluation_history doc id AND data["evaluationId"],
-// so this stays consistent with the mobile app's ConversationDialog.
+
 const chatModal = document.getElementById("chat-modal");
 const chatHeaderTitle = document.getElementById("chat-header-title");
 const chatHeaderSub = document.getElementById("chat-header-sub");
@@ -1984,16 +1971,7 @@ const chatInput = document.getElementById("chat-input");
 const chatSendBtn = document.getElementById("chat-send-btn");
 const chatCloseBtn = document.getElementById("chat-modal-close");
 
-// Normalizes any timestamp value into milliseconds since epoch.
-// Handles all timestamp formats:
-//  - a plain number (e.g. Date.now(), timestamps in milliseconds)
-//  - a numeric string ("1234567890123")
-//  - a Firestore Timestamp object (has .toMillis() method)
-//  - a raw {seconds, nanoseconds} timestamp map
-//  - a JS Date instance
-//  - ISO 8601 date strings ("2024-01-15T14:30:45.123Z")
-// Returns null when the timestamp is undefined, null, or unresolvable,
-// so callers can distinguish "no timestamp" from "timestamp is 0".
+
 function getTimestampMillis(value) {
   if (value === undefined || value === null || value === "") return null;
   
