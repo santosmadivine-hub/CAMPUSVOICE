@@ -1291,30 +1291,6 @@ function buildCommentsPayload(filteredEvals) {
   return { commentsCount: comments.length, comments };
 }
 
-// ======================
-// DOM-MEASURED PAGINATION HELPERS
-//
-// The report content (evaluation table rows, comment rows, narrative
-// paragraphs, the signature block) is paginated by ACTUALLY MEASURING
-// each piece in the live document (off-screen), instead of relying on
-// a fixed single-page template or on rasterized image slicing.
-//
-// SHRINK-TO-FIT: before falling back to a second physical sheet, each
-// section first tries to fit ALL of its content (the meta block, the
-// table rows, the narrative paragraphs, and the signature block) onto
-// ONE page by proportionally shrinking the body text size and vertical
-// spacing (via the --cvr-content-scale CSS variable, consumed by
-// .official-meta / .official-table / .official-narrative /
-// .official-signatures in the stylesheet). The letterhead header and
-// the accreditations footer are always rendered at full, fixed size —
-// only the body content between them shrinks. A second sheet is only
-// ever produced when the content still doesn't fit at the smallest
-// readable scale (CVR_CONTENT_MIN_SCALE), i.e. when it genuinely can't
-// fit on one page — in which case the (already-shrunk) content is
-// greedily packed across as few extra sheets as needed, each with the
-// same header pinned to the top and the same footer pinned to the
-// bottom.
-// ======================
 
 const CVR_CONTENT_MIN_SCALE = 0.62;
 const CVR_CONTENT_SCALE_STEP = 0.04;
@@ -1350,10 +1326,6 @@ function measureBlockHeightPx(html, widthPx) {
   return h || 0;
 }
 
-// Measures the same HTML as measureBlockHeightPx, but with the given
-// --cvr-content-scale value applied on a wrapping element, so the
-// scaled font-size/margin/padding calc() rules in the stylesheet take
-// effect for the measurement (mirrors what will actually be rendered).
 function measureScaledBlockHeightPx(html, widthPx, scale) {
   return measureBlockHeightPx(`<div style="--cvr-content-scale:${scale};">${html}</div>`, widthPx);
 }
@@ -1368,10 +1340,6 @@ function buildPaginatedSectionPages(section) {
   const pageHeightMm = getComputedStyle(document.documentElement).getPropertyValue("--page-height").trim() || "297mm";
   const pageWidthPx = mmStringToPx(pageWidthMm);
   const pageHeightPx = mmStringToPx(pageHeightMm);
-
-  // Header and footer always render at full, fixed size (never
-  // affected by content shrink-to-fit), so their measured height is
-  // scale-independent.
   const headerHeightPx = measureBlockHeightPx(`<div class="cvr-inner-header">${headerInnerHtml}</div>`, pageWidthPx);
   const footerHeightPx = measureBlockHeightPx(`<div class="cvr-inner-footer">${footerInnerHtml}</div>`, pageWidthPx);
   const availablePx = Math.max(pageHeightPx - headerHeightPx - footerHeightPx, 40);
@@ -1456,9 +1424,6 @@ function buildPaginatedSectionPages(section) {
     return renderPageHtml(fitMeasured, fitScale, true);
   }
 
-  // Content genuinely doesn't fit on one sheet even at the minimum
-  // readable scale — fall back to greedy multi-page packing at that
-  // minimum scale.
   const fallbackScale = CVR_CONTENT_MIN_SCALE;
   const measured = measureBlocksAtScale(fallbackScale);
   const theadH = theadHeightAtScale(fallbackScale);
@@ -1858,13 +1823,7 @@ window.exportPDF = async () => {
 
   setPaperSize("a4");
 
-  // Re-run pagination against the (fixed A4) paper size that is about
-  // to be exported, so the .cvr-page elements captured below already
-  // match the target PDF page dimensions (see regenerateCurrentPreviews).
   renderCombinedReport(currentReport);
-  // Give the browser a couple of frames to finish laying out / painting
-  // the freshly-regenerated pages (and any cached images) before we
-  // start rasterizing them with html2canvas.
   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
   const { jsPDF } = window.jspdf;
