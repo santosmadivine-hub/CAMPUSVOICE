@@ -852,7 +852,7 @@ document.getElementById("category-tabs").addEventListener("click", (ev) => {
   if (!btn) return;
   categoryFilter = btn.getAttribute("data-category");
   document.querySelectorAll(".category-tab").forEach(t => t.classList.toggle("active", t === btn));
-  officeFilter = ""; // switching category invalidates the previously selected office
+  officeFilter = ""; 
   document.getElementById("office-filter").value = "";
   populateOfficeFilter();
   renderMediaGrid();
