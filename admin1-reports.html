@@ -99,62 +99,35 @@ select { min-width:180px; }
 }
 
 @media (max-width: 1200px) {
-  .kpi-value {
-    font-size: 30px;
-  }
+  .kpi-value { font-size: 30px; }
 }
 
 @media (max-width: 1024px) {
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 900px) {
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .kpi-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
 }
 
 @media (max-width: 600px) {
-  .kpi-card {
-    padding: 16px 16px 18px;
-  }
-  .kpi-value {
-    font-size: 26px;
-  }
-  .kpi-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-    top: 14px;
-    right: 14px;
-  }
+  .kpi-card { padding: 16px 16px 18px; }
+  .kpi-value { font-size: 26px; }
+  .kpi-icon { width: 32px; height: 32px; font-size: 14px; top: 14px; right: 14px; }
 }
 
 @media (max-width: 480px) {
-  .kpi-grid {
-    grid-template-columns: 1fr;
-  }
-  .kpi-value {
-    font-size: 28px;
-  }
+  .kpi-grid { grid-template-columns: 1fr; }
+  .kpi-value { font-size: 28px; }
 }
 
 @media (max-width: 360px) {
-  .kpi-grid {
-    gap: 10px;
-  }
-  .kpi-card {
-    padding: 14px 14px 18px;
-  }
+  .kpi-grid { gap: 10px; }
+  .kpi-card { padding: 14px 14px 18px; }
 }
 
 .card {
@@ -239,13 +212,6 @@ select { min-width:180px; }
   border:1px solid #e2e8f0;
 }
 
-/*
-  FIX: header/content/footer now use a single 15mm horizontal inset
-  on screen AND in print/PDF, instead of 40px on screen and 15mm only
-  in print. This makes the on-screen preview (which html2canvas
-  captures for the PDF export) match the printed/reference layout
-  exactly, with no double-margin drift in the exported PDF.
-*/
 .generated-report-header,
 .generated-report-content,
 .generated-report-footer {
@@ -368,12 +334,6 @@ select { min-width:180px; }
     min-height: var(--page-height, 297mm) !important;
   }
 
-  /*
-    Header/content/footer padding is now already 15mm at the base
-    rule (see above), so print no longer needs to override it —
-    kept here explicitly (same 15mm value) so print behavior is
-    unaffected even if the base rule ever changes.
-  */
   body.print-report-mode .generated-report-header,
   body.print-report-mode .generated-report-content,
   body.print-report-mode .generated-report-footer,
@@ -610,7 +570,9 @@ select { min-width:180px; }
           <div class="csm-sigs">
             <div class="csm-sig-block">
               <div class="csm-sig-label">Prepared by:</div>
-              <div class="csm-sig-name">Ricky Jun P. Garcia,MSAgri/div>
+              <!-- FIX: was "Ricky Jun P. Garcia,MSAgri/div>" (missing "<"), which left a div
+                   unclosed and pushed the Saved Reports table inside the hidden #reportPreview -->
+              <div class="csm-sig-name">Ricky Jun P. Garcia, MSAgri</div>
               <div class="csm-sig-title">Chair, Research and Development</div>
             </div>
             <div class="csm-sig-block">
@@ -1075,15 +1037,9 @@ window.generateReport = () => {
   }
 
   // Official CSM formula:
-  //
-  //                 No. of 'Strongly Agree' answers + No. of 'Agree' answers
-  //   Overall Score = ---------------------------------------------------------
-  //                 Total No. of Respondents - No. of 'N/A' answers
-  //
-  // Per SQD_LABELS, sq values are stored on a 1-5 scale
-  // (5 = Strongly Agree, 4 = Agree, 3 = Neither, 2 = Disagree, 1 = Strongly Disagree).
-  // A missing/unanswered value (parses to NaN) is treated as 'N/A' and excluded
-  // from both the numerator and the denominator, exactly as the formula above.
+  //   Overall Score = (No. of 'Strongly Agree' + No. of 'Agree') /
+  //                   (Total No. of Respondents - No. of 'N/A')
+  // A missing/unanswered value is treated as 'N/A' and excluded from both.
   const agreeCounts = {}, counts = {};
   SQD_LABELS.forEach(s => { agreeCounts[s.key]=0; counts[s.key]=0; });
 
@@ -1271,22 +1227,10 @@ window.deleteSavedReport = async (key) => {
 };
 
 /*
-  FIX: exportPDF / renderElementToPdf no longer add an extra
-  jsPDF-side margin. The 15mm inset now lives entirely in the
-  on-screen .generated-report-* padding (captured by html2canvas),
-  so the exported image is placed edge-to-edge across the full
-  page — matching the printed layout with a single source of truth
-  for the margin instead of a doubled one.
-
-  ADDITIONAL FIX (header alignment on page 2): .page-break-sheet
-  adds margin-top/padding-top purely so the "— New Page —" divider
-  shows correctly on screen between report pages. html2canvas
-  captures that spacing too, which shoved the second page's header
-  down relative to the first page's header inside the exported PDF.
-  We temporarily zero out that spacing right before capture (and
-  restore it right after) so both pages render their header at the
-  exact same on-canvas offset, while the live on-screen preview is
-  completely unaffected.
+  PDF export: the 15mm inset lives in the on-screen .generated-report-*
+  padding, so the html2canvas image is placed edge-to-edge on the page.
+  .page-break-sheet spacing is zeroed briefly during capture so page 2's
+  header lines up with page 1's, then restored.
 */
 async function renderElementToPdf(pdf, element, { usableW, usableH, addPageBefore }) {
   const hadPageBreak = element.classList.contains('page-break-sheet');
@@ -1355,22 +1299,26 @@ window.exportPDF = async () => {
   pdf.save(`CSM_Report_${name}.pdf`);
 };
 
+// FIX: #tabCommentsBtn no longer exists in the HTML, so the old code threw
+// "Cannot read properties of null" here. This version skips missing elements.
 window.switchReportsTab = (tab) => {
   const ratingsSection  = document.getElementById("ratingsReportsSection");
   const commentsSection = document.getElementById("commentsReportsSection");
   const ratingsBtn      = document.getElementById("tabRatingsBtn");
   const commentsBtn     = document.getElementById("tabCommentsBtn");
 
+  const swap = (btn, from, to) => { if (btn) btn.classList.replace(from, to); };
+
   if (tab === "comments") {
-    ratingsSection.style.display  = "none";
-    commentsSection.style.display = "block";
-    ratingsBtn.classList.replace("btn-primary","btn-gray");
-    commentsBtn.classList.replace("btn-gray","btn-primary");
+    if (ratingsSection)  ratingsSection.style.display  = "none";
+    if (commentsSection) commentsSection.style.display = "block";
+    swap(ratingsBtn,  "btn-primary", "btn-gray");
+    swap(commentsBtn, "btn-gray",    "btn-primary");
   } else {
-    commentsSection.style.display = "none";
-    ratingsSection.style.display  = "block";
-    commentsBtn.classList.replace("btn-primary","btn-gray");
-    ratingsBtn.classList.replace("btn-gray","btn-primary");
+    if (commentsSection) commentsSection.style.display = "none";
+    if (ratingsSection)  ratingsSection.style.display  = "block";
+    swap(commentsBtn, "btn-primary", "btn-gray");
+    swap(ratingsBtn,  "btn-gray",    "btn-primary");
   }
 };
 
@@ -1558,13 +1506,6 @@ onSnapshot(commentReportsCol, (snapshot) => {
   }).join("");
 });
 
-/*
-  FIX: exportCommentsPDF now places the html2canvas screenshot
-  edge-to-edge (no extra jsPDF margin), matching the single 15mm
-  inset baked into the on-screen element itself. #commentsPage is
-  a single, non-page-break-sheet page (no second-page header issue
-  here), so no extra alignment fix is needed for this export path.
-*/
 window.exportCommentsPDF = async () => {
   if (document.getElementById("commentsPreview").style.display === "none") {
     alert("Please generate or view a comments report first.");
