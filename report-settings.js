@@ -70,19 +70,17 @@ const esc = v => String(v ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt
 function renderReportHeader(el, s, titleKey = "reportTitle") {
   if (!el) return;
   const align = s.headerAlign || "center";
- const logo = (src, w, h) => src
-  ? `<div class="lh-logo-box" style="width:${w}px;height:${h}px;flex-shrink:0;"><img src="${src}" alt="${esc(s.orgName)}" style="width:100%;height:100%;object-fit:contain;"></div>` : "";
-  // Campus name is NOT shown in the header; it appears in the "Office:" line of the report.
-  const lines = [[s.topText,"rep"],[s.orgName,"uni"],[s.department,"dept"]]
+  const logo  = (src, w, h) => src
+    ? `<div class="lh-logo-box" style="width:${w}px;height:${h}px;flex-shrink:0;"><img src="${src}" alt="${esc(s.orgName)}" style="width:100%;height:100%;object-fit:contain;"></div>` : "";
+  const lines = [[s.topText,"rep"],[s.orgName,"uni"],[s.addressLine,"addr1"],[s.department,"dept"]]
     .concat(String(s.additionalText || "").split("\n").map(t => [t,"addr"]))
     .filter(x => x[0] && String(x[0]).trim())
     .map(x => `<div class="${x[1]}">${esc(x[0])}</div>`).join("");
   const title = s[titleKey] ? `<div class="csm-doc-title">${esc(s[titleKey])}</div>` : "";
   el.innerHTML = `
-    <div class="lh-row">${logo(s.logoLeft, 150, 80)}<div class="lh-text" style="text-align:${align};">${lines}</div>${logo(s.logoRight, 90, 80)}</div>
+    <div class="lh-row">${logo(s.logoLeft, 125, 75)}<div class="lh-text" style="text-align:${align};">${lines}</div>${logo(s.logoRight, 100, 85)}</div>
     ${(lines || s.logoLeft || s.logoRight) ? '<hr class="lh-divider">' : ""}${title}`;
 }
-
 function renderReportFooter(el, s) {
   if (!el) return;
   const block = (l, n, p) => (l || n || p) ? `<div class="csm-sig-block">
