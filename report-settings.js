@@ -1,7 +1,8 @@
 /* CampusVoice – Report Header & Footer Settings
    Firestore: services/reportSettings/records/current  (live settings)
               services/reportSettings/records/default  (baseline for "Reset to Default")
-   No header/footer content is defined in this file. Every report value comes from Firestore. */
+   Built-in DEFAULTS below are used until settings are saved in Firestore.
+   After that, every report value comes from Firestore and is editable in the settings card. */
 import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -18,7 +19,7 @@ const GROUPS = [
     { k: "topText",        l: "Line above organization name", t: "text" },
     { k: "orgName",        l: "School / organization name", t: "text" },
     { k: "orgShort",       l: "Short name (used in report details)", t: "text" },
-    { k: "campusName",     l: "Campus name",               t: "text" },
+    { k: "campusName",     l: "Campus name (used in report details)", t: "text" },
     { k: "department",     l: "Department / office",       t: "text" },
     { k: "additionalText", l: "Additional header text (one line per row)", t: "area" },
     { k: "reportTitle",    l: "Report title – ratings report", t: "text" },
@@ -37,6 +38,27 @@ const GROUPS = [
 ];
 const ALL = GROUPS.flatMap(g => g.fields);
 
+/* Built-in starting values (used only until settings are saved in Firestore).
+   Logos and the footer image are uploaded once in the settings card. */
+const DEFAULTS = {
+  logoLeft: "", logoRight: "", footerImage: "",
+  topText: "Republic of the Philippines",
+  orgName: "Iloilo State University of Fisheries Science and Technology",
+  orgShort: "ISUFST",
+  campusName: "San Enrique Campus",
+  department: "Research & Development Office",
+  additionalText: "San Enrique, Iloilo | rdo@isufst.edu.ph | (033) 323-2050 / (033) 323-3400\nWebsite: www.isufst.edu.ph",
+  reportTitle: "Client Satisfaction Measurement (CSM) Report",
+  commentsTitle: "Client Satisfaction Measurement (CSM) – Comments & Suggestions",
+  headerAlign: "center",
+  preparedLabel: "Prepared by:",
+  preparedName: "Ricky Jun P. Garcia, MSAgri",
+  preparedPos: "Chair, Research and Development",
+  notedLabel: "Noted by:",
+  notedName: "Michael B. Dizon, EdD, PhD",
+  notedPos: "Campus Administrator"
+};
+
 let settings = {};      // live Firestore settings
 let pinned   = null;    // snapshot used when viewing a saved report
 let draft    = {};      // admin form state
@@ -50,7 +72,8 @@ function renderReportHeader(el, s, titleKey = "reportTitle") {
   const align = s.headerAlign || "center";
   const logo  = src => src
     ? `<div class="lh-logo-box" style="width:150px;height:90px;"><img src="${src}" alt="${esc(s.orgName)}" style="width:100%;height:100%;object-fit:contain;"></div>` : "";
-  const lines = [[s.topText,"rep"],[s.orgName,"uni"],[s.campusName,"rep"],[s.department,"dept"]]
+  // Campus name is NOT shown in the header; it appears in the "Office:" line of the report.
+  const lines = [[s.topText,"rep"],[s.orgName,"uni"],[s.department,"dept"]]
     .concat(String(s.additionalText || "").split("\n").map(t => [t,"addr"]))
     .filter(x => x[0] && String(x[0]).trim())
     .map(x => `<div class="${x[1]}">${esc(x[0])}</div>`).join("");
@@ -80,7 +103,9 @@ function renderAll() {
 function loadReportSettings() {
   if (!ready) ready = new Promise(resolve => {
     onSnapshot(curRef, snap => {
-      settings = snap.exists() ? snap.data() : {};
+      settings = snap.exists() ? snap.data() : { ...DEFAULTS };
+      // First run: store the defaults so they become the editable live settings
+      if (!snap.exists()) setDoc(curRef, { ...DEFAULTS, updatedAt: new Date().toISOString() }).catch(() => {});
       renderAll();
       if (!formDirty) { draft = { ...settings }; fillForm(); }
       resolve(settings);
@@ -225,9 +250,8 @@ $("rsSaveDefault").onclick = async () => {
 $("rsReset").onclick = async () => {
   try {
     const snap = await getDoc(defRef);
-    if (!snap.exists()) { alert("No default has been saved yet. Use “Save as Default” first."); return; }
-    if (!confirm("Replace the current settings with the saved default?")) return;
-    draft = { ...snap.data() };
+    if (!confirm("Replace the current settings with the default?")) return;
+    draft = snap.exists() ? { ...snap.data() } : { ...DEFAULTS };
     await setDoc(curRef, payload()); formDirty = false; fillForm();
   } catch (err) { alert("❌ Failed to reset: " + err.message); }
 };
