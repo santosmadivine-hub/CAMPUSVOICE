@@ -18,6 +18,7 @@ const GROUPS = [
     { k: "logoRight",      l: "Secondary logo / seal (right)", t: "image", max: 400 },
     { k: "topText",        l: "Line above organization name", t: "text" },
     { k: "orgName",        l: "School / organization name", t: "text" },
+    { k: "addressLine",    l: "Address line (under organization name)", t: "text" },
     { k: "orgShort",       l: "Short name (used in report details)", t: "text" },
     { k: "campusName",     l: "Campus name (used in report details)", t: "text" },
     { k: "department",     l: "Department / office",       t: "text" },
@@ -44,10 +45,11 @@ const DEFAULTS = {
   logoLeft: "", logoRight: "", footerImage: "",
   topText: "Republic of the Philippines",
   orgName: "Iloilo State University of Fisheries Science and Technology",
+  addressLine: "San Enrique, Iloilo",
   orgShort: "ISUFST",
   campusName: "San Enrique Campus",
-  department: "Research & Development Office",
-  additionalText: "San Enrique, Iloilo | rdo@isufst.edu.ph | (033) 323-2050 / (033) 323-3400\nWebsite: www.isufst.edu.ph",
+  department: "Office of the Research and Development",
+  additionalText: "Website: isufst.edu.ph  |  Contact No. (033) 327-3405  |  Email: secrd@isufst.edu.ph",
   reportTitle: "Client Satisfaction Measurement (CSM) Report",
   commentsTitle: "Client Satisfaction Measurement (CSM) – Comments & Suggestions",
   headerAlign: "center",
@@ -70,16 +72,17 @@ const esc = v => String(v ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt
 function renderReportHeader(el, s, titleKey = "reportTitle") {
   if (!el) return;
   const align = s.headerAlign || "center";
-  const logo = (src, w, h) => src
-  ? `<div class="lh-logo-box" style="width:${w}px;height:${h}px;flex-shrink:0;"><img src="${src}" alt="${esc(s.orgName)}" style="width:100%;height:100%;object-fit:contain;"></div>` : "";
+  // Logo box size (width, height in px). Adjust the numbers in the row below to resize the logos.
+  const logo  = (src, w, h) => src
+    ? `<div class="lh-logo-box" style="width:${w}px;height:${h}px;flex-shrink:0;"><img src="${src}" alt="${esc(s.orgName)}" style="width:100%;height:100%;object-fit:contain;"></div>` : "";
   // Campus name is NOT shown in the header; it appears in the "Office:" line of the report.
-  const lines = [[s.topText,"rep"],[s.orgName,"uni"],[s.department,"dept"]]
+  const lines = [[s.topText,"rep"],[s.orgName,"uni"],[s.addressLine,"addr1"],[s.department,"dept"]]
     .concat(String(s.additionalText || "").split("\n").map(t => [t,"addr"]))
     .filter(x => x[0] && String(x[0]).trim())
     .map(x => `<div class="${x[1]}">${esc(x[0])}</div>`).join("");
   const title = s[titleKey] ? `<div class="csm-doc-title">${esc(s[titleKey])}</div>` : "";
   el.innerHTML = `
-    <div class="lh-row">${logo(s.logoLeft, 150, 80)}<div class="lh-text" style="text-align:${align};">${lines}</div>${logo(s.logoRight, 90, 80)}</div>
+    <div class="lh-row">${logo(s.logoLeft, 125, 75)}<div class="lh-text" style="text-align:${align};">${lines}</div>${logo(s.logoRight, 100, 85)}</div>
     ${(lines || s.logoLeft || s.logoRight) ? '<hr class="lh-divider">' : ""}${title}`;
 }
 
