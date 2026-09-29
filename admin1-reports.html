@@ -76,15 +76,18 @@ select{min-width:180px}
   body.print-report-mode .generated-report-footer,body.print-comments-mode .generated-report-footer{padding:6mm 15mm!important;margin-top:auto!important}
 }
 
+/* ===== Letterhead header (matches the official ISUFST letterhead) ===== */
 .lh-row{display:flex;align-items:center;gap:9px;margin-bottom:1px}
 .lh-logo-box{width:100px;height:100px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .lh-logo-box img{width:100%;height:100%;object-fit:contain}
 .lh-text{flex:1;text-align:center;line-height:1.3}
-.lh-text .rep{font-size:8.5pt}
-.lh-text .uni{font-size:9pt;font-weight:bold;text-transform:uppercase;letter-spacing:.1px}
-.lh-text .dept{font-size:10pt;font-weight:bold;text-transform:uppercase}
-.lh-text .addr{font-size:7.5pt;color:#444}
-.lh-divider{border:none;border-top:2.5px solid #1a3a6b;margin:3px 0 8px}
+.lh-text .rep{font-family:'Times New Roman',Times,serif;font-size:10pt;color:#000}
+.lh-text .uni{font-family:'Times New Roman',Times,serif;font-size:11.5pt;font-weight:bold;color:#0f172a}
+.lh-text .addr1{font-family:'Times New Roman',Times,serif;font-size:9.5pt;color:#000}
+.lh-text .dept{font-family:Arial,Helvetica,sans-serif;font-size:11pt;font-weight:bold;text-transform:uppercase;color:#1f4e9c}
+.lh-text .addr{font-family:Arial,Helvetica,sans-serif;font-size:7.5pt;color:#222;white-space:nowrap}
+.lh-divider{border:none;border-top:2px solid #1f4e9c;margin:3px 0 8px}
+/* ===== Report body ===== */
 .csm-doc-title{text-align:center;font-size:11.5pt;font-weight:bold;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
 .csm-meta{font-size:10.5pt;line-height:1.8;margin-bottom:10px}
 .csm-table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:10pt}
