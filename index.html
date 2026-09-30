@@ -32,22 +32,7 @@
 
     body {
       font-family: 'DM Sans', sans-serif;
-
-      /* Campus gate photo as background, with a lighter scrim for visibility */
-      background:
-        linear-gradient(
-          160deg,
-          rgba(8,13,26,0.35),
-          rgba(9,15,28,0.25) 40%,
-          rgba(7,11,22,0.38)
-        ),
-        url('8.png');
-
-      background-size: cover;
-      background-position: center 30%;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-
+      background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       display: flex;
@@ -56,6 +41,26 @@
       padding: 24px;
       position: relative;
       overflow: hidden;
+    }
+
+    /* Blurred campus gate photo (blur applies only to the picture, not the card) */
+    .bg-image {
+      position: fixed;
+      inset: -40px;               /* extra bleed so blurred edges don't show */
+      z-index: -1;
+      background:
+        linear-gradient(
+          160deg,
+          rgba(8,13,26,0.35),
+          rgba(9,15,28,0.25) 40%,
+          rgba(7,11,22,0.38)
+        ),
+        url('8.png');
+      background-size: cover;
+      background-position: center 30%;
+      background-repeat: no-repeat;
+      filter: blur(4px);          /* slightly blurred: photo stays visible */
+      pointer-events: none;
     }
 
     /* Soft ambient glow blobs behind the card */
@@ -86,15 +91,16 @@
       position: relative;
       z-index: 1;
       width: 100%;
-      max-width: 400px;
-      background: rgba(17, 24, 39, 0.12);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 22px;
-      padding: 40px 36px 32px;
+      max-width: 540px;                       /* was 400px */
+      /* Deep navy-blue tint that complements the photo and site palette */
+      background: linear-gradient(160deg, rgba(20, 44, 96, 0.80), rgba(11, 22, 52, 0.86));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(125, 175, 255, 0.35);
+      border-radius: 26px;
+      padding: 52px 48px 42px;                /* was 40px 36px 32px */
       box-shadow:
-        0 8px 32px rgba(0,0,0,0.3),
+        0 12px 44px rgba(0,0,0,0.45),
         0 1px 0 rgba(255,255,255,0.06) inset;
       animation: fadeUp 0.6s ease both;
     }
@@ -104,8 +110,8 @@
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 3px;
-      border-radius: 22px 22px 0 0;
+      height: 4px;
+      border-radius: 26px 26px 0 0;
       background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3));
     }
 
@@ -117,13 +123,13 @@
     /* Logo */
     .login-logo {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 38px;
     }
 
     .login-logo .logo-mark {
-      width: 108px;
-      height: 108px;
-      margin: 0 auto 16px;
+      width: 132px;                           /* was 108px */
+      height: 132px;
+      margin: 0 auto 18px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--surface2), var(--surface));
       border: 1px solid var(--border);
@@ -145,7 +151,7 @@
     .login-logo .logo-mark .logo-fallback {
       display: none;
       font-family: 'Syne', sans-serif;
-      font-size: 1.6rem;
+      font-size: 2rem;
       font-weight: 800;
       background: linear-gradient(135deg, var(--accent2), var(--accent1));
       -webkit-background-clip: text;
@@ -165,49 +171,59 @@
       -webkit-text-fill-color: transparent;
     }
 
-    .login-logo .sub {
-      font-size: 0.78rem;
+    .login-logo .title {
+      color: white;
+      font-size: clamp(2.2rem, 8vw, 2.9rem);  /* was 2.0rem */
       font-weight: 900;
-      color: var(--muted);
+      line-height: 1.15;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.45);
+    }
+
+    .login-logo .sub {
+      font-size: 1rem;                        /* was 0.78rem */
+      font-weight: 900;
+      color: #ffffff;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      margin-top: 4px;
+      margin-top: 8px;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
     }
 
     .form-group {
-      margin-bottom: 18px;
+      margin-bottom: 26px;
     }
 
     .form-group label {
       display: block;
-      font-size: 0.78rem;
-      font-weight: 500;
-      color: var(--label);
+      font-size: 1.05rem;                     /* was 0.78rem */
+      font-weight: 700;
+      color: #ffffff;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      margin-bottom: 7px;
+      margin-bottom: 10px;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
     }
 
     .form-group input {
       width: 100%;
-      padding: 11px 14px;
-      background: rgba(26, 37, 55, 0.25);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 9px;
+      padding: 17px 20px;                     /* was 11px 14px */
+      background: rgba(6, 12, 30, 0.72);      /* darker than the card so fields stand out */
+      border: 2px solid rgba(147, 197, 253, 0.55);
+      border-radius: 12px;
       color: var(--text);
       font-family: 'DM Sans', sans-serif;
-      font-size: 0.93rem;
+      font-size: 1.2rem;                      /* was 0.93rem */
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     
     .form-group input::placeholder {
-      color: rgba(255,255,255,0.6);
+      color: rgba(255,255,255,0.75);
     }
 
     .form-group input:focus {
       border-color: var(--accent1);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
     }
 
     .form-group input:focus-visible {
@@ -221,19 +237,23 @@
 
     .password-wrapper input {
       width: 100%;
-      padding-right: 45px;
+      padding-right: 60px;
     }
 
     .toggle-password {
       position: absolute;
-      right: 14px;
+      right: 18px;
       top: 50%;
       transform: translateY(-50%);
       cursor: pointer;
       user-select: none;
-      font-size: 18px;
-      opacity: 0.8;
+      font-size: 24px;
+      opacity: 0.85;
       transition: opacity 0.2s;
+    }
+
+    .toggle-password::before {
+      content: '👁';
     }
 
     .toggle-password:hover {
@@ -242,25 +262,25 @@
 
     .btn-login {
       width: 100%;
-      padding: 13px;
-      margin-top: 8px;
+      padding: 19px;                          /* was 13px */
+      margin-top: 12px;
       border: none;
-      border-radius: 10px;
+      border-radius: 14px;
       cursor: pointer;
       font-family: 'Syne', sans-serif;
-      font-size: 0.92rem;
+      font-size: 1.25rem;                     /* was 0.92rem */
       font-weight: 700;
       letter-spacing: 0.04em;
       color: white;
       background: linear-gradient(135deg, var(--accent1), #1d4ed8);
       transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
+      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.45);
     }
 
     .btn-login:hover {
       opacity: 0.95;
       transform: translateY(-1px);
-      box-shadow: 0 14px 30px rgba(37, 99, 235, 0.45);
+      box-shadow: 0 16px 34px rgba(37, 99, 235, 0.55);
     }
 
     .btn-login:active {
@@ -280,13 +300,14 @@
 
     .login-error {
       display: none;
-      margin-top: 12px;
-      padding: 9px 14px;
-      background: rgba(239, 68, 68, 0.12);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 8px;
-      color: #f87171;
-      font-size: 0.8rem;
+      margin-top: 18px;
+      padding: 13px 18px;
+      background: rgba(239, 68, 68, 0.22);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      border-radius: 10px;
+      color: #fca5a5;
+      font-size: 1rem;                        /* was 0.8rem */
+      font-weight: 500;
       text-align: center;
       animation: shake 0.3s ease;
     }
@@ -298,22 +319,24 @@
     }
 
     .login-hint {
-      margin-top: 18px;
+      margin-top: 26px;
       text-align: center;
-      font-size: 0.76rem;
-      color: rgba(255,255,255,0.85);
+      font-size: 1rem;                        /* was 0.76rem */
+      color: rgba(255,255,255,0.95);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
     }
 
     .login-hint span {
       color: #ffffff;
-      font-weight: 500;
+      font-weight: 700;
     }
 
-    /* Small screens: let the card breathe without losing padding */
-    @media (max-width: 420px) {
+    /* Small screens: keep large text but tighten padding */
+    @media (max-width: 480px) {
       .login-box {
-        padding: 34px 26px 26px;
+        padding: 38px 24px 30px;
       }
+      .form-group input { font-size: 1.1rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -323,6 +346,9 @@
   </style>
 </head>
 <body>
+
+  <!-- Blurred background photo -->
+  <div class="bg-image" aria-hidden="true"></div>
 
   <div class="login-box">
 
@@ -336,7 +362,7 @@
         >
         <div class="logo-fallback">CV</div>
       </div>
-      <div style="color:white; font-size:2.0rem; font-weight:900">CampusVoice</div>
+      <div class="title">CampusVoice</div>
       <div class="sub">ISUFST – San Enrique Campus</div>
     </div>
 
