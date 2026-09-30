@@ -27,7 +27,7 @@
   /* Summary Stat Grid */
   .eval-stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 20px;
     margin-bottom: 24px;
   }
@@ -75,6 +75,7 @@
     color: #64748b;
     text-transform: uppercase;
     letter-spacing: .04em;
+    padding-right: 44px;
   }
 
   .eval-stat-pill-sub {
@@ -802,6 +803,12 @@
   }
 
   /* ─── Responsive ─── */
+  @media (max-width: 1400px) {
+    .eval-stats {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
   @media (max-width: 1200px) {
     .eval-stats {
       grid-template-columns: repeat(2, 1fr);
@@ -893,6 +900,11 @@
           <div class="eval-stat-pill-label">Total</div>
           <span id="stat-total">0</span>
           <div class="eval-stat-pill-sub">All Submissions</div>
+        </div>
+        <div class="eval-stat-pill" data-icon="👥">
+          <div class="eval-stat-pill-label">Total Evaluators</div>
+          <span id="stat-evaluators">0</span>
+          <div class="eval-stat-pill-sub">Unique Submitters</div>
         </div>
         <div class="eval-stat-pill" data-icon="⏳">
           <div class="eval-stat-pill-label">Pending</div>
@@ -1367,6 +1379,8 @@ function renderSubmissions() {
   const filtered = getFilteredSubmissions();
 
   document.getElementById("stat-total").textContent = evaluations.length;
+  document.getElementById("stat-evaluators").textContent =
+    new Set(evaluations.map(e => e.userId).filter(Boolean)).size;
 
   const pendingCount = evaluations.filter(e => e.status === "pending").length;
   const noActionCount = evaluations.filter(e => e.status === "no_action").length;
