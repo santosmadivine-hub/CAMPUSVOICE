@@ -1057,18 +1057,6 @@ let currentReport = null;
 let savedCommentsReports = [];
 let currentCommentsReport = null;
 
-// ======================
-// PAPER-SIZE RESYNC
-//
-// generateReport()/viewSavedReport() compute the report's page-by-page
-// layout (buildPaginatedSectionPages) using whatever --page-width /
-// --page-height / --cvr-* values are active on the document AT THE
-// MOMENT they run. regenerateCurrentPreviews() re-runs the same
-// pagination against the (fixed A4) paper size, so the header stays
-// pinned to the top, the footer stays pinned to the bottom, and
-// overflow content is re-flowed onto additional pages (with the same
-// header/footer) for A4.
-// ======================
 function regenerateCurrentPreviews() {
   const reportPreviewEl = document.getElementById("reportPreview");
   if (currentReport && reportPreviewEl && reportPreviewEl.style.display === "block") {
