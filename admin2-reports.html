@@ -745,21 +745,9 @@
     margin-bottom: 12px;
   }
 
-  /*
-    SHRINK-TO-FIT: the body content below the header (meta / table /
-    narrative / signatures) reads its font-size and vertical spacing
-    from --cvr-content-scale (default 1, i.e. unchanged full size).
-    buildPaginatedSectionPages() in the script below sets this variable
-    on the content wrapper of each generated page: it first tries scale
-    1, then shrinks in small steps if that's what it takes to fit ALL
-    of a section's content onto a single physical sheet, before ever
-    falling back to a second page. The letterhead header and the
-    accreditations footer intentionally do NOT read this variable, so
-    they always render at their normal, fixed size.
-  */
   .official-meta {
-    font-size: calc(13pt * var(--cvr-content-scale, 1));
-    line-height: 1.9;
+    font-size: calc(10pt * var(--cvr-content-scale, 1));
+    line-height: 1.7;
     margin-bottom: calc(10px * var(--cvr-content-scale, 1));
   }
 
@@ -771,7 +759,7 @@
     width: 100%;
     border-collapse: collapse;
     margin-bottom: calc(14px * var(--cvr-content-scale, 1));
-    font-size: calc(14pt * var(--cvr-content-scale, 1));
+    font-size: calc(10pt * var(--cvr-content-scale, 1));
   }
 
   .official-table th {
@@ -793,7 +781,7 @@
   }
 
   .official-narrative {
-    font-size: calc(13pt * var(--cvr-content-scale, 1));
+    font-size: calc(10pt * var(--cvr-content-scale, 1));
     line-height: 1.8;
     text-align: justify;
     margin-bottom: calc(16px * var(--cvr-content-scale, 1));
@@ -807,7 +795,7 @@
     display: flex;
     gap: calc(40px * var(--cvr-content-scale, 1));
     margin-top: calc(24px * var(--cvr-content-scale, 1));
-    font-size: calc(12pt * var(--cvr-content-scale, 1));
+    font-size: calc(10pt * var(--cvr-content-scale, 1));
   }
 
   .sig-block {
