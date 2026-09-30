@@ -581,6 +581,40 @@ function parseEvalStatus(data, avgRating) {
   return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
 }
 
+// Matches the stored category to Comfort Room / Surroundings ignoring
+// case and extra spaces, checking cleanlinessCategory first and then the
+// generic category field. Returns null when the record is neither.
+function normalizeCleanlinessCategory(data) {
+  const candidates = [data.cleanlinessCategory, data.category];
+  for (const raw of candidates) {
+    if (typeof raw !== "string") continue;
+    const match = CLEANLINESS_CATEGORIES.find(
+      c => c.toLowerCase() === raw.trim().toLowerCase()
+    );
+    if (match) return match;
+  }
+  return null;
+}
+
+// One evaluator = one distinct userId. Records saved without a userId
+// fall back to the evaluator's name so they are still counted once.
+function evaluatorKey(e) {
+  if (e.userId && e.userId !== "-") return "id:" + e.userId;
+  if (e.evaluatorName && e.evaluatorName !== "-") {
+    return "name:" + e.evaluatorName.trim().toLowerCase();
+  }
+  return null;
+}
+
+function countEvaluators(list) {
+  const keys = new Set();
+  list.forEach(e => {
+    const key = evaluatorKey(e);
+    if (key) keys.add(key);
+  });
+  return keys.size;
+}
+
 function categoryPillHtml(category) {
   const cls = category === "Surroundings" ? "surroundings" : "comfort-room";
   return `<span class="category-pill ${cls}">${category}</span>`;
@@ -671,27 +705,31 @@ onSnapshot(collection(db, CONVERSATIONS_COLLECTION), (snapshot) => {
 
 // ======================
 // LOAD EVALUATIONS
+// Reads the whole collection with no orderBy: Firestore silently drops
+// documents that lack the ordered field, which made the total too low.
+// Records are sorted by timestamp on the client instead.
 // ======================
 const evalCollectionRef = collection(db, EVAL_HISTORY_COLLECTION);
-const evalQuery = query(evalCollectionRef, orderBy("timestamp", "desc"));
 
-onSnapshot(evalQuery, (snapshot) => {
+onSnapshot(evalCollectionRef, (snapshot) => {
   evaluations = [];
+  let skipped = 0;
+
   snapshot.forEach((doc) => {
     const data = doc.data();
 
-    const rawCategory = data.cleanlinessCategory;
-    if (!CLEANLINESS_CATEGORIES.includes(rawCategory)) {
+    const category = normalizeCleanlinessCategory(data);
+    if (!category) {
+      skipped++;
       return;
     }
-    const category = rawCategory;
 
     const record = {
       id: doc.id,
       officeName: data.officeName || "Unknown",
       cleanlinessCategory: category,
       comments: data.comments || "",
-      timestamp: getTimestampMillis(data.timestamp) ?? 0,
+      timestamp: getTimestampMillis(data.timestamp ?? data.date ?? data.submittedAt) ?? 0,
       evidence: parseEvidence(data),
       sex: data.sex || "-",
       userCategory: data.userCategory || "-",
@@ -709,12 +747,22 @@ onSnapshot(evalQuery, (snapshot) => {
 
     evaluations.push(record);
   });
+
   evaluations.forEach(ev => {
     ev.code = makeCode(ev.officeName, ev.id);
   });
 
+  if (skipped > 0) {
+    console.warn(
+      `${skipped} of ${snapshot.size} records in "${EVAL_HISTORY_COLLECTION}" are not counted ` +
+      `because they have no Comfort Room / Surroundings category.`
+    );
+  }
+
   populateOfficeFilter();
   renderSubmissions();
+}, (err) => {
+  console.error("Failed to load evaluations:", err);
 });
 
 // ======================
@@ -829,8 +877,7 @@ function renderSubmissions() {
 
   document.getElementById("stat-total").textContent = categoryScoped.length;
   document.getElementById("stat-total-sub").textContent = categoryFilter === "all" ? "All Submissions" : categoryFilter;
-  document.getElementById("stat-evaluators").textContent =
-    new Set(categoryScoped.map(e => e.userId).filter(id => id && id !== "-")).size;
+  document.getElementById("stat-evaluators").textContent = countEvaluators(categoryScoped);
 
   const pendingCount = categoryScoped.filter(e => e.status === "pending").length;
   const noActionCount = categoryScoped.filter(e => e.status === "no_action").length;
