@@ -1,9 +1,7 @@
-/* ====== CAMPUSVOICE SHARED STYLES (JS-RELATED ONLY) ====== */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
 
 :root {
 
-  /* ===== PROFESSIONAL BLUE THEME ===== */
   --bg: #f0f9ff;
   --surface: rgba(255,255,255,0.95);
   --surface2: #e0f2fe;
@@ -27,10 +25,6 @@
   --admin3: #1e3a8a;
 
 }
-
-/* ===================================== */
-/* RESET */
-/* ===================================== */
 
 *,
 *::before,
@@ -60,19 +54,11 @@ body.sidebar-open {
   overflow:hidden;
 }
 
-/* ===================================== */
-/* LAYOUT */
-/* ===================================== */
-
 .layout{
   display:flex;
   min-height:100vh;
   width:100%;
 }
-
-/* ===================================== */
-/* SIDEBAR */
-/* ===================================== */
 
 .sidebar{
   width:240px;
@@ -184,8 +170,6 @@ body.sidebar-open {
   border:1px solid rgba(59,130,246,0.4);
 }
 
-/* NAVIGATION */
-
 .nav{
   flex:1;
   padding:12px 10px;
@@ -256,78 +240,48 @@ body.sidebar-open {
   font-size:1rem;
 }
 
-/* FOOTER */
-
 .sidebar-footer{
   padding:16px;
   border-top:1px solid rgba(255,255,255,0.15);
 }
 
-/* Logout button (red) */
-.user-chip{
+.logout-btn{
   display:flex;
   align-items:center;
+  justify-content:center;
   gap:10px;
 
-  padding:10px 12px;
+  padding:14px 12px;
 
   border-radius:14px;
 
   background:#dc2626;
+  color:#ffffff;
 
   text-decoration:none;
+
+  font-size:0.88rem;
+  font-weight:700;
 
   transition:.25s ease;
 }
 
-.user-chip:hover{
+.logout-btn:hover{
   background:#b91c1c;
 }
 
-.user-avatar{
-  width:34px;
-  height:34px;
-
-  border-radius:50%;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  background:linear-gradient(
-    135deg,
-    #93c5fd,
-    #60a5fa
-  );
-
-  color:white;
-
-  font-size:0.75rem;
-  font-weight:700;
-}
-
-.user-name{
-  font-size:0.82rem;
-  font-weight:600;
-  color:#ffffff;
-}
-
-/* Logout icon (replaces the "Admin 1" text) */
 .logout-icon{
-  width:16px;
-  height:16px;
+  width:20px;
+  height:20px;
   display:block;
+  flex-shrink:0;
   color:#ffffff;
 }
 
-.user-role-label{
-  font-size:0.68rem;
-  color:rgba(255,255,255,0.9);
+.logout-text{
+  color:#ffffff;
+  letter-spacing:0.02em;
 }
-
-/* ===================================== */
-/* HAMBURGER MENU */
-/* ===================================== */
 
 .hamburger-btn {
   display:none;
@@ -360,10 +314,6 @@ body.sidebar-open {
   transform:rotate(-45deg) translate(8px, -8px);
 }
 
-/* ===================================== */
-/* MAIN */
-/* ===================================== */
-
 .main{
   margin-left:240px;
   flex:1;
@@ -374,10 +324,6 @@ body.sidebar-open {
   padding:28px;
   transition:margin-left 0.3s ease;
 }
-
-/* ===================================== */
-/* TOPBAR */
-/* ===================================== */
 
 .topbar{
   display:flex;
@@ -422,26 +368,14 @@ body.sidebar-open {
   color:#0c4a6e;
 }
 
-/* ===================================== */
-/* BAR ANIMATION (for animateBars) */
-/* ===================================== */
-
 .bar-fill{
   transition:width .8s ease;
 }
-
-/* ===================================== */
-/* TOGGLE */
-/* ===================================== */
 
 .toggle{
   cursor:pointer;
   transition:all .25s ease;
 }
-
-/* ===================================== */
-/* SCROLLBAR */
-/* ===================================== */
 
 ::-webkit-scrollbar{
   width:8px;
@@ -456,11 +390,6 @@ body.sidebar-open {
   background:transparent;
 }
 
-/* ===================================== */
-/* RESPONSIVE */
-/* ===================================== */
-
-/* TABLET - Collapse sidebar to icons */
 @media (max-width: 1024px){
 
   .sidebar{
@@ -471,8 +400,7 @@ body.sidebar-open {
   .sidebar-logo .campus,
   .sidebar-role,
   .nav-item span:not(.nav-icon),
-  .user-name,
-  .user-role-label{
+  .logout-text{
     display:none;
   }
 
@@ -494,7 +422,6 @@ body.sidebar-open {
 
 }
 
-/* MOBILE - Hide sidebar, show hamburger */
 @media (max-width: 768px){
 
   .sidebar{
@@ -513,8 +440,7 @@ body.sidebar-open {
 
   .sidebar-role,
   .nav-item span:not(.nav-icon),
-  .user-name,
-  .user-role-label{
+  .logout-text{
     display:block;
   }
 
@@ -549,7 +475,6 @@ body.sidebar-open {
 
 }
 
-/* SMALL MOBILE */
 @media (max-width: 480px){
 
   .main{
