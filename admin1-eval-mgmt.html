@@ -135,6 +135,13 @@
         <div class="stat-sub">All Time</div>
       </div>
 
+      <div class="stat-card blue">
+        <div class="stat-icon">👥</div>
+        <div class="stat-label">Total Evaluators</div>
+        <div class="stat-value" id="statEvaluators">0</div>
+        <div class="stat-sub">Unique Submitters</div>
+      </div>
+
       <div class="stat-card green">
         <div class="stat-icon">🏢</div>
         <div class="stat-label">Offices Covered</div>
@@ -264,6 +271,8 @@ function updateSummaryStats() {
   document.getElementById("statTotal").textContent = entries.length;
   document.getElementById("statOffices").textContent =
     new Set(entries.map(e => e.office).filter(Boolean)).size;
+  document.getElementById("statEvaluators").textContent =
+    new Set(entries.map(e => e.userId).filter(Boolean)).size;
 }
 
 function renderTable() {
