@@ -1,8 +1,4 @@
-/* CampusVoice – Admin 2 Report Header & Footer Settings
-   Firestore: services/reportSettingsAdmin2/records/current  (live settings)
-              services/reportSettingsAdmin2/records/default  (baseline for "Reset to Default")
-   Built-in DEFAULTS match the current Admin 2 header/footer (2.png, 3.jpg, 4.jpg).
-   Must be loaded AFTER the inline module in admin2 (it reuses the Firebase app). */
+
 import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
