@@ -263,6 +263,7 @@ body.sidebar-open {
   border-top:1px solid rgba(255,255,255,0.15);
 }
 
+/* Logout button (red) */
 .user-chip{
   display:flex;
   align-items:center;
@@ -272,7 +273,7 @@ body.sidebar-open {
 
   border-radius:14px;
 
-  background:rgba(255,255,255,0.1);
+  background:#dc2626;
 
   text-decoration:none;
 
@@ -280,7 +281,7 @@ body.sidebar-open {
 }
 
 .user-chip:hover{
-  background:rgba(255,255,255,0.15);
+  background:#b91c1c;
 }
 
 .user-avatar{
@@ -311,9 +312,17 @@ body.sidebar-open {
   color:#ffffff;
 }
 
+/* Logout icon (replaces the "Admin 1" text) */
+.logout-icon{
+  width:16px;
+  height:16px;
+  display:block;
+  color:#ffffff;
+}
+
 .user-role-label{
   font-size:0.68rem;
-  color:rgba(255,255,255,0.6);
+  color:rgba(255,255,255,0.9);
 }
 
 /* ===================================== */
