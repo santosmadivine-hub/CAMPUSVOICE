@@ -25,22 +25,9 @@
     z-index: 9999;
     white-space: nowrap;
   }
-
-  .pie-tooltip.show {
-    opacity: 1;
-  }
-
-  .pie-tooltip .tt-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    margin-bottom: 3px;
-  }
-
-  .pie-tooltip .tt-sub {
-    color: #cbd5e1;
-    font-size: 11px;
-  }
+  .pie-tooltip.show { opacity: 1; }
+  .pie-tooltip .tt-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+  .pie-tooltip .tt-sub { color: #cbd5e1; font-size: 11px; }
 
   /* ─── Stat cards grid ─── */
   .stat-grid {
@@ -49,11 +36,10 @@
     gap: 20px;
     margin-bottom: 28px;
   }
-
   .stat-card {
     position: relative;
     background: #ffffff;
-     border:1px solid #bae6fd;
+    border: 1px solid #bae6fd;
     border-top: 4px solid var(--accent3, #2563eb);
     border-radius: 16px;
     padding: 20px 20px 22px;
@@ -62,23 +48,10 @@
     flex-direction: column;
     gap: 6px;
   }
-
-  .stat-card.blue {
-    border-top-color: #2563eb;
-  }
-
-  .stat-card.cyan {
-    border-top-color: #06b6d4;
-  }
-
-  .stat-card.purple {
-    border-top-color: #8b5cf6;
-  }
-
-  .stat-card.green {
-    border-top-color: #15803d;
-  }
-
+  .stat-card.blue { border-top-color: #2563eb; }
+  .stat-card.cyan { border-top-color: #06b6d4; }
+  .stat-card.purple { border-top-color: #8b5cf6; }
+  .stat-card.green { border-top-color: #15803d; }
   .stat-icon {
     position: absolute;
     top: 18px;
@@ -92,7 +65,6 @@
     justify-content: center;
     font-size: 16px;
   }
-
   .stat-label {
     font-family: 'DM Sans', sans-serif;
     font-size: 13px;
@@ -101,7 +73,6 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
-
   .stat-value {
     font-family: 'Syne', sans-serif;
     font-weight: 700;
@@ -109,7 +80,6 @@
     color: #0f172a;
     line-height: 1.1;
   }
-
   .stat-sub {
     font-family: 'DM Sans', sans-serif;
     font-size: 12px;
@@ -119,7 +89,7 @@
   /* ─── Card styling ─── */
   .card {
     background: #ffffff;
-   border:1px solid #bae6fd;
+    border: 1px solid #bae6fd;
     border-radius: 18px;
     box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
     padding: 22px 24px 26px;
@@ -127,22 +97,8 @@
     flex-direction: column;
     gap: 6px;
   }
-
-  .card-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    color: #0f172a;
-    margin: 0;
-  }
-
-  .card-sub {
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 400;
-    font-size: 13px;
-    color: #94a3b8;
-  }
-
+  .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: #0f172a; margin: 0; }
+  .card-sub { font-family: 'DM Sans', sans-serif; font-weight: 400; font-size: 13px; color: #94a3b8; }
   .card-header-row {
     display: flex;
     align-items: center;
@@ -152,16 +108,8 @@
     margin-bottom: 12px;
   }
 
-  /* ─── Chart legend (ported from admin2, used above the Weekly
-       Reports line chart) ─── */
-  .chart-legend {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-top: -6px;
-    margin-bottom: 4px;
-  }
-
+  /* ─── Chart legend ─── */
+  .chart-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: -6px; margin-bottom: 4px; }
   .chart-legend .legend-item {
     display: flex;
     align-items: center;
@@ -171,13 +119,7 @@
     font-weight: 600;
     color: #475569;
   }
-
-  .chart-legend .legend-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+  .chart-legend .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
   /* ─── Charts grid ─── */
   .charts-grid {
@@ -186,14 +128,9 @@
     gap: 24px;
     margin-bottom: 28px;
   }
+  @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } }
 
-  @media (max-width: 1024px) {
-    .charts-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* ─── Evaluation Status + Quick Access row ─── */
+  /* ─── Total Evaluators + Quick Access row ─── */
   .eval-quick-row {
     display: grid;
     grid-template-columns: minmax(0, 2.2fr) minmax(240px, 1fr);
@@ -201,16 +138,8 @@
     align-items: stretch;
     margin-bottom: 28px;
   }
-
-  .eval-quick-row > .card {
-    margin-bottom: 0;
-  }
-
-  @media (max-width: 1024px) {
-    .eval-quick-row {
-      grid-template-columns: 1fr;
-    }
-  }
+  .eval-quick-row > .card { margin-bottom: 0; }
+  @media (max-width: 1024px) { .eval-quick-row { grid-template-columns: 1fr; } }
 
   /* ─── Badge pill ─── */
   .badge-pill {
@@ -229,15 +158,8 @@
   }
 
   /* ─── Line chart ─── */
-  .line-chart-wrap {
-    margin-top: 4px;
-  }
-
-  #line-chart-svg {
-    width: 100%;
-    height: 235px;
-    display: block;
-  }
+  .line-chart-wrap { margin-top: 4px; }
+  #line-chart-svg { width: 100%; height: 235px; display: block; }
 
   /* ─── Donut chart ─── */
   .donut-wrap {
@@ -249,20 +171,8 @@
     padding: 12px 0;
     flex: 1;
   }
-
-  .donut-wrap svg {
-    flex-shrink: 1;
-    width: 220px;
-    max-width: 100%;
-    height: auto;
-  }
-
-  .donut-legend {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
+  .donut-wrap svg { flex-shrink: 1; width: 220px; max-width: 100%; height: auto; }
+  .donut-legend { display: flex; flex-direction: column; gap: 12px; }
   .legend-item {
     display: flex;
     align-items: center;
@@ -271,15 +181,9 @@
     font-size: 13px;
     color: #1e293b;
   }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-  .legend-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  /* ─── Evaluation Status ─── */
+  /* ─── Total Evaluators card ─── */
   .eval-status-header {
     display: flex;
     align-items: flex-start;
@@ -288,101 +192,52 @@
     gap: 16px;
     margin-bottom: 20px;
   }
-
-  .eval-filters {
+  .evaluator-body {
     display: flex;
-    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    flex-wrap: wrap;
+    flex: 1;
+    padding: 4px 0;
+  }
+  .evaluator-total { display: flex; flex-direction: column; gap: 4px; }
+  .evaluator-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(37, 99, 235, 0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .evaluator-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 56px;
+    line-height: 1.05;
+    color: #2563eb;
+  }
+  .evaluator-donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 24px;
     flex-wrap: wrap;
   }
+  .evaluator-donut-wrap svg { width: 150px; max-width: 100%; height: auto; flex-shrink: 1; }
+  .evaluator-donut-wrap .legend-item { font-size: 13px; }
+  .evaluator-donut-wrap .legend-item span { color: #94a3b8; margin-left: 4px; }
 
-  .eval-filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 180px;
-  }
-
-  .eval-filter-label {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #94a3b8;
-  }
-
-  .eval-filter-select {
-    appearance: none;
-    -webkit-appearance: none;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 10px 36px 10px 14px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    color: #1e293b;
-    cursor: pointer;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-  }
-
-  .eval-filter-select:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-  }
-
-  /* ─── Status bars ─── */
-  .status-rows {
-    margin-top: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-
-  .status-row {
-    display: grid;
-    grid-template-columns: 180px 1fr 36px;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .status-label-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .status-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .status-label {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-  }
-
-  .status-bar-track {
-    background: #e9edf3;
-    border-radius: 999px;
-    height: 10px;
-    width: 100%;
-    overflow: hidden;
-  }
-
-  .status-bar-fill {
-    height: 100%;
-    border-radius: 999px;
-    width: 0%;
-    transition: width 0.4s ease;
-  }
-
+  /* ─── Breakdown bars ─── */
+  .status-rows { margin-top: 24px; display: flex; flex-direction: column; gap: 18px; }
+  .status-row { display: grid; grid-template-columns: 180px 1fr 36px; align-items: center; gap: 14px; }
+  .status-label-wrap { display: flex; align-items: center; gap: 8px; }
+  .status-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .status-label { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+  .status-bar-track { background: #e9edf3; border-radius: 999px; height: 10px; width: 100%; overflow: hidden; }
+  .status-bar-fill { height: 100%; border-radius: 999px; width: 0%; transition: width 0.4s ease; }
   .status-count {
     font-family: 'Syne', sans-serif;
     font-weight: 800;
@@ -391,22 +246,9 @@
     text-align: right;
   }
 
-  /* ─── Quick Access Section ───
-     Card layout modeled on the reference: 2-column grid, each button
-     left-aligned with an icon in a small white rounded badge, the
-     first button ("Analytics") highlighted solid blue. ─── */
-  .quick-access-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-top: 12px;
-  }
-
-  .quick-access-card .quick-access-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-  }
-
+  /* ─── Quick Access Section ─── */
+  .quick-access-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 12px; }
+  .quick-access-card .quick-access-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .quick-access-btn {
     display: flex;
     flex-direction: row;
@@ -425,7 +267,6 @@
     position: relative;
     overflow: hidden;
   }
-
   .quick-access-btn::before {
     content: "";
     position: absolute;
@@ -437,21 +278,13 @@
     transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 0;
   }
-
   .quick-access-btn:hover {
     border-color: #cbd5e1;
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
     transform: translateY(-2px);
   }
-
-  .quick-access-btn:hover::before {
-    left: 0;
-  }
-
-  .quick-access-btn:active {
-    transform: translateY(0);
-  }
-
+  .quick-access-btn:hover::before { left: 0; }
+  .quick-access-btn:active { transform: translateY(0); }
   .qa-icon-badge {
     flex-shrink: 0;
     width: 42px;
@@ -465,12 +298,7 @@
     position: relative;
     z-index: 1;
   }
-
-  .qa-icon {
-    font-size: 20px;
-    line-height: 1;
-  }
-
+  .qa-icon { font-size: 20px; line-height: 1; }
   .qa-label {
     font-family: 'Syne', sans-serif;
     font-weight: 600;
@@ -481,19 +309,12 @@
     z-index: 1;
     line-height: 1.3;
   }
-
-  /* Highlighted "Analytics" card in the Quick Access panel, matching
-     the reference image. */
   .quick-access-card .quick-access-btn:first-child {
     background: linear-gradient(135deg, #0788d1, #1b9ad8);
     border-color: #0788d1;
     color: #fff;
   }
-
-  .quick-access-card .quick-access-btn:first-child .qa-label {
-    color: #fff;
-  }
-
+  .quick-access-card .quick-access-btn:first-child .qa-label { color: #fff; }
   .quick-access-card .quick-access-btn:first-child .qa-icon-badge {
     background: rgba(255, 255, 255, 0.22);
     box-shadow: none;
@@ -501,158 +322,52 @@
 
   /* ─── Responsive ─── */
   @media (max-width: 1200px) {
-    .stat-value {
-      font-size: 30px;
-    }
-    .quick-access-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
+    .stat-value { font-size: 30px; }
+    .quick-access-grid { grid-template-columns: repeat(3, 1fr); }
   }
-
   @media (max-width: 1024px) {
-    .stat-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .quick-access-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .quick-access-card .quick-access-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .quick-access-grid { grid-template-columns: repeat(2, 1fr); }
+    .quick-access-card .quick-access-grid { grid-template-columns: repeat(3, 1fr); }
   }
-
   @media (max-width: 768px) {
-    #line-chart-svg {
-      height: 180px;
-    }
-
-    .donut-wrap {
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .donut-wrap svg {
-      width: 260px;
-    }
-
-    .stat-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .card {
-      padding: 18px 18px 22px;
-    }
-
-    .card-title {
-      font-size: 15px;
-    }
-
-    .eval-filters {
-      flex-direction: column;
-    }
-
-    .eval-filter-group {
-      min-width: 100%;
-    }
-
-    .quick-access-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-
-    .quick-access-btn {
-      padding: 16px 12px;
-      gap: 10px;
-    }
-
-    .qa-icon {
-      font-size: 24px;
-    }
-
-    .qa-label {
-      font-size: 12px;
-    }
+    #line-chart-svg { height: 180px; }
+    .donut-wrap { flex-direction: column; gap: 20px; }
+    .donut-wrap svg { width: 260px; }
+    .stat-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+    .card { padding: 18px 18px 22px; }
+    .card-title { font-size: 15px; }
+    .quick-access-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .quick-access-btn { padding: 16px 12px; gap: 10px; }
+    .qa-icon { font-size: 24px; }
+    .qa-label { font-size: 12px; }
   }
-
   @media (max-width: 600px) {
-    .stat-card {
-      padding: 16px 16px 18px;
-    }
-
-    .stat-value {
-      font-size: 26px;
-    }
-
-    .stat-icon {
-      width: 32px;
-      height: 32px;
-      font-size: 14px;
-      top: 14px;
-      right: 14px;
-    }
-
-    .badge-pill {
-      font-size: 12px;
-      padding: 5px 12px;
-    }
-
+    .stat-card { padding: 16px 16px 18px; }
+    .stat-value { font-size: 26px; }
+    .stat-icon { width: 32px; height: 32px; font-size: 14px; top: 14px; right: 14px; }
+    .badge-pill { font-size: 12px; padding: 5px 12px; }
     .status-row {
       grid-template-columns: 1fr;
       grid-template-areas: "label" "bar" "count";
       row-gap: 6px;
     }
-
     .status-row .status-label-wrap { grid-area: label; }
     .status-row .status-bar-track { grid-area: bar; }
     .status-row .status-count { grid-area: count; text-align: left; }
-
-    .quick-access-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
+    .quick-access-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   }
-
   @media (max-width: 480px) {
-    .stat-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .stat-value {
-      font-size: 28px;
-    }
-
-    #line-chart-svg {
-      height: 160px;
-    }
-
-    .donut-wrap svg {
-      width: 220px;
-    }
-
-    .quick-access-grid {
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-
-    .quick-access-btn {
-      padding: 14px 12px;
-    }
-
-    .qa-icon {
-      font-size: 22px;
-    }
-
-    .qa-label {
-      font-size: 11px;
-    }
+    .stat-grid { grid-template-columns: 1fr; }
+    .stat-value { font-size: 28px; }
+    #line-chart-svg { height: 160px; }
+    .donut-wrap svg { width: 220px; }
+    .quick-access-grid { grid-template-columns: 1fr; gap: 10px; }
+    .quick-access-btn { padding: 14px 12px; }
+    .qa-icon { font-size: 22px; }
+    .qa-label { font-size: 11px; }
   }
-
-  @media (max-width: 360px) {
-    .quick-access-grid {
-      gap: 8px;
-    }
-  }
+  @media (max-width: 360px) { .quick-access-grid { gap: 8px; } }
 </style>
 </head>
 <body>
@@ -720,63 +435,30 @@
         </div>
       </div>
 
-      <!-- EVALUATION STATUS + QUICK ACCESS -->
+      <!-- TOTAL EVALUATORS + QUICK ACCESS -->
       <div class="eval-quick-row">
         <div class="card">
-          <div class="eval-status-header">
+          <div class="card-header-row">
             <div>
-              <div class="card-title">Evaluation Status <span class="card-sub">— No Action Required, Pending & Resolved by month</span></div>
+              <div class="card-title">Total Evaluators <span class="card-sub">— Unique users who submitted evaluations</span></div>
             </div>
+            <div class="badge-pill" id="avg-eval-badge">Avg 0 per user</div>
           </div>
 
-          <div class="eval-filters">
-            <div class="eval-filter-group">
-              <label class="eval-filter-label" for="eval-month-select">Month</label>
-              <select id="eval-month-select" class="eval-filter-select"></select>
+          <div class="evaluator-body">
+            <div class="evaluator-total">
+              <div class="evaluator-icon">👥</div>
+              <div class="evaluator-value" id="total-evaluators">0</div>
+              <div class="stat-sub">users have submitted evaluations</div>
             </div>
-            <div class="eval-filter-group">
-              <label class="eval-filter-label" for="eval-office-select">Office</label>
-              <select id="eval-office-select" class="eval-filter-select">
-                <option value="all">All Offices</option>
-              </select>
+            <div class="evaluator-donut-wrap">
+              <svg id="evaluator-donut" viewBox="0 0 120 120" width="150" height="150">
+                <circle cx="60" cy="60" r="46" fill="none" stroke="#e9edf3" stroke-width="20"/>
+              </svg>
+              <div class="donut-legend" id="evaluator-legend"></div>
             </div>
           </div>
-
-          <div class="status-rows" id="statusRowsWrap">
-            <div class="status-row" data-status="no_action">
-              <div class="status-label-wrap">
-                <div class="status-dot" style="background: #3b82f6;"></div>
-                <div class="status-label" style="color: #3b82f6;">No Action Required</div>
-              </div>
-              <div class="status-bar-track">
-                <div class="status-bar-fill" id="bar-no_action" style="background: #3b82f6;"></div>
-              </div>
-              <div class="status-count" id="count-no_action">0</div>
-            </div>
-
-            <div class="status-row" data-status="pending">
-              <div class="status-label-wrap">
-                <div class="status-dot" style="background: #f59e0b;"></div>
-                <div class="status-label" style="color: #f59e0b;">Pending</div>
-              </div>
-              <div class="status-bar-track">
-                <div class="status-bar-fill" id="bar-pending" style="background: #f59e0b;"></div>
-              </div>
-              <div class="status-count" id="count-pending">0</div>
-            </div>
-
-            <div class="status-row" data-status="resolved">
-              <div class="status-label-wrap">
-                <div class="status-dot" style="background: #10b981;"></div>
-                <div class="status-label" style="color: #10b981;">Resolved</div>
-              </div>
-              <div class="status-bar-track">
-                <div class="status-bar-fill" id="bar-resolved" style="background: #10b981;"></div>
-              </div>
-              <div class="status-count" id="count-resolved">0</div>
-            </div>
-            <div class="pie-tooltip" id="status-tooltip"></div>
-          </div>
+          <div class="pie-tooltip" id="evaluator-tooltip"></div>
         </div>
 
         <div class="card quick-access-card">
@@ -832,7 +514,6 @@ const firebaseConfig = {
   measurementId: "G-LK8D1CBQ2J"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -850,9 +531,7 @@ let officeCount = 0;
 // ======================
 // LOAD OFFICES FROM FIRESTORE
 // ======================
-const officesRef = collection(db, "offices");
-
-onSnapshot(officesRef, (snapshot) => {
+onSnapshot(collection(db, "offices"), (snapshot) => {
   offices = {};
   snapshot.docs.forEach((doc) => {
     offices[doc.id] = doc.data().name || doc.id;
@@ -865,16 +544,12 @@ onSnapshot(officesRef, (snapshot) => {
   if (badge) badge.textContent = `Total Offices: ${officeCount}`;
 
   renderDashboard();
-  populateOfficeSelect();
-  renderEvalStatus();
 });
 
 // ======================
 // LOAD FACILITY EVALUATIONS FROM FIRESTORE
 // ======================
-const evalRef = collection(db, "facility_evaluations");
-
-onSnapshot(evalRef, (snapshot) => {
+onSnapshot(collection(db, "facility_evaluations"), (snapshot) => {
   evaluations = snapshot.docs.map((doc) => {
     const ev = doc.data();
     const ratings = [
@@ -913,9 +588,6 @@ onSnapshot(evalRef, (snapshot) => {
   });
 
   renderDashboard();
-  populateMonthSelect();
-  populateOfficeSelect();
-  renderEvalStatus();
 });
 
 function parseEvalTimestamp(ev) {
@@ -930,10 +602,7 @@ function parseEvalTimestamp(ev) {
 }
 
 // Status is derived from the average rating unless an admin has manually
-// marked the evaluation "resolved" after investigating it.
-//   avg >= 4.3            -> "no_action"  (auto, no admin action needed)
-//   avg <  4.3             -> "pending"    (auto, needs admin review)
-//   ev.status === resolved -> "resolved"   (manual, set by admin after investigation)
+// marked the evaluation "resolved".
 const NO_ACTION_THRESHOLD = 4.3;
 
 function normalizeStatus(ev, avg) {
@@ -958,6 +627,7 @@ function renderDashboard() {
   renderStatCards();
   renderLineChart();
   renderDonut();
+  renderTotalEvaluators();
 }
 
 function renderStatCards() {
@@ -981,12 +651,6 @@ function renderStatCards() {
 
 // ======================
 // WEEKLY REPORTS — LINE CHART (last 7 days)
-// Ported from admin2-dashboard.html's smooth-curve/area-fill/gridline
-// styling. Admin 3 only has one evaluation source (facility_evaluations,
-// no Comfort Room / Surroundings split), so this renders a single
-// "Facility Evaluations" series instead of two category series — same
-// visual treatment (smooth spline, filled area, gridlines, y-axis
-// labels, per-day tooltip), just one line instead of two.
 // ======================
 function renderLineChart() {
   const svg = document.getElementById("line-chart-svg");
@@ -1021,21 +685,15 @@ function renderLineChart() {
     counts.push(dayEvals.length);
   }
 
-  // Fixed 0-100 y-axis scale (matches Admin2 styling)
   const yMax = 100;
   const xStep = chartW / Math.max(1, days.length - 1);
 
-  function toPoints(vals) {
-    return vals.map((c, i) => ({
-      x: padding.left + i * xStep,
-      y: padding.top + chartH - (c / yMax) * chartH,
-      c
-    }));
-  }
+  const points = counts.map((c, i) => ({
+    x: padding.left + i * xStep,
+    y: padding.top + chartH - (c / yMax) * chartH,
+    c
+  }));
 
-  const points = toPoints(counts);
-
-  // Soft horizontal gridlines.
   const gridCount = 4;
   for (let g = 0; g <= gridCount; g++) {
     const y = padding.top + (chartH / gridCount) * g;
@@ -1049,7 +707,6 @@ function renderLineChart() {
     svg.appendChild(line);
   }
 
-  // Small y-axis labels, matching the admin2 reference style.
   for (let g = 0; g <= gridCount; g++) {
     const value = Math.round(yMax - (yMax / gridCount) * g);
     const y = padding.top + (chartH / gridCount) * g + 3;
@@ -1082,7 +739,6 @@ function renderLineChart() {
     return d;
   }
 
-  // Blue area under the line, as in the admin2 reference.
   if (points.length > 1) {
     const linePath = smoothPath(points);
     const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -1093,11 +749,9 @@ function renderLineChart() {
     area.setAttribute("fill", "#2563eb");
     area.setAttribute("fill-opacity", "0.10");
     svg.appendChild(area);
-  }
 
-  if (points.length > 1) {
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", smoothPath(points));
+    path.setAttribute("d", linePath);
     path.setAttribute("fill", "none");
     path.setAttribute("stroke", "#2563eb");
     path.setAttribute("stroke-width", "2.5");
@@ -1170,6 +824,9 @@ function renderLineChart() {
   }
 }
 
+// ======================
+// SUBMISSION BREAKDOWN — DONUT
+// ======================
 function renderDonut() {
   const svg = document.getElementById("donut-svg");
   const legend = document.getElementById("donut-legend");
@@ -1179,7 +836,6 @@ function renderDonut() {
 
   const total = evaluations.length;
 
-  // Remove previously drawn segments
   svg.querySelectorAll(".donut-segment").forEach(el => el.remove());
   svg.querySelectorAll("text").forEach(el => el.remove());
   tooltip.classList.remove("show");
@@ -1227,6 +883,10 @@ function renderDonut() {
     circle.setAttribute("transform", "rotate(-90 60 60)");
     circle.style.cursor = "pointer";
 
+    const moveTooltip = (evt) => {
+      tooltip.style.left = (evt.clientX + 10) + "px";
+      tooltip.style.top = (evt.clientY - 35) + "px";
+    };
     const showTooltip = (evt) => {
       tooltip.classList.add("show");
       tooltip.innerHTML = `
@@ -1235,11 +895,6 @@ function renderDonut() {
         <div class="tt-sub">${pct.toFixed(1)}% of total</div>
       `;
       moveTooltip(evt);
-    };
-
-    const moveTooltip = (evt) => {
-      tooltip.style.left = (evt.clientX + 10) + "px";
-      tooltip.style.top = (evt.clientY - 35) + "px";
     };
 
     circle.addEventListener("mouseenter", showTooltip);
@@ -1274,144 +929,113 @@ function renderDonut() {
 }
 
 // ======================
-// EVALUATION STATUS
+// TOTAL EVALUATORS
+// Counts unique userId values across facility_evaluations, so a user who
+// submits several evaluations is counted once. The bars break the total
+// down by userCategory (e.g. Student, Faculty).
 // ======================
-function monthKey(ts) {
-  const d = new Date(ts);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
+function renderTotalEvaluators() {
+  const totalEl = document.getElementById("total-evaluators");
+  const svg = document.getElementById("evaluator-donut");
+  const legend = document.getElementById("evaluator-legend");
+  const tooltip = document.getElementById("evaluator-tooltip");
+  const badge = document.getElementById("avg-eval-badge");
+  if (!totalEl || !svg || !legend || !tooltip) return;
 
-function monthLabel(key) {
-  const [y, m] = key.split("-").map(Number);
-  const d = new Date(y, m - 1, 1);
-  return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-}
+  const seen = new Set();
+  const byCategory = {};
+  let submissions = 0;
 
-function populateMonthSelect() {
-  const select = document.getElementById("eval-month-select");
-  if (!select) return;
+  evaluations.forEach(e => {
+    if (!e.userId) return;
+    submissions++;
+    if (seen.has(e.userId)) return;
+    seen.add(e.userId);
+    const cat = e.userCategory || "Other";
+    byCategory[cat] = (byCategory[cat] || 0) + 1;
+  });
 
-  const currentKey = monthKey(Date.now());
-  const keysFromData = evaluations.map(e => monthKey(e.timestamp));
-  const keys = Array.from(new Set([currentKey, ...keysFromData])).sort().reverse();
+  const total = seen.size;
+  totalEl.textContent = total;
+  if (badge) badge.textContent = `Avg ${total ? (submissions / total).toFixed(1) : 0} per user`;
 
-  const prevValue = select.value;
+  svg.querySelectorAll(".donut-segment, text").forEach(el => el.remove());
+  tooltip.classList.remove("show");
 
-  select.innerHTML = keys
-    .map(k => `<option value="${k}">${monthLabel(k)}</option>`)
-    .join("");
-
-  if (keys.includes(prevValue)) {
-    select.value = prevValue;
-  } else {
-    select.value = currentKey;
+  if (total === 0) {
+    legend.innerHTML = `<div class="legend-item">No evaluators yet</div>`;
+    return;
   }
-}
 
-function populateOfficeSelect() {
-  const select = document.getElementById("eval-office-select");
-  if (!select) return;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
 
-  const officeList = Object.values(offices);
-  const namesFromEvals = evaluations.map(e => e.officeName).filter(Boolean);
-  const names = Array.from(new Set([...officeList, ...namesFromEvals])).sort();
+  const colors = ["#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#06b6d4"];
+  const entries = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+  const r = 46;
+  const circumference = 2 * Math.PI * r;
+  let offsetPct = 0;
 
-  const prevValue = select.value || "all";
+  entries.forEach(([cat, n], i) => {
+    const pct = (n / total) * 100;
+    const color = colors[i % colors.length];
+    const dash = (pct / 100) * circumference;
 
-  select.innerHTML =
-    `<option value="all">All Offices</option>` +
-    names.map(n => `<option value="${n}">${n}</option>`).join("");
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("class", "donut-segment");
+    circle.setAttribute("cx", "60");
+    circle.setAttribute("cy", "60");
+    circle.setAttribute("r", String(r));
+    circle.setAttribute("fill", "none");
+    circle.setAttribute("stroke", color);
+    circle.setAttribute("stroke-width", "20");
+    circle.setAttribute("stroke-dasharray", `${dash} ${circumference - dash}`);
+    circle.setAttribute("stroke-dashoffset", String(-((offsetPct / 100) * circumference)));
+    circle.setAttribute("transform", "rotate(-90 60 60)");
+    circle.style.cursor = "pointer";
 
-  select.value = names.includes(prevValue) || prevValue === "all" ? prevValue : "all";
-}
-
-function setBar(kind, count, max) {
-  const bar = document.getElementById(`bar-${kind}`);
-  const countEl = document.getElementById(`count-${kind}`);
-  const pct = max > 0 ? Math.max((count / max) * 100, count > 0 ? 4 : 0) : 0;
-  if (bar) bar.style.width = `${pct}%`;
-  if (countEl) countEl.textContent = String(count);
-}
-
-function renderEvalStatus() {
-  const monthSelect = document.getElementById("eval-month-select");
-  const officeSelect = document.getElementById("eval-office-select");
-  if (!monthSelect || !officeSelect) return;
-
-  const selectedMonth = monthSelect.value || monthKey(Date.now());
-  const selectedOffice = officeSelect.value || "all";
-
-  const filtered = evaluations.filter(e => {
-    const monthMatch = monthKey(e.timestamp) === selectedMonth;
-    const officeMatch = selectedOffice === "all" || e.officeName === selectedOffice;
-    return monthMatch && officeMatch;
-  });
-
-  const counts = { no_action: 0, pending: 0, resolved: 0 };
-  filtered.forEach(e => {
-    if (e.status === "no_action") counts.no_action++;
-    else if (e.status === "pending") counts.pending++;
-    else if (e.status === "resolved") counts.resolved++;
-  });
-
-  const max = Math.max(1, counts.no_action, counts.pending, counts.resolved);
-
-  setBar("no_action", counts.no_action, max);
-  setBar("pending", counts.pending, max);
-  setBar("resolved", counts.resolved, max);
-
-  addStatusBarTooltips(counts);
-}
-
-function addStatusBarTooltips(counts) {
-  const tooltip = document.getElementById("status-tooltip");
-  const wrap = document.getElementById("statusRowsWrap");
-
-  if (!tooltip || !wrap) return;
-
-  const statusLabels = {
-    no_action: { label: "No Action Required", color: "#3b82f6" },
-    pending: { label: "Pending", color: "#f59e0b" },
-    resolved: { label: "Resolved", color: "#10b981" }
-  };
-
-  Object.keys(counts).forEach(status => {
-    const row = wrap.querySelector(`[data-status="${status}"]`);
-    if (!row) return;
-
-    const barTrack = row.querySelector(".status-bar-track");
-    if (!barTrack) return;
-
-    const showTooltip = (evt) => {
-      const info = statusLabels[status];
-      tooltip.classList.add("show");
-      tooltip.innerHTML = `
-        <div class="tt-title">${info.label}</div>
-        <div>${counts[status]} evaluations</div>
-      `;
-      moveTooltip(evt);
-    };
-
-    const moveTooltip = (evt) => {
+    const move = (evt) => {
       tooltip.style.left = (evt.clientX + 10) + "px";
       tooltip.style.top = (evt.clientY - 35) + "px";
     };
-
-    barTrack.addEventListener("mouseenter", showTooltip);
-    barTrack.addEventListener("mousemove", moveTooltip);
-    barTrack.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
-    barTrack.addEventListener("touchstart", (evt) => {
+    const show = (evt) => {
+      tooltip.classList.add("show");
+      tooltip.innerHTML = `
+        <div class="tt-title">${esc(cat)}</div>
+        <div>${n} evaluators</div>
+        <div class="tt-sub">${pct.toFixed(1)}% of total</div>`;
+      move(evt);
+    };
+    circle.addEventListener("mouseenter", show);
+    circle.addEventListener("mousemove", move);
+    circle.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
+    circle.addEventListener("touchstart", (evt) => {
       evt.preventDefault();
-      showTooltip(evt.touches[0]);
+      show(evt.touches[0]);
     }, { passive: false });
-  });
-}
 
-document.addEventListener("change", (e) => {
-  if (e.target && (e.target.id === "eval-month-select" || e.target.id === "eval-office-select")) {
-    renderEvalStatus();
-  }
-});
+    svg.appendChild(circle);
+    offsetPct += pct;
+  });
+
+  const center = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  center.setAttribute("x", "60");
+  center.setAttribute("y", "65");
+  center.setAttribute("text-anchor", "middle");
+  center.setAttribute("fill", "#000000");
+  center.setAttribute("font-size", "15");
+  center.setAttribute("font-family", "Syne,sans-serif");
+  center.setAttribute("font-weight", "800");
+  center.textContent = String(total);
+  svg.appendChild(center);
+
+  legend.innerHTML = entries.map(([cat, n], i) => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${colors[i % colors.length]}"></div>
+      ${esc(cat)} (${n})<span>${((n / total) * 100).toFixed(0)}%</span>
+    </div>`).join("");
+}
 
 </script>
 </body>
