@@ -7,976 +7,284 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
+  .card { background: #fff; border-radius: 18px; padding: 18px; border: 1px solid #bae6fd; margin-bottom: 28px; }
+  .card-title { font-size: 18px; font-weight: 700; margin: 0; }
 
-
-  .card {
-    background: #fff;
-    border-radius: 18px;
-    padding: 18px;
-    border: 1px solid #bae6fd;
-    margin-bottom: 28px;
+  /* ─── Summary stat cards ─── */
+  .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 24px; }
+  .stat-card {
+    position: relative; background: #ffffff; border: 1px solid #bae6fd;
+    border-top: 4px solid var(--accent3, #2563eb); border-radius: 16px;
+    padding: 20px 20px 22px; box-shadow: 0 4px 14px rgba(15,23,42,0.05);
+    display: flex; flex-direction: column; gap: 6px;
   }
-
-  .card-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin: 0;
+  .stat-card.blue { border-top-color: #2563eb; }
+  .stat-card.green { border-top-color: #2563eb; }
+  .stat-icon {
+    position: absolute; top: 18px; right: 18px; width: 38px; height: 38px; border-radius: 10px;
+    background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 16px;
   }
-
-  /* ─── Summary stat cards — identical to Admin 1's stat-card system ─── */
-  .stat-grid{
-    display:grid;
-    grid-template-columns:repeat(5, 1fr);
-    gap:20px;
-    margin-bottom: 24px;
+  .stat-label {
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: #64748b;
+    text-transform: uppercase; letter-spacing: .04em; padding-right: 44px;
   }
-
-  .stat-card{
-    position:relative;
-    background:#ffffff;
-    border:1px solid #bae6fd;
-    border-top:4px solid var(--accent3, #2563eb);
-    border-radius:16px;
-    padding:20px 20px 22px;
-    box-shadow:0 4px 14px rgba(15,23,42,0.05);
-    display:flex;
-    flex-direction:column;
-    gap:6px;
+  .stat-value {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 30px; color: #0f172a;
+    line-height: 1.1; overflow-wrap: anywhere;
   }
+  .stat-sub { font-family: 'DM Sans', sans-serif; font-size: 12px; color: #94a3b8; }
 
-  .stat-card.blue{ border-top-color:#2563eb; }
-  .stat-card.green{ border-top-color:#2563eb; }
-
-  .stat-icon{
-    position:absolute;
-    top:18px;
-    right:18px;
-    width:38px;
-    height:38px;
-    border-radius:10px;
-    background:#f1f5f9;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:16px;
-  }
-
-  .stat-label{
-    font-family:'DM Sans',sans-serif;
-    font-size:13px;
-    font-weight:500;
-    color:#64748b;
-    text-transform:uppercase;
-    letter-spacing:.04em;
-    padding-right:44px;
-  }
-
-  .stat-value{
-    font-family:'Syne',sans-serif;
-    font-weight:700;
-    font-size:30px;
-    color:#0f172a;
-    line-height:1.1;
-    overflow-wrap:anywhere;
-  }
-
-  .stat-sub{
-    font-family:'DM Sans',sans-serif;
-    font-size:12px;
-    color:#94a3b8;
-  }
-
-  @media (max-width: 1400px) {
-    .stat-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  @media (max-width: 1200px) {
-    .stat-value {
-      font-size: 30px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    .stat-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (max-width: 900px) {
-    .stat-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (max-width: 768px) {
-    .stat-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-  }
-
+  @media (max-width: 1400px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 1200px) { .stat-value { font-size: 30px; } }
+  @media (max-width: 1024px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 768px) { .stat-grid { grid-template-columns: 1fr 1fr; gap: 14px; } }
   @media (max-width: 600px) {
-    .stat-card {
-      padding: 16px 16px 18px;
-    }
-    .stat-value {
-      font-size: 26px;
-    }
-    .stat-icon {
-      width: 32px;
-      height: 32px;
-      font-size: 14px;
-      top: 14px;
-      right: 14px;
-    }
+    .stat-card { padding: 16px 16px 18px; }
+    .stat-value { font-size: 26px; }
+    .stat-icon { width: 32px; height: 32px; font-size: 14px; top: 14px; right: 14px; }
   }
-
-  @media (max-width: 480px) {
-    .stat-grid {
-      grid-template-columns: 1fr;
-    }
-    .stat-value {
-      font-size: 28px;
-    }
-  }
-
-  @media (max-width: 360px) {
-    .stat-grid {
-      gap: 10px;
-    }
-    .stat-card {
-      padding: 14px 14px 18px;
-    }
-  }
+  @media (max-width: 480px) { .stat-grid { grid-template-columns: 1fr; } .stat-value { font-size: 28px; } }
+  @media (max-width: 360px) { .stat-grid { gap: 10px; } .stat-card { padding: 14px 14px 18px; } }
 
   /* Toolbar */
-  .submissions-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-  }
-
-  .toolbar-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
+  .submissions-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .btn {
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-    padding: 10px 16px;
-    font-weight: 600;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    -webkit-tap-highlight-color: transparent;
+    border: none; cursor: pointer; border-radius: 10px; padding: 10px 16px; font-weight: 600;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; -webkit-tap-highlight-color: transparent;
   }
+  .btn-secondary { background: #e2e8f0; color: #0f172a; }
+  .btn-secondary:hover { background: #cbd5e1; }
 
-  .btn-secondary {
-    background: #e2e8f0;
-    color: #0f172a;
-  }
-
-  .btn-secondary:hover {
-    background: #cbd5e1;
-  }
-
-  /* Category tabs (Comfort Room / Surroundings) */
-  .category-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-  }
-
+  /* Category tabs */
+  .category-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
   .category-tab {
-    border: 1px solid #bae6fd;
-    background: #ffffff;
-    color: #0369a1;
-    padding: 9px 16px;
-    border-radius: 999px;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 13px;
-    font-family: 'DM Sans', sans-serif;
+    border: 1px solid #bae6fd; background: #ffffff; color: #0369a1; padding: 9px 16px; border-radius: 999px;
+    cursor: pointer; font-weight: 700; font-size: 13px; font-family: 'DM Sans', sans-serif;
     transition: background .2s, color .2s, transform .2s, border-color .2s;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
   }
-
-  .category-tab:hover {
-    border-color: #0284c7;
-    transform: translateY(-1px);
-  }
-
-  .category-tab.active {
-    background: #0284c7;
-    border-color: #0284c7;
-    color: #ffffff;
-    box-shadow: 0 4px 14px rgba(2,132,199,.3);
-  }
-
-  .category-tab.active[data-category="Surroundings"] {
-    background: #16a34a;
-    border-color: #16a34a;
-    box-shadow: 0 4px 14px rgba(22,163,74,.3);
-  }
-
-  .category-tab .tab-count {
-    background: rgba(255,255,255,0.35);
-    border-radius: 4px;
-    padding: 1px 7px;
-    font-size: 11px;
-  }
-
-  .category-tab:not(.active) .tab-count {
-    background: #f1f5f9;
-    color: #64748b;
-  }
-
+  .category-tab:hover { border-color: #0284c7; transform: translateY(-1px); }
+  .category-tab.active { background: #0284c7; border-color: #0284c7; color: #ffffff; box-shadow: 0 4px 14px rgba(2,132,199,.3); }
+  .category-tab.active[data-category="Surroundings"] { background: #16a34a; border-color: #16a34a; box-shadow: 0 4px 14px rgba(22,163,74,.3); }
+  .category-tab .tab-count { background: rgba(255,255,255,0.35); border-radius: 4px; padding: 1px 7px; font-size: 11px; }
+  .category-tab:not(.active) .tab-count { background: #f1f5f9; color: #64748b; }
   .category-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 9px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; white-space: nowrap;
   }
+  .category-pill.comfort-room { background: #e0f2fe; color: #0369a1; }
+  .category-pill.surroundings { background: #dcfce7; color: #15803d; }
 
-  .category-pill.comfort-room {
-    background: #e0f2fe;
-    color: #0369a1;
-  }
-
-  .category-pill.surroundings {
-    background: #dcfce7;
-    color: #15803d;
-  }
-
-  /* ─── Status tabs (Recent / Pending / No Action / Resolved) ───
-     Evenly-spaced segmented control inside a light "track" container,
-     so every tab gets identical padding and gap regardless of label
-     length. */
-  .eval-tabs {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 20px;
-    padding: 5px;
-    background: #f1f5f9;
-    border-radius: 12px;
-    flex-wrap: wrap;
-  }
-
+  /* Status tabs */
+  .eval-tabs { display: flex; gap: 4px; margin-bottom: 20px; padding: 5px; background: #f1f5f9; border-radius: 12px; flex-wrap: wrap; }
   .eval-tab {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    color: #64748b;
-    padding: 10px 14px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: background .2s ease, color .2s ease, box-shadow .2s ease;
-    white-space: nowrap;
+    background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 700;
+    font-size: 13px; color: #64748b; padding: 10px 14px; border-radius: 8px; display: flex; align-items: center;
+    gap: 8px; transition: background .2s ease, color .2s ease, box-shadow .2s ease; white-space: nowrap;
   }
-
-  .eval-tab:hover {
-    color: #0f172a;
-    background: #e2e8f0;
-  }
-
-  .eval-tab.active {
-    color: #ffffff;
-    background: #2563eb;
-    box-shadow: 0 4px 12px rgba(37,99,235,.28);
-  }
-
+  .eval-tab:hover { color: #0f172a; background: #e2e8f0; }
+  .eval-tab.active { color: #ffffff; background: #2563eb; box-shadow: 0 4px 12px rgba(37,99,235,.28); }
   .tab-count {
-    background: #e2e8f0;
-    color: #64748b;
-    border-radius: 999px;
-    padding: 2px 9px;
-    font-size: 11px;
-    font-weight: 700;
-    min-width: 18px;
-    text-align: center;
-    line-height: 1.5;
+    background: #e2e8f0; color: #64748b; border-radius: 999px; padding: 2px 9px; font-size: 11px;
+    font-weight: 700; min-width: 18px; text-align: center; line-height: 1.5;
   }
-
-  .eval-tab.active .tab-count {
-    background: rgba(255,255,255,0.28);
-    color: #ffffff;
-  }
+  .eval-tab.active .tab-count { background: rgba(255,255,255,0.28); color: #ffffff; }
 
   /* Filters */
-  .submissions-filter-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-  }
-
+  .submissions-filter-row { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
   .search-input-wrap {
-    flex: 1;
-    min-width: 250px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 46px;
-    background: #f8fafc;
-    border: 1px solid #dbe4ee;
-    border-radius: 12px;
-    padding: 0 14px;
+    flex: 1; min-width: 250px; display: flex; align-items: center; gap: 8px; height: 46px;
+    background: #f8fafc; border: 1px solid #dbe4ee; border-radius: 12px; padding: 0 14px;
   }
-
   .search-input-wrap input {
-    flex: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: #0f172a;
+    flex: 1; border: none; outline: none; background: transparent;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; color: #0f172a;
   }
-
   .office-filter-select {
-    height: 46px;
-    background: #f8fafc;
-    border: 1px solid #dbe4ee;
-    border-radius: 12px;
-    padding: 0 14px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: #0f172a;
-    min-width: 180px;
-    -webkit-appearance: none;
-    appearance: none;
+    height: 46px; background: #f8fafc; border: 1px solid #dbe4ee; border-radius: 12px; padding: 0 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; color: #0f172a; min-width: 180px;
+    -webkit-appearance: none; appearance: none;
   }
 
-  /* Table — vertical + horizontal scroll with a sticky header */
+  /* Table */
   .table-wrap {
-    overflow-x: auto;
-    overflow-y: auto;
-    max-height: 620px;
-    -webkit-overflow-scrolling: touch;
-    border: 1px solid #edf2f7;
-    border-radius: 12px;
+    overflow-x: auto; overflow-y: auto; max-height: 620px; -webkit-overflow-scrolling: touch;
+    border: 1px solid #edf2f7; border-radius: 12px;
   }
-  .table-wrap::-webkit-scrollbar {
-    width: 7px;
-    height: 7px;
-  }
-  .table-wrap::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 10px;
-  }
-  .table-wrap::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-  }
-  .table-wrap::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .submissions-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
+  .table-wrap::-webkit-scrollbar { width: 7px; height: 7px; }
+  .table-wrap::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  .table-wrap::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  .table-wrap::-webkit-scrollbar-track { background: transparent; }
+  .submissions-table { width: 100%; border-collapse: collapse; }
   .submissions-table th {
-    text-align: left;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: #94a3b8;
-    padding: 14px 10px;
-    border-bottom: 1px solid #e2e8f0;
-    white-space: nowrap;
-    position: sticky;
-    top: 0;
-    background: #fff;
-    z-index: 2;
-    box-shadow: 0 1px 0 #e2e8f0;
+    text-align: left; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.05em; text-transform: uppercase; color: #94a3b8; padding: 14px 10px;
+    border-bottom: 1px solid #e2e8f0; white-space: nowrap; position: sticky; top: 0;
+    background: #fff; z-index: 2; box-shadow: 0 1px 0 #e2e8f0;
   }
-
   .submissions-table td {
-    padding: 14px 10px;
-    border-bottom: 1px solid #edf2f7;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    color: #334155;
-    vertical-align: middle;
+    padding: 14px 10px; border-bottom: 1px solid #edf2f7; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: #334155; vertical-align: middle;
   }
-
-  .submissions-table tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  .row-index {
-    color: #94a3b8;
-    font-size: 12px;
-  }
-
-  .rating-q-cell {
-    text-align: center;
-  }
-
-  .empty-row td {
-    text-align: center;
-    color: #94a3b8;
-    padding: 40px 0 !important;
-  }
+  .submissions-table tbody tr:last-child td { border-bottom: none; }
+  .row-index { color: #94a3b8; font-size: 12px; }
+  .rating-q-cell { text-align: center; }
+  .empty-row td { text-align: center; color: #94a3b8; padding: 40px 0 !important; }
 
   /* Status Badge */
   .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 12px;
-    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 6px;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 12px; white-space: nowrap;
   }
-
-  .status-badge.pending {
-    background: #fef3c7;
-    color: #b45309;
-  }
-
-  .status-badge.no_action {
-    background: #e0e7ff;
-    color: #4338ca;
-  }
-
-  .status-badge.resolved {
-    background: #dcfce7;
-    color: #166534;
-  }
+  .status-badge.pending { background: #fef3c7; color: #b45309; }
+  .status-badge.no_action { background: #e0e7ff; color: #4338ca; }
+  .status-badge.resolved { background: #dcfce7; color: #166534; }
 
   /* Action Links */
-  .btn-view {
-    background: none;
-    border: none;
-    color: #2563eb;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    padding: 0;
-    margin-right: 14px;
+  .btn-view, .btn-edit, .btn-delete {
+    background: none; border: none; font-family: 'DM Sans', sans-serif; font-weight: 600;
+    font-size: 13px; cursor: pointer; padding: 0;
   }
-
-  .btn-view:hover {
-    text-decoration: underline;
-  }
-
-  .btn-edit {
-    background: none;
-    border: none;
-    color: #c2410c;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    padding: 0;
-    margin-right: 14px;
-  }
-
-  .btn-edit:hover {
-    text-decoration: underline;
-  }
-
-  .btn-delete {
-    background: none;
-    border: none;
-    color: #dc2626;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    padding: 0;
-  }
-
-  .btn-delete:hover {
-    text-decoration: underline;
-  }
-
-  .btn-delete:disabled {
-    opacity: 0.5;
-    cursor: default;
-    text-decoration: none;
-  }
+  .btn-view { color: #2563eb; margin-right: 14px; }
+  .btn-edit { color: #c2410c; margin-right: 14px; }
+  .btn-delete { color: #dc2626; }
+  .btn-view:hover, .btn-edit:hover, .btn-delete:hover { text-decoration: underline; }
+  .btn-delete:disabled { opacity: 0.5; cursor: default; text-decoration: none; }
 
   /* Message User button + unread badge */
   .btn-message {
-    position: relative;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    color: #1d4ed8;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 12px;
-    cursor: pointer;
-    padding: 4px 10px;
-    border-radius: 8px;
-    white-space: nowrap;
-    margin-right: 14px;
+    position: relative; background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 12px; cursor: pointer;
+    padding: 4px 10px; border-radius: 8px; white-space: nowrap; margin-right: 14px;
   }
-
-  .btn-message:hover {
-    background: #dbeafe;
-  }
-
+  .btn-message:hover { background: #dbeafe; }
   .btn-message .unread-dot {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 3px;
-    border-radius: 999px;
-    background: #ef4444;
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    line-height: 16px;
-    text-align: center;
+    position: absolute; top: -6px; right: -6px; min-width: 16px; height: 16px; padding: 0 3px;
+    border-radius: 999px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 700;
+    line-height: 16px; text-align: center;
   }
 
   /* Modals */
   .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 27, 50, 0.55);
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
-    padding: 20px;
+    display: none; position: fixed; inset: 0; background: rgba(15, 27, 50, 0.55);
+    align-items: center; justify-content: center; z-index: 999; padding: 20px;
   }
-
-  .modal-overlay.open {
-    display: flex;
-  }
-
+  .modal-overlay.open { display: flex; }
   .modal-content {
-    background: #ffffff;
-    border-radius: 18px;
-    width: 100%;
-    max-width: 480px;
-    padding: 28px;
-    box-shadow: 0 20px 60px rgba(15, 27, 50, 0.15);
-    max-height: 85vh;
-    overflow-y: auto;
+    background: #ffffff; border-radius: 18px; width: 100%; max-width: 480px; padding: 28px;
+    box-shadow: 0 20px 60px rgba(15, 27, 50, 0.15); max-height: 85vh; overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
-
-  .modal-content h3 {
-    font-family: 'Syne', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 20px 0;
-  }
-
+  .modal-content h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 20px 0; }
   .modal-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #f1f5f9;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: #334155;
-    gap: 12px;
+    display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; color: #334155; gap: 12px;
   }
-
-  .modal-row:last-of-type {
-    border-bottom: none;
-  }
-
-  .modal-row span:first-child {
-    color: #94a3b8;
-    font-weight: 600;
-    min-width: 120px;
-  }
-
-  .modal-row span:last-child {
-    word-break: break-word;
-    text-align: right;
-  }
-
-  .modal-footer {
-    display: flex;
-    gap: 10px;
-    margin-top: 24px;
-  }
+  .modal-row:last-of-type { border-bottom: none; }
+  .modal-row span:first-child { color: #94a3b8; font-weight: 600; min-width: 120px; }
+  .modal-row span:last-child { word-break: break-word; text-align: right; }
+  .modal-footer { display: flex; gap: 10px; margin-top: 24px; }
 
   /* Edit Form Fields */
-  .edit-field {
-    margin-bottom: 16px;
-  }
-
+  .edit-field { margin-bottom: 16px; }
   .edit-field label {
-    display: block;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 8px;
+    display: block; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700;
+    color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;
   }
-
   .edit-field select {
-    width: 100%;
-    box-sizing: border-box;
-    height: 44px;
-    border: 1px solid #dbe4ee;
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: #0f172a;
-    background: #f8fafc;
-    -webkit-appearance: none;
-    appearance: none;
+    width: 100%; box-sizing: border-box; height: 44px; border: 1px solid #dbe4ee; border-radius: 10px;
+    padding: 10px 12px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: #0f172a;
+    background: #f8fafc; -webkit-appearance: none; appearance: none;
   }
-
   .btn-primary {
-    flex: 1;
-    background: #2563eb;
-    color: #fff;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    cursor: pointer;
+    flex: 1; background: #2563eb; color: #fff; border: none; padding: 10px 16px; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer;
   }
-
-  .btn-primary:hover:not(:disabled) {
-    background: #1d4ed8;
-  }
-
-  .btn-primary:disabled {
-    opacity: 0.6;
-    cursor: default;
-  }
-
-  .btn-primary.danger {
-    background: #dc2626;
-  }
-
-  .btn-primary.danger:hover:not(:disabled) {
-    background: #b91c1c;
-  }
-
+  .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+  .btn-primary:disabled { opacity: 0.6; cursor: default; }
+  .btn-primary.danger { background: #dc2626; }
+  .btn-primary.danger:hover:not(:disabled) { background: #b91c1c; }
   .btn-secondary {
-    flex: 1;
-    background: #e2e8f0;
-    color: #0f172a;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    cursor: pointer;
+    flex: 1; background: #e2e8f0; color: #0f172a; border: none; padding: 10px 16px; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; cursor: pointer;
   }
+  .btn-secondary:hover { background: #cbd5e1; }
 
-  .btn-secondary:hover {
-    background: #cbd5e1;
-  }
-
-  /* --- Evidence column & gallery --- */
-  .evidence-cell {
-    cursor: pointer;
-  }
-
+  /* Evidence column & gallery */
+  .evidence-cell { cursor: pointer; }
   .evidence-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #334155;
-    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border: 1px solid #e2e8f0;
+    border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 600; color: #334155; white-space: nowrap;
   }
-
-  .evidence-badge:hover {
-    background: #e2e8f0;
-  }
-
-  .evidence-badge.empty {
-    color: #94a3b8;
-    cursor: default;
-  }
-
-  .evidence-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 10px;
-    margin-top: 4px;
-  }
-
+  .evidence-badge:hover { background: #e2e8f0; }
+  .evidence-badge.empty { color: #94a3b8; cursor: default; }
+  .evidence-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 4px; }
   .evidence-gallery-item {
-    position: relative;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
-    background: #0f172a;
-    display: block;
-    text-decoration: none;
+    position: relative; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0;
+    background: #0f172a; display: block; text-decoration: none;
   }
-
-  .evidence-gallery-item img,
-  .evidence-gallery-item video {
-    width: 100%;
-    height: 90px;
-    object-fit: cover;
-    display: block;
-  }
-
+  .evidence-gallery-item img, .evidence-gallery-item video { width: 100%; height: 90px; object-fit: cover; display: block; }
   .evidence-gallery-item .evidence-type-tag {
-    position: absolute;
-    bottom: 4px;
-    right: 4px;
-    background: rgba(15, 23, 42, 0.75);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
-    text-transform: uppercase;
+    position: absolute; bottom: 4px; right: 4px; background: rgba(15, 23, 42, 0.75); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;
   }
-
-  .evidence-empty-note {
-    font-size: 13px;
-    color: #94a3b8;
-  }
+  .evidence-empty-note { font-size: 13px; color: #94a3b8; }
 
   /* Chat Modal */
   .chat-modal-content {
-    background: #ffffff;
-    border-radius: 18px;
-    width: 100%;
-    max-width: 480px;
-    box-shadow: 0 20px 60px rgba(15, 27, 50, 0.15);
-    display: flex;
-    flex-direction: column;
-    height: 640px;
-    max-height: 85vh;
-    overflow: hidden;
+    background: #ffffff; border-radius: 18px; width: 100%; max-width: 480px;
+    box-shadow: 0 20px 60px rgba(15, 27, 50, 0.15); display: flex; flex-direction: column;
+    height: 640px; max-height: 85vh; overflow: hidden;
   }
-
   .chat-header {
-    padding: 18px 20px;
-    border-bottom: 1px solid #edf2f7;
-    flex-shrink: 0;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
+    padding: 18px 20px; border-bottom: 1px solid #edf2f7; flex-shrink: 0; display: flex;
+    align-items: flex-start; justify-content: space-between; gap: 12px;
   }
-
-  .chat-header-text {
-    min-width: 0;
-  }
-
-  .chat-header h3 {
-    font-family: 'Syne', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 3px 0;
-  }
-
-  .chat-header p {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    color: #64748b;
-    margin: 0;
-  }
-
+  .chat-header-text { min-width: 0; }
+  .chat-header h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 3px 0; }
+  .chat-header p { font-family: 'DM Sans', sans-serif; font-size: 12px; color: #64748b; margin: 0; }
   .chat-close-btn {
-    background: #f1f5f9;
-    border: none;
-    color: #64748b;
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    font-size: 16px;
-    line-height: 1;
-    cursor: pointer;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background .2s, color .2s;
+    background: #f1f5f9; border: none; color: #64748b; width: 30px; height: 30px; border-radius: 8px;
+    font-size: 16px; line-height: 1; cursor: pointer; flex-shrink: 0; display: flex;
+    align-items: center; justify-content: center; transition: background .2s, color .2s;
   }
-
-  .chat-close-btn:hover {
-    background: #e2e8f0;
-    color: #0f172a;
-  }
-
+  .chat-close-btn:hover { background: #e2e8f0; color: #0f172a; }
   .chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: #f8fafc;
+    flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column;
+    gap: 10px; background: #f8fafc;
   }
-
-  .chat-bubble-row {
-    display: flex;
-    flex-direction: column;
-    max-width: 78%;
-  }
-
-  .chat-bubble-row.admin {
-    align-self: flex-end;
-    align-items: flex-end;
-  }
-
-  .chat-bubble-row.user {
-    align-self: flex-start;
-    align-items: flex-start;
-  }
-
+  .chat-bubble-row { display: flex; flex-direction: column; max-width: 78%; }
+  .chat-bubble-row.admin { align-self: flex-end; align-items: flex-end; }
+  .chat-bubble-row.user { align-self: flex-start; align-items: flex-start; }
   .chat-bubble {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13.5px;
-    line-height: 1.4;
-    padding: 9px 13px;
-    border-radius: 14px;
-    word-break: break-word;
-    white-space: pre-wrap;
+    font-family: 'DM Sans', sans-serif; font-size: 13.5px; line-height: 1.4; padding: 9px 13px;
+    border-radius: 14px; word-break: break-word; white-space: pre-wrap;
   }
-
-  .chat-bubble-row.admin .chat-bubble {
-    background: #2563eb;
-    color: #ffffff;
-    border-bottom-right-radius: 4px;
-  }
-
-  .chat-bubble-row.user .chat-bubble {
-    background: #e2e8f0;
-    color: #0f172a;
-    border-bottom-left-radius: 4px;
-  }
-
-  .chat-meta {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10.5px;
-    color: #94a3b8;
-    margin-top: 3px;
-    padding: 0 3px;
-  }
-
-  .chat-empty-note {
-    margin: auto;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    color: #94a3b8;
-    text-align: center;
-  }
-
-  .chat-input-row {
-    display: flex;
-    gap: 8px;
-    padding: 14px 16px;
-    border-top: 1px solid #edf2f7;
-    flex-shrink: 0;
-    background: #ffffff;
-  }
-
+  .chat-bubble-row.admin .chat-bubble { background: #2563eb; color: #ffffff; border-bottom-right-radius: 4px; }
+  .chat-bubble-row.user .chat-bubble { background: #e2e8f0; color: #0f172a; border-bottom-left-radius: 4px; }
+  .chat-meta { font-family: 'DM Sans', sans-serif; font-size: 10.5px; color: #94a3b8; margin-top: 3px; padding: 0 3px; }
+  .chat-empty-note { margin: auto; font-family: 'DM Sans', sans-serif; font-size: 13px; color: #94a3b8; text-align: center; }
+  .chat-input-row { display: flex; gap: 8px; padding: 14px 16px; border-top: 1px solid #edf2f7; flex-shrink: 0; background: #ffffff; }
   .chat-input-row textarea {
-    flex: 1;
-    resize: none;
-    border: 1px solid #dbe4ee;
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13.5px;
-    color: #0f172a;
-    max-height: 90px;
-    background: #f8fafc;
+    flex: 1; resize: none; border: 1px solid #dbe4ee; border-radius: 12px; padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif; font-size: 13.5px; color: #0f172a; max-height: 90px; background: #f8fafc;
   }
-
-  .chat-input-row textarea:focus {
-    outline: none;
-    border-color: #0284c7;
-  }
-
+  .chat-input-row textarea:focus { outline: none; border-color: #0284c7; }
   .chat-send-btn {
-    background: #2563eb;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 0 18px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    flex-shrink: 0;
+    background: #2563eb; color: #fff; border: none; border-radius: 12px; padding: 0 18px;
+    font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 13px; cursor: pointer; flex-shrink: 0;
   }
-
-  .chat-send-btn:hover:not(:disabled) {
-    background: #1d4ed8;
-  }
-
-  .chat-send-btn:disabled {
-    opacity: 0.55;
-    cursor: default;
-  }
+  .chat-send-btn:hover:not(:disabled) { background: #1d4ed8; }
+  .chat-send-btn:disabled { opacity: 0.55; cursor: default; }
 
   @media (max-width: 768px) {
-    .submissions-filter-row {
-      flex-direction: column;
-    }
-
-    .search-input-wrap,
-    .office-filter-select {
-      width: 100%;
-      min-width: unset;
-    }
-
-    .modal-content {
-      padding: 20px;
-    }
-
-    .table-wrap {
-      max-height: 480px;
-    }
-
-    .chat-modal-content {
-      height: 100%;
-      max-height: 100%;
-      border-radius: 0;
-    }
+    .submissions-filter-row { flex-direction: column; }
+    .search-input-wrap, .office-filter-select { width: 100%; min-width: unset; }
+    .modal-content { padding: 20px; }
+    .table-wrap { max-height: 480px; }
+    .chat-modal-content { height: 100%; max-height: 100%; border-radius: 0; }
   }
 </style>
 </head>
@@ -1031,11 +339,7 @@
           </div>
         </div>
 
-        <!-- Category tabs: cleanliness evaluations are split into Comfort
-             Room and Surroundings (separate office lists + separate
-             Firestore subtree per the Android app). Switching tabs
-             filters stats, the office dropdown, and the table to just
-             that category. -->
+        <!-- Category tabs -->
         <div class="category-tabs" id="category-tabs">
           <button class="category-tab active" data-category="all">All Categories <span class="tab-count" id="cat-count-all">0</span></button>
           <button class="category-tab" data-category="Comfort Room">Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
@@ -1065,9 +369,7 @@
         <div class="table-wrap">
           <table class="submissions-table">
             <thead>
-              <tr id="submissions-thead-row">
-             
-              </tr>
+              <tr id="submissions-thead-row"></tr>
             </thead>
             <tbody id="submissions-tbody"></tbody>
           </table>
@@ -1171,7 +473,6 @@ const firebaseConfig = {
   measurementId: "G-LK8D1CBQ2J"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -1200,10 +501,8 @@ const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
 const DEFAULT_CATEGORY = "Comfort Room";
 
 const TOTAL_RATING_QUESTIONS = 5;
-
 const LOW_RATING_THRESHOLD = 3;
 
-// No icon field — status badges/modals now render label text only.
 const STATUS_META = {
   pending: { label: "Pending" },
   no_action: { label: "No Action Required" },
@@ -1216,8 +515,8 @@ const STATUS_META = {
 let evaluations = [];
 let comfortOffices = {};
 let surroundingsOffices = {};
-let usersMap = {};          // userId -> display name, loaded from `users` collection
-let conversationsMap = {};  // evaluationId -> conversation doc data (unread counts, last message, etc.)
+let usersMap = {};          // userId -> display name
+let conversationsMap = {};  // evaluationId -> conversation doc data
 let searchTerm = "";
 let officeFilter = "";
 let categoryFilter = "all";
@@ -1225,7 +524,6 @@ let currentTab = "recent";
 let editingId = null;
 let deletingId = null;
 
-// Chat modal state
 let activeChatEvalId = null;
 let chatMessagesUnsub = null;
 
@@ -1289,11 +587,8 @@ function categoryPillHtml(category) {
 }
 
 // Resolves the evaluator's display name, preferring a live lookup in the
-// `users` collection by userId (users/{userId}.name). Falls back to
-// whatever name was stored directly on the evaluation document
-// (evaluatorName / userName / name / fullName) if there's no userId
-// match — e.g. the user account was deleted, or the doc predates the
-// userId field.
+// `users` collection by userId, falling back to the name stored on the
+// evaluation document.
 function getEvaluatorName(e) {
   if (e.userId && e.userId !== "-" && usersMap[e.userId]) {
     return usersMap[e.userId];
@@ -1350,7 +645,7 @@ onSnapshot(collection(db, OFFICE_COLLECTIONS["Surroundings"]), (snapshot) => {
 });
 
 // ======================
-// LOAD USERS (for evaluator name lookup by userId)
+// LOAD USERS (evaluator name lookup by userId)
 // ======================
 onSnapshot(collection(db, USERS_COLLECTION), (snapshot) => {
   usersMap = {};
@@ -1358,13 +653,11 @@ onSnapshot(collection(db, USERS_COLLECTION), (snapshot) => {
     const data = doc.data();
     usersMap[doc.id] = data.name || data.fullName || data.email || doc.id;
   });
-  // Names may resolve after evaluations already rendered — re-render
-  // so the Evaluator column updates once users have loaded.
   renderSubmissions();
 });
 
 // ======================
-// LOAD CONVERSATIONS (for unread-message badges on the Message button)
+// LOAD CONVERSATIONS (unread badges)
 // ======================
 onSnapshot(collection(db, CONVERSATIONS_COLLECTION), (snapshot) => {
   conversationsMap = {};
@@ -1386,7 +679,6 @@ onSnapshot(evalQuery, (snapshot) => {
   evaluations = [];
   snapshot.forEach((doc) => {
     const data = doc.data();
-
 
     const rawCategory = data.cleanlinessCategory;
     if (!CLEANLINESS_CATEGORIES.includes(rawCategory)) {
@@ -1518,9 +810,8 @@ function evidenceCellHtml(e) {
   return `<span class="evidence-badge evidence-cell" data-eval-id="${e.id}">${parts.join("  ")}</span>`;
 }
 
-// Builds the "💬 Message" button, with a small red unread-count badge
-// when the conversation for this evaluation has unread messages
-// waiting on the admin's side.
+// "💬 Message" button, with a red unread-count badge when the
+// conversation has unread messages waiting on the admin's side.
 function messageCellHtml(e) {
   const convo = conversationsMap[e.id];
   const unread = convo ? (Number(convo.unreadForAdmin) || 0) : 0;
@@ -1565,7 +856,9 @@ function renderSubmissions() {
     return;
   }
 
+  // Edit and Delete are both hidden on the "No Action Required" tab.
   const showEditButtonForTab = showActionColumn && currentTab !== "no_action";
+  const showDeleteButtonForTab = showActionColumn && currentTab !== "no_action";
 
   tbody.innerHTML = filtered.map((e, i) => {
     const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-";
@@ -1575,7 +868,7 @@ function renderSubmissions() {
         <td>
           <button class="btn-view" data-eval-id="${e.id}">View</button>
           ${showEditButtonForTab ? `<button class="btn-edit" data-eval-id="${e.id}">Edit</button>` : ""}
-          <button class="btn-delete" data-eval-id="${e.id}">Delete</button>
+          ${showDeleteButtonForTab ? `<button class="btn-delete" data-eval-id="${e.id}">Delete</button>` : ""}
         </td>` : "";
     return `
       <tr>
@@ -1833,11 +1126,9 @@ async function saveStatusUpdate(record, newStatus) {
 
 // ======================
 // NOTIFY USER OF STATUS CHANGE
+// Writes to notifications/{userId}/items so the submitter sees it in the
+// Android app's Profile notification bell (type: "eval_status").
 // ======================
-// Writes a notification document to notifications/{userId}/items so the
-// submitter sees it in the Android app's Profile notification bell.
-// Uses the same collection the app already writes login/logout entries
-// to, distinguished by `type: "eval_status"` so the app can filter it.
 async function notifyUserOfStatusChange(record, newStatus) {
   if (!record.userId || record.userId === "-") return;
 
@@ -1864,8 +1155,7 @@ async function notifyUserOfStatusChange(record, newStatus) {
       read: false
     });
   } catch (err) {
-    // Don't block the status save if the notification write fails —
-    // just log it so the admin isn't blocked by a secondary write.
+    // Don't block the status save if the notification write fails.
     console.error("Failed to send status notification", err);
   }
 }
@@ -1910,6 +1200,9 @@ const deleteConfirmBtn = document.getElementById("delete-modal-confirm");
 function openDeleteModal(evalId) {
   const e = evaluations.find(item => item.id === evalId);
   if (!e) return;
+
+  // Safeguard: "No Action Required" submissions cannot be deleted.
+  if (e.status === "no_action") return;
 
   const date = e.timestamp ? new Date(e.timestamp).toLocaleString() : "-";
   const meta = STATUS_META[e.status] || STATUS_META.pending;
@@ -1977,7 +1270,9 @@ deleteConfirmBtn.addEventListener("click", async () => {
   }
 });
 
-
+// ======================
+// CHAT MODAL
+// ======================
 const chatModal = document.getElementById("chat-modal");
 const chatHeaderTitle = document.getElementById("chat-header-title");
 const chatHeaderSub = document.getElementById("chat-header-sub");
@@ -1986,14 +1281,15 @@ const chatInput = document.getElementById("chat-input");
 const chatSendBtn = document.getElementById("chat-send-btn");
 const chatCloseBtn = document.getElementById("chat-modal-close");
 
-
+// Normalizes every timestamp format (number, numeric string, date string,
+// Firestore Timestamp, {seconds}, Date) to epoch milliseconds.
 function getTimestampMillis(value) {
   if (value === undefined || value === null || value === "") return null;
-  
+
   if (typeof value === "number") {
     return value;
   }
-  
+
   if (typeof value === "string") {
     const n = Number(value);
     if (!Number.isNaN(n)) {
@@ -2002,23 +1298,22 @@ function getTimestampMillis(value) {
     const parsed = Date.parse(value);
     return Number.isNaN(parsed) ? null : parsed;
   }
-  
+
   if (typeof value.toMillis === "function") {
     return value.toMillis();
   }
-  
+
   if (typeof value.seconds === "number") {
     return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1e6);
   }
-  
+
   if (value instanceof Date) {
     return value.getTime();
   }
-  
+
   return null;
 }
 
-// Alias for backward compatibility in chat context
 function getMessageMillis(m) {
   return getTimestampMillis(m && m.timestamp);
 }
@@ -2054,9 +1349,8 @@ function renderChatMessages(messages) {
   chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 }
 
-// Marks every unread user-sent message as read, and zeroes the admin's
-// unread counter on the conversation doc, so the badge on the row
-// clears the moment the admin opens the thread.
+// Marks unread user-sent messages as read and zeroes the admin's unread
+// counter so the badge clears when the admin opens the thread.
 async function markMessagesReadForAdmin(evalId, messages) {
   const unreadFromUser = messages.filter(m => m.senderRole === "user" && m.read === false);
 
@@ -2097,18 +1391,9 @@ function openChatModal(evalId) {
 
   chatMessagesUnsub = onSnapshot(messagesQuery, (snapshot) => {
     const messages = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    // Defensive client-side sort by timestamp ascending (oldest first,
-    // newest last) — this is a belt-and-suspenders safeguard on top of
-    // the Firestore orderBy("timestamp","asc") query above. It keeps
-    // the conversation strictly in chronological order (whoever sent a
-    // message first appears first, and each following message —
-    // whether from the user or the admin — is placed right after it in
-    // send order) even if two messages share the exact same timestamp,
-    // or if a message document is briefly missing/has a null timestamp
-    // while a serverTimestamp() write is still resolving. Uses proper
-    // timestamp normalization via getMessageMillis() to handle all
-    // timestamp formats (numeric, string, Firestore Timestamp, Date, etc.)
-    // so that Timestamp objects are not incorrectly treated as zero.
+    // Defensive client-side sort (oldest first) on top of the Firestore
+    // orderBy, so messages stay in send order even with identical or
+    // briefly-null timestamps while a serverTimestamp() write resolves.
     const sortedMessages = messages.slice().sort((a, b) => {
       const tA = getMessageMillis(a);
       const tB = getMessageMillis(b);
