@@ -1,7 +1,3 @@
-// ====== CAMPUSVOICE SHARED LAYOUT JS ======
-// Include in every page:
-// <script src="shared.js"></script>
-
 function buildSidebar(role, activePage) {
 
   const navAdmin1 = [
@@ -62,13 +58,6 @@ function buildSidebar(role, activePage) {
       ? 'role-admin2'
       : 'role-admin3';
 
-  const avatarText =
-    role === 'admin1'
-      ? 'A1'
-      : role === 'admin2'
-      ? 'A2'
-      : 'A3';
-
   const userName =
     role === 'admin1'
       ? 'Admin 1'
@@ -101,29 +90,19 @@ function buildSidebar(role, activePage) {
       </nav>
 
       <div class="sidebar-footer">
-        <a class="user-chip" href="index.html" aria-label="Logout ${userName}" title="Logout">
-          <div class="user-avatar">${avatarText}</div>
-
-          <div>
-            <div class="user-name">
-              <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </div>
-            <div class="user-role-label">
-              Click to logout
-            </div>
-          </div>
-
+        <a class="logout-btn" href="index.html" aria-label="Logout ${userName}" title="Logout">
+          <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          <span class="logout-text">Logout</span>
         </a>
       </div>
 
     </aside>
   `;
 }
-
 
 function buildTopbar(pageTitle, role) {
 
@@ -165,9 +144,6 @@ function buildTopbar(pageTitle, role) {
   `;
 }
 
-
-// ====== RESPONSIVE SIDEBAR TOGGLE ======
-
 function initSidebarToggle() {
   const hamburger = document.getElementById('hamburger-btn');
   const sidebar = document.getElementById('sidebar');
@@ -187,20 +163,16 @@ function initSidebarToggle() {
     document.body.classList.remove('sidebar-open');
   };
 
-  // Hamburger click
   hamburger.addEventListener('click', toggleSidebar);
 
-  // Sidebar links click
   document.querySelectorAll('.nav-item').forEach(link => {
     link.addEventListener('click', closeSidebar);
   });
 
-  // Overlay click
   if (overlay) {
     overlay.addEventListener('click', closeSidebar);
   }
 
-  // Close sidebar when window is resized to tablet/desktop
   window.addEventListener('resize', () => {
     if (window.innerWidth > 768) {
       closeSidebar();
@@ -208,11 +180,8 @@ function initSidebarToggle() {
   });
 }
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', initSidebarToggle);
 
-
-// Animate bars
 function animateBars() {
   setTimeout(() => {
     document.querySelectorAll('.bar-fill').forEach(bar => {
@@ -222,8 +191,6 @@ function animateBars() {
   }, 100);
 }
 
-
-// Toggle
 document.addEventListener('click', function (e) {
 
   if (e.target.classList.contains('toggle')) {
@@ -232,20 +199,6 @@ document.addEventListener('click', function (e) {
 
 });
 
-
-/* ====================================================================
-   RESIZE / RESPONSIVE CHART HELPERS
-   Charts on the dashboard and analytics pages are rendered as inline
-   SVG using JS. SVG scales cleanly via viewBox, but the *padding* and
-   *font sizes* inside a chart need to change based on how much room is
-   actually available — otherwise a chart designed for a 500px-wide
-   desktop card looks cramped (or overflows) at 300px on a phone.
-   These helpers are shared by admin*-dashboard.html and
-   admin*-analytics.html so every chart resizes the same way.
-==================================================================== */
-
-// Debounce: wait until resizing has paused before doing the (relatively
-// expensive) work of recomputing chart geometry and re-rendering.
 function CVDebounce(fn, wait = 150) {
   let t;
   return (...args) => {
@@ -254,11 +207,6 @@ function CVDebounce(fn, wait = 150) {
   };
 }
 
-// Given a chart's actual rendered container width, return a small
-// "profile" of geometry values (padding, font sizes) tuned for that
-// width, so charts stay readable and correctly spaced at any size
-// instead of just scaling everything uniformly (which makes text too
-// tiny on small screens, or wastes space on large ones).
 function CVChartProfile(width) {
   if (width < 340) {
     return { pad: { top: 16, right: 12, bottom: 42, left: 30 }, valueFont: 10, axisFont: 9,  labelFont: 10 };
@@ -269,11 +217,8 @@ function CVChartProfile(width) {
   return { pad: { top: 20, right: 30, bottom: 60, left: 50 }, valueFont: 12, axisFont: 11, labelFont: 12 };
 }
 
-// Re-run a set of render callbacks on resize/orientation change, but
-// only after resizing has settled (debounced) so we don't thrash the
-// DOM while the user is actively dragging a window edge.
 function CVOnResize(renderFns) {
-  const run = () => renderFns.forEach(fn => { try { fn(); } catch (e) { /* chart not ready yet */ } });
+  const run = () => renderFns.forEach(fn => { try { fn(); } catch (e) {  } });
   window.addEventListener('resize', CVDebounce(run, 150));
   window.addEventListener('orientationchange', CVDebounce(run, 150));
 }
