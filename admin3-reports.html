@@ -17,8 +17,16 @@
     .report-section { break-inside: avoid; }
     .report-page-2 { border-top: none !important; margin-top: 0 !important; padding-top: 0 !important; }
     .page-break-label { display: none !important; }
-    .official-report { page-break-inside: avoid; }
     body, .layout, .main { margin: 0 !important; padding: 0 !important; }
+
+    /* Each report page is exactly one A4 sheet (1mm short so rounding never
+       spills the footer onto a blank extra page). */
+    .official-report {
+      min-height: 296mm !important;
+      height: 296mm !important;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
 
     /* The wrapper carries an inline margin/padding for the on-screen layout;
        zero it for print so Page 1's letterhead aligns with every other page. */
@@ -580,7 +588,7 @@
     min-height: 297mm;
     margin: 0 auto;
     box-sizing: border-box;
-    padding: 10px 40px 32px;
+    padding: 10px 40px 20px;
   }
 
   /* Letterhead */
@@ -711,11 +719,12 @@
     margin-bottom: 6px;
   }
 
+  /* Compact signature block (lives inside the footer) */
   .official-signatures {
     display: flex;
-    gap: 40px;
-    margin-top: 14px;
-    font-size: 11pt;
+    gap: 24px;
+    margin-top: 8px;
+    font-size: 10pt;
   }
 
   .sig-block {
@@ -724,8 +733,8 @@
 
   .sig-label {
     color: #555;
-    font-size: 10.5pt;
-    margin-bottom: 18px;
+    font-size: 9.5pt;
+    margin-bottom: 6px;
   }
 
   .sig-line {
@@ -737,15 +746,17 @@
   .sig-name {
     font-weight: bold;
     text-transform: uppercase;
-    padding-top: 4px;
+    padding-top: 0;
     display: inline-block;
+    font-size: 10pt;
   }
 
   .sig-title {
-    font-size: 10pt;
+    font-size: 9pt;
     font-style: italic;
     color: #333;
-    margin-top: 2px;
+    margin-top: 0;
+    line-height: 1.2;
   }
 
   /* Footer pinned to the bottom of its page via margin-top:auto. Safe because
@@ -753,7 +764,7 @@
      before placing content, so there's always reserved room for it. */
   .official-footer {
     margin-top: auto;
-    padding-top: 12px;
+    padding-top: 6px;
     border-top: 1px solid #dfe6ee;
     display: block;
     width: 100%;
@@ -770,7 +781,7 @@
      right above the footer image at the bottom of every page. */
   .official-footer .official-signatures {
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }
 
   /* ─── Responsive ─── */
@@ -1176,8 +1187,8 @@ function generateNarrative(office, respondents, overallPct, dimensionAverages) {
 // the footer stays pinned to the bottom of every page.
 const MM_TO_PX = 96 / 25.4;
 const A4_HEIGHT_PX = 297 * MM_TO_PX;
-const PAGE_V_PADDING_PX = 10 + 32; // matches .official-report's 10px top + 32px bottom padding
-const PAGE_SAFETY_BUFFER_PX = 60; // cushion so rounding/print-engine differences never push the footer onto an extra page
+const PAGE_V_PADDING_PX = 10 + 20; // matches .official-report's 10px top + 20px bottom padding
+const PAGE_SAFETY_BUFFER_PX = 24; // cushion so rounding/print-engine differences never push the footer onto an extra page
 // Width available to the footer image: .official-report's content box
 // (210mm) minus its 40px left + 40px right padding.
 const PAGE_CONTENT_WIDTH_PX = 210 * MM_TO_PX - 80;
@@ -1187,7 +1198,7 @@ const PAGE_CONTENT_WIDTH_PX = 210 * MM_TO_PX - 80;
 // The footer image is preloaded and its natural aspect ratio is converted
 // into a FIXED pixel height baked into the <img> tag, so the height measured
 // during pagination always matches what actually renders. The image source
-// now comes from the header & footer settings (admin3-report-settings.js)
+// comes from the header & footer settings (admin3-report-settings.js)
 // and the ratio is cached per image source.
 // ======================
 let footerRatioCache = { src: null, ratio: null };
@@ -1213,7 +1224,7 @@ async function getFooterAspectRatio() {
   return ratio;
 }
 
-const FOOTER_MAX_HEIGHT_PX = 70; // keeps the accreditation banner compact so it always fits below the text on Page 1
+const FOOTER_MAX_HEIGHT_PX = 56; // keeps the accreditation banner compact so it always fits below the text
 
 function buildFooterInnerHtml(ratio, src) {
   if (!src) return "";
