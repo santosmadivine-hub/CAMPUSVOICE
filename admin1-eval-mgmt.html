@@ -219,6 +219,7 @@
     <div class="form-grid">
       <label>Transaction Code (optional)<input id="f_code" class="filter-input" placeholder="Auto-generated if blank"></label>
       <label>Office *<select id="f_office" class="filter-select"></select></label>
+      <label>Evaluation Date *<input id="f_date" type="date" class="filter-input"></label>
       <label>Age<input id="f_age" type="number" min="1" max="120" class="filter-input"></label>
       <label>Sex
         <select id="f_sex" class="filter-select">
@@ -262,7 +263,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-import { getFirestore, collection, onSnapshot, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, setDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
@@ -554,6 +555,9 @@ window.closeAddModal = () => { addModal.style.display = "none"; };
 
 document.getElementById("addBtn").onclick = () => {
   addModal.querySelectorAll("input, select, textarea").forEach(el => { el.value = ""; });
+  const t = new Date();
+  document.getElementById("f_date").value =
+    `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
   addError.textContent = "";
   addModal.style.display = "flex";
 };
@@ -566,6 +570,7 @@ document.getElementById("saveEvalBtn").onclick = async () => {
   const val = (id) => document.getElementById(id).value.trim();
 
   if (!val("f_office")) { addError.textContent = "Please select an office."; return; }
+  if (!val("f_date")) { addError.textContent = "Please select the evaluation date."; return; }
   const sqdValues = Array.from({ length: 9 }, (_, n) => val(`f_sqd${n}`));
   if (sqdValues.some(v => !v)) { addError.textContent = "Please answer all SQD items (SQD0–SQD8)."; return; }
 
@@ -590,7 +595,15 @@ document.getElementById("saveEvalBtn").onclick = async () => {
       cc3: val("f_cc3"),
       suggestions: val("f_suggestions"),
       userId: "admin-manual",
-      submittedAt: serverTimestamp()
+      source: "manual",
+      // "date" (YYYY-MM-DD) is what the Reports page filters by
+      date: val("f_date"),
+      // submittedAt uses the chosen date (with the current time) so the table sorts/shows it correctly
+      submittedAt: (() => {
+        const [y, m, d] = val("f_date").split("-").map(Number);
+        const now = new Date();
+        return Timestamp.fromDate(new Date(y, m - 1, d, now.getHours(), now.getMinutes(), now.getSeconds()));
+      })()
     };
     sqdValues.forEach((v, n) => { payload[`sqd${n}`] = v; });
 
