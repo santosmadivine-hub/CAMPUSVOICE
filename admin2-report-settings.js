@@ -3,8 +3,9 @@ import { getFirestore, doc, getDoc, setDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const db     = getFirestore(getApp());
-const curRef = doc(db, "services", "reportSettingsAdmin2", "records", "current");
-const defRef = doc(db, "services", "reportSettingsAdmin2", "records", "default");
+// Top-level collection (outside "services"), used only by Admin 2
+const curRef = doc(db, "reportSettingsAdmin2", "current");
+const defRef = doc(db, "reportSettingsAdmin2", "default");
 
 const GROUPS = [
   { title: "Header", fields: [
