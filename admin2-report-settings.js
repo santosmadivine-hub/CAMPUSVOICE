@@ -1,4 +1,3 @@
-
 import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -187,8 +186,9 @@ function fillForm() {
 }
 function livePreview() {
   $("rsPvH").innerHTML = headerHtml(draft, "reportTitle");
-  $("rsPvS").innerHTML = signaturesHtml(draft);
-  $("rsPvF").innerHTML = footerHtml(draft);
+  $("rsPvS").innerHTML = "";
+  // Signatures live in the footer (same as Admin 1): Prepared by / Noted by, then the footer image
+  $("rsPvF").innerHTML = signaturesHtml(draft) + footerHtml(draft);
 }
 
 card.addEventListener("input", e => {
