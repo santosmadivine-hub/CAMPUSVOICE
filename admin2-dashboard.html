@@ -8,799 +8,190 @@
 <link rel="stylesheet" href="shared.css">
 <style>
 /* ─── Tooltip styling (matches admin1) ─── */
-.pie-tooltip{
-  position:fixed;
-  pointer-events:none;
-  background:#0f172a;
-  color:#fff;
-  font-family:'DM Sans',sans-serif;
-  font-size:12px;
-  line-height:1.4;
-  padding:9px 13px;
-  border-radius:10px;
-  box-shadow:0 10px 24px rgba(15,23,42,0.28);
-  opacity:0;
-  transform:translate(0, 0);
-  transition:opacity .12s ease;
-  z-index:9999;
-  white-space:nowrap;
-}
-.pie-tooltip.show{
-  opacity:1;
-}
-.pie-tooltip .tt-title{
-  font-family:'Syne',sans-serif;
-  font-weight:700;
-  font-size:13px;
-  margin-bottom:3px;
-}
-.pie-tooltip .tt-sub{
-  color:#cbd5e1;
-  font-size:11px;
-}
+.pie-tooltip{position:fixed;pointer-events:none;background:#0f172a;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.4;padding:9px 13px;border-radius:10px;box-shadow:0 10px 24px rgba(15,23,42,0.28);opacity:0;transform:translate(0,0);transition:opacity .12s ease;z-index:9999;white-space:nowrap}
+.pie-tooltip.show{opacity:1}
+.pie-tooltip .tt-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:3px}
+.pie-tooltip .tt-sub{color:#cbd5e1;font-size:11px}
 
 /* ─── Main Content Container ─── */
-.dashboard-container {
-  flex: 1;
-  padding: 25px 30px 12px;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
+.dashboard-container{flex:1;padding:25px 30px 12px;max-width:1400px;margin:0 auto;width:100%;overflow-y:auto;display:flex;flex-direction:column;gap:24px}
 
 /* ─── Stat cards ─── */
-.stat-grid{
-  display:grid;
-  grid-template-columns:repeat(4, 1fr);
-  gap:20px;
-}
-
-.stat-card{
-  position:relative;
-  background:#ffffff;
-  border:1px solid #bae6fd;
-  border-top:4px solid var(--accent3, #0284c7);
-  border-radius:16px;
-  padding:20px 20px 22px;
-  box-shadow:0 4px 14px rgba(2, 132, 199, 0.08);
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-.stat-card.blue{ border-top-color:#0284c7; }
-.stat-card.cyan{ border-top-color:#0ea5e9; }
-.stat-card.purple{ border-top-color:#0284c7; }
-.stat-card.green{ border-top-color:#0284c7; }
-
-.stat-icon{
-  position:absolute;
-  top:18px;
-  right:18px;
-  width:38px;
-  height:38px;
-  border-radius:10px;
-  background:#f1f5f9;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:16px;
-}
-
-.stat-label{
-  font-family:'DM Sans',sans-serif;
-  font-size:15px;
-  font-weight:500;
-  color:#64748b;
-  text-transform:uppercase;
-  letter-spacing:.04em;
-}
-
-.stat-value{
-  font-family:'Syne',sans-serif;
-  font-weight:700;
-  font-size:30px;
-  color:#0f172a;
-  line-height:1.1;
-  overflow-wrap: anywhere;
-}
-
-.stat-sub{
-  font-family:'DM Sans',sans-serif;
-  font-size:12px;
-  color:#94a3b8;
-}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.stat-card{position:relative;background:#ffffff;border:1px solid #bae6fd;border-top:4px solid var(--accent3,#0284c7);border-radius:16px;padding:20px 20px 22px;box-shadow:0 4px 14px rgba(2,132,199,0.08);display:flex;flex-direction:column;gap:6px}
+.stat-card.blue{border-top-color:#0284c7}
+.stat-card.cyan{border-top-color:#0ea5e9}
+.stat-card.purple{border-top-color:#0284c7}
+.stat-card.green{border-top-color:#0284c7}
+.stat-icon{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:16px}
+.stat-label{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+.stat-value{font-family:'Syne',sans-serif;font-weight:700;font-size:30px;color:#0f172a;line-height:1.1;overflow-wrap:anywhere}
+.stat-sub{font-family:'DM Sans',sans-serif;font-size:12px;color:#94a3b8}
 
 /* ─── Chart cards grid ─── */
-.charts-grid {
-  display: flex;
-  align-items: stretch;
-  gap: 24px;
-  flex-wrap: wrap;
-  margin-bottom: 0;
-}
-
-.card {
-  background: #ffffff;
-  border: 1px solid #bae6fd;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1 1 420px;
-  min-width: 0;
-}
-
-.card-title{
-  font-family:'Syne',sans-serif;
-  font-weight:700;
-  font-size:16px;
-  color:#0f172a;
-}
-
-.card-sub{
-  font-family:'DM Sans',sans-serif;
-  font-weight:400;
-  font-size:13px;
-  color:#94a3b8;
-}
-
-.card-header-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-.badge-pill{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  background:rgba(37,99,235,0.12);
-  color:#3b82f6;
-  font-family:'Syne',sans-serif;
-  font-weight:700;
-  font-size:13px;
-  padding:6px 14px;
-  border-radius:999px;
-  border:1px solid rgba(59,130,246,0.35);
-  white-space:nowrap;
-}
+.charts-grid{display:flex;align-items:stretch;gap:24px;flex-wrap:wrap;margin-bottom:0}
+.card{background:#ffffff;border:1px solid #bae6fd;border-radius:12px;box-shadow:0 2px 8px rgba(2,132,199,0.08);padding:20px;display:flex;flex-direction:column;gap:6px;flex:1 1 420px;min-width:0}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:#0f172a}
+.card-sub{font-family:'DM Sans',sans-serif;font-weight:400;font-size:13px;color:#94a3b8}
+.card-header-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.badge-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,0.12);color:#3b82f6;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:6px 14px;border-radius:999px;border:1px solid rgba(59,130,246,0.35);white-space:nowrap}
 
 /* ─── Line chart styling ─── */
-.line-chart-wrap{
-  margin-top:12px;
-}
-#line-chart-svg{
-  width:100%;
-  height:220px;
-  display:block;
-}
+.line-chart-wrap{margin-top:12px}
+#line-chart-svg{width:100%;height:220px;display:block}
 
 /* ─── Donut chart styling ─── */
-.donut-wrap{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:28px;
-  flex-wrap:wrap;
-  padding:12px 0;
-  flex:1;
-}
-.donut-wrap svg{
-  flex-shrink:1;
-  width:230px;
-  max-width:100%;
-  height:auto;
-}
-.donut-legend{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-.legend-item{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-family:'DM Sans',sans-serif;
-  font-size:13px;
-  color:#1e293b;
-}
-.legend-dot{
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  flex-shrink:0;
-}
+.donut-wrap{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap;padding:12px 0;flex:1}
+.donut-wrap svg{flex-shrink:1;width:230px;max-width:100%;height:auto}
+.donut-legend{display:flex;flex-direction:column;gap:12px}
+.legend-item{display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1e293b}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
 /* ─── User Category Distribution — legend table ─── */
-.category-table{
-  display:flex;
-  flex-direction:column;
-  font-family:'DM Sans',sans-serif;
-  font-size:13px;
-  color:#1e293b;
-  min-width:200px;
-}
-.category-table-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:.05em;
-  text-transform:uppercase;
-  color:#94a3b8;
-  padding-bottom:8px;
-  border-bottom:1px solid #e2e8f0;
-  margin-bottom:4px;
-}
-.category-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding:5px 0;
-  cursor:default;
-}
-.category-row .cat-name{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-weight:600;
-}
-.category-row.sub{
-  padding:3px 0 3px 17px;
-  font-size:12px;
-  color:#64748b;
-}
-.category-row.sub .cat-name{
-  font-weight:400;
-  gap:6px;
-}
-.category-row.total{
-  border-top:1px solid #e2e8f0;
-  margin-top:6px;
-  padding-top:8px;
-  font-family:'Syne',sans-serif;
-  font-weight:800;
-  color:#0f172a;
-}
-.category-dot{
-  width:9px;
-  height:9px;
-  border-radius:50%;
-  flex-shrink:0;
-}
-.category-count{
-  font-weight:700;
-  color:#0f172a;
-  white-space:nowrap;
-}
-.category-row.sub .category-count{
-  font-weight:600;
-  color:#334155;
-}
+.category-table{display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;font-size:13px;color:#1e293b;min-width:200px}
+.category-table-head{display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;padding-bottom:8px;border-bottom:1px solid #e2e8f0;margin-bottom:4px}
+.category-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:5px 0;cursor:default}
+.category-row .cat-name{display:flex;align-items:center;gap:8px;font-weight:600}
+.category-row.sub{padding:3px 0 3px 17px;font-size:12px;color:#64748b}
+.category-row.sub .cat-name{font-weight:400;gap:6px}
+.category-row.total{border-top:1px solid #e2e8f0;margin-top:6px;padding-top:8px;font-family:'Syne',sans-serif;font-weight:800;color:#0f172a}
+.category-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.category-count{font-weight:700;color:#0f172a;white-space:nowrap}
+.category-row.sub .category-count{font-weight:600;color:#334155}
 
 /* ─── Evaluation Status card ─── */
-.eval-status-card{
-  background: #ffffff;
-  border: 1px solid #bae6fd;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
-  padding: 20px;
-  flex: 1.7 1 500px;
-}
-.eval-status-header{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  flex-wrap:wrap;
-  gap:16px;
-}
+.eval-status-card{background:#ffffff;border:1px solid #bae6fd;border-radius:12px;box-shadow:0 2px 8px rgba(2,132,199,0.08);padding:20px;flex:1.7 1 500px}
+.eval-status-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px}
 
-/* ─── Category legend (Comfort Room vs Surroundings) — reused above the
-     line chart ─── */
-.chart-legend{
-  display:flex;
-  gap:16px;
-  flex-wrap:wrap;
-  margin-top:2px;
-}
-.chart-legend .legend-item{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-family:'DM Sans',sans-serif;
-  font-size:12px;
-  font-weight:600;
-  color:#475569;
-}
-.chart-legend .legend-dot{
-  width:9px;
-  height:9px;
-  border-radius:50%;
-  flex-shrink:0;
-}
+/* ─── Category legend (Comfort Room vs Surroundings) ─── */
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:2px}
+.chart-legend .legend-item{display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:#475569}
+.chart-legend .legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 
-/* ─── Submission Status — vertical grouped bar chart (ported from
-     admin2-analytics.html so Status by Area now matches Analytics) ─── */
-.status-vbar-wrap {
-  display: flex;
-  gap: 8px;
-}
-
-.status-vbar-yaxis {
-  flex: 0 0 32px;
-  width: 32px;
-  position: relative;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 10px;
-  color: #94a3b8;
-}
-
-.status-vbar-yaxis span {
-  position: absolute;
-  right: 6px;
-  transform: translateY(-50%);
-}
-
-.status-vbar-chart {
-  flex: 1;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
-  border-left: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0 12px;
-}
-
-.status-vbar-group {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  height: 100%;
-}
-
-.status-vbar-col {
-  width: 34px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  height: 100%;
-  cursor: help;
-}
-
-.status-vbar-fill {
-  width: 100%;
-  border-radius: 4px 4px 0 0;
-  transition: height 0.3s ease;
-  min-height: 1px;
-}
-
-.status-vbar-value {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #334155;
-  margin-bottom: 4px;
-}
-
-.status-vbar-labels {
-  display: flex;
-  justify-content: space-around;
-  margin: 8px 0 0;
-  padding: 0 12px;
-  margin-left: 32px;
-}
-
-.status-vbar-label {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  color: #334155;
-  text-align: center;
-}
-
-.status-vbar-legend {
-  display: flex;
-  gap: 16px;
-  margin-top: 14px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 12px;
-  color: #475569;
-}
-
-.status-vbar-legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.status-vbar-legend-swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-}
-
-.lb-empty {
-  text-align: center;
-  color: #94a3b8;
-  padding: 20px 0;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-}
+/* ─── Submission Status — vertical grouped bar chart ─── */
+.status-vbar-wrap{display:flex;gap:8px}
+.status-vbar-yaxis{flex:0 0 32px;width:32px;position:relative;font-family:'DM Sans',sans-serif;font-size:10px;color:#94a3b8}
+.status-vbar-yaxis span{position:absolute;right:6px;transform:translateY(-50%)}
+.status-vbar-chart{flex:1;display:flex;align-items:flex-end;justify-content:space-around;border-left:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;padding:0 12px}
+.status-vbar-group{display:flex;align-items:flex-end;gap:8px;height:100%}
+.status-vbar-col{width:34px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:help}
+.status-vbar-fill{width:100%;border-radius:4px 4px 0 0;transition:height 0.3s ease;min-height:1px}
+.status-vbar-value{font-family:'DM Sans',sans-serif;font-size:10.5px;font-weight:700;color:#334155;margin-bottom:4px}
+.status-vbar-labels{display:flex;justify-content:space-around;margin:8px 0 0;padding:0 12px;margin-left:32px}
+.status-vbar-label{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:#334155;text-align:center}
+.status-vbar-legend{display:flex;gap:16px;margin-top:14px;font-family:'DM Sans',sans-serif;font-size:12px;color:#475569}
+.status-vbar-legend-item{display:flex;align-items:center;gap:6px}
+.status-vbar-legend-swatch{width:10px;height:10px;border-radius:3px}
+.lb-empty{text-align:center;color:#94a3b8;padding:20px 0;font-family:'DM Sans',sans-serif;font-size:14px}
 
 /* ─── Quick Access Section ─── */
-.quick-access-card{
-  flex: 1 1 300px;
-}
-
-.quick-access-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-top: 12px;
-}
-
-.quick-access-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 20px 16px;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border: 1.5px solid #bae6fd;
-  border-radius: 14px;
-  text-decoration: none;
-  color: #0f172a;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  font-family: 'Syne', sans-serif;
-  position: relative;
-  overflow: hidden;
-}
-
-.quick-access-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.04) 100%);
-  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 0;
-}
-
-.quick-access-btn:hover {
-  border-color: #7dd3fc;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12);
-  transform: translateY(-2px);
-}
-
-.quick-access-btn:hover::before {
-  left: 0;
-}
-
-.quick-access-btn:active {
-  transform: translateY(0);
-}
-
-.qa-icon {
-  font-size: 28px;
-  line-height: 1;
-  position: relative;
-  z-index: 1;
-}
-
-.qa-label {
-  font-family: 'Syne', sans-serif;
-  font-weight: 600;
-  font-size: 13px;
-  color: #0f172a;
-  text-align: center;
-  position: relative;
-  z-index: 1;
-  line-height: 1.3;
-}
+.quick-access-card{flex:1 1 300px}
+.quick-access-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:12px}
+.quick-access-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px 16px;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border:1.5px solid #bae6fd;border-radius:14px;text-decoration:none;color:#0f172a;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);cursor:pointer;font-family:'Syne',sans-serif;position:relative;overflow:hidden}
+.quick-access-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,rgba(37,99,235,0.08) 0%,rgba(37,99,235,0.04) 100%);transition:left 0.25s cubic-bezier(0.4,0,0.2,1);z-index:0}
+.quick-access-btn:hover{border-color:#7dd3fc;box-shadow:0 4px 12px rgba(2,132,199,0.12);transform:translateY(-2px)}
+.quick-access-btn:hover::before{left:0}
+.quick-access-btn:active{transform:translateY(0)}
+.qa-icon{font-size:28px;line-height:1;position:relative;z-index:1}
+.qa-label{font-family:'Syne',sans-serif;font-weight:600;font-size:13px;color:#0f172a;text-align:center;position:relative;z-index:1;line-height:1.3}
 
 /* ─── Stat Mini Cards (from Office Management) ─── */
-.stat-mini-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
-}
-
-.stat-mini-card {
-  background: white;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #bae6fd;
-  text-align: center;
-}
-
-.stat-mini-label {
-  font-size: 11px;
-  color: #64748b;
-  font-weight: 600;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
-
-.stat-mini-value {
-  font-size: 28px;
-  font-weight: 800;
-  font-family: 'Syne', sans-serif;
-  color: #0c4a6e;
-}
+.stat-mini-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.stat-mini-card{background:white;padding:16px;border-radius:12px;border:1px solid #bae6fd;text-align:center}
+.stat-mini-label{font-size:11px;color:#64748b;font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.stat-mini-value{font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:#0c4a6e}
 
 /* ─── Responsive breakpoints ─── */
-
-/* Large tablets / small laptops */
-@media (max-width: 1200px) {
-  .dashboard-container {
-    max-width: 100%;
-  }
-  .stat-value {
-    font-size: 30px;
-  }
+@media (max-width:1200px){.dashboard-container{max-width:100%}.stat-value{font-size:30px}}
+@media (max-width:1024px){.stat-grid{grid-template-columns:repeat(2,1fr)}.charts-grid>.card{flex-basis:300px}.quick-access-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:900px){.charts-grid{flex-direction:column}.charts-grid>.card{flex-basis:auto;width:100%}.quick-access-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:768px){
+  #line-chart-svg{height:180px}
+  .donut-wrap{flex-direction:column;gap:20px}
+  .donut-wrap svg{width:260px}
+  .dashboard-container{padding:20px 16px 28px;border-radius:16px;gap:18px}
+  .stat-grid{grid-template-columns:1fr 1fr;gap:14px}
+  .card{padding:18px 18px 22px}
+  .card-title{font-size:15px}
+  .quick-access-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .quick-access-btn{padding:16px 12px;gap:10px}
+  .qa-icon{font-size:24px}
+  .qa-label{font-size:12px}
 }
-
-/* Tablets */
-@media (max-width: 1024px) {
-  .stat-grid{
-    grid-template-columns:repeat(2, 1fr);
-  }
-  .charts-grid > .card {
-    flex-basis: 300px;
-  }
-  .quick-access-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+@media (max-width:600px){
+  .stat-card{padding:16px 16px 18px}
+  .stat-value{font-size:26px}
+  .stat-icon{width:32px;height:32px;font-size:14px;top:14px;right:14px}
+  .badge-pill{font-size:12px;padding:5px 12px}
+  .quick-access-grid{grid-template-columns:repeat(2,1fr);gap:12px}
 }
-
-/* Small tablets / large phones — stack charts, tighten spacing */
-@media (max-width: 900px) {
-  .charts-grid {
-    flex-direction: column;
-  }
-  .charts-grid > .card {
-    flex-basis: auto;
-    width: 100%;
-  }
-  .quick-access-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+@media (max-width:480px){
+  .dashboard-container{padding:16px 12px 24px}
+  .stat-grid{grid-template-columns:1fr}
+  .stat-value{font-size:28px}
+  #line-chart-svg{height:160px}
+  .donut-wrap svg{width:220px}
+  .quick-access-grid{grid-template-columns:1fr;gap:10px}
+  .quick-access-btn{padding:14px 12px}
+  .qa-icon{font-size:22px}
+  .qa-label{font-size:11px}
 }
-
-@media (max-width: 768px) {
-  #line-chart-svg { height:180px; }
-  .donut-wrap {
-    flex-direction: column;
-    gap: 20px;
-  }
-  .donut-wrap svg {
-    width: 260px;
-  }
-  .dashboard-container {
-    padding: 20px 16px 28px;
-    border-radius: 16px;
-    gap: 18px;
-  }
-  .stat-grid{
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-  }
-  .card {
-    padding: 18px 18px 22px;
-  }
-  .card-title {
-    font-size: 15px;
-  }
-  .quick-access-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-  .quick-access-btn {
-    padding: 16px 12px;
-    gap: 10px;
-  }
-  .qa-icon {
-    font-size: 24px;
-  }
-  .qa-label {
-    font-size: 12px;
-  }
-}
-
-/* Phones */
-@media (max-width: 600px) {
-  .stat-card {
-    padding: 16px 16px 18px;
-  }
-  .stat-value {
-    font-size: 26px;
-  }
-  .stat-icon {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-    top: 14px;
-    right: 14px;
-  }
-  .badge-pill {
-    font-size: 12px;
-    padding: 5px 12px;
-  }
-  .quick-access-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-}
-
-/* Small phones */
-@media (max-width: 480px) {
-  .dashboard-container {
-    padding: 16px 12px 24px;
-  }
-  .stat-grid{
-    grid-template-columns:1fr;
-  }
-  .stat-value {
-    font-size: 28px;
-  }
-  #line-chart-svg { height:160px; }
-  .donut-wrap svg {
-    width: 220px;
-  }
-  .quick-access-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-  .quick-access-btn {
-    padding: 14px 12px;
-  }
-  .qa-icon {
-    font-size: 22px;
-  }
-  .qa-label {
-    font-size: 11px;
-  }
-}
-
-@media (max-width: 360px) {
-  .stat-grid{
-    gap: 10px;
-  }
-  .card {
-    padding: 14px 14px 18px;
-  }
-  .quick-access-grid {
-    gap: 8px;
-  }
-}
-
+@media (max-width:360px){.stat-grid{gap:10px}.card{padding:14px 14px 18px}.quick-access-grid{gap:8px}}
 
 /* =========================================================
    REFERENCE-DASHBOARD VISUAL OVERRIDES
    DATA / FIRESTORE / QUERIES ARE NOT CHANGED.
    ========================================================= */
-.dashboard-container{
-  max-width: 1320px;
-  padding: 22px 22px 16px;
-  gap: 16px;
-  background: transparent;
-}
-.stat-grid{gap:14px;}
-.stat-card{
-  border:1px solid #e5e7eb;
-  border-top:3px solid #2563eb;
-  border-radius:10px;
-  box-shadow:0 2px 8px rgba(15,23,42,.05);
-  padding:16px 16px 17px;
-}
-.stat-card.cyan{border-top-color:#16a34a;}
-.stat-card.purple{border-top-color:#2563eb;}
-.stat-card.green{border-top-color:#16a34a;}
-.stat-icon{width:34px;height:34px;top:14px;right:14px;border-radius:9px;font-size:15px;}
-.stat-label{font-size:11px;}
-.stat-value{font-size:27px;}
-.stat-sub{font-size:11px;}
+.dashboard-container{max-width:1320px;padding:22px 22px 16px;gap:16px;background:transparent}
+.stat-grid{gap:14px}
+.stat-card{border:1px solid #e5e7eb;border-top:3px solid #2563eb;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.05);padding:16px 16px 17px}
+.stat-card.cyan{border-top-color:#16a34a}
+.stat-card.purple{border-top-color:#2563eb}
+.stat-card.green{border-top-color:#16a34a}
+.stat-icon{width:34px;height:34px;top:14px;right:14px;border-radius:9px;font-size:15px}
+.stat-label{font-size:11px}
+.stat-value{font-size:27px}
+.stat-sub{font-size:11px}
 
-.charts-grid{
-  display:grid;
-  grid-template-columns:minmax(0,2.15fr) minmax(260px,1fr);
-  gap:16px;
-  align-items:stretch;
-}
-.card,
-.eval-status-card{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:10px;
-  box-shadow:0 2px 8px rgba(15,23,42,.05);
-  padding:16px;
-  min-width:0;
-}
-.card-title{
-  font-size:14px;
-  line-height:1.25;
-}
-.card-sub{font-size:10px;}
-.card-header-row{gap:8px;}
-.badge-pill{font-size:10px;padding:4px 9px;border-radius:999px;}
-.chart-legend{gap:12px;margin-top:0;}
-.chart-legend .legend-item{font-size:10px;gap:5px;}
-.chart-legend .legend-dot{width:8px;height:8px;}
+.charts-grid{display:grid;grid-template-columns:minmax(0,2.15fr) minmax(260px,1fr);gap:16px;align-items:stretch}
+.card,.eval-status-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.05);padding:16px;min-width:0}
+.card-title{font-size:14px;line-height:1.25}
+.card-sub{font-size:10px}
+.card-header-row{gap:8px}
+.badge-pill{font-size:10px;padding:4px 9px;border-radius:999px}
+.chart-legend{gap:12px;margin-top:0}
+.chart-legend .legend-item{font-size:10px;gap:5px}
+.chart-legend .legend-dot{width:8px;height:8px}
 
-.line-chart-wrap{margin-top:4px;position:relative;overflow:visible;}
-#line-chart-svg{height:235px;width:100%;display:block;overflow:visible;}
+.line-chart-wrap{margin-top:4px;position:relative;overflow:visible}
+#line-chart-svg{height:235px;width:100%;display:block;overflow:visible}
 
 /* Compact donut card like the reference image. */
-.donut-wrap{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-start;
-  gap:6px;
-  padding:2px 0 0;
-  flex:1;
-}
-.donut-wrap svg{width:190px;height:190px;max-width:100%;}
-.donut-legend{width:100%;max-height:128px;overflow:auto;gap:0;}
-.category-table{min-width:0;width:100%;font-size:10px;}
-.category-table-head{font-size:8px;padding-bottom:5px;margin-bottom:2px;}
-.category-row{padding:3px 0;gap:8px;}
-.category-row .cat-name{gap:6px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.category-dot{width:7px;height:7px;}
-.category-count{font-size:10px;}
-.category-row.sub{font-size:9px;padding:2px 0 2px 13px;}
-.category-row.total{padding-top:5px;margin-top:3px;}
+.donut-wrap{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;padding:2px 0 0;flex:1}
+.donut-wrap svg{width:190px;height:190px;max-width:100%}
+.donut-legend{width:100%;max-height:128px;overflow:auto;gap:0}
+.category-table{min-width:0;width:100%;font-size:10px}
+.category-table-head{font-size:8px;padding-bottom:5px;margin-bottom:2px}
+.category-row{padding:3px 0;gap:8px}
+.category-row .cat-name{gap:6px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.category-dot{width:7px;height:7px}
+.category-count{font-size:10px}
+.category-row.sub{font-size:9px;padding:2px 0 2px 13px}
+.category-row.total{padding-top:5px;margin-top:3px}
 
-.eval-status-card{padding:16px;display:flex;flex-direction:column;}
-.eval-status-header{gap:8px;}
+.eval-status-card{padding:16px;display:flex;flex-direction:column}
+.eval-status-header{gap:8px}
 
-.quick-access-card{
-  min-width:0;
-  align-self:start;
-}
-.quick-access-grid{gap:10px;margin-top:10px;}
-.quick-access-btn{
-  padding:12px 8px;
-  gap:7px;
-  border:1px solid #dbe2ea;
-  border-radius:9px;
-  background:#f8fafc;
-}
-.quick-access-btn:first-child{background:linear-gradient(135deg,#0788d1,#1b9ad8);color:#fff;border-color:#0788d1;}
-.quick-access-btn:first-child .qa-label{color:#fff;}
-.qa-icon{font-size:22px;}
-.qa-label{font-size:9px;}
+.quick-access-card{min-width:0;align-self:start}
+.quick-access-grid{gap:10px;margin-top:10px}
+.quick-access-btn{padding:12px 8px;gap:7px;border:1px solid #dbe2ea;border-radius:9px;background:#f8fafc}
+.quick-access-btn:first-child{background:linear-gradient(135deg,#0788d1,#1b9ad8);color:#fff;border-color:#0788d1}
+.quick-access-btn:first-child .qa-label{color:#fff}
+.qa-icon{font-size:22px}
+.qa-label{font-size:9px}
 
-@media (max-width:900px){
-  .charts-grid{grid-template-columns:1fr;}
-  .donut-wrap svg{width:205px;height:205px;}
-}
-@media (max-width:600px){
-  .dashboard-container{padding:16px 12px 24px;}
-  .charts-grid{gap:12px;}
-  #line-chart-svg{height:200px;}
-  .donut-wrap svg{width:190px;height:190px;}
-}
-
+@media (max-width:900px){.charts-grid{grid-template-columns:1fr}.donut-wrap svg{width:205px;height:205px}}
+@media (max-width:600px){.dashboard-container{padding:16px 12px 24px}.charts-grid{gap:12px}#line-chart-svg{height:200px}.donut-wrap svg{width:190px;height:190px}}
 </style>
 </head>
 <body>
@@ -946,11 +337,9 @@ buildTopbar("Dashboard", "admin2");
 // ======================
 // FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS
 // ======================
-// ComfortRoomEvalActivity / SurroundingsEvalActivity write each
-// evaluation to a nested per-office doc AND to a flat mirror at
-// evaluation_history/{id} (see admin2-eval-mgmt.html). This dashboard
-// reads from the flat mirror, same as Eval Mgmt, so counts/status here
-// always match what admins see and edit there.
+// Data flow:
+//   evaluation_history -> only Cleanliness records
+//   -> Comfort Room + Surroundings -> Daily / Weekly / Monthly
 const EVAL_HISTORY_COLLECTION = "evaluation_history";
 
 // Each cleanliness category keeps its own office list, in a separately
@@ -962,19 +351,15 @@ const OFFICE_COLLECTIONS = {
   "Surroundings": "office_names_surroundings"
 };
 const CLEANLINESS_CATEGORIES = Object.keys(OFFICE_COLLECTIONS);
-const DEFAULT_CATEGORY = "Comfort Room"; // fallback for any legacy record saved before cleanlinessCategory existed
 
 // ComfortRoomEvalActivity / SurroundingsEvalActivity both set
-// TOTAL_QUESTIONS = 5 and only ever write rating1...rating5 — confirmed
-// directly from the submission code (see admin2-eval-mgmt.html), not
-// rating1-15.
+// TOTAL_QUESTIONS = 5 and only ever write rating1...rating5.
 const TOTAL_RATING_QUESTIONS = 5;
 
 // Evaluations with an average rating at or above this threshold (out of
 // 5, matching the Evaluation Management page) are treated as positive
 // feedback and auto-classified as "No Action Required" instead of
-// "Pending", so this dashboard's status breakdown matches Eval Mgmt.
-// Adjust this single constant to tune the cutoff.
+// "Pending". Adjust this single constant to tune the cutoff.
 const LOW_RATING_THRESHOLD = 3;
 
 // Status labels/colors used by the Submission Status chart — kept
@@ -1034,10 +419,10 @@ function buildOfficeStats() {
   });
 
   evaluations.forEach(e => {
-    const matchingOfficeKey = Object.entries(offices).find(([_, office]) => 
+    const matchingOfficeKey = Object.entries(offices).find(([_, office]) =>
       normalizeName(office.name) === normalizeName(e.officeName)
     )?.[0];
-    
+
     if (matchingOfficeKey) {
       statsByKey[matchingOfficeKey].total += 1;
       statsByKey[matchingOfficeKey].sum += avgOf(e);
@@ -1049,15 +434,8 @@ function buildOfficeStats() {
 
 // Normalizes whatever is stored under a record's status into "pending",
 // "no_action", or "resolved" (mirrors the Evaluation Management page).
-//
-// Records with no status field at all — which today is every record the
-// app writes, since it never sets a status field on submit — are
-// auto-classified from their average rating instead of defaulting to
-// "pending":
-//   - avgRating < LOW_RATING_THRESHOLD  -> "pending"    (needs attention)
-//   - avgRating >= LOW_RATING_THRESHOLD -> "no_action"   (positive feedback)
-// Once an admin explicitly sets a status via the Eval Mgmt Edit modal,
-// that saved value is always respected and skips the auto-classification.
+// Records with no status field are auto-classified from their average
+// rating (< LOW_RATING_THRESHOLD -> pending, otherwise no_action).
 function parseEvalStatus(data, avgRating) {
   const stored = (data.status || "").toString().toLowerCase();
   if (stored === "resolved" || stored === "pending" || stored === "no_action") {
@@ -1069,9 +447,6 @@ function parseEvalStatus(data, avgRating) {
 // ======================
 // LOAD OFFICE LISTS -> one listener per category, then combined
 // ======================
-// Recomputes the combined `offices` map (used for the Total Office stat,
-// the office <select>, and buildOfficeStats) whenever either category's
-// office list changes.
 function rebuildOffices() {
   offices = { ...comfortOffices, ...surroundingsOffices };
 
@@ -1106,46 +481,90 @@ onSnapshot(query(collection(db, OFFICE_COLLECTIONS["Surroundings"]), orderBy("na
 });
 
 // ======================
-// LOAD EVALUATIONS -> flat evaluation_history mirror (same source Eval
-// Mgmt reads from, so this dashboard's counts/status always agree with
-// it — real-time across both categories and every office in one listener)
+// LOAD EVALUATIONS
+// Source: evaluation_history -> only Cleanliness records
+//         (Comfort Room + Surroundings) -> daily / weekly / monthly
+// Records that are not Comfort Room or Surroundings are skipped.
 // ======================
-const evalCollectionRef = collection(db, EVAL_HISTORY_COLLECTION);
-const evalQuery = query(evalCollectionRef, orderBy("timestamp", "desc"));
 
-onSnapshot(evalQuery, (snapshot) => {
+// Normalizes every timestamp format (number, numeric string, date string,
+// Firestore Timestamp, {seconds}, Date) to epoch milliseconds.
+function getTimestampMillis(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const n = Number(value);
+    if (!Number.isNaN(n)) return n;
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (typeof value.seconds === "number") {
+    return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1e6);
+  }
+  if (value instanceof Date) return value.getTime();
+  return null;
+}
+
+// Returns "Comfort Room" / "Surroundings", or null if the record is not a
+// cleanliness evaluation (so it is excluded from every count).
+function normalizeCleanlinessCategory(data) {
+  const candidates = [data.cleanlinessCategory, data.category];
+  for (const raw of candidates) {
+    if (typeof raw !== "string") continue;
+    const match = CLEANLINESS_CATEGORIES.find(
+      c => c.toLowerCase() === raw.trim().toLowerCase()
+    );
+    if (match) return match;
+  }
+  return null;
+}
+
+const evalCollectionRef = collection(db, EVAL_HISTORY_COLLECTION);
+
+// No orderBy: Firestore silently drops documents that lack the ordered field.
+onSnapshot(evalCollectionRef, (snapshot) => {
   evaluations = [];
+  let skipped = 0;
+
   snapshot.forEach((doc) => {
     const data = doc.data();
 
-    const rawCategory = data.cleanlinessCategory;
-    const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+    const category = normalizeCleanlinessCategory(data);
+    if (!category) {      // not Comfort Room / Surroundings -> ignore
+      skipped++;
+      return;
+    }
 
     const record = {
       id: doc.id,
       officeName: data.officeName || "Unknown",
       cleanlinessCategory: category,
       comments: data.comments || "",
-      timestamp: Number(data.timestamp) || 0,
+      timestamp: getTimestampMillis(data.timestamp ?? data.date ?? data.submittedAt) ?? 0,
       userCategory: (data.userCategory || "").toString().trim() || "Unspecified",
       course: (data.course || "").toString().trim()
     };
 
-    // Pull rating1 ... rating5 (matches what ComfortRoomEvalActivity /
-    // SurroundingsEvalActivity actually write — TOTAL_QUESTIONS = 5).
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
       record["rating" + i] = Number(data["rating" + i]) || 0;
     }
 
-    // Status depends on the average rating, so it's computed after the
-    // rating fields are populated above.
     record.status = parseEvalStatus(data, avgOf(record));
-
     evaluations.push(record);
   });
 
+  if (skipped > 0) {
+    console.warn(
+      `${skipped} of ${snapshot.size} records in "${EVAL_HISTORY_COLLECTION}" were ignored ` +
+      `because they are not Comfort Room / Surroundings evaluations.`
+    );
+  }
+
   renderDashboard();
   renderEvalStatus();
+}, (err) => {
+  console.error("Failed to load evaluations:", err);
 });
 
 // ======================
@@ -1368,9 +787,8 @@ function renderLineChart() {
 // ======================
 // AVERAGE RATINGS — pie chart
 //   Comfort Room vs Surroundings, each slice sized by its share of the
-//   combined average rating (comfortAvg vs surroundingsAvg), so the
-//   category with the higher average takes the bigger slice. Built live
-//   from rating1..rating5 on each evaluation_history record.
+//   combined average rating, so the category with the higher average
+//   takes the bigger slice.
 // ======================
 const RATING_CATEGORY_COLORS = {
   "Comfort Room": "#2563eb",
@@ -1495,11 +913,6 @@ function renderAvgRatingPie() {
 
 // ======================
 // SUBMISSION STATUS — vertical grouped bar chart
-// (ported from admin2-analytics.html so this dashboard now shows the
-// same "Submission Status — by category" chart instead of the old
-// "Status by Area" SVG chart. Same underlying `evaluations`/`status`
-// data as before, just rendered as HTML/CSS bars instead of SVG.)
-//
 //   x-axis  -> the three statuses (Pending / No Action Required / Resolved)
 //   y-axis  -> percentage of that status's own category total (0–100%)
 //   each status has two side-by-side bars: blue = Comfort Room, green = Surroundings
