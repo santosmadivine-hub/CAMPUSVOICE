@@ -617,7 +617,7 @@
           <div class="stat-icon">📊</div>
           <div class="stat-label">Total Evaluations</div>
           <div class="stat-value" id="summary-total-evals">0</div>
-          <div class="stat-sub">All Time</div>
+          <div class="stat-sub" id="summary-total-evals-sub">All Time</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">⭐</div>
@@ -846,15 +846,20 @@ function updateSummary() {
 
   const statsByKey = buildOfficeStats();
 
-  let totalEvals = 0;
+  // Total Evaluations counts EVERY submission in facility_evaluations so it
+  // matches the "Total" on Evaluation Management. Evaluations whose office
+  // name doesn't match a listed office are counted here but can't appear in
+  // any office row, so we report how many there are.
+  const totalEvals = evaluations.length;
+  const matchedEvals = Object.values(statsByKey).reduce((sum, s) => sum + s.total, 0);
+  const unlinkedEvals = totalEvals - matchedEvals;
+
   let highestOffice = "—";
   let lowestOffice = "—";
   let highestRating = -1;
   let lowestRating = 11;
 
   Object.values(statsByKey).forEach(stats => {
-    totalEvals += stats.total;
-
     if (stats.total > 0) {
       const avg = stats.sum / stats.total;
 
@@ -872,6 +877,21 @@ function updateSummary() {
 
   document.getElementById("summary-total-offices-count").textContent = totalOffices;
   document.getElementById("summary-total-evals").textContent = totalEvals;
+  document.getElementById("summary-total-evals-sub").textContent =
+    unlinkedEvals > 0
+      ? `All Time · ${unlinkedEvals} not linked to a listed office`
+      : "All Time";
+
+  if (unlinkedEvals > 0) {
+    const known = new Set(Object.values(offices).map(normalizeName));
+    const orphanNames = [...new Set(
+      evaluations
+        .map(e => e.officeName)
+        .filter(n => !known.has(normalizeName(n)))
+    )];
+    console.warn("Evaluations with no matching office:", orphanNames);
+  }
+
   document.getElementById("summary-highest-office").textContent = highestOffice;
   document.getElementById("summary-highest-office").title = highestOffice;
   document.getElementById("summary-lowest-office").textContent = lowestOffice;
