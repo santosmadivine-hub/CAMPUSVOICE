@@ -18,6 +18,7 @@
 .btn-primary { background: #2563eb; color: #fff; }
 .btn-secondary { background: #e2e8f0; color: #0f172a; }
 .btn:hover { opacity: 0.92; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .filter-row { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
 .filter-input, .filter-select {
@@ -77,6 +78,14 @@
 
 .loading-row td { text-align: center; padding: 40px !important; color: #94a3b8; font-style: italic; }
 
+/* Add Evaluation form */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+.form-grid label, .form-full { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: #64748b; }
+.form-grid .filter-input, .form-grid .filter-select { width: 100%; min-width: 0; }
+.sqd-grid { grid-template-columns: repeat(3, 1fr); }
+.form-section { font-size: 13px; font-weight: 700; color: #0f172a; margin: 8px 0 10px; }
+.form-error { color: #dc2626; font-size: 13px; min-height: 18px; margin-top: 8px; }
+
 .modal-content::-webkit-scrollbar { width: 7px; }
 .modal-content::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
 .modal-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -108,6 +117,7 @@
   .modal-row { flex-direction: column; gap: 4px; }
   .modal-label { width: 100%; min-width: 100%; }
   .modal-value { width: 100%; text-align: left; }
+  .form-grid, .sqd-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
   .stat-grid { grid-template-columns: 1fr; }
@@ -154,6 +164,7 @@
       <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
         <div class="card-title">Recent Evaluation Submissions</div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-primary" id="addBtn">➕ Add Evaluation</button>
           <button class="btn btn-secondary" id="refreshBtn">🔄 Refresh</button>
           <button class="btn btn-secondary" id="exportBtn">📥 Export CSV</button>
         </div>
@@ -189,6 +200,7 @@
   </main>
 </div>
 
+<!-- View details modal -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <h3>📋 Evaluation Details</h3>
@@ -199,12 +211,58 @@
   </div>
 </div>
 
+<!-- Add evaluation modal -->
+<div class="modal" id="addModal">
+  <div class="modal-content">
+    <h3>➕ Add Evaluation Manually</h3>
+
+    <div class="form-grid">
+      <label>Transaction Code (optional)<input id="f_code" class="filter-input" placeholder="Auto-generated if blank"></label>
+      <label>Office *<select id="f_office" class="filter-select"></select></label>
+      <label>Age<input id="f_age" type="number" min="1" max="120" class="filter-input"></label>
+      <label>Sex
+        <select id="f_sex" class="filter-select">
+          <option value="">Select</option><option>Male</option><option>Female</option>
+        </select>
+      </label>
+      <label>Category
+        <select id="f_category" class="filter-select">
+          <option value="">Select</option><option>Business</option><option>Citizen</option><option>Government</option>
+        </select>
+      </label>
+      <label>Client Type
+        <select id="f_clientType" class="filter-select">
+          <option value="">Select</option><option>Business</option><option>Citizen</option><option>Government</option>
+        </select>
+      </label>
+      <label>Region<input id="f_region" class="filter-input"></label>
+      <label>Service Availed<input id="f_service" class="filter-input"></label>
+      <label>CC1<select id="f_cc1" class="filter-select"></select></label>
+      <label>CC2<select id="f_cc2" class="filter-select"></select></label>
+      <label>CC3<select id="f_cc3" class="filter-select"></select></label>
+    </div>
+
+    <div class="form-section">Service Quality Dimensions (1 = Strongly Disagree, 5 = Strongly Agree)</div>
+    <div class="form-grid sqd-grid" id="sqdFields"></div>
+
+    <label class="form-full">Suggestions / Comments
+      <textarea id="f_suggestions" rows="3" class="filter-input" style="height:auto;padding:12px 16px;width:100%;"></textarea>
+    </label>
+
+    <div id="addError" class="form-error"></div>
+    <div class="modal-footer" style="gap:8px;">
+      <button class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" id="saveEvalBtn">Save Evaluation</button>
+    </div>
+  </div>
+</div>
+
 <script src="shared.js"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
@@ -227,6 +285,7 @@ document.getElementById("topbar-mount").innerHTML = buildTopbar("Evaluation Mana
 const table = document.getElementById("evaluationTable");
 const searchInput = document.getElementById("searchInput");
 const officeFilter = document.getElementById("officeFilter");
+const formOffice = document.getElementById("f_office");
 
 let allData = {};
 
@@ -235,8 +294,7 @@ const officesCol = collection(db, "services", "offices", "records");
 
 onSnapshot(officesCol, (snapshot) => {
   const prevValue = officeFilter.value;
-  officeFilter.innerHTML = `<option value="">All Offices</option>`;
-  if (snapshot.empty) return;
+  const prevForm = formOffice.value;
 
   const names = [];
   snapshot.forEach((docSnap) => {
@@ -244,13 +302,23 @@ onSnapshot(officesCol, (snapshot) => {
     const name = data.name || docSnap.id;
     if (name) names.push(name);
   });
+  names.sort((a, b) => a.localeCompare(b));
 
-  names.sort((a, b) => a.localeCompare(b)).forEach((name) => {
+  officeFilter.innerHTML = `<option value="">All Offices</option>`;
+  formOffice.innerHTML = `<option value="">Select office</option>`;
+
+  names.forEach((name) => {
     const opt = document.createElement("option");
     opt.value = name;
     opt.textContent = name;
     if (name === prevValue) opt.selected = true;
     officeFilter.appendChild(opt);
+
+    const opt2 = document.createElement("option");
+    opt2.value = name;
+    opt2.textContent = name;
+    if (name === prevForm) opt2.selected = true;
+    formOffice.appendChild(opt2);
   });
 }, (error) => {
   console.error("Error loading offices:", error);
@@ -461,6 +529,80 @@ document.getElementById("exportBtn").onclick = () => {
 document.getElementById("refreshBtn").onclick = () => location.reload();
 searchInput.addEventListener("input", renderTable);
 officeFilter.addEventListener("change", renderTable);
+
+// ---------- Manual evaluation entry ----------
+const fillSelect = (id, opts) => {
+  document.getElementById(id).innerHTML =
+    `<option value="">Select</option>` + opts.map(o => `<option value="${o}">${o}</option>`).join("");
+};
+fillSelect("f_cc1", ["1", "2", "3", "4"]);
+fillSelect("f_cc2", ["1", "2", "3", "4", "5", "N/A"]);
+fillSelect("f_cc3", ["1", "2", "3", "N/A"]);
+
+document.getElementById("sqdFields").innerHTML = Array.from({ length: 9 }, (_, n) => `
+  <label>SQD${n}
+    <select id="f_sqd${n}" class="filter-select">
+      <option value="">Select</option>
+      ${["1", "2", "3", "4", "5", "N/A"].map(v => `<option value="${v}">${v}</option>`).join("")}
+    </select>
+  </label>`).join("");
+
+const addModal = document.getElementById("addModal");
+const addError = document.getElementById("addError");
+
+window.closeAddModal = () => { addModal.style.display = "none"; };
+
+document.getElementById("addBtn").onclick = () => {
+  addModal.querySelectorAll("input, select, textarea").forEach(el => { el.value = ""; });
+  addError.textContent = "";
+  addModal.style.display = "flex";
+};
+
+addModal.addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) closeAddModal();
+});
+
+document.getElementById("saveEvalBtn").onclick = async () => {
+  const val = (id) => document.getElementById(id).value.trim();
+
+  if (!val("f_office")) { addError.textContent = "Please select an office."; return; }
+  const sqdValues = Array.from({ length: 9 }, (_, n) => val(`f_sqd${n}`));
+  if (sqdValues.some(v => !v)) { addError.textContent = "Please answer all SQD items (SQD0–SQD8)."; return; }
+
+  const btn = document.getElementById("saveEvalBtn");
+  btn.disabled = true; btn.textContent = "Saving…";
+  addError.textContent = "";
+
+  try {
+    const ref = doc(evaluationsCol);
+    const payload = {
+      evaluationId: ref.id,
+      transactionCode: val("f_code") || "MAN-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
+      office: val("f_office"),
+      age: val("f_age"),
+      sex: val("f_sex"),
+      category: val("f_category"),
+      clientType: val("f_clientType"),
+      region: val("f_region"),
+      serviceAvailed: val("f_service"),
+      cc1: val("f_cc1"),
+      cc2: val("f_cc2"),
+      cc3: val("f_cc3"),
+      suggestions: val("f_suggestions"),
+      userId: "admin-manual",
+      submittedAt: serverTimestamp()
+    };
+    sqdValues.forEach((v, n) => { payload[`sqd${n}`] = v; });
+
+    await setDoc(ref, payload);
+    closeAddModal(); // onSnapshot refreshes the table and stats automatically
+  } catch (err) {
+    console.error("Error adding evaluation:", err);
+    addError.textContent = "Failed to save. Check your connection or Firestore permissions.";
+  } finally {
+    btn.disabled = false; btn.textContent = "Save Evaluation";
+  }
+};
 </script>
 </body>
 </html>
