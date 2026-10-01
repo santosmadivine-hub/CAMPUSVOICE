@@ -617,12 +617,20 @@
 .cv-btn-primary:active { transform: translateY(0); }
 
 .cv-btn-warn {
-  background: linear-gradient(160deg, #fb923c 0%, #f97316 55%, #ea580c 100%);
+  background: linear-gradient(160deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(234,88,12,.28);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, .28);
 }
-.cv-btn-warn:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(234,88,12,.32); }
-.cv-btn-warn:active { transform: translateY(0); }
+
+.cv-btn-warn:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(160deg, #f87171 0%, #dc2626 55%, #991b1b 100%);
+  box-shadow: 0 8px 18px rgba(220, 38, 38, .32);
+}
+
+.cv-btn-warn:active {
+  transform: translateY(0);
+}
 
 .cv-toast-stack {
   position: fixed;
