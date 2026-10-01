@@ -244,6 +244,59 @@
   .ev-name { color: #1e293b; font-weight: 500; }
   .ev-count { font-family: 'Syne', sans-serif; font-weight: 700; color: #0f172a; }
   .ev-pct { color: #94a3b8; text-align: right; font-size: 12px; }
+  .evaluator-bars { width: 100%; min-width: 0; }
+  .ev-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 18px;
+    height: 200px;
+    padding: 0 8px;
+    background: repeating-linear-gradient(to top, transparent 0, transparent 38px, #eef1f5 38px, #eef1f5 39px);
+  }
+  .ev-col {
+    flex: 1;
+    max-width: 96px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    cursor: pointer;
+  }
+  .ev-col-val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0f172a;
+    margin-bottom: 4px;
+  }
+  .ev-col-bar {
+    width: 100%;
+    min-height: 3px;
+    border-radius: 10px 10px 0 0;
+    transition: height 0.4s ease, filter 0.15s ease;
+  }
+  .ev-col:hover .ev-col-bar { filter: brightness(1.08); }
+  .ev-labels {
+    display: flex;
+    justify-content: space-around;
+    gap: 18px;
+    padding: 0 8px;
+    border-top: 2px solid #e2e8f0;
+  }
+  .ev-label {
+    flex: 1;
+    max-width: 96px;
+    text-align: center;
+    padding-top: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    line-height: 1.3;
+  }
+  .ev-label small { display: block; font-weight: 400; color: #94a3b8; font-size: 11px; }
   @media (max-width: 700px) {
     .evaluator-body { grid-template-columns: 1fr; gap: 20px; }
     .evaluator-divider { display: none; }
@@ -473,12 +526,7 @@
               <div class="stat-sub">users have submitted evaluations</div>
             </div>
             <div class="evaluator-divider"></div>
-            <div class="evaluator-donut-wrap">
-              <svg id="evaluator-donut" viewBox="0 0 120 120" width="150" height="150">
-                <circle cx="60" cy="60" r="46" fill="none" stroke="#e9edf3" stroke-width="20"/>
-              </svg>
-              <div class="donut-legend" id="evaluator-legend"></div>
-            </div>
+            <div class="evaluator-bars" id="evaluator-bars"></div>
           </div>
           <div class="pie-tooltip" id="evaluator-tooltip"></div>
         </div>
@@ -979,21 +1027,28 @@ function renderDonut() {
 }
 
 // ======================
-// TOTAL EVALUATORS
+// TOTAL EVALUATORS — BAR GRAPH
 // Counts unique userId values across facility_evaluations, so a user who
-// submits several evaluations is counted once. The donut breaks the total
-// down by userCategory (e.g. Student, Faculty).
+// submits several evaluations is counted once. Bars show the number of
+// unique evaluators per group: Student, Faculty/Staff and Visitors.
 // ======================
+function normalizeEvaluatorCategory(raw) {
+  const s = String(raw || "").toLowerCase();
+  if (s.includes("student")) return "Student";
+  if (s.includes("faculty") || s.includes("staff") || s.includes("employee")) return "Faculty/Staff";
+  if (s.includes("visitor") || s.includes("guest")) return "Visitors";
+  return "Other";
+}
+
 function renderTotalEvaluators() {
   const totalEl = document.getElementById("total-evaluators");
-  const svg = document.getElementById("evaluator-donut");
-  const legend = document.getElementById("evaluator-legend");
+  const wrap = document.getElementById("evaluator-bars");
   const tooltip = document.getElementById("evaluator-tooltip");
   const badge = document.getElementById("avg-eval-badge");
-  if (!totalEl || !svg || !legend || !tooltip) return;
+  if (!totalEl || !wrap || !tooltip) return;
 
   const seen = new Set();
-  const byCategory = {};
+  const byCategory = { "Student": 0, "Faculty/Staff": 0, "Visitors": 0 };
   let submissions = 0;
 
   evaluations.forEach(e => {
@@ -1001,7 +1056,7 @@ function renderTotalEvaluators() {
     submissions++;
     if (seen.has(e.userId)) return;
     seen.add(e.userId);
-    const cat = e.userCategory || "Other";
+    const cat = normalizeEvaluatorCategory(e.userCategory);
     byCategory[cat] = (byCategory[cat] || 0) + 1;
   });
 
@@ -1009,42 +1064,35 @@ function renderTotalEvaluators() {
   totalEl.textContent = total;
   if (badge) badge.textContent = `Avg ${total ? (submissions / total).toFixed(1) : 0} per user`;
 
-  svg.querySelectorAll(".donut-segment, text").forEach(el => el.remove());
   tooltip.classList.remove("show");
 
-  if (total === 0) {
-    legend.innerHTML = `<div class="legend-item">No evaluators yet</div>`;
-    return;
-  }
+  const palette = {
+    "Student": "#3b82f6",
+    "Faculty/Staff": "#8b5cf6",
+    "Visitors": "#10b981",
+    "Other": "#94a3b8"
+  };
 
-  const esc = s => String(s).replace(/[&<>"']/g, c => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-  }[c]));
+  const entries = Object.entries(byCategory).filter(([cat, n]) => cat !== "Other" || n > 0);
+  const maxVal = Math.max(1, ...entries.map(([, n]) => n));
+  const maxBarPx = 140;
 
-  const colors = ["#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#06b6d4"];
-  const entries = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
-  const r = 46;
-  const circumference = 2 * Math.PI * r;
-  let offsetPct = 0;
+  wrap.innerHTML = `
+    <div class="ev-chart">
+      ${entries.map(([cat, n]) => `
+        <div class="ev-col" data-cat="${cat}">
+          <div class="ev-col-val">${n}</div>
+          <div class="ev-col-bar" style="height:${n ? Math.max(6, (n / maxVal) * maxBarPx) : 3}px; background:${palette[cat]}"></div>
+        </div>`).join("")}
+    </div>
+    <div class="ev-labels">
+      ${entries.map(([cat, n]) => `
+        <div class="ev-label">${cat}<small>${total ? ((n / total) * 100).toFixed(0) : 0}%</small></div>`).join("")}
+    </div>`;
 
-  entries.forEach(([cat, n], i) => {
-    const pct = (n / total) * 100;
-    const color = colors[i % colors.length];
-    const dash = (pct / 100) * circumference;
-
-    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    circle.setAttribute("class", "donut-segment");
-    circle.setAttribute("cx", "60");
-    circle.setAttribute("cy", "60");
-    circle.setAttribute("r", String(r));
-    circle.setAttribute("fill", "none");
-    circle.setAttribute("stroke", color);
-    circle.setAttribute("stroke-width", "20");
-    circle.setAttribute("stroke-dasharray", `${dash} ${circumference - dash}`);
-    circle.setAttribute("stroke-dashoffset", String(-((offsetPct / 100) * circumference)));
-    circle.setAttribute("transform", "rotate(-90 60 60)");
-    circle.style.cursor = "pointer";
-
+  wrap.querySelectorAll(".ev-col").forEach(col => {
+    const cat = col.dataset.cat;
+    const n = byCategory[cat] || 0;
     const move = (evt) => {
       tooltip.style.left = (evt.clientX + 10) + "px";
       tooltip.style.top = (evt.clientY - 35) + "px";
@@ -1052,51 +1100,19 @@ function renderTotalEvaluators() {
     const show = (evt) => {
       tooltip.classList.add("show");
       tooltip.innerHTML = `
-        <div class="tt-title">${esc(cat)}</div>
+        <div class="tt-title">${cat}</div>
         <div>${n} evaluators</div>
-        <div class="tt-sub">${pct.toFixed(1)}% of total</div>`;
+        <div class="tt-sub">${total ? ((n / total) * 100).toFixed(1) : 0}% of total</div>`;
       move(evt);
     };
-    circle.addEventListener("mouseenter", show);
-    circle.addEventListener("mousemove", move);
-    circle.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
-    circle.addEventListener("touchstart", (evt) => {
+    col.addEventListener("mouseenter", show);
+    col.addEventListener("mousemove", move);
+    col.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
+    col.addEventListener("touchstart", (evt) => {
       evt.preventDefault();
       show(evt.touches[0]);
     }, { passive: false });
-
-    svg.appendChild(circle);
-    offsetPct += pct;
   });
-
-  const center = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  center.setAttribute("x", "60");
-  center.setAttribute("y", "62");
-  center.setAttribute("text-anchor", "middle");
-  center.setAttribute("fill", "#0f172a");
-  center.setAttribute("font-size", "20");
-  center.setAttribute("font-family", "Syne,sans-serif");
-  center.setAttribute("font-weight", "800");
-  center.textContent = String(total);
-  svg.appendChild(center);
-
-  const centerLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  centerLabel.setAttribute("x", "60");
-  centerLabel.setAttribute("y", "75");
-  centerLabel.setAttribute("text-anchor", "middle");
-  centerLabel.setAttribute("fill", "#94a3b8");
-  centerLabel.setAttribute("font-size", "7");
-  centerLabel.setAttribute("font-family", "DM Sans,sans-serif");
-  centerLabel.textContent = "evaluators";
-  svg.appendChild(centerLabel);
-
-  legend.innerHTML = entries.map(([cat, n], i) => `
-    <div class="legend-item">
-      <div class="legend-dot" style="background:${colors[i % colors.length]}"></div>
-      <span class="ev-name">${esc(cat)}</span>
-      <span class="ev-count">${n}</span>
-      <span class="ev-pct">${((n / total) * 100).toFixed(0)}%</span>
-    </div>`).join("");
 }
 
 </script>
