@@ -558,7 +558,7 @@
 
   .report-footer-box {
     background: #f8fafc;
-    
+    border-top: 2px solid #bae6fd;
     padding: 20px 32px;
     margin-top: 24px;
     border-radius: 8px;
@@ -759,13 +759,9 @@
     line-height: 1.2;
   }
 
-  /* Footer pinned to the bottom of its page via margin-top:auto. Safe because
-     paginateReportDocument() subtracts footerHeight from every page's capacity
-     before placing content, so there's always reserved room for it. */
   .official-footer {
     margin-top: auto;
     padding-top: 6px;
-    border-top: 1px solid #dfe6ee;
     display: block;
     width: 100%;
   }
@@ -777,8 +773,6 @@
     object-fit: contain;
   }
 
-  /* Prepared by / Noted by live INSIDE the footer (like Admin 2): they sit
-     right above the footer image at the bottom of every page. */
   .official-footer .official-signatures {
     margin-top: 0;
     margin-bottom: 6px;
