@@ -766,6 +766,13 @@
     object-fit: contain;
   }
 
+  /* Prepared by / Noted by live INSIDE the footer (like Admin 2): they sit
+     right above the footer image at the bottom of every page. */
+  .official-footer .official-signatures {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
   /* ─── Responsive ─── */
   @media (max-width: 1200px) {
     .stats-row {
@@ -1423,12 +1430,12 @@ function createOfficialDocument(report, footerRatio) {
             </tr>
   `);
 
-  // Trailing content: one block per narrative paragraph, then signatures.
-  const narrativeBlocks = narrative.map(p => `<div class="official-narrative"><p>${p}</p></div>`);
-  const signaturesBlock = rs.signaturesHtml(s);
-  const trailingBlocks = [...narrativeBlocks, signaturesBlock];
+  // Trailing content: one block per narrative paragraph. The signatures are
+  // no longer a trailing block — they live in the footer (below), so they
+  // appear at the bottom of every page, above the footer image.
+  const trailingBlocks = narrative.map(p => `<div class="official-narrative"><p>${p}</p></div>`);
 
-  const footerInnerHtml = buildFooterInnerHtml(footerRatio, s.footerImage);
+  const footerInnerHtml = rs.signaturesHtml(s) + buildFooterInnerHtml(footerRatio, s.footerImage);
 
   return paginateReportDocument("csmPage", buildChrome, theadHtml, rowHtmls, trailingBlocks, footerInnerHtml);
 }
@@ -1485,10 +1492,10 @@ function createCommentsDocument(report, footerRatio) {
       <div class="official-narrative">
         <p>${summaryLine}</p>
       </div>
-      ${rs.signaturesHtml(s)}
   `;
 
-  const footerInnerHtml = buildFooterInnerHtml(footerRatio, s.footerImage);
+  // Signatures live in the footer, above the footer image (like Admin 2).
+  const footerInnerHtml = rs.signaturesHtml(s) + buildFooterInnerHtml(footerRatio, s.footerImage);
 
   return paginateReportDocument("ccsPage", buildChrome, theadHtml, rowHtmls, trailingHtml, footerInnerHtml);
 }
