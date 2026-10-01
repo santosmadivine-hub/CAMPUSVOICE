@@ -389,13 +389,13 @@
           <div class="stat-icon">🗓️</div>
           <div class="stat-label">Weekly</div>
           <div class="stat-value" data-stat="weekly">0</div>
-          <div class="stat-sub">Evaluations this week</div>
+          <div class="stat-sub">Evaluations in the last 7 days</div>
         </div>
         <div class="stat-card blue">
           <div class="stat-icon">📆</div>
           <div class="stat-label">Monthly</div>
           <div class="stat-value" data-stat="monthly">0</div>
-          <div class="stat-sub">Evaluations this month</div>
+          <div class="stat-sub">Evaluations in the last 30 days</div>
         </div>
         <div class="stat-card blue">
           <div class="stat-icon">🏢</div>
@@ -590,13 +590,39 @@ onSnapshot(collection(db, "facility_evaluations"), (snapshot) => {
   renderDashboard();
 });
 
+// Returns milliseconds since epoch, or 0 if no usable date is found.
+// Handles Firestore Timestamps, plain {seconds} objects, numbers, and
+// string dates such as "September 01, 2026 10:34 PM".
 function parseEvalTimestamp(ev) {
-  if (ev.timestamp && typeof ev.timestamp === 'object' && ev.timestamp.seconds) {
-    return ev.timestamp.seconds * 1000;
+  const t = ev.timestamp;
+
+  // Firestore Timestamp object
+  if (t && typeof t.toMillis === "function") return t.toMillis();
+  if (t && typeof t === "object") {
+    const s = t.seconds ?? t._seconds;
+    if (typeof s === "number") return s * 1000;
   }
-  if (ev.date) {
-    const parsed = new Date(ev.date).getTime();
+  if (typeof t === "number") return t;
+
+  // Fallback: string date field
+  const raw = ev.date || (typeof t === "string" ? t : "");
+  if (raw) {
+    let parsed = new Date(raw).getTime();
     if (!Number.isNaN(parsed)) return parsed;
+
+    // Manual fallback for "Month DD, YYYY hh:mm AM/PM"
+    const m = String(raw).match(
+      /^([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})(?:\s+(\d{1,2}):(\d{2})\s*(AM|PM))?$/i
+    );
+    if (m) {
+      let hr = Number(m[4] || 0);
+      const min = Number(m[5] || 0);
+      const ap = (m[6] || "").toUpperCase();
+      if (ap === "PM" && hr < 12) hr += 12;
+      if (ap === "AM" && hr === 12) hr = 0;
+      parsed = new Date(`${m[1]} ${m[2]}, ${m[3]} ${hr}:${String(min).padStart(2, "0")}:00`).getTime();
+      if (!Number.isNaN(parsed)) return parsed;
+    }
   }
   return 0;
 }
@@ -634,13 +660,15 @@ function renderStatCards() {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
+  // Rolling windows (include today)
   const startOfWeek = new Date(startOfDay);
-  startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+  startOfWeek.setDate(startOfDay.getDate() - 6);     // last 7 days
 
-  const startOfMonth = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), 1);
+  const startOfMonth = new Date(startOfDay);
+  startOfMonth.setDate(startOfDay.getDate() - 29);   // last 30 days
 
-  const daily = evaluations.filter(e => e.timestamp >= startOfDay.getTime()).length;
-  const weekly = evaluations.filter(e => e.timestamp >= startOfWeek.getTime()).length;
+  const daily   = evaluations.filter(e => e.timestamp >= startOfDay.getTime()).length;
+  const weekly  = evaluations.filter(e => e.timestamp >= startOfWeek.getTime()).length;
   const monthly = evaluations.filter(e => e.timestamp >= startOfMonth.getTime()).length;
 
   document.querySelector('[data-stat="daily"]').textContent = daily;
@@ -931,7 +959,7 @@ function renderDonut() {
 // ======================
 // TOTAL EVALUATORS
 // Counts unique userId values across facility_evaluations, so a user who
-// submits several evaluations is counted once. The bars break the total
+// submits several evaluations is counted once. The donut breaks the total
 // down by userCategory (e.g. Student, Faculty).
 // ======================
 function renderTotalEvaluators() {
