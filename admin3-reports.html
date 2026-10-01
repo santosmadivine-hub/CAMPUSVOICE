@@ -766,16 +766,18 @@
     width: 100%;
   }
 
+  /* Footer banner spans the full content width. The exact pixel height is set
+     inline by buildFooterInnerHtml() so pagination measures what renders. */
   .official-footer img {
     display: block;
-    width: 100px;
+    width: 100%;
     height: auto;
     object-fit: contain;
   }
 
   .official-footer .official-signatures {
     margin-top: 0;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
   }
 
   /* ─── Responsive ─── */
@@ -1218,18 +1220,15 @@ async function getFooterAspectRatio() {
   return ratio;
 }
 
-const FOOTER_MAX_HEIGHT_PX = 56; // keeps the accreditation banner compact so it always fits below the text
-
+// Footer banner renders at the FULL content width of the page, with its
+// height derived from the image's natural aspect ratio. The height is baked
+// into the <img> so pagination measures exactly what renders.
 function buildFooterInnerHtml(ratio, src) {
   if (!src) return "";
   const safe = window.ReportSettings.esc(src);
   const r = ratio || 0.18;
-  const naturalH = PAGE_CONTENT_WIDTH_PX * r;
-  if (naturalH <= FOOTER_MAX_HEIGHT_PX) {
-    return `<img src="${safe}" alt="Footer" crossorigin="anonymous" style="display:block;width:100%;height:${Math.round(naturalH)}px;object-fit:contain;">`;
-  }
-  const w = Math.round(FOOTER_MAX_HEIGHT_PX / r);
-  return `<img src="${safe}" alt="Footer" crossorigin="anonymous" style="display:block;width:${w}px;height:${FOOTER_MAX_HEIGHT_PX}px;object-fit:contain;margin:0 auto;">`;
+  const h = Math.round(PAGE_CONTENT_WIDTH_PX * r);
+  return `<img src="${safe}" alt="Footer" crossorigin="anonymous" style="display:block;width:100%;height:${h}px;object-fit:contain;">`;
 }
 
 // Renders HTML inside a hidden, off-screen element sized like a real
