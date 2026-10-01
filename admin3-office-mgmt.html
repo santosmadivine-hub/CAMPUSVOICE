@@ -398,10 +398,7 @@
     }
   }
 
-  /* ---------- Add Office modal + toast (ported from Admin 2 — used ONLY for
-     Add Office; View/Delete below are untouched and still use
-     prompt()/confirm()/alert(). Edit Office now uses the modal-based
-     rename/merge flow ported from Admin 2 as well. ---------- */
+  /* ---------- Add Office modal + toast (ported from Admin 2) ---------- */
 
   .cv-modal-overlay {
     display: none;
@@ -452,6 +449,7 @@
     flex-shrink: 0;
   }
   .cv-modal-icon.warn { background: #ffedd5; }
+  .cv-modal-icon.danger { background: #fee2e2; }
 
   .cv-modal-title {
     font-family: 'Syne', sans-serif;
@@ -560,6 +558,15 @@
   }
   .cv-btn-warn:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(234,88,12,.32); }
   .cv-btn-warn:active { transform: translateY(0); }
+
+  /* Red "danger" tone — used by the Delete Office confirmation */
+  .cv-btn-danger {
+    background: linear-gradient(160deg, #f87171 0%, #ef4444 55%, #dc2626 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(220,38,38,.28);
+  }
+  .cv-btn-danger:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(220,38,38,.32); }
+  .cv-btn-danger:active { transform: translateY(0); }
 
   .cv-toast-stack {
     position: fixed;
@@ -684,7 +691,7 @@
   </div>
 </div>
 
-<!-- Rename/Merge confirm modal (ported from Admin 2, used by Edit Office) -->
+<!-- Rename/Merge/Delete confirm modal (ported from Admin 2) -->
 <div class="cv-modal-overlay" id="cvConfirmOverlay">
   <div class="cv-modal">
     <div class="cv-modal-header">
@@ -1123,7 +1130,7 @@ async function migrateOfficeEvaluations(oldName, newName) {
   }
 }
 
-/* ---------- Delete Office (ported from Admin 2: styled confirm modal + toast) ---------- */
+/* ---------- Delete Office (styled confirm modal + toast, red "danger" tone) ---------- */
 
 async function deleteOffice(docId) {
   const name = offices[docId] || "this office";
@@ -1131,7 +1138,7 @@ async function deleteOffice(docId) {
   const confirmed = await openConfirmModal({
     title: "Delete Office?",
     icon: "🗑",
-    tone: "warn",
+    tone: "danger",
     confirmText: "Delete Office",
     message: `Remove "<strong>${escapeHtml(name)}</strong>" from the office list? This action cannot be undone.`
   });
@@ -1207,14 +1214,17 @@ let cvConfirmResolve = null;
 
 // Opens the styled confirm modal and resolves true/false. `message` may
 // contain simple inline HTML (e.g. <strong>) for emphasis.
+// tone: "warn" (orange), "danger" (red), or anything else (blue/primary).
 function openConfirmModal({ title, message, icon, confirmText, tone }) {
   cvConfirmTitle.textContent = title || "Confirm";
   cvConfirmMessage.innerHTML = message || "";
   cvConfirmIcon.textContent = icon || "❓";
   cvConfirmIcon.classList.toggle("warn", tone === "warn");
+  cvConfirmIcon.classList.toggle("danger", tone === "danger");
   cvConfirmOkBtn.textContent = confirmText || "Confirm";
   cvConfirmOkBtn.classList.toggle("cv-btn-warn", tone === "warn");
-  cvConfirmOkBtn.classList.toggle("cv-btn-primary", tone !== "warn");
+  cvConfirmOkBtn.classList.toggle("cv-btn-danger", tone === "danger");
+  cvConfirmOkBtn.classList.toggle("cv-btn-primary", tone !== "warn" && tone !== "danger");
   cvConfirmOverlay.classList.add("open");
 
   return new Promise((resolve) => { cvConfirmResolve = resolve; });
