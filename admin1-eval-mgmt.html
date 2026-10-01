@@ -544,7 +544,7 @@ document.getElementById("sqdFields").innerHTML = Array.from({ length: 9 }, (_, n
   <label>SQD${n}
     <select id="f_sqd${n}" class="filter-select">
       <option value="">Select</option>
-      ${["1", "2", "3", "4", "5", "N/A"].map(v => `<option value="${v}">${v}</option>`).join("")}
+      ${[["5","5 – Strongly Agree"],["4","4 – Agree"],["3","3 – Neither"],["2","2 – Disagree"],["1","1 – Strongly Disagree"],["N/A","N/A"]].map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}
     </select>
   </label>`).join("");
 
