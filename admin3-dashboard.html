@@ -192,16 +192,18 @@
     gap: 16px;
     margin-bottom: 20px;
   }
+  .eval-card-head { display: flex; flex-direction: column; gap: 2px; }
+  .eval-card-head .card-sub { font-size: 12.5px; }
   .evaluator-body {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(150px, 0.8fr) 1px minmax(0, 1.6fr);
     align-items: center;
-    justify-content: space-between;
     gap: 28px;
-    flex-wrap: wrap;
     flex: 1;
-    padding: 4px 0;
+    padding: 8px 4px 4px;
   }
-  .evaluator-total { display: flex; flex-direction: column; gap: 4px; }
+  .evaluator-divider { width: 1px; align-self: stretch; background: #e2e8f0; }
+  .evaluator-total { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
   .evaluator-icon {
     width: 44px;
     height: 44px;
@@ -223,12 +225,30 @@
   .evaluator-donut-wrap {
     display: flex;
     align-items: center;
-    gap: 24px;
+    justify-content: center;
+    gap: 28px;
     flex-wrap: wrap;
   }
-  .evaluator-donut-wrap svg { width: 150px; max-width: 100%; height: auto; flex-shrink: 1; }
-  .evaluator-donut-wrap .legend-item { font-size: 13px; }
-  .evaluator-donut-wrap .legend-item span { color: #94a3b8; margin-left: 4px; }
+  .evaluator-donut-wrap svg { width: 150px; height: 150px; max-width: 100%; flex-shrink: 0; }
+  .evaluator-donut-wrap .donut-legend { gap: 10px; min-width: 190px; flex: 1; max-width: 280px; }
+  .evaluator-donut-wrap .legend-item {
+    display: grid;
+    grid-template-columns: 10px 1fr auto 44px;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #e2e8f0;
+  }
+  .evaluator-donut-wrap .legend-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .ev-name { color: #1e293b; font-weight: 500; }
+  .ev-count { font-family: 'Syne', sans-serif; font-weight: 700; color: #0f172a; }
+  .ev-pct { color: #94a3b8; text-align: right; font-size: 12px; }
+  @media (max-width: 700px) {
+    .evaluator-body { grid-template-columns: 1fr; gap: 20px; }
+    .evaluator-divider { display: none; }
+    .evaluator-donut-wrap { justify-content: flex-start; }
+  }
 
   /* ─── Breakdown bars ─── */
   .status-rows { margin-top: 24px; display: flex; flex-direction: column; gap: 18px; }
@@ -439,8 +459,9 @@
       <div class="eval-quick-row">
         <div class="card">
           <div class="card-header-row">
-            <div>
-              <div class="card-title">Total Evaluators <span class="card-sub">— Unique users who submitted evaluations</span></div>
+            <div class="eval-card-head">
+              <div class="card-title">Total Evaluators</div>
+              <div class="card-sub">Unique users who submitted evaluations</div>
             </div>
             <div class="badge-pill" id="avg-eval-badge">Avg 0 per user</div>
           </div>
@@ -451,6 +472,7 @@
               <div class="evaluator-value" id="total-evaluators">0</div>
               <div class="stat-sub">users have submitted evaluations</div>
             </div>
+            <div class="evaluator-divider"></div>
             <div class="evaluator-donut-wrap">
               <svg id="evaluator-donut" viewBox="0 0 120 120" width="150" height="150">
                 <circle cx="60" cy="60" r="46" fill="none" stroke="#e9edf3" stroke-width="20"/>
@@ -1049,19 +1071,31 @@ function renderTotalEvaluators() {
 
   const center = document.createElementNS("http://www.w3.org/2000/svg", "text");
   center.setAttribute("x", "60");
-  center.setAttribute("y", "65");
+  center.setAttribute("y", "62");
   center.setAttribute("text-anchor", "middle");
-  center.setAttribute("fill", "#000000");
-  center.setAttribute("font-size", "15");
+  center.setAttribute("fill", "#0f172a");
+  center.setAttribute("font-size", "20");
   center.setAttribute("font-family", "Syne,sans-serif");
   center.setAttribute("font-weight", "800");
   center.textContent = String(total);
   svg.appendChild(center);
 
+  const centerLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  centerLabel.setAttribute("x", "60");
+  centerLabel.setAttribute("y", "75");
+  centerLabel.setAttribute("text-anchor", "middle");
+  centerLabel.setAttribute("fill", "#94a3b8");
+  centerLabel.setAttribute("font-size", "7");
+  centerLabel.setAttribute("font-family", "DM Sans,sans-serif");
+  centerLabel.textContent = "evaluators";
+  svg.appendChild(centerLabel);
+
   legend.innerHTML = entries.map(([cat, n], i) => `
     <div class="legend-item">
       <div class="legend-dot" style="background:${colors[i % colors.length]}"></div>
-      ${esc(cat)} (${n})<span>${((n / total) * 100).toFixed(0)}%</span>
+      <span class="ev-name">${esc(cat)}</span>
+      <span class="ev-count">${n}</span>
+      <span class="ev-pct">${((n / total) * 100).toFixed(0)}%</span>
     </div>`).join("");
 }
 
