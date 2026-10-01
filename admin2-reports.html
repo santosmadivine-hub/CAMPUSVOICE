@@ -433,6 +433,50 @@ function parseDateOnly(value) {
   return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 }
 
+// ======================
+// SAME RULES AS EVALUATION MANAGEMENT
+// ======================
+
+// Matches the stored category to Comfort Room / Surroundings ignoring
+// case and extra spaces, checking cleanlinessCategory first and then the
+// generic category field. Returns null when the record is neither.
+function normalizeCleanlinessCategory(data) {
+  const candidates = [data.cleanlinessCategory, data.category];
+  for (const raw of candidates) {
+    if (typeof raw !== "string") continue;
+    const match = CLEANLINESS_CATEGORIES.find(
+      c => c.toLowerCase() === raw.trim().toLowerCase()
+    );
+    if (match) return match;
+  }
+  return null;
+}
+
+// Normalizes every timestamp format (number, numeric string, date string,
+// Firestore Timestamp, {seconds}, Date) to epoch milliseconds.
+function getTimestampMillis(value) {
+  if (value === undefined || value === null || value === "") return null;
+
+  if (typeof value === "number") return value;
+
+  if (typeof value === "string") {
+    const n = Number(value);
+    if (!Number.isNaN(n)) return n;
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  if (typeof value.toMillis === "function") return value.toMillis();
+
+  if (typeof value.seconds === "number") {
+    return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1e6);
+  }
+
+  if (value instanceof Date) return value.getTime();
+
+  return null;
+}
+
 function categoryPillHtml(category) {
   const cls = category === "Surroundings" ? "surroundings" : "comfort-room";
   const icon = category === "Surroundings" ? "🌳" : "🚻";
@@ -463,15 +507,25 @@ function currentOffices() {
   return selectedCategory === "Comfort Room" ? comfortOffices : surroundingsOffices;
 }
 
-const evalQuery = query(collection(db, EVAL_HISTORY_COLLECTION), orderBy("timestamp", "desc"));
-
-onSnapshot(evalQuery, (snapshot) => {
+// ======================
+// LOAD EVALUATIONS
+// Reads the whole collection with NO orderBy (Firestore silently drops
+// documents that lack the ordered field) and skips records without a valid
+// Comfort Room / Surroundings category, exactly like Evaluation Management,
+// so both pages always show the same total.
+// ======================
+onSnapshot(collection(db, EVAL_HISTORY_COLLECTION), (snapshot) => {
   evaluations = [];
+  let skipped = 0;
+
   snapshot.forEach((docSnap) => {
     const ev = docSnap.data();
 
-    const rawCategory = ev.cleanlinessCategory;
-    const category = CLEANLINESS_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+    const category = normalizeCleanlinessCategory(ev);
+    if (!category) {
+      skipped++;
+      return;
+    }
 
     const record = {
       id: docSnap.id,
@@ -479,13 +533,23 @@ onSnapshot(evalQuery, (snapshot) => {
       cleanlinessCategory: category,
       comments: ev.comments || "",
       status: (ev.status || "").toString().toLowerCase() === "resolved" ? "resolved" : "pending",
-      timestamp: Number(ev.timestamp) || 0
+      timestamp: getTimestampMillis(ev.timestamp ?? ev.date ?? ev.submittedAt) ?? 0
     };
     for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
       record["rating" + i] = Number(ev["rating" + i]) || 0;
     }
     evaluations.push(record);
   });
+
+  evaluations.sort((a, b) => b.timestamp - a.timestamp);
+
+  if (skipped > 0) {
+    console.warn(
+      `${skipped} of ${snapshot.size} records in "${EVAL_HISTORY_COLLECTION}" are not counted ` +
+      `because they have no Comfort Room / Surroundings category.`
+    );
+  }
+
   renderStats();
 });
 
