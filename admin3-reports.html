@@ -11,7 +11,7 @@
 <style>
   @media print {
     @page { size: A4; margin: 0; }
-    #sidebar-mount, #topbar-mount, .filter-row, .stats-row, .saved-reports-section { display: none !important; }
+    #sidebar-mount, #topbar-mount, .filter-row, .stats-row, .saved-reports-section, #rsCard { display: none !important; }
     .preview-bar { display: none !important; }
     #reportPreview { border: none !important; border-radius: 0 !important; box-shadow: none !important; margin: 0 !important; }
     .report-section { break-inside: avoid; }
@@ -20,31 +20,14 @@
     .official-report { page-break-inside: avoid; }
     body, .layout, .main { margin: 0 !important; padding: 0 !important; }
 
-    /* The outer wrapper around stats-row/filter-row/reportPreview/
-       saved-reports-section carries an inline "margin-top: 28px;
-       padding: 0 20px 40px;" meant for the on-screen layout. Its
-       children that shouldn't print (.stats-row, .filter-row,
-       .saved-reports-section) are already hidden above, but the
-       wrapper's OWN margin/padding was never reset — and since it's
-       the very first thing in the print flow, that 28px top margin
-       only pushes down Page 1 (the first physical printed sheet).
-       Every later page starts fresh at the top of its own new sheet
-       via .report-page-2's page-break-before, so they were never
-       affected — which is what made Page 1's letterhead sit lower
-       than Page 3's. Zeroing it here for print only (screen layout is
-       untouched) aligns Page 1's header with every other page. */
+    /* The wrapper carries an inline margin/padding for the on-screen layout;
+       zero it for print so Page 1's letterhead aligns with every other page. */
     .page-content-wrap {
       margin: 0 !important;
       padding: 0 !important;
     }
 
-    /* Browsers drop background colors/shading on print by default
-       (Chrome/Edge/Firefox all do this unless told otherwise), which is
-       why the light-blue table header, rating badges, and other filled
-       backgrounds were vanishing in the printed/exported report even
-       though they render correctly on screen. This forces every
-       element to keep its actual background + text colors as printed,
-       so the printed output matches the live preview exactly. */
+    /* Keep background colors (table header, badges) when printing. */
     * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
@@ -171,10 +154,8 @@
     font-family: 'DM Sans', sans-serif;
   }
 
-  /* Marks the start of the second page (Comments & Suggestions) within
-     the same report preview / PDF export. On screen it's a dashed
-     divider + label; in print/PDF it forces an actual page break and
-     the label/divider are hidden (see @media print above). */
+  /* Marks the start of the second page (Comments & Suggestions). On screen
+     it's a dashed divider + label; in print/PDF it forces a real page break. */
   .page-break-label {
     text-align: center;
     font-family: 'DM Sans', sans-serif;
@@ -582,23 +563,11 @@
     margin: 4px 0;
   }
 
-  /* Official Document Style — sized to a single A4 sheet (210mm x
-     297mm). display:flex + flex-direction:column keeps the letterhead
-     header pinned to the top (it's simply the first block of content)
-     while .official-footer (the last child, margin-top:auto) is
-     pushed to the exact bottom of THIS page, without overlapping the
-     table/narrative/signatures content above it. Each physical page is
-     its own separate .official-report div (see paginateReportDocument
-     below), and that function always reserves footerHeight worth of
-     space in its capacity math before deciding what content goes on a
-     given page — so the footer never gets pushed past the bottom of
-     the sheet or onto an extra page of its own; it simply fills
-     whatever gap is left after the page's content. Top padding is kept
-     tight (and the letterhead itself trimmed — see .lh-row/.lh-divider
-     below) so the whole header sits higher on the sheet, freeing up
-     extra vertical room before the footer's bottom is reached — see
-     PAGE_V_PADDING_PX below, which must stay in sync with this
-     top+bottom total. */
+  /* Official Document Style — one A4 sheet (210mm x 297mm). Flex column keeps
+     the letterhead at the top and pushes .official-footer (last child,
+     margin-top:auto) to the bottom of THIS page. Each physical page is its own
+     .official-report div (see paginateReportDocument). PAGE_V_PADDING_PX below
+     must stay in sync with this top+bottom padding total. */
   .official-report {
     display: flex;
     flex-direction: column;
@@ -667,11 +636,6 @@
     color: #000000;
   }
 
-  /* Matches the reference CSM report exactly: the contact-info and
-     website lines under the letterhead render in a muted slate gray
-     (the same gray used elsewhere in this report for secondary/meta
-     text), not a saturated blue — that's what made this line stand
-     out too strongly compared to the reference document. */
   .lh-text .addr {
     font-size: 8.5pt;
     color: #64748b;
@@ -702,10 +666,6 @@
     font-weight: bold;
   }
 
-  /* Table style matches the reference CSM report layout: a soft
-     letterhead-blue header (not a solid fill) with navy text, thin
-     hairline borders throughout, and no zebra-striping — clean rows
-     that read like the University's official CSM template. */
   .official-table {
     width: 100%;
     border-collapse: collapse;
@@ -788,18 +748,9 @@
     margin-top: 2px;
   }
 
-  /* The footer is pinned to the physical BOTTOM of whichever page it's
-     on, via margin-top:auto inside the flex-column .official-report
-     box (each page is rendered as its own separate .official-report
-     div by paginateReportDocument() below, so this only ever pins the
-     footer to the bottom of that single 297mm sheet — never a
-     different page). This is safe from the "footer jumps to a blank
-     extra page" bug because paginateReportDocument() already measures
-     footerHeight and subtracts it from every page's capacity BEFORE
-     deciding how many table rows / narrative blocks / signatures to
-     place on that page — so there is always exactly enough leftover
-     room on the page for the footer to sit in, and margin-top:auto
-     simply fills that reserved gap instead of overflowing past it. */
+  /* Footer pinned to the bottom of its page via margin-top:auto. Safe because
+     paginateReportDocument() subtracts footerHeight from every page's capacity
+     before placing content, so there's always reserved room for it. */
   .official-footer {
     margin-top: auto;
     padding-top: 12px;
@@ -899,17 +850,9 @@
         </div>
       </div>
 
-      <!-- "Generate Report" now builds BOTH pages of the report in one
-           step: Page 1 is the Facilities Evaluation Report (ratings),
-           Page 2 is the Comments & Suggestions Report — pulled
-           automatically from the same filtered evaluations, no separate
-           button or step required. "Save Report" saves the whole
-           two-page report (ratings + comments) as a single record. The
-           "Print" button lives in the preview bar below (next to
-           PDF/Close) and opens the browser print dialog for the
-           generated two-page report; the admin can use the browser's
-           own page-range setting there to print just Page 1, just
-           Page 2, or both. -->
+      <!-- "Generate Report" builds BOTH pages: Page 1 is the Facilities
+           Evaluation Report (ratings), Page 2 is the Comments & Suggestions
+           Report. "Save Report" saves the whole two-page report as one record. -->
       <div class="filter-row">
         <input type="date" class="filter-date" id="start-date">
         <input type="date" class="filter-date" id="end-date">
@@ -922,10 +865,9 @@
         <button class="btn-save" id="btn-save-report" disabled>💾 Save Report</button>
       </div>
 
-      <!-- REPORT PREVIEW — page 1 (ratings) and page 2 (comments &
-           suggestions) are both rendered into #report-container, one
-           after another, separated by a page-break divider. Print is
-           placed to the left, PDF to the right, both before Close. -->
+      <!-- The "Report Header & Footer Settings" card (#rsCard) is inserted
+           here, right before #reportPreview, by admin3-report-settings.js -->
+
       <div id="reportPreview">
         <div class="preview-bar">
           <span class="preview-label" id="previewLabel">📄 Report Preview</span>
@@ -975,12 +917,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Collection names (Firestore). Evaluations + offices match
-// admin3-eval-mgmt.html exactly, so this page stays in sync with it:
-// - "facility_evaluations" is what FacilitiesEvalActivity.kt writes to
-// - "offices" confirmed via Firestore console (each doc has a "name"
-//   field, e.g. "Cashier")
-// - "facility_saved_reports" holds the whole two-page report (ratings
-//   + comments) as a single document per save.
+// admin3-eval-mgmt.html exactly.
 const EVAL_COLLECTION = "facility_evaluations";
 const OFFICE_COLLECTION = "offices";
 const SAVED_REPORTS_COLLECTION = "facility_saved_reports";
@@ -999,8 +936,16 @@ let endDate = "";
 let savedReports = [];
 let currentReport = null; // snapshot of the last generated report (both pages), ready to save/print
 
-// Dimension definitions — matches the 10 questions on the actual
-// Facilities Evaluation Form (rating1 -> rating10, in order).
+// Repaint the open report whenever the header/footer settings change
+// (fired by admin3-report-settings.js).
+window.addEventListener("reportsettingschange", async () => {
+  const el = document.getElementById("reportPreview");
+  if (currentReport && el && el.style.display === "block") {
+    document.getElementById("report-container").innerHTML = await buildReportPreviewHtml(currentReport);
+  }
+});
+
+// Dimension definitions — the 10 questions on the Facilities Evaluation Form.
 const DIMENSIONS = [
   { id: 1, field: "rating1", label: "The needed equipment/resources are available" },
   { id: 2, field: "rating2", label: "The equipment/resources are working properly" },
@@ -1024,17 +969,15 @@ const RATING_SCALE = [
 // ======================
 // HELPERS (date/timestamp parsing — matches admin3-eval-mgmt.html)
 // ======================
-// FacilitiesEvalActivity.kt stores "date" as a human-readable string
-// (e.g. "July 02, 2026 10:29 AM") rather than always having a numeric
-// "timestamp". This derives a real millisecond timestamp from whichever
-// field is actually present, so date-range filtering works correctly.
+// FacilitiesEvalActivity.kt stores "date" as a human-readable string, not
+// always a numeric "timestamp". Derive a real millisecond timestamp from
+// whichever field is present so date-range filtering works.
 function parseEvalTimestamp(ev) {
   if (ev.timestamp !== undefined && ev.timestamp !== null && ev.timestamp !== "") {
     const t = Number(ev.timestamp);
     if (!Number.isNaN(t) && t > 0) return t;
   }
   if (ev.date) {
-    // Firestore Timestamp objects expose toMillis()
     if (typeof ev.date === "object" && typeof ev.date.toMillis === "function") {
       return ev.date.toMillis();
     }
@@ -1044,13 +987,8 @@ function parseEvalTimestamp(ev) {
   return 0;
 }
 
-// Safe, timezone-consistent date-only parsing for the report filter
-// inputs (#start-date / #end-date). These are <input type="date">,
-// which give "YYYY-MM-DD" strings. new Date("YYYY-MM-DD") parses that
-// as UTC midnight, which can silently shift to the previous/next local
-// day depending on timezone and drop evaluations on the boundary dates.
-// This parses the Y/M/D components directly as LOCAL midnight instead,
-// so the comparison against evaluation timestamps lines up correctly.
+// Parses "YYYY-MM-DD" as LOCAL midnight (new Date("YYYY-MM-DD") is UTC and can
+// shift the day, dropping boundary-date evaluations).
 function parseDateOnly(value) {
   if (!value) return null;
   const str = String(value).trim();
@@ -1067,10 +1005,8 @@ function parseDateOnly(value) {
   return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 }
 
-// Pulls a comment/suggestion string out of an evaluation record, trying
-// a handful of likely field names so it keeps working even if the
-// Firestore field name ever changes. `comments` is the confirmed field
-// on facility_evaluations records; the rest are just safety nets.
+// Pulls a comment/suggestion string from an evaluation record, trying a few
+// likely field names. `comments` is the confirmed one; the rest are fallbacks.
 function getCommentText(item) {
   const candidates = [
     item.comments, item.comment,
@@ -1085,7 +1021,7 @@ function getCommentText(item) {
 }
 
 // ======================
-// LOAD OFFICES -> office-names collection
+// LOAD OFFICES -> offices collection
 // ======================
 onSnapshot(collection(db, OFFICE_COLLECTION), (snapshot) => {
   offices = {};
@@ -1101,9 +1037,6 @@ onSnapshot(collection(db, OFFICE_COLLECTION), (snapshot) => {
 // ======================
 // LOAD EVALUATIONS -> facility_evaluations collection
 // ======================
-// Schema matches what FacilitiesEvalActivity.kt writes: officeName,
-// comments, date (string), rating1-10, plus an optional status field
-// added later by the eval-mgmt admin page.
 onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
   evaluations = snapshot.docs.map((docSnap) => {
     const ev = docSnap.data();
@@ -1133,7 +1066,6 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
       userId: ev.userId || ""
     };
   });
-  // Auto-render stats whenever evaluations load
   renderStats([]);
 }, (err) => {
   console.error("Failed to load facility evaluations:", err);
@@ -1186,10 +1118,9 @@ function formatDateShort(dateStr) {
 }
 
 // ======================
-// STATS — Calculate from ALL evaluations (like Admin 1)
+// STATS — calculated from ALL evaluations
 // ======================
 function renderStats(filteredEvals) {
-  // Render KPIs from ALL evaluations in the system
   const total = evaluations.length;
   document.getElementById("stat-total").textContent = total;
 
@@ -1206,15 +1137,19 @@ function renderStats(filteredEvals) {
 }
 
 // ======================
-// GENERATE NARRATIVE (page 1 — ratings, like Admin 1)
+// GENERATE NARRATIVE (page 1 — ratings)
+// Organization / campus names now come from the header & footer settings.
 // ======================
 function generateNarrative(office, respondents, overallPct, dimensionAverages) {
+  const s = window.ReportSettings.get();
+  const orgLine = [s.orgName, s.campusName].filter(Boolean).join(" – ");
+
   const perfWord = overallPct >= 90 ? "outstanding" : overallPct >= 75 ? "very satisfactory" : overallPct >= 60 ? "satisfactory" : "needs improvement";
   const topDims = dimensionAverages.filter(d => parseFloat(d.percentage) >= 90).map(d => d.dimension);
   const lowDims = dimensionAverages.filter(d => parseFloat(d.percentage) < 75).map(d => d.dimension);
   const highDims = dimensionAverages.filter(d => parseFloat(d.percentage) >= 80).slice(0, 3).map(d => d.dimension);
 
-  const p1 = `The <strong>results</strong> of the Facilities Evaluation Report for the <strong>${office}</strong>, Iloilo State University of Fisheries Science and Technology – San Enrique Campus, with <strong>${respondents}</strong> respondent(s), show an <strong>${perfWord} performance</strong> in facility quality and service with an average satisfaction rate of <strong>${overallPct.toFixed(2)}%</strong>.
+  const p1 = `The <strong>results</strong> of the Facilities Evaluation Report for the <strong>${office}</strong>, ${orgLine}, with <strong>${respondents}</strong> respondent(s), show an <strong>${perfWord} performance</strong> in facility quality and service with an average satisfaction rate of <strong>${overallPct.toFixed(2)}%</strong>.
     ${topDims.length ? `This indicates that the facility excels in ${topDims.join(", ")}, reflecting strong upkeep and service delivery.` : ""}`;
 
   const p2 = `<strong>Regarding specific evaluation dimensions</strong>,
@@ -1229,41 +1164,26 @@ function generateNarrative(office, respondents, overallPct, dimensionAverages) {
 // ======================
 // PAGINATION HELPERS
 // ======================
-// Splits a table + trailing content (narrative/signatures/footer)
-// across as many physical A4 pages as needed, so long tables, long
-// narrative text, or comment lists never get cut off or overlap the
-// footer. Every generated page repeats the same letterhead header at
-// the top, and the accreditation footer stays pinned to the exact
-// bottom of every page (the .official-report flex-column +
-// .official-footer{margin-top:auto} CSS handles that per page) — this
-// function's job is to decide how much content belongs on each page
-// so that pinned footer always has its reserved footerHeight worth of
-// clear space below the content, and never has to spill onto an extra
-// page of its own.
+// Splits a table + trailing content (narrative/signatures/footer) across as
+// many physical A4 pages as needed. Every page repeats the letterhead, and
+// the footer stays pinned to the bottom of every page.
 const MM_TO_PX = 96 / 25.4;
 const A4_HEIGHT_PX = 297 * MM_TO_PX;
 const PAGE_V_PADDING_PX = 10 + 32; // matches .official-report's 10px top + 32px bottom padding
 const PAGE_SAFETY_BUFFER_PX = 60; // cushion so rounding/print-engine differences never push the footer onto an extra page
 // Width available to the footer image: .official-report's content box
-// (210mm) minus its 40px left + 40px right padding. Used to turn the
-// footer image's natural aspect ratio into a fixed pixel height below.
+// (210mm) minus its 40px left + 40px right padding.
 const PAGE_CONTENT_WIDTH_PX = 210 * MM_TO_PX - 80;
 
 // ======================
-// FOOTER IMAGE SIZING — the accreditation footer ("4.jpg") previously
-// rendered with CSS "height:auto", so its actual height depended on
-// the browser knowing the image's intrinsic dimensions. During
-// pagination, fragment heights are measured in an off-screen element
-// *before* that image is guaranteed to have finished loading/decoding,
-// so the measured footer height (a rough 60px fallback) could disagree
-// with the height the footer actually rendered at. That mismatch is
-// what allowed the footer to overlap the narrative text above it, or
-// to be pushed onto its own extra page. Preloading the image once and
-// converting its natural aspect ratio into a fixed pixel height (baked
-// into the <img> tag itself, both for measurement and for the final
-// rendered page) makes the two always match, so the footer lands
-// exactly where the pagination math expects it to.
-let footerAspectRatio = null; // naturalHeight / naturalWidth of 4.jpg, cached after first load
+// FOOTER IMAGE SIZING
+// The footer image is preloaded and its natural aspect ratio is converted
+// into a FIXED pixel height baked into the <img> tag, so the height measured
+// during pagination always matches what actually renders. The image source
+// now comes from the header & footer settings (admin3-report-settings.js)
+// and the ratio is cached per image source.
+// ======================
+let footerRatioCache = { src: null, ratio: null };
 
 function preloadImage(src) {
   return new Promise((resolve) => {
@@ -1275,34 +1195,33 @@ function preloadImage(src) {
 }
 
 async function getFooterAspectRatio() {
-  if (footerAspectRatio !== null) return footerAspectRatio;
-  const dims = await preloadImage("4.jpg");
-  footerAspectRatio = (dims && dims.w) ? (dims.h / dims.w) : 0.18; // sane fallback if the image fails to load
-  return footerAspectRatio;
+  const rs = window.ReportSettings;
+  await rs.loadReportSettings();
+  const src = rs.get().footerImage;
+  if (!src) return null;
+  if (footerRatioCache.src === src) return footerRatioCache.ratio;
+  const dims = await preloadImage(src);
+  const ratio = (dims && dims.w) ? (dims.h / dims.w) : 0.18; // sane fallback if the image fails to load
+  footerRatioCache = { src, ratio };
+  return ratio;
 }
 
-// Builds the footer's inner HTML with an explicit pixel height derived
-// from the preloaded aspect ratio, so it renders identically whether
-// it's being measured off-screen or displayed on the real page.
 const FOOTER_MAX_HEIGHT_PX = 70; // keeps the accreditation banner compact so it always fits below the text on Page 1
 
-function buildFooterInnerHtml(ratio) {
+function buildFooterInnerHtml(ratio, src) {
+  if (!src) return "";
+  const safe = window.ReportSettings.esc(src);
   const r = ratio || 0.18;
   const naturalH = PAGE_CONTENT_WIDTH_PX * r;
   if (naturalH <= FOOTER_MAX_HEIGHT_PX) {
-    return `<img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous" style="display:block;width:100%;height:${Math.round(naturalH)}px;object-fit:contain;">`;
+    return `<img src="${safe}" alt="Footer" crossorigin="anonymous" style="display:block;width:100%;height:${Math.round(naturalH)}px;object-fit:contain;">`;
   }
   const w = Math.round(FOOTER_MAX_HEIGHT_PX / r);
-  return `<img src="4.jpg" alt="ISUFST Accreditations Footer" crossorigin="anonymous" style="display:block;width:${w}px;height:${FOOTER_MAX_HEIGHT_PX}px;object-fit:contain;margin:0 auto;">`;
+  return `<img src="${safe}" alt="Footer" crossorigin="anonymous" style="display:block;width:${w}px;height:${FOOTER_MAX_HEIGHT_PX}px;object-fit:contain;margin:0 auto;">`;
 }
 
-// Warm the cache as soon as the script loads, so the first "Generate
-// Report" click doesn't have to wait on the image request.
-getFooterAspectRatio();
-
 // Renders HTML inside a hidden, off-screen element sized like a real
-// .official-report page (so font sizes/line-wrapping match exactly),
-// measures it, then cleans up.
+// .official-report page, measures it, then cleans up.
 function withMeasuringPage(fn) {
   const root = document.createElement("div");
   root.style.cssText = "position:fixed;left:-99999px;top:0;width:210mm;visibility:hidden;pointer-events:none;";
@@ -1319,17 +1238,8 @@ function withMeasuringPage(fn) {
   }
 }
 
-// Measures the height a fragment of content actually takes up, EXCLUDING
-// the .official-report page div's own fixed top+bottom padding (10px
-// top + 32px bottom, see PAGE_V_PADDING_PX above).
-// getBoundingClientRect() on `page` always includes that padding (it's a
-// constant part of the box regardless of how little content is inside),
-// so every fragment measurement here would otherwise silently carry an
-// extra PAGE_V_PADDING_PX. Since the capacity formula below already
-// subtracts PAGE_V_PADDING_PX once for the page as a whole, leaving it
-// in per-fragment measurements double-counts it (once per fragment
-// measured), understating how much content actually fits and forcing
-// a report that truly fits on one sheet onto a second page.
+// Measures a fragment's height EXCLUDING the page div's own fixed top+bottom
+// padding (otherwise PAGE_V_PADDING_PX would be double-counted per fragment).
 function measureFragmentHeight(page, html) {
   page.innerHTML = html;
   return Math.max(page.getBoundingClientRect().height - PAGE_V_PADDING_PX, 0);
@@ -1341,40 +1251,24 @@ function measureRowHeights(page, theadHtml, rowHtmls) {
 }
 
 /**
- * Lays out a table (with a repeating header/thead) plus a trailing
- * body of content (narrative paragraphs + signatures) across one or
- * more A4 pages.
+ * Lays out a table (with a repeating thead) plus trailing content
+ * (narrative paragraphs + signatures) across one or more A4 pages.
  *
- * The trailing content is treated as a sequence of independent,
- * atomic BLOCKS (one per narrative paragraph, plus one final block for
- * the signatures) rather than a single indivisible chunk. Blocks are
- * packed greedily: as many as fit are placed directly under the table
- * on the same page (in the leftover space after the last row), and
- * only the true overflow — whatever didn't fit — flows onto the next
- * page(s), which repeat the letterhead but omit the table. This is
- * what lets a short report's summary/conclusion sit fully on Page 1
- * right under the table, while a longer one spills only its excess
- * onto Page 2, instead of the whole block jumping pages together.
+ * Trailing content is a sequence of atomic BLOCKS packed greedily: as many as
+ * fit go directly under the table on the same page, and only the true
+ * overflow flows onto additional pages (which repeat the letterhead but omit
+ * the table). footerHeight is always subtracted from each page's capacity, so
+ * the footer never overlaps content and never needs a page of its own.
  *
- * The footer stays pinned to the physical bottom of whichever page it
- * ends up on (via .official-footer's margin-top:auto within each
- * page's flex-column .official-report box). footerHeight is always
- * subtracted from each page's capacity before deciding what content
- * goes on that page, so there's always guaranteed clear room for the
- * footer below the content — it never overlaps the text above it and
- * never needs a page of its own.
- *
- * `trailing` may be a single HTML string (treated as one atomic
- * block — preserves old all-or-nothing behavior for callers that
- * don't need paragraph-level splitting) or an array of HTML strings
- * (each its own block, packed independently).
+ * `trailing` may be a single HTML string (one atomic block) or an array of
+ * HTML strings (each its own block).
  *
  * @param {string} idPrefix     id used for page 1; further pages get `${idPrefix}_2`, `_3`, ...
- * @param {(isContinuation:boolean) => string} buildChrome  returns the letterhead + title + meta HTML for a page
+ * @param {(isContinuation:boolean) => string} buildChrome  letterhead + title + meta HTML for a page
  * @param {string} theadHtml    the <thead>...</thead> markup (identical on every page)
  * @param {string[]} rowHtmls   array of <tr>...</tr> strings (at least one row)
- * @param {string|string[]} trailing  narrative/signature content, as one blob or an array of blocks
- * @param {string} footerInnerHtml the accreditation footer's inner HTML (repeated on every page)
+ * @param {string|string[]} trailing  narrative/signature content
+ * @param {string} footerInnerHtml the footer's inner HTML (repeated on every page)
  * @returns {{id:string, html:string}[]}
  */
 function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trailing, footerInnerHtml) {
@@ -1382,12 +1276,7 @@ function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trai
     const trailingBlocks = Array.isArray(trailing) ? trailing.filter(Boolean) : (trailing ? [trailing] : []);
     const footerHtml = `<div class="official-footer">${footerInnerHtml}</div>`;
 
-    // Chrome height on a page that also carries the table (letterhead
-    // + title + meta + empty table shell).
     const chromeWithTableHeight = measureFragmentHeight(page, buildChrome(false) + `<table class="official-table">${theadHtml}<tbody></tbody></table>`);
-    // Chrome height on a continuation page that carries ONLY trailing
-    // blocks (no table) — e.g. a page that's just the tail end of the
-    // narrative and the signatures.
     const chromeOnlyHeight = measureFragmentHeight(page, buildChrome(true));
     const footerHeight = measureFragmentHeight(page, footerHtml) || 60;
     const blockHeights = trailingBlocks.map(b => measureFragmentHeight(page, b));
@@ -1396,9 +1285,7 @@ function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trai
     const capacityWithTable = Math.max(A4_HEIGHT_PX - PAGE_V_PADDING_PX - chromeWithTableHeight - footerHeight - PAGE_SAFETY_BUFFER_PX, 0);
     const capacityNoTable = Math.max(A4_HEIGHT_PX - PAGE_V_PADDING_PX - chromeOnlyHeight - footerHeight - PAGE_SAFETY_BUFFER_PX, 0);
 
-    // Bucket table rows into pages that fit within capacityWithTable,
-    // tracking each bucket's total row height alongside it (avoids any
-    // ambiguity from duplicate row HTML when rows repeat).
+    // Bucket table rows into pages that fit within capacityWithTable.
     const pagesRows = [];
     let current = { rows: [], height: 0 };
     rowHtmls.forEach((rowHtml, i) => {
@@ -1414,8 +1301,7 @@ function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trai
 
     const pages = [];
 
-    // Render every table page EXCEPT the last one with just its rows —
-    // there's no room to consider trailing content on these yet.
+    // Every table page EXCEPT the last carries just its rows.
     pagesRows.slice(0, -1).forEach((bucket, idx) => {
       const isContinuation = idx > 0;
       const id = idx === 0 ? idPrefix : `${idPrefix}_${idx + 1}`;
@@ -1434,8 +1320,7 @@ function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trai
       });
     });
 
-    // On the LAST table page, pack as many trailing blocks as fit into
-    // the leftover space directly under the table's rows.
+    // On the LAST table page, pack as many trailing blocks as fit under the rows.
     const lastPageIdx = pagesRows.length - 1;
     const lastBucket = pagesRows[lastPageIdx];
     let blockIdx = 0;
@@ -1463,14 +1348,9 @@ function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trai
       `
     });
 
-    // Whatever trailing blocks didn't fit (the true overflow) continue
-    // onto as many additional pages as needed. Each of these pages
-    // repeats the letterhead (marked "(Continued)") but has no table,
-    // and the footer is appended right after the last block placed on
-    // that page. A block that alone is too tall even for a fresh empty
-    // page is still placed (rather than silently dropped) so nothing
-    // is ever lost — this only matters for pathologically long single
-    // paragraphs.
+    // Remaining trailing blocks continue onto additional pages (letterhead,
+    // no table). A block too tall for even an empty page is still placed so
+    // nothing is ever dropped.
     while (blockIdx < blockHeights.length) {
       const pageBlocks = [];
       let remaining = capacityNoTable;
@@ -1497,42 +1377,28 @@ function paginateReportDocument(idPrefix, buildChrome, theadHtml, rowHtmls, trai
 }
 
 // ======================
-// CREATE OFFICIAL DOCUMENT — PAGE 1 (ratings, like Admin 1)
+// CREATE OFFICIAL DOCUMENT — PAGE 1 (ratings)
+// Letterhead, title, office line, signatures and footer image all come from
+// the header & footer settings (window.ReportSettings).
 // ======================
 function createOfficialDocument(report, footerRatio) {
+  const rs = window.ReportSettings;
+  const s = rs.get();
+
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   const narrative = generateNarrative(report.office, report.respondents, parseFloat(report.avgSatisfaction), report.dimensionAverages);
 
-  // Letterhead + title + meta — identical on every page. A page past
-  // the first repeats this same header and appends "(Continued)" to
-  // the title so it's clear it's still the same report.
+  // Letterhead + title + meta — identical on every page. Continuation pages
+  // repeat only the letterhead.
   const buildChrome = (isContinuation) => `
-      <!-- LETTERHEAD WITH LOGOS -->
-      <div class="lh-row">
-        <div class="lh-logo-box" style="width:110px; height:100px;">
-          <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
-        </div>
-        <div class="lh-text">
-          <div class="rep">Republic of the Philippines</div>
-          <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
-          <div class="dept">General Services Office</div>
-          <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
-          <div class="addr">Website: www.isufst.edu.ph</div>
-        </div>
-        <div class="lh-seal-box" style="width:110px; height:100px;">
-          <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
-        </div>
-      </div>
-
-      <hr class="lh-divider">
-
+      ${rs.headerHtml(s, null)}
       ${isContinuation ? "" : `
-      <div class="official-title">Client Satisfaction Measurement (CSM) Report</div>
+      ${rs.titleHtml(s.reportTitle)}
 
       <div class="official-meta">
-        <b>Office:</b> ${report.office}, ISUFST – San Enrique Campus<br>
+        <b>Office:</b> ${rs.officeLine(report.office)}<br>
         <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
         <b>No. of Respondents:</b> ${report.respondents}
       </div>
@@ -1557,47 +1423,25 @@ function createOfficialDocument(report, footerRatio) {
             </tr>
   `);
 
-  // Trailing content is a sequence of independent blocks: one per
-  // narrative paragraph, then the signatures block. paginateReportDocument
-  // packs as many of these as fit directly under the table on Page 1,
-  // and only the true overflow continues onto Page 2 (or beyond) — the
-  // signatures always stay right after whatever narrative text lands
-  // on the same page as them, and the footer stays pinned to the
-  // bottom of that same page.
+  // Trailing content: one block per narrative paragraph, then signatures.
   const narrativeBlocks = narrative.map(p => `<div class="official-narrative"><p>${p}</p></div>`);
-
-  const signaturesBlock = `
-      <div class="official-signatures">
-        <div class="sig-block">
-          <div class="sig-label">Prepared by:</div>
-          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-          <span class="sig-name">Mr. Joneben Penol</span>
-          <div class="sig-title">General Services Office</div>
-        </div>
-        <div class="sig-block">
-          <div class="sig-label">Noted by:</div>
-          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-          <span class="sig-name">MICHAEL B. DIZON, EDD, PHD</span>
-          <div class="sig-title">Campus Administrator</div>
-        </div>
-      </div>
-  `;
-
+  const signaturesBlock = rs.signaturesHtml(s);
   const trailingBlocks = [...narrativeBlocks, signaturesBlock];
 
-  const footerInnerHtml = buildFooterInnerHtml(footerRatio);
+  const footerInnerHtml = buildFooterInnerHtml(footerRatio, s.footerImage);
 
   return paginateReportDocument("csmPage", buildChrome, theadHtml, rowHtmls, trailingBlocks, footerInnerHtml);
 }
 
 // ======================
 // CREATE COMMENTS DOCUMENT — PAGE 2 (comments & suggestions).
-// Same letterhead system as createOfficialDocument(), but lists
-// individual comments/suggestions instead of dimension percentages.
-// Uses its own page id ("ccsPage") so PDF export/print can target it
-// separately from page 1's "csmPage".
+// Same letterhead system, lists individual comments/suggestions. Uses its
+// own page id ("ccsPage").
 // ======================
 function createCommentsDocument(report, footerRatio) {
+  const rs = window.ReportSettings;
+  const s = rs.get();
+
   const reportStart = new Date(report.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const reportEnd = new Date(report.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const comments = report.comments || [];
@@ -1616,32 +1460,12 @@ function createCommentsDocument(report, footerRatio) {
     ? `During the covered period, the <strong>${report.office}</strong> received <strong>${commentsCount}</strong> written comment(s) and suggestion(s) out of <strong>${report.respondents}</strong> total respondent(s). These qualitative responses provide additional context to the quantitative ratings in the preceding page and are provided here to support the office in identifying areas for continuous improvement.`
     : `No written comments or suggestions were submitted by respondents of the <strong>${report.office}</strong> during the covered period.`;
 
-  // Letterhead + title + meta — identical on every page, with
-  // "(Continued)" appended to the title on pages after the first.
   const buildChrome = (isContinuation) => `
-      <!-- LETTERHEAD WITH LOGOS -->
-      <div class="lh-row">
-        <div class="lh-logo-box" style="width:110px; height:100px;">
-          <img src="2.png" alt="ISUFST Logo" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
-        </div>
-        <div class="lh-text">
-          <div class="rep">Republic of the Philippines</div>
-          <div class="uni">Iloilo State University of Fisheries Science and Technology</div>
-          <div class="dept">General Services Office</div>
-          <div class="addr">San Enrique, Iloilo &nbsp;|&nbsp; rdo@isufst.edu.ph &nbsp;|&nbsp; Contact No: (033) 323-2050 / (033) 323-3400</div>
-          <div class="addr">Website: www.isufst.edu.ph</div>
-        </div>
-        <div class="lh-seal-box" style="width:110px; height:100px;">
-          <img src="3.jpg" alt="Bagong Pilipinas Seal" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain;">
-        </div>
-      </div>
-
-      <hr class="lh-divider">
-
-      <div class="official-title">Comments &amp; Suggestions Report${isContinuation ? " (Continued)" : ""}</div>
+      ${rs.headerHtml(s, null)}
+      ${rs.titleHtml(s.commentsTitle, isContinuation ? " (Continued)" : "")}
 
       <div class="official-meta">
-        <b>Office:</b> ${report.office}, ISUFST – San Enrique Campus<br>
+        <b>Office:</b> ${rs.officeLine(report.office)}<br>
         <b>Covered Period:</b> ${reportStart} – ${reportEnd}<br>
         <b>No. of Respondents:</b> ${report.respondents}<br>
         <b>No. of Comments/Suggestions Received:</b> ${commentsCount}
@@ -1661,37 +1485,18 @@ function createCommentsDocument(report, footerRatio) {
       <div class="official-narrative">
         <p>${summaryLine}</p>
       </div>
-
-      <div class="official-signatures">
-        <div class="sig-block">
-          <div class="sig-label">Prepared by:</div>
-          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-          <span class="sig-name">Mr. Joneben Penol</span>
-          <div class="sig-title">General Services Office</div>
-        </div>
-        <div class="sig-block">
-          <div class="sig-label">Noted by:</div>
-          <div style="margin-bottom:6px;font-style:italic;font-size:9.5pt;">_______________________</div>
-          <span class="sig-name">MICHAEL B. DIZON, EDD, PHD</span>
-          <div class="sig-title">Campus Administrator</div>
-        </div>
-      </div>
+      ${rs.signaturesHtml(s)}
   `;
 
-  const footerInnerHtml = buildFooterInnerHtml(footerRatio);
+  const footerInnerHtml = buildFooterInnerHtml(footerRatio, s.footerImage);
 
   return paginateReportDocument("ccsPage", buildChrome, theadHtml, rowHtmls, trailingHtml, footerInnerHtml);
 }
 
 // ======================
-// BUILD THE FULL REPORT PREVIEW HTML — the ratings document (page 1
-// onward) immediately followed by the comments & suggestions document,
-// each separated by a page-break divider so print/PDF land every
-// physical page on its own sheet. Either document may now expand into
-// several physical pages on its own (e.g. a long narrative or a long
-// comments list), and each additional page repeats the same letterhead
-// header while the footer stays pinned to the bottom of that page —
-// see paginateReportDocument() above.
+// BUILD THE FULL REPORT PREVIEW HTML — the ratings document followed by the
+// comments & suggestions document, separated by a page-break divider. Either
+// document may expand into several physical pages.
 // ======================
 async function buildReportPreviewHtml(report) {
   const footerRatio = await getFooterAspectRatio();
@@ -1716,8 +1521,7 @@ async function buildReportPreviewHtml(report) {
 
 // ======================
 // GENERATE REPORT — builds page 1 (ratings) AND page 2 (comments &
-// suggestions) together from the same filtered evaluations, then
-// renders both into the single report preview.
+// suggestions) from the same filtered evaluations.
 // ======================
 async function generateReport() {
   if (!selectedOffice) {
@@ -1732,9 +1536,6 @@ async function generateReport() {
 
   const officeEvals = evaluations.filter(e => e.officeName === selectedOffice);
 
-  // Normalize the picked range to LOCAL start-of-day / end-of-day so
-  // evaluations dated on either boundary are always included, without
-  // any UTC/timezone shift and without requiring leading-zero dates.
   const start = parseDateOnly(startDate);
   const end = parseDateOnly(endDate);
 
@@ -1764,15 +1565,14 @@ async function generateReport() {
     return;
   }
 
-  // Calculate averages for each dimension (rating1 -> rating10). This
-  // is Page 1.
+  // Averages for each dimension (rating1 -> rating10). This is Page 1.
   const dimensionAverages = [];
 
   DIMENSIONS.forEach(dim => {
     const values = filteredEvals.map(e => e[dim.field]).filter(v => v > 0);
     if (values.length > 0) {
       const avg = values.reduce((a, b) => a + b, 0) / values.length;
-      const percentage = (avg / 5) * 100; // Convert 1-5 scale to 0-100%
+      const percentage = (avg / 5) * 100; // 1-5 scale -> 0-100%
       const rating = getRatingLabel(percentage);
       dimensionAverages.push({
         dimension: dim.label,
@@ -1785,14 +1585,12 @@ async function generateReport() {
   const overallPct = dimensionAverages.reduce((sum, d) => sum + parseFloat(d.percentage), 0) / dimensionAverages.length;
   const overallRating = getRatingLabel(overallPct);
 
-  // Pull comments & suggestions from the same filtered evaluations.
-  // This is Page 2 — generated automatically, no separate step.
+  // Comments & suggestions from the same filtered evaluations (Page 2).
   const comments = filteredEvals
     .map(e => ({ text: getCommentText(e), timestamp: e.timestamp }))
     .filter(c => c.text)
     .sort((a, b) => a.timestamp - b.timestamp);
 
-  // Snapshot ready to be printed — carries both pages' data.
   currentReport = {
     office: selectedOffice,
     startDate,
@@ -1825,10 +1623,8 @@ window.closeReport = () => {
 };
 
 // ======================
-// EXPORT PDF — captures every generated .official-report page (there
-// may now be more than two, since either document can spill onto
-// extra pages) as its own PDF page, from the live preview already
-// rendered in #report-container, in document order.
+// EXPORT PDF — captures every generated .official-report page from the live
+// preview as its own PDF page, in document order.
 // ======================
 window.exportPDF = async () => {
   if (document.getElementById("reportPreview").style.display === "none" || !currentReport) {
@@ -1837,8 +1633,8 @@ window.exportPDF = async () => {
   }
 
   const margin = 10; // left/right/bottom margin
-  const marginTop = 3; // top margin only — kept small so the letterhead sits at the top of the page instead of leaving a large gap above it
-  const pageWidthMM = 210; // A4 width, kept for a familiar page width
+  const marginTop = 3; // small top margin so the letterhead sits at the top
+  const pageWidthMM = 210;
   const usableW = pageWidthMM - margin * 2;
   const { jsPDF } = window.jspdf;
   let pdf = null;
@@ -1852,17 +1648,8 @@ window.exportPDF = async () => {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
-        // html2canvas captures using the page's CURRENT scroll offset by
-        // default rather than always starting fresh from the top of the
-        // target element. Since generating a report auto-scrolls the
-        // preview into view (see reportPreview.scrollIntoView() in
-        // generateReport()), the page is usually scrolled down by the
-        // time "⬇ PDF" is clicked — without this override, that leftover
-        // scroll offset gets baked into the capture, which visually
-        // pushes the letterhead down (most noticeably on whichever page
-        // sits at/near the top of the viewport). Passing the negative of
-        // the current scroll position cancels that out so every page is
-        // captured identically, matching the on-screen/print layout.
+        // Cancel the leftover scroll offset (the preview auto-scrolls into
+        // view) so every page is captured from its own top.
         scrollX: 0,
         scrollY: -window.scrollY
       });
@@ -1875,7 +1662,7 @@ window.exportPDF = async () => {
     const img = canvas.toDataURL("image/png");
     const scale = usableW / canvas.width;
     const pdfH = canvas.height * scale;
-    const pageHeightMM = pdfH + marginTop + margin; // page height hugs the content instead of a fixed A4 length (smaller top margin + normal bottom margin)
+    const pageHeightMM = pdfH + marginTop + margin; // page height hugs the content
 
     if (!pdf) {
       pdf = new jsPDF({ unit: "mm", format: [pageWidthMM, pageHeightMM] });
@@ -1905,8 +1692,8 @@ window.exportPDF = async () => {
 };
 
 // ======================
-// SAVE REPORT — saves the whole two-page report (ratings + comments)
-// as a single facility_saved_reports document.
+// SAVE REPORT — saves the whole two-page report (ratings + comments) as a
+// single facility_saved_reports document.
 // ======================
 function saveReport() {
   if (!currentReport) return;
@@ -1922,12 +1709,9 @@ function saveReport() {
 }
 
 // ======================
-// PRINT REPORT — opens the browser's native print dialog for the
-// currently generated/viewed two-page report. Page 1 (#csmPage) and
-// Page 2 (#ccsPage, inside .report-page-2) are separated by a CSS
-// page-break, so the browser's print dialog shows them as two
-// separate pages and the admin can use its own page-range control
-// (e.g. "Pages: 1" or "Pages: 1-2") to choose what to print.
+// PRINT REPORT — opens the browser's print dialog for the generated report.
+// Pages are separated by CSS page breaks; use the dialog's page-range
+// control to print just Page 1, just Page 2, or both.
 // ======================
 function printReport() {
   if (document.getElementById("reportPreview").style.display === "none" || !currentReport) {
@@ -2043,5 +1827,8 @@ document.getElementById("btn-generate-report").addEventListener("click", generat
 document.getElementById("btn-save-report").addEventListener("click", saveReport);
 document.getElementById("btn-print-report").addEventListener("click", printReport);
 </script>
+
+<!-- MUST come after the inline module above: it reuses the Firebase app and defines window.ReportSettings -->
+<script type="module" src="admin3-report-settings.js"></script>
 </body>
 </html>
