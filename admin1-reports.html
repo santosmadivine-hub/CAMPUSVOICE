@@ -19,6 +19,7 @@ body{margin:0;font-family:'DM Sans',sans-serif;background:white;color:#0f172a}
 select{min-width:180px}
 .btn{padding:10px 16px;border:none;border-radius:10px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif;font-size:14px}
 .btn-primary{background:#2563eb;color:#fff}.btn-blue{background:#1d4ed8;color:#fff}.btn-green{background:#16a34a;color:#fff}.btn-gray{background:#e2e8f0;color:#475569}.btn-purple{background:#7c3aed;color:#fff}
+a.btn{text-decoration:none;display:inline-block}
 
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:24px}
 .kpi-card{position:relative;background:#fff;border:1px solid #bae6fd;border-top:4px solid var(--accent3,#2563eb);border-radius:16px;padding:20px 20px 22px;box-shadow:0 4px 14px rgba(15,23,42,.05);display:flex;flex-direction:column;gap:6px}
@@ -128,7 +129,12 @@ select{min-width:180px}
       </div>
     </div>
 
-    <!-- The "Report Header & Footer Settings" card is inserted here by report-settings.js -->
+    <!-- Opens the separate settings page (admin1-report-settings.html) -->
+    <div class="config-card" style="padding:10px 16px;">
+      <div class="config-row">
+        <a class="btn btn-gray" href="admin1-report-settings.html">⚙️ Report Header &amp; Footer Settings</a>
+      </div>
+    </div>
 
     <div id="reportPreview">
       <div class="preview-bar">
@@ -138,7 +144,7 @@ select{min-width:180px}
         <button class="btn btn-gray" onclick="closePreview()">✕ Close</button>
       </div>
 
-      <!-- PAGE 1: ratings. Header/footer are filled from Firestore by report-settings.js -->
+      <!-- PAGE 1: ratings. Header/footer are filled from Firestore by admin1-report-settings.js -->
       <div class="generated-report" id="csmPage">
         <div class="generated-report-header" data-report-header data-title-key="reportTitle"></div>
         <div class="generated-report-content">
@@ -660,7 +666,7 @@ window.exportCommentsPDF = async () => {
 };
 </script>
 
-<!-- MUST come after the inline module above: it reuses the Firebase app and defines window.ReportSettings -->
+<!-- MUST come after the inline module above: it reuses the Firebase app and defines window.ReportSettings (no UI on this page) -->
 <script type="module" src="admin1-report-settings.js"></script>
 </body>
 </html>
