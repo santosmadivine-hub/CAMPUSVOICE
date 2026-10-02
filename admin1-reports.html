@@ -104,6 +104,135 @@ a.btn{text-decoration:none;display:inline-block}
 .csm-sig-title{font-size:9.5pt;font-style:italic;color:#333;margin-top:2px}
 .csm-footer{display:block;width:100%}
 .csm-footer img{display:block;width:100%;height:auto;object-fit:contain}
+
+/* ================= HOVER + DESIGN POLISH ================= */
+
+/* Entrance animation (static blocks only; never the report paper) */
+@keyframes cvRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.kpi-card, .config-card {
+  animation: cvRise .5s cubic-bezier(.2,.7,.2,1) both;
+}
+.kpi-card:nth-child(2) { animation-delay: .06s; }
+.kpi-card:nth-child(3) { animation-delay: .12s; }
+.kpi-card:nth-child(4) { animation-delay: .18s; }
+.config-card { animation-delay: .24s; }
+
+/* KPI cards */
+.kpi-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  overflow: hidden;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.kpi-card::after {
+  content: "";
+  position: absolute;
+  right: -30px; bottom: -30px;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37,99,235,.10), transparent 70%);
+  transition: transform .35s ease;
+  pointer-events: none;
+}
+.kpi-card:hover {
+  transform: translateY(-6px);
+  border-color: #7dd3fc;
+  box-shadow: 0 14px 30px rgba(37,99,235,.16);
+}
+.kpi-card:hover::after { transform: scale(1.5); }
+.kpi-icon { transition: transform .3s ease, background .3s ease; }
+.kpi-card:hover .kpi-icon {
+  background: #dbeafe;
+  transform: rotate(-8deg) scale(1.12);
+}
+.kpi-value { transition: color .25s ease; }
+.kpi-card:hover .kpi-value { color: #2563eb; }
+
+/* Config + saved-report cards */
+.config-card, .card {
+  box-shadow: 0 4px 14px rgba(15,23,42,.05);
+  transition: box-shadow .25s ease, border-color .25s ease;
+}
+.config-card:hover, .card:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 12px 28px rgba(15,23,42,.08);
+}
+.card-title { font-family: 'Syne', sans-serif; }
+.card-title::after {
+  content: "";
+  display: block;
+  width: 28px; height: 3px;
+  margin-top: 6px;
+  border-radius: 3px;
+  background: #2563eb;
+  transition: width .3s ease;
+}
+.card:hover .card-title::after { width: 56px; }
+
+/* Inputs */
+.input, select {
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.input:hover, select:hover { border-color: #7dd3fc; }
+.input:focus, select:focus {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+select { cursor: pointer; }
+
+/* Buttons */
+.btn {
+  transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn-primary { box-shadow: 0 4px 12px rgba(37,99,235,.25); }
+.btn-primary:hover { background: #1d4ed8; box-shadow: 0 8px 18px rgba(37,99,235,.35); }
+.btn-green { box-shadow: 0 4px 12px rgba(22,163,74,.25); }
+.btn-green:hover { background: #15803d; box-shadow: 0 8px 18px rgba(22,163,74,.35); }
+.btn-blue:hover { background: #1e40af; box-shadow: 0 8px 18px rgba(29,78,216,.35); }
+.btn-purple:hover { background: #6d28d9; box-shadow: 0 8px 18px rgba(124,58,237,.35); }
+.btn-gray:hover { background: #dbeafe; color: #1e40af; box-shadow: 0 6px 14px rgba(37,99,235,.15); }
+.btn:focus-visible, .act-btn:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+/* Preview toolbar */
+.preview-bar { box-shadow: 0 2px 8px rgba(15,23,42,.05); }
+
+/* Saved reports tables */
+.reports-table th { box-shadow: 0 1px 0 #bae6fd; }
+.reports-table td { transition: background .2s ease; }
+.reports-table tbody tr:hover td { background: #f0f9ff; }
+.reports-table tbody tr:hover td:first-child { box-shadow: inset 4px 0 0 #2563eb; }
+.badge { transition: transform .2s ease, box-shadow .2s ease; }
+.reports-table tbody tr:hover .badge { transform: scale(1.06); }
+.reports-table tbody tr:hover .badge-green { box-shadow: 0 0 0 3px rgba(21,128,61,.12); }
+.reports-table tbody tr:hover .badge-blue  { box-shadow: 0 0 0 3px rgba(29,78,216,.12); }
+.reports-table tbody tr:hover .badge-amber { box-shadow: 0 0 0 3px rgba(161,98,7,.12); }
+.reports-table tbody tr:hover .badge-red   { box-shadow: 0 0 0 3px rgba(220,38,38,.12); }
+.count-pill { transition: background .2s ease, color .2s ease; }
+.card:hover .count-pill { background: #2563eb; color: #ffffff; }
+
+/* Row action buttons */
+.act-btn {
+  transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.act-btn:hover { transform: translateY(-2px); }
+.act-btn:active { transform: translateY(0); }
+.act-view:hover   { background: #1e3a8a; box-shadow: 0 4px 12px rgba(15,23,42,.25); }
+.act-delete:hover { background: #fecaca; box-shadow: 0 3px 10px rgba(153,27,27,.2); }
+
+/* Empty state */
+.empty-state .icon { transition: transform .3s ease; }
+.empty-state:hover .icon { transform: scale(1.12) rotate(-6deg); }
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .kpi-card, .config-card { animation: none; }
+  * { transition: none !important; }
+}
 </style>
 </head>
 <body>
