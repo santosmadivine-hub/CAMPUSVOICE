@@ -112,6 +112,13 @@ a.btn{text-decoration:none;display:inline-block}
   <main class="main">
     <div id="topbar-mount"></div>
 
+    <!-- Opens the separate settings page (admin1-report-settings.html) -->
+    <div class="config-card" style="padding:10px 16px;">
+      <div class="config-row">
+        <a class="btn btn-gray" href="admin1-report-settings.html">⚙️ Report Header &amp; Footer Settings</a>
+      </div>
+    </div>
+
     <div class="kpi-grid">
       <div class="kpi-card"><div class="kpi-icon">📝</div><div class="kpi-title">Total Feedback</div><div class="kpi-value" id="totalFeedback">0</div><div class="kpi-sub">All Evaluations</div></div>
       <div class="kpi-card"><div class="kpi-icon">👍</div><div class="kpi-title">Positive (≥4★)</div><div class="kpi-value" id="positive">0</div><div class="kpi-sub">Highly Rated</div></div>
@@ -126,13 +133,6 @@ a.btn{text-decoration:none;display:inline-block}
         <select id="officeFilter"><option value="">Select Office…</option></select>
         <button class="btn btn-primary" onclick="generateReport()">📊 Generate Report</button>
         <button class="btn btn-green" onclick="saveReport()">💾 Save Report</button>
-      </div>
-    </div>
-
-    <!-- Opens the separate settings page (admin1-report-settings.html) -->
-    <div class="config-card" style="padding:10px 16px;">
-      <div class="config-row">
-        <a class="btn btn-gray" href="admin1-report-settings.html">⚙️ Report Header &amp; Footer Settings</a>
       </div>
     </div>
 
@@ -272,6 +272,7 @@ const commentReportsCol = collection(db,"services","commentReports","records");
 
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','reports');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Reports','admin1');
+
 
 const PAPER_SIZES = { a4:{ width:210, height:297, jspdf:"a4" } };
 window.setPaperSize = () => {
