@@ -885,6 +885,162 @@
       right: 14px;
     }
   }
+  /* ================= HOVER + DESIGN POLISH ================= */
+
+@keyframes cvRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Entrance animation */
+.eval-stat-pill, main .card {
+  animation: cvRise .5s cubic-bezier(.2,.7,.2,1) backwards;
+}
+.eval-stat-pill:nth-child(2) { animation-delay: .06s; }
+.eval-stat-pill:nth-child(3) { animation-delay: .12s; }
+.eval-stat-pill:nth-child(4) { animation-delay: .18s; }
+.eval-stat-pill:nth-child(5) { animation-delay: .24s; }
+main .card { animation-delay: .30s; }
+
+/* Stat pills */
+.eval-stat-pill {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  overflow: hidden;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.eval-stat-pill::after {
+  content: "";
+  position: absolute;
+  right: -30px; bottom: -30px;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37,99,235,.10), transparent 70%);
+  transition: transform .35s ease;
+  pointer-events: none;
+}
+.eval-stat-pill:nth-child(2)::after { background: radial-gradient(circle, rgba(16,185,129,.12), transparent 70%); }
+.eval-stat-pill:nth-child(3)::after { background: radial-gradient(circle, rgba(249,115,22,.12), transparent 70%); }
+.eval-stat-pill:nth-child(4)::after { background: radial-gradient(circle, rgba(139,92,246,.12), transparent 70%); }
+.eval-stat-pill:nth-child(5)::after { background: radial-gradient(circle, rgba(16,185,129,.12), transparent 70%); }
+
+.eval-stat-pill:hover {
+  transform: translateY(-6px);
+  border-color: #7dd3fc;
+  box-shadow: 0 14px 30px rgba(37,99,235,.16);
+}
+.eval-stat-pill:hover::after { transform: scale(1.5); }
+
+.eval-stat-pill::before { transition: transform .3s ease, background .3s ease; }
+.eval-stat-pill:hover::before {
+  background: #dbeafe;
+  transform: rotate(-8deg) scale(1.12);
+}
+
+.eval-stat-pill span { transition: color .25s ease; }
+.eval-stat-pill:hover span { color: #2563eb; }
+.eval-stat-pill:nth-child(2):hover span { color: #059669; }
+.eval-stat-pill:nth-child(3):hover span { color: #ea580c; }
+.eval-stat-pill:nth-child(4):hover span { color: #7c3aed; }
+.eval-stat-pill:nth-child(5):hover span { color: #059669; }
+
+/* Main card (border + shadow only, no lift, since it holds the whole table) */
+.card {
+  transition: box-shadow .25s ease, border-color .25s ease;
+}
+.card:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 12px 28px rgba(15,23,42,.10);
+}
+.card-title { transition: color .2s ease; }
+.card:hover .submissions-toolbar .card-title { color: #1d4ed8; }
+
+/* Toolbar buttons */
+.btn { transition: background .2s ease, transform .2s ease, box-shadow .2s ease; }
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(15,23,42,.14);
+}
+.btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+.btn-primary:hover:not(:disabled) { box-shadow: 0 8px 18px rgba(37,99,235,.30); }
+
+/* Tabs */
+.eval-tab { border-radius: 8px 8px 0 0; }
+.eval-tab:hover { background: #f0f9ff; color: #1d4ed8; }
+.eval-tab .tab-count { transition: background .2s ease, color .2s ease, transform .2s ease; }
+.eval-tab:hover .tab-count { background: #dbeafe; color: #2563eb; transform: scale(1.08); }
+
+/* Search + filter */
+.search-input-wrap, .office-filter-select {
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.search-input-wrap:hover, .office-filter-select:hover { border-color: #7dd3fc; }
+.search-input-wrap:focus-within, .office-filter-select:focus {
+  border-color: #0284c7;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(2,132,199,.12);
+}
+
+/* Table rows */
+.submissions-table td { transition: background .2s ease, color .2s ease; }
+.submissions-table tbody tr:hover .code-cell { color: #1d4ed8; }
+.submissions-table tbody tr:hover .row-index { color: #2563eb; }
+.submissions-table tbody tr:hover .rating-cell { color: #2563eb; }
+
+/* Status + evidence badges */
+.status-badge { transition: transform .2s ease, box-shadow .2s ease; }
+.submissions-table tbody tr:hover .status-badge {
+  transform: scale(1.06);
+  box-shadow: 0 3px 8px rgba(15,23,42,.10);
+}
+.evidence-badge { transition: background .2s ease, transform .2s ease, box-shadow .2s ease; }
+.evidence-badge:not(.empty):hover {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37,99,235,.15);
+}
+
+/* Row action buttons */
+.btn-view, .btn-edit { transition: color .2s ease, transform .2s ease; }
+.btn-view:hover { color: #1d4ed8; transform: translateY(-1px); }
+.btn-edit:hover { color: #9a3412; transform: translateY(-1px); }
+
+.btn-message { transition: background .2s ease, transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.btn-message:hover {
+  transform: translateY(-2px);
+  border-color: #93c5fd;
+  box-shadow: 0 6px 12px rgba(37,99,235,.18);
+}
+.btn-message:active { transform: translateY(0); box-shadow: none; }
+
+/* Evidence gallery (inside View modal) */
+.evidence-gallery-item { transition: transform .2s ease, box-shadow .2s ease; }
+.evidence-gallery-item img, .evidence-gallery-item video { transition: transform .3s ease; }
+.evidence-gallery-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(15,23,42,.20);
+}
+.evidence-gallery-item:hover img, .evidence-gallery-item:hover video { transform: scale(1.06); }
+
+/* Modal rows + chat */
+.modal-row { transition: background .15s ease; }
+.modal-row:hover { background: #f8fafc; }
+.chat-send-btn { transition: background .2s ease, transform .2s ease, box-shadow .2s ease; }
+.chat-send-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(37,99,235,.25);
+}
+.chat-header-close { transition: background .2s ease, color .2s ease, transform .2s ease; }
+.chat-header-close:hover { transform: rotate(90deg); }
+
+/* Empty state */
+.empty-row td { font-style: italic; }
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .eval-stat-pill, main .card { animation: none; }
+  * { transition: none !important; }
+}
 </style>
 </head>
 <body>
