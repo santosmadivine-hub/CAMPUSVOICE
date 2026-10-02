@@ -50,6 +50,140 @@
 .official-footer{margin-top:auto;padding-top:6px;display:block;width:100%}
 .official-footer img{display:block;width:100%;height:auto;object-fit:contain}
 .official-footer .official-signatures{margin-top:0;margin-bottom:10px}
+/* ================= HOVER + DESIGN POLISH (Admin 3 – Report Settings) ================= */
+
+@keyframes cvRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Entrance animation ── */
+#rsCard {
+  animation: cvRise .5s cubic-bezier(.2,.7,.2,1) backwards;
+}
+
+/* ── Settings card (no lift, since it holds the whole form) ── */
+#rsCard {
+  transition: box-shadow .25s ease, border-color .25s ease;
+}
+#rsCard:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 12px 28px rgba(15,23,42,.08);
+}
+#rsCard .rs-title { transition: color .2s ease; }
+#rsCard:hover .rs-title { color: #1d4ed8; }
+
+/* ── Section headings + labels ── */
+#rsCard h4 { transition: color .2s ease; }
+#rsCard h4:hover { color: #0369a1; }
+#rsCard label { transition: color .2s ease; }
+#rsCard label:hover { color: #1d4ed8; }
+
+/* ── Inputs, selects, textareas ── */
+#rsCard input[type=text],
+#rsCard select,
+#rsCard textarea {
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+#rsCard input[type=text]:hover,
+#rsCard select:hover,
+#rsCard textarea:hover { border-color: #7dd3fc; }
+#rsCard input[type=text]:focus,
+#rsCard select:focus,
+#rsCard textarea:focus {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  outline: none;
+}
+#rsCard select { cursor: pointer; }
+
+/* Highlight the label of the field being edited */
+#rsCard label:has(+ input:focus),
+#rsCard label:has(+ select:focus),
+#rsCard label:has(+ textarea:focus) { color: #2563eb; }
+
+/* ── Image upload rows ── */
+#rsCard .rs-img img {
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+#rsCard .rs-img img:hover {
+  transform: scale(1.08);
+  border-color: #7dd3fc;
+  box-shadow: 0 6px 14px rgba(15,23,42,.18);
+}
+#rsCard input[type=file] { cursor: pointer; }
+#rsCard input[type=file]::file-selector-button {
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  margin-right: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background .2s ease, box-shadow .2s ease;
+}
+#rsCard input[type=file]::file-selector-button:hover {
+  background: #bae6fd;
+  box-shadow: 0 3px 10px rgba(2,132,199,.2);
+}
+
+/* ── Buttons ── */
+#rsCard .rs-btn {
+  transition: background .2s ease, box-shadow .2s ease, transform .2s ease, color .2s ease;
+}
+#rsCard .rs-btn:hover:not(:disabled) { transform: translateY(-2px); }
+#rsCard .rs-btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+
+#rsCard .rs-gray:hover:not(:disabled) {
+  background: #dbeafe;
+  color: #1e40af;
+  box-shadow: 0 6px 14px rgba(37,99,235,.15);
+}
+
+#rsCard .rs-green {
+  background: linear-gradient(160deg, #22c55e 0%, #16a34a 55%, #15803d 100%);
+  box-shadow: 0 4px 12px rgba(22,163,74,.28);
+}
+#rsCard .rs-green:hover:not(:disabled) {
+  background: linear-gradient(160deg, #4ade80 0%, #16a34a 55%, #166534 100%);
+  box-shadow: 0 8px 18px rgba(22,163,74,.35);
+}
+
+#rsCard .rs-purple {
+  background: linear-gradient(160deg, #8b5cf6 0%, #7c3aed 55%, #6d28d9 100%);
+  box-shadow: 0 4px 12px rgba(124,58,237,.28);
+}
+#rsCard .rs-purple:hover:not(:disabled) {
+  background: linear-gradient(160deg, #a78bfa 0%, #7c3aed 55%, #5b21b6 100%);
+  box-shadow: 0 8px 18px rgba(124,58,237,.35);
+}
+
+#rsCard .rs-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* ── Live preview panel (the letterhead inside is left untouched) ── */
+#rsCard .rs-preview {
+  transition: box-shadow .25s ease, background .25s ease;
+}
+#rsCard .rs-preview:hover {
+  background: #eef4fb;
+  box-shadow: inset 0 0 0 1px #bae6fd;
+}
+
+/* ── Helper note ── */
+#rsCard .rs-note { font-style: italic; }
+
+/* ── Accessibility: reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  #rsCard { animation: none; }
+  * { transition: none !important; }
+}
 </style>
 </head>
 <body>
