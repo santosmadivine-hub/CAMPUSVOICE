@@ -885,14 +885,18 @@
       right: 14px;
     }
   }
-  /* ================= HOVER + DESIGN POLISH ================= */
+ /* ================= HOVER + DESIGN POLISH (Admin 3 – Evaluation Mgmt) ================= */
 
 @keyframes cvRise {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes cvModalIn {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 
-/* Entrance animation */
+/* ── Entrance animation ── */
 .eval-stat-pill, main .card {
   animation: cvRise .5s cubic-bezier(.2,.7,.2,1) backwards;
 }
@@ -902,7 +906,7 @@
 .eval-stat-pill:nth-child(5) { animation-delay: .24s; }
 main .card { animation-delay: .30s; }
 
-/* Stat pills */
+/* ── Stat pills ── */
 .eval-stat-pill {
   background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
   overflow: hidden;
@@ -943,7 +947,7 @@ main .card { animation-delay: .30s; }
 .eval-stat-pill:nth-child(4):hover span { color: #7c3aed; }
 .eval-stat-pill:nth-child(5):hover span { color: #059669; }
 
-/* Main card (border + shadow only, no lift, since it holds the whole table) */
+/* ── Main card (no lift, since it wraps the whole table) ── */
 .card {
   transition: box-shadow .25s ease, border-color .25s ease;
 }
@@ -954,91 +958,175 @@ main .card { animation-delay: .30s; }
 .card-title { transition: color .2s ease; }
 .card:hover .submissions-toolbar .card-title { color: #1d4ed8; }
 
-/* Toolbar buttons */
-.btn { transition: background .2s ease, transform .2s ease, box-shadow .2s ease; }
-.btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(15,23,42,.14);
+/* ── Buttons (toolbar + modal footers + chat send) ── */
+.btn, .btn-primary, .btn-secondary, .chat-send-btn {
+  transition: background .2s ease, box-shadow .2s ease, transform .2s ease, opacity .2s ease;
 }
-.btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
-.btn-primary:hover:not(:disabled) { box-shadow: 0 8px 18px rgba(37,99,235,.30); }
+.btn:hover:not(:disabled),
+.btn-primary:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.chat-send-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.btn:active:not(:disabled),
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled),
+.chat-send-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.btn-primary, .chat-send-btn {
+  background: linear-gradient(160deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%);
+  box-shadow: 0 4px 12px rgba(37,99,235,.28);
+}
+.btn-primary:hover:not(:disabled),
+.chat-send-btn:hover:not(:disabled) {
+  background: linear-gradient(160deg, #60a5fa 0%, #2563eb 55%, #1e40af 100%);
+  box-shadow: 0 8px 18px rgba(37,99,235,.35);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #dbeafe;
+  color: #1e40af;
+  box-shadow: 0 6px 14px rgba(37,99,235,.15);
+}
 
-/* Tabs */
+/* ── Tabs ── */
 .eval-tab { border-radius: 8px 8px 0 0; }
 .eval-tab:hover { background: #f0f9ff; color: #1d4ed8; }
 .eval-tab .tab-count { transition: background .2s ease, color .2s ease, transform .2s ease; }
 .eval-tab:hover .tab-count { background: #dbeafe; color: #2563eb; transform: scale(1.08); }
 
-/* Search + filter */
-.search-input-wrap, .office-filter-select {
+/* ── Search + filter + selects ── */
+.search-input-wrap, .office-filter-select, .edit-field select, .chat-input-row textarea {
   transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
 }
-.search-input-wrap:hover, .office-filter-select:hover { border-color: #7dd3fc; }
-.search-input-wrap:focus-within, .office-filter-select:focus {
-  border-color: #0284c7;
+.search-input-wrap:hover, .office-filter-select:hover,
+.edit-field select:hover, .chat-input-row textarea:hover { border-color: #7dd3fc; }
+.search-input-wrap:focus-within, .office-filter-select:focus,
+.edit-field select:focus, .chat-input-row textarea:focus {
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(2,132,199,.12);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  outline: none;
 }
+.office-filter-select, .edit-field select { cursor: pointer; }
 
-/* Table rows */
+/* ── Table rows ── */
 .submissions-table td { transition: background .2s ease, color .2s ease; }
-.submissions-table tbody tr:hover .code-cell { color: #1d4ed8; }
-.submissions-table tbody tr:hover .row-index { color: #2563eb; }
+.submissions-table tbody tr:hover td { background: #f0f9ff; }
+.submissions-table tbody tr:hover td:first-child { box-shadow: inset 4px 0 0 #2563eb; }
+.submissions-table tbody tr:hover .code-cell,
+.submissions-table tbody tr:hover .row-index,
 .submissions-table tbody tr:hover .rating-cell { color: #2563eb; }
+.empty-row:hover td { background: transparent !important; box-shadow: none !important; }
 
-/* Status + evidence badges */
+/* ── Status + evidence badges ── */
 .status-badge { transition: transform .2s ease, box-shadow .2s ease; }
-.submissions-table tbody tr:hover .status-badge {
-  transform: scale(1.06);
-  box-shadow: 0 3px 8px rgba(15,23,42,.10);
-}
-.evidence-badge { transition: background .2s ease, transform .2s ease, box-shadow .2s ease; }
+.submissions-table tbody tr:hover .status-badge { transform: scale(1.06); }
+.submissions-table tbody tr:hover .status-badge.pending   { box-shadow: 0 0 0 3px rgba(180,83,9,.12); }
+.submissions-table tbody tr:hover .status-badge.no_action { box-shadow: 0 0 0 3px rgba(67,56,202,.12); }
+.submissions-table tbody tr:hover .status-badge.resolved  { box-shadow: 0 0 0 3px rgba(22,101,52,.12); }
+
+.evidence-badge { transition: background .2s ease, transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
 .evidence-badge:not(.empty):hover {
-  background: #e0f2fe;
-  border-color: #7dd3fc;
+  background: #dbeafe;
+  border-color: #93c5fd;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(37,99,235,.15);
+  box-shadow: 0 3px 10px rgba(37,99,235,.18);
 }
 
-/* Row action buttons */
-.btn-view, .btn-edit { transition: color .2s ease, transform .2s ease; }
-.btn-view:hover { color: #1d4ed8; transform: translateY(-1px); }
-.btn-edit:hover { color: #9a3412; transform: translateY(-1px); }
+/* ── Row actions: View / Edit / Message ── */
+.btn-view, .btn-edit {
+  border-radius: 8px;
+  padding: 4px 8px;
+  transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+.btn-view { margin-right: 6px; }
+.btn-view:hover, .btn-edit:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+.btn-view:hover {
+  color: #2563eb;
+  background: #dbeafe;
+  box-shadow: 0 3px 10px rgba(37,99,235,.2);
+}
+.btn-edit:hover {
+  color: #c2410c;
+  background: #ffedd5;
+  box-shadow: 0 3px 10px rgba(194,65,12,.2);
+}
+.btn-view:active, .btn-edit:active { transform: translateY(0); box-shadow: none; }
 
-.btn-message { transition: background .2s ease, transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.btn-message {
+  transition: background .2s ease, transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
 .btn-message:hover {
-  transform: translateY(-2px);
   border-color: #93c5fd;
-  box-shadow: 0 6px 12px rgba(37,99,235,.18);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37,99,235,.2);
 }
 .btn-message:active { transform: translateY(0); box-shadow: none; }
+.btn-message .unread-dot { transition: transform .2s ease; }
+.btn-message:hover .unread-dot { transform: scale(1.15); }
 
-/* Evidence gallery (inside View modal) */
-.evidence-gallery-item { transition: transform .2s ease, box-shadow .2s ease; }
-.evidence-gallery-item img, .evidence-gallery-item video { transition: transform .3s ease; }
+/* ── Keyboard focus ── */
+.btn:focus-visible, .btn-primary:focus-visible, .btn-secondary:focus-visible,
+.chat-send-btn:focus-visible, .eval-tab:focus-visible,
+.btn-view:focus-visible, .btn-edit:focus-visible, .btn-message:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* ── Modals (View + Edit + Chat) ── */
+.modal-overlay { backdrop-filter: blur(2px); }
+.modal-content, .chat-modal-content {
+  border: 1px solid #e0f2fe;
+  box-shadow: 0 30px 70px rgba(15,23,42,.28);
+  animation: cvModalIn .2s ease;
+}
+
+.modal-row {
+  border-radius: 8px;
+  transition: background .2s ease, padding .2s ease;
+}
+.modal-row:hover {
+  background: #f0f9ff;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.modal-row span:first-child { transition: color .2s ease; }
+.modal-row:hover > span:first-child { color: #0369a1; }
+
+.edit-field label { transition: color .2s ease; }
+.edit-field:focus-within label { color: #2563eb; }
+
+/* ── Evidence gallery (View modal) ── */
+.evidence-gallery-item {
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
 .evidence-gallery-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(15,23,42,.20);
+  transform: translateY(-3px) scale(1.03);
+  border-color: #7dd3fc;
+  box-shadow: 0 8px 18px rgba(15,23,42,.25);
 }
-.evidence-gallery-item:hover img, .evidence-gallery-item:hover video { transform: scale(1.06); }
+.evidence-gallery-item img, .evidence-gallery-item video { transition: transform .3s ease; }
+.evidence-gallery-item:hover img,
+.evidence-gallery-item:hover video { transform: scale(1.08); }
 
-/* Modal rows + chat */
-.modal-row { transition: background .15s ease; }
-.modal-row:hover { background: #f8fafc; }
-.chat-send-btn { transition: background .2s ease, transform .2s ease, box-shadow .2s ease; }
-.chat-send-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(37,99,235,.25);
-}
-.chat-header-close { transition: background .2s ease, color .2s ease, transform .2s ease; }
+/* ── Chat ── */
+.chat-header-close { transition: background .2s ease, color .2s ease, transform .25s ease; }
 .chat-header-close:hover { transform: rotate(90deg); }
+.chat-bubble { transition: box-shadow .2s ease, transform .2s ease; }
+.chat-bubble:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15,23,42,.12); }
+.chat-bubble-row.admin .chat-bubble:hover { box-shadow: 0 4px 12px rgba(37,99,235,.3); }
 
-/* Empty state */
-.empty-row td { font-style: italic; }
+/* ── Empty / loading text ── */
+.empty-row td, .chat-empty-note, .evidence-empty-note { font-style: italic; }
 
-/* Accessibility: reduced motion */
+/* ── Accessibility: reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  .eval-stat-pill, main .card { animation: none; }
+  .eval-stat-pill, main .card, .modal-content, .chat-modal-content { animation: none; }
   * { transition: none !important; }
 }
 </style>
