@@ -524,3 +524,105 @@ body.sidebar-open {
   }
 
 }
+
+/* ================= HOVER POLISH (append at end of shared.css) ================= */
+
+/* Only apply hover effects on devices that actually hover (avoids stuck hover on touch) */
+@media (hover: hover) {
+
+  /* Sidebar logo */
+  .sidebar-logo .wordmark,
+  .sidebar-logo .campus {
+    transition: letter-spacing .3s ease, color .3s ease;
+  }
+  .sidebar-logo:hover .wordmark { letter-spacing: 0; }
+  .sidebar-logo:hover .campus   { color: rgba(255,255,255,.9); }
+
+  /* Role pill */
+  .sidebar-role {
+    transition: background .25s ease, border-color .25s ease, transform .25s ease, box-shadow .25s ease;
+  }
+  .sidebar-role:hover {
+    background: rgba(59,130,246,.35);
+    border-color: rgba(147,197,253,.7);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(30,64,175,.35);
+  }
+
+  /* Nav items: accent bar + icon pop (active item keeps its own look) */
+  .nav-item { position: relative; }
+  .nav-item::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 50%;
+    width: 3px; height: 0;
+    border-radius: 3px;
+    background: #93c5fd;
+    transform: translateY(-50%);
+    transition: height .25s ease;
+  }
+  .nav-item:hover::before { height: 55%; }
+
+  .nav-icon { transition: transform .25s ease; }
+  .nav-item:hover .nav-icon { transform: scale(1.2) rotate(-6deg); }
+
+  .nav-item:not([class*="active-"]):hover {
+    background: rgba(255,255,255,.14);
+    border-color: rgba(255,255,255,.18);
+    box-shadow: 0 6px 16px rgba(0,0,0,.18);
+  }
+  .nav-item[class*="active-"]:hover {
+    background: rgba(59,130,246,.38);
+    box-shadow: 0 10px 24px rgba(59,130,246,.28);
+  }
+
+  /* Logout button */
+  .logout-btn {
+    transition: background .25s ease, transform .2s ease, box-shadow .25s ease;
+  }
+  .logout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(220,38,38,.4);
+  }
+  .logout-btn:active { transform: translateY(0); }
+  .logout-icon { transition: transform .25s ease; }
+  .logout-btn:hover .logout-icon { transform: translateX(3px); }
+
+  /* Hamburger */
+  .hamburger-btn { border-radius: 8px; transition: background .2s ease; }
+  .hamburger-btn:hover { background: #e0f2fe; }
+  .hamburger-btn:hover span { background: #0284c7; }
+
+  /* Topbar badge */
+  .badge {
+    transition: background .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
+  }
+  .badge-blue:hover {
+    background: #0284c7;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(2,132,199,.3);
+  }
+
+  /* Page title */
+  .page-title { transition: color .25s ease; }
+  .page-title:hover { color: #1d4ed8; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar-thumb:hover { background: #0369a1; }
+}
+
+/* Keyboard focus (works on all devices) */
+.nav-item:focus-visible,
+.logout-btn:focus-visible,
+.hamburger-btn:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+.hamburger-btn:focus-visible { outline-color: #2563eb; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .nav-item, .nav-item::before, .nav-icon, .logout-btn, .logout-icon,
+  .sidebar-role, .badge, .page-title { transition: none !important; }
+}
