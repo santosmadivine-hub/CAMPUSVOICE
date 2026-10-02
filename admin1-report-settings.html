@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CampusVoice – Report Header &amp; Footer Settings | Admin 1</title>
+<title>CampusVoice – Report Settings | Admin 1</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
@@ -67,7 +67,7 @@ textarea{min-height:70px;resize:vertical;padding:10px 12px;border:1px solid #dbe
     <div class="card" id="rsCard">
       <div class="card-header">
         <button class="btn btn-gray" id="rsBack" type="button">← Back to Reports</button>
-        <div class="card-title">⚙️ Report Header &amp; Footer Settings</div>
+        <div class="card-title">⚙️ Report Settings</div>
       </div>
 
       <div class="rs-grid">
@@ -114,6 +114,7 @@ const $ = id => document.getElementById(id);
 
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','reports');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Report Settings','admin1');
+
 
 let draft = {};
 let formDirty = false;
