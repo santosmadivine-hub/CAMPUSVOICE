@@ -70,9 +70,6 @@
 .stat-value { font-family:'Syne',sans-serif; font-weight:700; font-size:30px; color:#0f172a; line-height:1.1; overflow-wrap:anywhere; }
 .stat-sub { font-family:'DM Sans',sans-serif; font-size:12px; color:#94a3b8; }
 
-/* Office-name stat values (Highest/Lowest Rating) are text, not numbers —
-   reduced from 30px to 18px to keep text readable without overlapping
-   the icon. Uses clamping to limit to 2 lines with ellipsis. */
 .stat-value-text { font-size:18px; line-height:1.3; max-width: calc(100% - 50px); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: ellipsis; word-break: break-word; padding-right: 8px; }
 
 .card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #bae6fd; }
@@ -145,6 +142,153 @@
   .cv-modal-body { padding: 16px 18px 4px; }
   .cv-modal-footer { padding: 16px 18px 20px; flex-direction: column-reverse; }
   .cv-modal-footer .cv-btn { width: 100%; }
+}
+/* ================= HOVER + DESIGN POLISH ================= */
+
+@keyframes cvRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stat-card, .office-section > .card {
+  animation: cvRise .5s cubic-bezier(.2,.7,.2,1) backwards;
+}
+.stat-card:nth-child(2) { animation-delay: .06s; }
+.stat-card:nth-child(3) { animation-delay: .12s; }
+.stat-card:nth-child(4) { animation-delay: .18s; }
+.office-section > .card { animation-delay: .24s; }
+
+/* Stat cards */
+.stat-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  overflow: hidden;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.stat-card::after {
+  content: "";
+  position: absolute;
+  right: -30px; bottom: -30px;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37,99,235,.10), transparent 70%);
+  transition: transform .35s ease;
+  pointer-events: none;
+}
+.stat-card:hover {
+  transform: translateY(-6px);
+  border-color: #7dd3fc;
+  box-shadow: 0 14px 30px rgba(37,99,235,.16);
+}
+.stat-card:hover::after { transform: scale(1.5); }
+.stat-icon { transition: transform .3s ease, background .3s ease; }
+.stat-card:hover .stat-icon {
+  background: #dbeafe;
+  transform: rotate(-8deg) scale(1.12);
+}
+.stat-value { transition: color .25s ease; }
+.stat-card:hover .stat-value { color: #2563eb; }
+
+/* Main card */
+.card {
+  border-radius: 18px;
+  box-shadow: 0 4px 14px rgba(15,23,42,.05);
+  transition: box-shadow .25s ease, border-color .25s ease;
+}
+.card:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 12px 28px rgba(15,23,42,.08);
+}
+
+/* Category tabs */
+.category-tab {
+  transition: background .2s ease, color .2s ease, transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.category-tab:not(.active):hover {
+  background: #f0f9ff;
+  border-color: #0284c7;
+  box-shadow: 0 6px 14px rgba(2,132,199,.15);
+  transform: translateY(-2px);
+}
+.category-tab[data-category="Surroundings"]:not(.active):hover {
+  background: #f0fdf4;
+  border-color: #16a34a;
+  color: #15803d;
+  box-shadow: 0 6px 14px rgba(22,163,74,.15);
+}
+.category-tab.active:hover { transform: translateY(-1px); }
+.category-tab:focus-visible { outline: 2px solid #0284c7; outline-offset: 2px; }
+
+/* Search input */
+.search-input {
+  background: #f8fafc;
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.search-input:hover { border-color: #7dd3fc; }
+.search-input:focus {
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(2,132,199,.12);
+}
+
+/* Table */
+.office-table th { box-shadow: 0 1px 0 #bae6fd; }
+.office-table td { transition: background .2s ease; }
+.office-table tbody tr:hover td { background: #f0f9ff; }
+.office-table tbody tr:hover td:first-child {
+  box-shadow: inset 4px 0 0 #0284c7;
+  color: #0c4a6e;
+}
+.office-table tbody tr:hover .rating-fill {
+  background: linear-gradient(90deg, #0369a1, #38bdf8);
+  box-shadow: 0 0 8px rgba(14,165,233,.45);
+}
+.rating-track { transition: background .2s ease; }
+.office-table tbody tr:hover .rating-track { background: #7dd3fc; }
+.eval-count { transition: background .2s ease, color .2s ease, transform .2s ease; }
+.office-table tbody tr:hover .eval-count {
+  background: #0284c7;
+  color: #ffffff;
+  transform: scale(1.08);
+}
+.no-results { font-style: italic; letter-spacing: .01em; }
+
+/* Row action buttons */
+.action-btn {
+  transition: background .2s ease, box-shadow .2s ease, transform .2s ease, border-color .2s ease, opacity .2s ease;
+}
+.action-btn:hover { opacity: 1; transform: translateY(-2px); }
+.action-btn:active { transform: translateY(0); }
+.action-delete, .delete-btn { border: 1px solid #fecaca; }
+.action-delete:hover, .delete-btn:hover {
+  background: #fecaca;
+  box-shadow: 0 3px 10px rgba(153,27,27,.2);
+}
+.action-btn:focus-visible { outline: 2px solid #0284c7; outline-offset: 2px; }
+
+/* Add Office button */
+.primary-btn:hover { transform: translateY(-2px); }
+
+/* Modals */
+.cv-modal {
+  border: 1px solid #e0f2fe;
+  box-shadow: 0 30px 70px rgba(15,23,42,.28);
+}
+.cv-modal-icon { transition: transform .25s ease; }
+.cv-modal:hover .cv-modal-icon { transform: rotate(-6deg) scale(1.08); }
+.cv-field-input:hover { border-color: #7dd3fc; }
+.cv-btn:focus-visible { outline: 2px solid #0284c7; outline-offset: 2px; }
+.cv-btn-ghost:hover { transform: translateY(-1px); }
+.cv-btn:active { transform: translateY(0); }
+
+/* Toasts */
+.cv-toast {
+  border-left: 4px solid #38bdf8;
+  backdrop-filter: blur(4px);
+}
+.cv-toast.error { border-left-color: #f87171; }
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .stat-card, .office-section > .card { animation: none; }
+  * { transition: none !important; }
 }
 </style>
 </head>
