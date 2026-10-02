@@ -54,6 +54,125 @@ textarea{min-height:70px;resize:vertical;padding:10px 12px;border:1px solid #dbe
 .csm-sig-title{font-size:9.5pt;font-style:italic;color:#333;margin-top:2px}
 .csm-footer{display:block;width:100%}
 .csm-footer img{display:block;width:100%;height:auto;object-fit:contain}
+/* ================= HOVER + DESIGN POLISH ================= */
+
+/* Entrance animation (main card only) */
+@keyframes cvRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+#rsCard {
+  animation: cvRise .5s cubic-bezier(.2,.7,.2,1) both;
+}
+
+/* Main card */
+.card {
+  border-radius: 18px;
+  box-shadow: 0 4px 14px rgba(15,23,42,.05);
+  transition: box-shadow .25s ease, border-color .25s ease;
+}
+.card:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 12px 28px rgba(15,23,42,.08);
+}
+.card-title { font-family: 'Syne', sans-serif; }
+.card-title::after {
+  content: "";
+  display: block;
+  width: 28px; height: 3px;
+  margin-top: 6px;
+  border-radius: 3px;
+  background: #2563eb;
+  transition: width .3s ease;
+}
+.card:hover .card-title::after { width: 56px; }
+
+/* Form section headings */
+.rs-col h4 {
+  font-family: 'Syne', sans-serif;
+  padding-left: 10px;
+  border-left: 3px solid #2563eb;
+}
+
+/* Labels react when their field is focused */
+label { transition: color .2s ease; }
+#rsForm label:has(+ .input:focus),
+#rsForm label:has(+ textarea:focus),
+#rsForm label:has(+ select:focus) { color: #2563eb; }
+
+/* Inputs */
+.input, select, textarea {
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.input:hover, select:hover, textarea:hover { border-color: #7dd3fc; }
+.input:focus, select:focus, textarea:focus {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  outline: none;
+}
+select { cursor: pointer; }
+
+/* Image upload rows */
+.rs-img img {
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.rs-img img:hover {
+  transform: scale(1.08);
+  border-color: #7dd3fc;
+  box-shadow: 0 6px 14px rgba(15,23,42,.15);
+}
+.rs-img input[type=file] { font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; }
+.rs-img input[type=file]::file-selector-button {
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  margin-right: 10px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background .2s ease, box-shadow .2s ease;
+}
+.rs-img input[type=file]::file-selector-button:hover {
+  background: #bfdbfe;
+  box-shadow: 0 3px 10px rgba(37,99,235,.2);
+}
+
+/* Buttons */
+.btn {
+  transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn-green { box-shadow: 0 4px 12px rgba(22,163,74,.25); }
+.btn-green:hover { background: #15803d; box-shadow: 0 8px 18px rgba(22,163,74,.35); }
+.btn-purple { box-shadow: 0 4px 12px rgba(124,58,237,.25); }
+.btn-purple:hover { background: #6d28d9; box-shadow: 0 8px 18px rgba(124,58,237,.35); }
+.btn-gray:hover { background: #dbeafe; color: #1e40af; box-shadow: 0 6px 14px rgba(37,99,235,.15); }
+.btn:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+/* Live preview panel */
+.rs-preview {
+  border: 1px solid #e2e8f0;
+  box-shadow: inset 0 1px 3px rgba(15,23,42,.05);
+  transition: border-color .25s ease, box-shadow .25s ease;
+}
+.rs-preview:hover {
+  border-color: #7dd3fc;
+  box-shadow: inset 0 1px 3px rgba(15,23,42,.05), 0 8px 20px rgba(15,23,42,.08);
+}
+
+/* Footer note */
+.rs-note { font-style: italic; }
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #rsCard { animation: none; }
+  * { transition: none !important; }
+}
 </style>
 </head>
 <body>
