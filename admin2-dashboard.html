@@ -152,7 +152,8 @@
    REFERENCE-DASHBOARD VISUAL OVERRIDES
    DATA / FIRESTORE / QUERIES ARE NOT CHANGED.
    ========================================================= */
-.dashboard-container{max-width:1320px;padding:22px 22px 16px;gap:16px;background:transparent}
+.dashboard-container{max-width:none;margin:0;width:100%;box-sizing:border-box;padding:22px 22px 16px;gap:16px;background:transparent}
+.charts-grid>*,.stat-grid>*{min-width:0}
 .stat-grid{gap:14px}
 .stat-card{border:1px solid #e5e7eb;border-top:3px solid #2563eb;border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.05);padding:16px 16px 17px}
 .stat-card.cyan{border-top-color:#16a34a}
@@ -200,8 +201,32 @@
 .qa-icon{font-size:22px}
 .qa-label{font-size:9px}
 
-@media (max-width:900px){.charts-grid{grid-template-columns:1fr}.donut-wrap svg{width:205px;height:205px}}
-@media (max-width:600px){.dashboard-container{padding:16px 12px 24px}.charts-grid{gap:12px}#line-chart-svg{height:200px}.donut-wrap svg{width:190px;height:190px}}
+/* ─── Fit every screen size ─── */
+.stat-value{font-size:clamp(22px,2.2vw,27px)}
+.status-vbar-col{width:clamp(20px,4vw,34px)}
+.status-vbar-group{gap:clamp(4px,1vw,8px)}
+.qa-label{font-size:11px}
+
+@media (max-width:1100px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:900px){
+  .charts-grid{grid-template-columns:1fr}
+  .quick-access-grid{grid-template-columns:repeat(3,1fr)}
+  .donut-wrap svg{width:205px;height:205px}
+}
+@media (max-width:600px){
+  .dashboard-container{padding:14px 12px 24px;gap:12px}
+  .charts-grid{gap:12px}
+  .stat-grid{gap:10px}
+  .quick-access-grid{grid-template-columns:repeat(2,1fr)}
+  .donut-wrap svg{width:180px;height:180px}
+  .status-vbar-label{font-size:10px}
+}
+@media (max-width:380px){
+  .stat-grid{grid-template-columns:1fr}
+  .quick-access-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -618,7 +643,13 @@ function renderLineChart() {
   svg.innerHTML = "";
   tooltip.classList.remove("show");
 
-  const width = 600, height = 235;
+  // Size the chart to its real container so it never gets stretched
+  const width  = Math.max(280, Math.round(svg.parentElement.clientWidth || 600));
+  const height = window.innerWidth <= 480 ? 170 : window.innerWidth <= 768 ? 200 : 235;
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  svg.style.height = height + "px";
+
   const padding = { top: 18, right: 16, bottom: 28, left: 34 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
@@ -793,6 +824,13 @@ function renderLineChart() {
     svg.appendChild(empty);
   }
 }
+
+// Redraw the line chart when the window is resized or zoomed
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(renderLineChart, 150);
+});
 
 // ======================
 // AVERAGE RATINGS — pie chart
