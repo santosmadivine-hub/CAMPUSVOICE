@@ -834,6 +834,157 @@
     height: 10px;
     border-radius: 3px;
   }
+  /* ================= HOVER + DESIGN POLISH ================= */
+
+@keyframes cvRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes cvPop {
+  from { opacity: 0; transform: translateY(-6px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.stat-card-alt, main .card {
+  animation: cvRise .5s cubic-bezier(.2,.7,.2,1) backwards;
+}
+.stat-card-alt:nth-child(2) { animation-delay: .06s; }
+.stat-card-alt:nth-child(3) { animation-delay: .12s; }
+.stat-card-alt:nth-child(4) { animation-delay: .18s; }
+.analytics-grid > .card:nth-child(1) { animation-delay: .22s; }
+.analytics-grid > .card:nth-child(2) { animation-delay: .28s; }
+.pie-row > .card:nth-child(1) { animation-delay: .34s; }
+.pie-row > .card:nth-child(2) { animation-delay: .40s; }
+main > .card { animation-delay: .44s; }
+
+/* Stat cards */
+.stat-card-alt {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  overflow: hidden;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.stat-card-alt::after {
+  content: "";
+  position: absolute;
+  right: -30px; bottom: -30px;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37,99,235,.10), transparent 70%);
+  transition: transform .35s ease;
+  pointer-events: none;
+}
+.stat-card-alt.accent-green::after  { background: radial-gradient(circle, rgba(16,185,129,.12), transparent 70%); }
+.stat-card-alt.accent-purple::after { background: radial-gradient(circle, rgba(139,92,246,.12), transparent 70%); }
+.stat-card-alt.accent-orange::after { background: radial-gradient(circle, rgba(249,115,22,.12), transparent 70%); }
+.stat-card-alt:hover {
+  transform: translateY(-6px);
+  border-color: #7dd3fc;
+  box-shadow: 0 14px 30px rgba(37,99,235,.16);
+}
+.stat-card-alt:hover::after { transform: scale(1.5); }
+.stat-card-alt::before { transition: transform .3s ease, background .3s ease; }
+.stat-card-alt:hover::before {
+  background: #dbeafe;
+  transform: rotate(-8deg) scale(1.12);
+}
+.stat-card-alt .sca-value { transition: color .25s ease; }
+.stat-card-alt:hover .sca-value { color: #2563eb; }
+.stat-card-alt.accent-green:hover .sca-value  { color: #059669; }
+.stat-card-alt.accent-purple:hover .sca-value { color: #7c3aed; }
+.stat-card-alt.accent-orange:hover .sca-value { color: #ea580c; }
+
+/* Cards */
+.card {
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+  border-color: #7dd3fc;
+  box-shadow: 0 12px 28px rgba(15,23,42,.10);
+}
+.card-title { font-family: 'Syne', sans-serif; transition: color .2s ease; }
+.card:hover > .card-title { color: #1d4ed8; }
+
+/* Status vertical bars */
+.status-vbar-fill { transition: height .3s ease, filter .2s ease, box-shadow .2s ease; }
+.status-vbar-col:hover .status-vbar-fill {
+  filter: brightness(1.1);
+  box-shadow: 0 -4px 12px rgba(15,23,42,.18);
+}
+.status-vbar-value { transition: color .2s ease, transform .2s ease; }
+.status-vbar-col:hover .status-vbar-value { color: #2563eb; transform: translateY(-2px); }
+.status-vbar-label { transition: color .2s ease; }
+.status-vbar-label:hover { color: #1d4ed8; }
+.status-vbar-legend-item {
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background .2s ease, transform .2s ease;
+}
+.status-vbar-legend-item:hover { background: #eff6ff; transform: translateY(-1px); }
+.status-vbar-legend-swatch { transition: transform .2s ease; }
+.status-vbar-legend-item:hover .status-vbar-legend-swatch { transform: scale(1.35); }
+
+/* SVG bars + donut segments (rating distribution, office trend, sex donut) */
+.status-trend-wrap svg rect, #rating-distribution-chart svg rect, .ot-line-svg rect,
+.evidence-donut-svg path {
+  transition: filter .2s ease, opacity .2s ease;
+  cursor: pointer;
+}
+#rating-distribution-chart svg rect:hover, .ot-line-svg rect:hover {
+  filter: brightness(1.1) drop-shadow(0 3px 6px rgba(15,23,42,.28));
+}
+.evidence-donut-svg path:hover {
+  filter: brightness(1.1) drop-shadow(0 3px 6px rgba(15,23,42,.30));
+}
+
+/* Sex distribution legend */
+.evidence-bar-row {
+  padding: 6px 8px;
+  margin: 0 -8px;
+  border-radius: 10px;
+  transition: background .2s ease, transform .2s ease;
+}
+.evidence-bar-row:hover { background: #f0f9ff; transform: translateX(4px); }
+.evidence-bar-row .dot { transition: transform .2s ease; }
+.evidence-bar-row:hover .dot { transform: scale(1.4); }
+.evidence-bar-track { transition: height .2s ease; }
+.evidence-bar-row:hover .evidence-bar-track { height: 8px; }
+.evidence-bar-fill { transition: width .3s ease, filter .2s ease; }
+.evidence-bar-row:hover .evidence-bar-fill { filter: brightness(1.08); }
+.evidence-bar-row:hover .evidence-bar-row-value { color: #2563eb; }
+.evidence-donut-center strong { transition: color .25s ease; }
+.evidence-donut-visual:hover .evidence-donut-center strong { color: #2563eb; }
+
+/* Chart.js panels */
+.chart-wrap { transition: box-shadow .25s ease, background .25s ease; }
+.chart-wrap:hover { background: #eef4fb; box-shadow: inset 0 0 0 1px #bae6fd; }
+
+/* Office trend dropdown */
+.ot-dropdown-btn {
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.ot-dropdown-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(37,99,235,.15);
+}
+.ot-dropdown-btn:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.ot-dropdown-panel.open { animation: cvPop .18s ease; }
+.ot-checkbox-row { transition: background .15s ease, color .15s ease, padding .15s ease; }
+.ot-checkbox-row:hover { color: #1d4ed8; padding-left: 12px; }
+.ot-group-label { transition: opacity .2s ease; }
+.ot-group-label:hover { opacity: .75; }
+.ot-line-legend-item { transition: transform .2s ease, color .2s ease; }
+.ot-line-legend-item:hover { transform: translateY(-1px); color: #0f172a; }
+.ot-line-legend-swatch { transition: transform .2s ease; }
+.ot-line-legend-item:hover .ot-line-legend-swatch { transform: scale(1.3); }
+
+/* Empty states */
+.lb-empty, .ot-empty { font-style: italic; }
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .stat-card-alt, main .card, .ot-dropdown-panel.open { animation: none; }
+  * { transition: none !important; }
+}
 </style>
 </head>
 <body>
