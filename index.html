@@ -190,6 +190,47 @@
       text-shadow: 0 1px 6px rgba(0,0,0,0.5);
     }
 
+    /* ───────── Marquee: CampusVoice + campus name ───────── */
+    .login-logo .marquee {
+      overflow: hidden;
+      width: 100%;
+      /* soft fade at both edges */
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+              mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marqueeScroll 14s linear infinite;
+      will-change: transform;
+    }
+
+    .marquee-group {
+      display: flex;
+      flex-shrink: 0;
+    }
+
+    .marquee-group span {
+      flex-shrink: 0;
+      white-space: nowrap;
+      padding-right: 1.6em;      /* gap between repeats */
+    }
+
+    /* The subtitle is smaller, so give it a slightly slower, opposite-direction scroll */
+    .login-logo .sub.marquee .marquee-track {
+      animation-duration: 18s;
+      animation-direction: reverse;
+    }
+
+    /* Pause when hovering */
+    .login-logo .marquee:hover .marquee-track { animation-play-state: paused; }
+
+    @keyframes marqueeScroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }   /* two identical groups = seamless loop */
+    }
+
     .form-group {
       margin-bottom: clamp(14px, 2.6vh, 26px);
     }
@@ -217,7 +258,7 @@
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    
+
     .form-group input::placeholder {
       color: rgba(255,255,255,0.75);
     }
@@ -323,7 +364,7 @@
       border: 1px solid rgba(239, 68, 68, 0.5);
       border-radius: 10px;
       color: #fca5a5;
-      font-size: 1rem;                        /* was 0.8rem */
+      font-size: 1rem;
       font-weight: 500;
       text-align: center;
       animation: shake 0.3s ease;
@@ -358,6 +399,13 @@
 
     @media (prefers-reduced-motion: reduce) {
       .login-box { animation: none; }
+
+      /* No scrolling: show one centered copy of each marquee line */
+      .marquee-track { animation: none !important; width: 100%; justify-content: center; }
+      .marquee-group + .marquee-group { display: none; }
+      .marquee-group span:not(:first-child) { display: none; }
+      .marquee-group span { padding-right: 0; }
+      .login-logo .marquee { -webkit-mask-image: none; mask-image: none; }
     }
 
   </style>
@@ -379,8 +427,22 @@
         >
         <div class="logo-fallback">CV</div>
       </div>
-      <div class="title">CampusVoice</div>
-      <div class="sub">ISUFST – San Enrique Campus</div>
+
+      <!-- Marquee: CampusVoice -->
+      <div class="title marquee" role="img" aria-label="CampusVoice">
+        <div class="marquee-track" aria-hidden="true">
+          <div class="marquee-group"><span>CampusVoice</span><span>CampusVoice</span><span>CampusVoice</span></div>
+          <div class="marquee-group"><span>CampusVoice</span><span>CampusVoice</span><span>CampusVoice</span></div>
+        </div>
+      </div>
+
+      <!-- Marquee: campus name -->
+      <div class="sub marquee" role="img" aria-label="ISUFST – San Enrique Campus">
+        <div class="marquee-track" aria-hidden="true">
+          <div class="marquee-group"><span>ISUFST – San Enrique Campus</span><span>ISUFST – San Enrique Campus</span><span>ISUFST – San Enrique Campus</span></div>
+          <div class="marquee-group"><span>ISUFST – San Enrique Campus</span><span>ISUFST – San Enrique Campus</span><span>ISUFST – San Enrique Campus</span></div>
+        </div>
+      </div>
     </div>
 
     <!-- Credentials -->
