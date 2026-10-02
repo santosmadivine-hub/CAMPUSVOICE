@@ -877,10 +877,9 @@
 
         <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
         <button class="btn-save" id="btn-save-report" disabled>💾 Save Report</button>
+        <!-- Opens the separate settings page (admin3-report-settings.html) -->
+        <a class="btn-generate" href="admin3-report-settings.html" style="background:#e2e8f0;color:#475569;text-decoration:none;">⚙️ Report Settings</a>
       </div>
-
-      <!-- The "Report Header & Footer Settings" card (#rsCard) is inserted
-           here, right before #reportPreview, by admin3-report-settings.js -->
 
       <div id="reportPreview">
         <div class="preview-bar">
@@ -1839,7 +1838,7 @@ document.getElementById("btn-save-report").addEventListener("click", saveReport)
 document.getElementById("btn-print-report").addEventListener("click", printReport);
 </script>
 
-<!-- MUST come after the inline module above: it reuses the Firebase app and defines window.ReportSettings -->
+<!-- MUST come after the inline module above: it reuses the Firebase app and defines window.ReportSettings (no UI on this page) -->
 <script type="module" src="admin3-report-settings.js"></script>
 </body>
 </html>
