@@ -216,9 +216,9 @@
 
       <button class="btn-generate" id="btn-generate-report">📊 Generate Report</button>
       <button class="btn-save" id="btn-save-report" disabled>💾 Save Report</button>
+      <!-- Opens the separate settings page (admin2-report-settings.html) -->
+      <a class="btn-generate" href="admin2-report-settings.html" style="background:#e2e8f0;color:#475569;text-decoration:none;padding:10px 18px;">⚙️ Report Settings</a>
     </div>
-
-    <!-- The "Report Header & Footer Settings" card is inserted here by admin2-report-settings.js -->
 
     <div id="reportPreview">
       <div class="preview-bar">
@@ -820,7 +820,7 @@ function createOfficialDocument(report) {
 
   const narrative = generateNarrative(report.office, report.respondents, parseFloat(report.avgSatisfaction), report.dimensionAverages);
 
-  // Header / footer / signatures come from admin2-report-settings.js (editable in the settings card)
+  // Header / footer / signatures come from admin2-report-settings.js (editable on the Report Settings page)
   const rs = window.ReportSettings;
   const headerInnerHtml = rs.headerHtml(rs.get(), "reportTitle");
   // Signatures now live in the footer (like Admin 1): Prepared by / Noted by, then the footer image
@@ -883,7 +883,7 @@ function createCommentsAttachmentDocument(report) {
     ? `During the covered period, the <strong>${report.office}</strong> received <strong>${commentsCount}</strong> written comment(s) and suggestion(s) out of <strong>${report.respondents}</strong> total respondent(s). These qualitative responses provide additional context to the quantitative ratings and are provided here to support the office in identifying areas for continuous improvement.`
     : `No written comments or suggestions were submitted by respondents of the <strong>${report.office}</strong> during the covered period.`;
 
-  // Header / footer / signatures come from admin2-report-settings.js (editable in the settings card)
+  // Header / footer / signatures come from admin2-report-settings.js (editable on the Report Settings page)
   const rs = window.ReportSettings;
   const headerInnerHtml = rs.headerHtml(rs.get(), "commentsTitle");
   // Signatures live in the footer (like Admin 1)
@@ -1528,7 +1528,7 @@ document.getElementById("btn-generate-report").addEventListener("click", generat
 document.getElementById("btn-save-report").addEventListener("click", saveReport);
 </script>
 
-<!-- MUST come after the inline module above: it reuses the Firebase app and defines window.ReportSettings -->
+<!-- MUST come after the inline module above: it reuses the Firebase app and defines window.ReportSettings (no UI on this page) -->
 <script type="module" src="admin2-report-settings.js"></script>
 </body>
 </html>
