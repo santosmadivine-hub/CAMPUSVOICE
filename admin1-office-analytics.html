@@ -73,6 +73,16 @@
 
 .card { background:var(--card); border-radius:18px; border:1px solid var(--line); box-shadow:0 4px 14px rgba(15,23,42,.05); margin-bottom:20px; overflow:hidden; padding:22px 24px; }
 
+/* Hover effects */
+.card, .chart-card { transition:box-shadow .2s ease, transform .2s ease, border-color .2s ease; }
+.card:hover, .chart-card:hover { box-shadow:0 10px 28px rgba(15,23,42,.10); transform:translateY(-2px); border-color:var(--brand-light); }
+.chart-wrap canvas { cursor:pointer; }
+.breakdown-table tbody tr { transition:background .15s ease; }
+.breakdown-table tbody tr:hover { background:#eff6ff; }
+.breakdown-table tbody tr:hover .dim-name { color:var(--brand); font-weight:600; }
+.code-usage-legend .legend-item { cursor:default; transition:transform .15s ease; }
+.code-usage-legend .legend-item:hover { transform:scale(1.08); }
+
 @media (max-width:768px) {
   .analytics-header .header-row { flex-direction:column; }
   .stat-grid { grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); }
@@ -449,12 +459,36 @@ async function main() {
       type: "bar",
       data: {
         labels: DIMENSION_LABELS,
-        datasets: [{ data: dimAverages, backgroundColor: palette, borderRadius: 8 }]
+        datasets: [{
+          data: dimAverages,
+          backgroundColor: palette.map(c => c + "cc"),
+          hoverBackgroundColor: palette,
+          borderColor: palette,
+          hoverBorderWidth: 2,
+          borderRadius: 8
+        }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        interaction: { mode: "index", intersect: false },
+        animation: { duration: 400 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "#0b1220",
+            padding: 12,
+            cornerRadius: 8,
+            displayColors: false,
+            callbacks: {
+              title: items => items[0].label,
+              label: ctx => [
+                `Average: ${ctx.parsed.y.toFixed(2)} / 5`,
+                `Satisfaction: ${((ctx.parsed.y / 5) * 100).toFixed(0)}%`
+              ]
+            }
+          }
+        },
         scales: { y: { beginAtZero: true, max: 5 } }
       }
     });
@@ -487,13 +521,39 @@ async function main() {
           borderColor: "#2563eb",
           backgroundColor: "rgba(37,99,235,0.12)",
           fill: true,
-          tension: 0.3
+          tension: 0.3,
+          pointRadius: 4,
+          pointHoverRadius: 8,
+          pointBackgroundColor: "#2563eb",
+          pointHoverBackgroundColor: "#f97316",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 2,
+          pointHoverBorderWidth: 3
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "#0b1220",
+            padding: 12,
+            cornerRadius: 8,
+            displayColors: false,
+            callbacks: {
+              label: ctx => {
+                const day = sortedDays[ctx.dataIndex];
+                const n = byDay[day].count;
+                return [
+                  `Average: ${ctx.parsed.y.toFixed(2)} / 5`,
+                  `${n} evaluation${n === 1 ? "" : "s"}`
+                ];
+              }
+            }
+          }
+        },
         scales: { y: { beginAtZero: true, max: 5 } }
       }
     });
