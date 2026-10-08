@@ -19,7 +19,7 @@
 *, *::before, *::after { box-sizing:border-box; }
 .main, .layout > main { min-width:0; max-width:100%; }
 .analytics-page, .analytics-page > * { min-width:0; }
-.analytics-page { max-width:1200px; width:100%; margin:0 auto; }
+.analytics-page { max-width:1600px; width:100%; margin:0 auto; }
 
 .back-link { display:inline-block; margin-bottom:16px; color:var(--brand); text-decoration:none; font-weight:900; font-size:clamp(15px, 2vw, 18px); padding:4px 0; }
 .back-link:hover { text-decoration:underline; }
@@ -324,8 +324,8 @@ function renderCodeUsage(codes) {
   const legend = document.getElementById("code-usage-legend");
 
   if (total === 0) {
-    label.innerHTML = `0<span class="donut-sub">codes</span>`;
-    legend.innerHTML = `<div class="code-usage-empty">No codes generated for this office yet.</div>`;
+    document.getElementById("chart-codes-wrap").style.display = "none";
+    legend.innerHTML = `<div class="code-usage-empty">No codes generated for this office yet. Create them in Generate Code.</div>`;
     return;
   }
 
@@ -496,7 +496,15 @@ async function main() {
     if (dimChart) { dimChart.destroy(); dimChart = null; }
     const horizontal = narrowMQ.matches;
     const valueAxis = { beginAtZero: true, max: 5, ticks: { stepSize: 1 } };
-    const labelAxis = { ticks: { autoSkip: false, maxRotation: horizontal ? 0 : 45, minRotation: 0 }, grid: { display: !horizontal ? false : true } };
+    // Wrap multi-word labels onto separate lines instead of rotating them
+    const wrap = function (value) {
+      const label = this.getLabelForValue(value);
+      if (horizontal) return label;
+      const words = label.split(" ");
+      if (words.length === 3 && words[1] === "&") return [words[0] + " &", words[2]];
+      return words.length > 1 ? words : label;
+    };
+    const labelAxis = { ticks: { autoSkip: false, maxRotation: 0, minRotation: 0, callback: wrap, font: { size: horizontal ? 12 : 11 } }, grid: { display: horizontal } };
 
     dimChart = safeRenderChart("chart-dimensions-wrap", "chart-dimensions", (canvas) => {
       return new Chart(canvas, {
