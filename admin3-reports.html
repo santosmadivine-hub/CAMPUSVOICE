@@ -167,18 +167,13 @@
   .saved-office-name { font-weight: 700; color: #0f1b32; }
   .saved-avg { font-family: 'Syne', sans-serif; font-weight: 700; }
   .saved-comments-count { font-family: 'Syne', sans-serif; font-weight: 700; color: #7c3aed; }
-  .action-btns { display: flex; gap: 8px; }
+  .action-btns { display: flex; gap: 8px; align-items: center; }
   .btn-view {
     background: #dbeafe; color: #1e40af; border: none; border-radius: 8px; padding: 7px 14px;
     font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer;
     display: inline-flex; align-items: center; gap: 5px;
   }
   .btn-view:hover { background: #bfdbfe; }
-  .btn-delete {
-    background: #fee2e2; color: #991b1b; border: none; border-radius: 8px; padding: 7px 10px;
-    font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
-  }
-  .btn-delete:hover { background: #fecaca; }
 
   /* Report Header & Footer */
   .report-header-box { background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); color: #fff; padding: 24px 32px; margin-bottom: 24px; border-radius: 8px; }
@@ -340,11 +335,10 @@
   .saved-reports-table tbody tr:hover .rating-satisfactory      { box-shadow: 0 0 0 3px rgba(146,64,14,.12); }
   .saved-reports-table tbody tr:hover .rating-poor              { box-shadow: 0 0 0 3px rgba(153,27,27,.12); }
 
-  /* View / Delete row buttons */
-  .btn-view, .btn-delete { transition: background .2s ease, transform .2s ease, box-shadow .2s ease; }
+  /* View row button (the Delete button has its own styles at the end of this file) */
+  .btn-view { transition: background .2s ease, transform .2s ease, box-shadow .2s ease; }
   .btn-view:hover { background: #bfdbfe; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37,99,235,.22); }
-  .btn-delete:hover { background: #fecaca; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(220,38,38,.22); }
-  .btn-view:active, .btn-delete:active { transform: translateY(0); box-shadow: none; }
+  .btn-view:active { transform: translateY(0); box-shadow: none; }
 
   /* Report summary table (in-card version) */
   .report-table td { transition: background .2s ease; }
@@ -400,6 +394,31 @@
   @media (prefers-reduced-motion: reduce) {
     .stat-card, .filter-row, .saved-reports-section { animation: none; }
     * { transition: none !important; }
+  }
+
+  /* ================= DELETE BUTTON (outlined icon button) ================= */
+  .btn-delete {
+    width: 34px; height: 34px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #fff; color: #dc2626;
+    border: 1.5px solid #fecaca; border-radius: 10px; cursor: pointer;
+    transition: background .2s ease, color .2s ease, border-color .2s ease,
+                transform .2s ease, box-shadow .2s ease;
+  }
+  .btn-delete .trash-lid {
+    transform-origin: 6px 6px;
+    transition: transform .25s ease;
+  }
+  .btn-delete:hover {
+    background: #dc2626; color: #fff; border-color: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(220, 38, 38, .3);
+  }
+  .btn-delete:hover .trash-lid { transform: rotate(-14deg) translateY(-1px); }
+  .btn-delete:active { transform: translateY(0); box-shadow: none; background: #b91c1c; }
+  .btn-delete:focus-visible { outline: 2px solid #dc2626; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    .btn-delete, .btn-delete .trash-lid { transition: none !important; }
   }
 </style>
 </head>
@@ -1366,7 +1385,14 @@ function renderSavedReports() {
             <td>
               <div class="action-btns">
                 <button class="btn-view" data-id="${r.id}">👁 View</button>
-                <button class="btn-delete" data-id="${r.id}">🗑</button>
+                <button class="btn-delete" data-id="${r.id}" title="Delete report" aria-label="Delete report">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <g class="trash-lid"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/></g>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6M14 11v6"/>
+                  </svg>
+                </button>
               </div>
             </td>
           </tr>
