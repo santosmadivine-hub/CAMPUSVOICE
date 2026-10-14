@@ -323,6 +323,43 @@
   .stat-card, .filter-row, .report-tabs, .saved-reports-section { animation: none; }
   * { transition: none !important; }
 }
+
+/* ===== Delete confirmation modal ===== */
+.cv-modal-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(3px);
+  padding: 16px;
+}
+.cv-modal-overlay.show { display: flex; animation: cvFade .18s ease; }
+.cv-modal {
+  width: 100%; max-width: 500px; background: #fff; border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+  overflow: hidden; animation: cvPop .22s cubic-bezier(.2,.8,.2,1);
+}
+.cv-modal-head { display: flex; align-items: center; gap: 16px; padding: 22px 26px; border-bottom: 1px solid #e0f2fe; }
+.cv-modal-icon {
+  width: 52px; height: 52px; border-radius: 16px; background: #fdebd3;
+  display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+}
+.cv-modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #0f172a; margin: 0; }
+.cv-modal-body { padding: 22px 26px 8px; font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.55; color: #334155; }
+.cv-modal-body b { color: #0f172a; }
+.cv-modal-actions { display: flex; justify-content: flex-end; gap: 12px; padding: 18px 26px 24px; }
+.cv-btn-cancel, .cv-btn-confirm {
+  border: none; border-radius: 12px; padding: 12px 22px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.cv-btn-cancel { background: #eef2f7; color: #334155; }
+.cv-btn-cancel:hover { background: #e2e8f0; transform: translateY(-1px); }
+.cv-btn-confirm { background: linear-gradient(180deg, #ef4444, #dc2626); color: #fff; box-shadow: 0 6px 16px rgba(220, 38, 38, .35); }
+.cv-btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(220, 38, 38, .45); }
+.cv-btn-cancel:focus-visible, .cv-btn-confirm:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+@keyframes cvFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cvPop  { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+@media print { .cv-modal-overlay { display: none !important; } }
 </style>
 </head>
 <body>
@@ -422,6 +459,21 @@
       </div>
     </div>
   </main>
+</div>
+
+<!-- Delete confirmation modal -->
+<div class="cv-modal-overlay" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+  <div class="cv-modal">
+    <div class="cv-modal-head">
+      <div class="cv-modal-icon">🗑️</div>
+      <h3 class="cv-modal-title" id="deleteModalTitle">Delete Report?</h3>
+    </div>
+    <div class="cv-modal-body" id="deleteModalMessage"></div>
+    <div class="cv-modal-actions">
+      <button class="cv-btn-cancel" id="deleteModalCancel">Cancel</button>
+      <button class="cv-btn-confirm" id="deleteModalConfirm">Delete Report</button>
+    </div>
+  </div>
 </div>
 
 <script src="shared.js"></script>
@@ -1391,8 +1443,51 @@ function viewSavedReport(id) {
   switchToRatingsTab();
 }
 
-function deleteSavedReport(id) {
-  if (!confirm("Delete this saved report? This cannot be undone.")) return;
+// ===== Custom delete confirmation (replaces window.confirm) =====
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function showDeleteModal({ title, messageHtml, confirmText }) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById("deleteModal");
+    const cancelBtn = document.getElementById("deleteModalCancel");
+    const confirmBtn = document.getElementById("deleteModalConfirm");
+
+    document.getElementById("deleteModalTitle").textContent = title;
+    document.getElementById("deleteModalMessage").innerHTML = messageHtml;
+    confirmBtn.textContent = confirmText;
+    overlay.classList.add("show");
+    cancelBtn.focus();
+
+    const close = (result) => {
+      overlay.classList.remove("show");
+      cancelBtn.removeEventListener("click", onCancel);
+      confirmBtn.removeEventListener("click", onConfirm);
+      overlay.removeEventListener("click", onOverlay);
+      document.removeEventListener("keydown", onKey);
+      resolve(result);
+    };
+    const onCancel = () => close(false);
+    const onConfirm = () => close(true);
+    const onOverlay = (e) => { if (e.target === overlay) close(false); };
+    const onKey = (e) => { if (e.key === "Escape") close(false); };
+
+    cancelBtn.addEventListener("click", onCancel);
+    confirmBtn.addEventListener("click", onConfirm);
+    overlay.addEventListener("click", onOverlay);
+    document.addEventListener("keydown", onKey);
+  });
+}
+
+async function deleteSavedReport(id) {
+  const r = savedReports.find(sr => sr.id === id);
+  const ok = await showDeleteModal({
+    title: "Delete Report?",
+    messageHtml: `Remove the saved report for "<b>${escapeHtml(r?.office || "this office")}</b>" from the list? This action cannot be undone.`,
+    confirmText: "Delete Report"
+  });
+  if (!ok) return;
   deleteDoc(doc(db, SAVED_REPORTS_COLLECTION, id)).catch(err => {
     alert("Could not delete report: " + err.message);
   });
@@ -1655,8 +1750,14 @@ function viewSavedCommentsReport(id) {
   renderStats();
 }
 
-function deleteSavedCommentsReport(id) {
-  if (!confirm("Delete this saved comments report? This cannot be undone.")) return;
+async function deleteSavedCommentsReport(id) {
+  const r = savedCommentsReports.find(sr => sr.id === id);
+  const ok = await showDeleteModal({
+    title: "Delete Report?",
+    messageHtml: `Remove the saved comments report for "<b>${escapeHtml(r?.office || "this office")}</b>" from the list? This action cannot be undone.`,
+    confirmText: "Delete Report"
+  });
+  if (!ok) return;
   deleteDoc(doc(db, SAVED_COMMENTS_REPORTS_COLLECTION, id)).catch(err => {
     alert("Could not delete comments report: " + err.message);
   });
