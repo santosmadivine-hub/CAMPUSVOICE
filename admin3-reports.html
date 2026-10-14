@@ -388,6 +388,7 @@
     * { transition: none !important; }
     #reportPreview { overflow: visible !important; }
     #report-container { zoom: 1 !important; width: 210mm !important; padding: 0 !important; margin: 0 !important; }
+    .cv-modal-backdrop { display: none !important; }
   }
 
   /* Accessibility: reduced motion */
@@ -419,6 +420,47 @@
   .btn-delete:focus-visible { outline: 2px solid #dc2626; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) {
     .btn-delete, .btn-delete .trash-lid { transition: none !important; }
+  }
+
+  /* ================= DELETE CONFIRM MODAL ================= */
+  .cv-modal-backdrop {
+    position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center;
+    padding: 20px; background: rgba(15, 23, 42, .55); backdrop-filter: blur(4px);
+    opacity: 0; transition: opacity .2s ease !important;
+  }
+  .cv-modal-backdrop.show { opacity: 1; }
+  .cv-modal {
+    position: relative; width: 100%; max-width: 400px; background: #fff; border-radius: 20px;
+    padding: 32px 28px 24px; text-align: center; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, .3);
+    transform: translateY(16px) scale(.96); transition: transform .25s cubic-bezier(.2,.9,.3,1.2) !important;
+  }
+  .cv-modal::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    background: linear-gradient(90deg, #f87171, #dc2626);
+  }
+  .cv-modal-backdrop.show .cv-modal { transform: translateY(0) scale(1); }
+  .cv-modal-icon {
+    width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%;
+    background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 8px #fef2f2;
+  }
+  .cv-modal h3 { margin: 0 0 8px; font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; color: #0f172a; }
+  .cv-modal p { margin: 0 0 24px; font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.6; color: #64748b; }
+  .cv-modal p b { color: #0f172a; font-weight: 700; }
+  .cv-modal-actions { display: flex; gap: 10px; }
+  .cv-modal-actions button {
+    flex: 1; padding: 12px 16px; border-radius: 12px; font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer; border: 1.5px solid transparent;
+    transition: background .2s ease, transform .2s ease, box-shadow .2s ease !important;
+  }
+  .cv-modal-cancel { background: #fff; color: #475569; border-color: #e2e8f0 !important; }
+  .cv-modal-cancel:hover { background: #f1f5f9; }
+  .cv-modal-confirm { background: #dc2626; color: #fff; box-shadow: 0 6px 16px rgba(220, 38, 38, .3); }
+  .cv-modal-confirm:hover { background: #b91c1c; transform: translateY(-2px); }
+  .cv-modal-actions button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    .cv-modal-backdrop, .cv-modal, .cv-modal-actions button { transition: none !important; }
   }
 </style>
 </head>
@@ -1432,8 +1474,60 @@ async function viewSavedReport(id) {
   document.getElementById("btn-print-report").disabled = false;
 }
 
-function deleteSavedReport(id) {
-  if (!confirm("Delete this saved report? This cannot be undone.")) return;
+// ======================
+// DELETE CONFIRM MODAL — replaces the browser's confirm() box.
+// Resolves true when the user confirms, false on Cancel / Esc / backdrop click.
+// ======================
+function confirmDeleteModal({ title, name, confirmText = "Delete" }) {
+  return new Promise((resolve) => {
+    const backdrop = document.createElement("div");
+    backdrop.className = "cv-modal-backdrop";
+    backdrop.innerHTML = `
+      <div class="cv-modal" role="alertdialog" aria-modal="true" aria-labelledby="cvModalTitle">
+        <div class="cv-modal-icon">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/>
+          </svg>
+        </div>
+        <h3 id="cvModalTitle"></h3>
+        <p>Are you sure you want to delete <b class="cv-name"></b>? This action cannot be undone.</p>
+        <div class="cv-modal-actions">
+          <button type="button" class="cv-modal-cancel">Cancel</button>
+          <button type="button" class="cv-modal-confirm"></button>
+        </div>
+      </div>`;
+    backdrop.querySelector("h3").textContent = title;
+    backdrop.querySelector(".cv-name").textContent = name;
+    backdrop.querySelector(".cv-modal-confirm").textContent = confirmText;
+    document.body.appendChild(backdrop);
+    requestAnimationFrame(() => backdrop.classList.add("show"));
+
+    const close = (result) => {
+      document.removeEventListener("keydown", onKey);
+      backdrop.classList.remove("show");
+      setTimeout(() => backdrop.remove(), 200);
+      resolve(result);
+    };
+    const onKey = (e) => { if (e.key === "Escape") close(false); };
+    document.addEventListener("keydown", onKey);
+
+    backdrop.querySelector(".cv-modal-cancel").onclick = () => close(false);
+    backdrop.querySelector(".cv-modal-confirm").onclick = () => close(true);
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(false); });
+    backdrop.querySelector(".cv-modal-cancel").focus();
+  });
+}
+
+async function deleteSavedReport(id) {
+  const r = savedReports.find(sr => sr.id === id);
+  const ok = await confirmDeleteModal({
+    title: "Delete Report?",
+    name: r ? `${r.office} (${r.startDate} → ${r.endDate})` : "this report",
+    confirmText: "Delete Report"
+  });
+  if (!ok) return;
   deleteDoc(doc(db, SAVED_REPORTS_COLLECTION, id)).catch(err => {
     alert("Could not delete report: " + err.message);
   });
