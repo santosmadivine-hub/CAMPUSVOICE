@@ -233,6 +233,76 @@ select { cursor: pointer; }
   .kpi-card, .config-card { animation: none; }
   * { transition: none !important; }
 }
+
+/* ================= DELETE CONFIRM MODAL ================= */
+.cv-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .22s ease;
+  z-index: 10000;
+}
+.cv-modal-overlay.show { opacity: 1; pointer-events: auto; }
+
+.cv-modal {
+  width: 100%; max-width: 480px;
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+  overflow: hidden;
+  transform: translateY(14px) scale(.97);
+  transition: transform .25s cubic-bezier(.2,.7,.2,1);
+}
+.cv-modal-overlay.show .cv-modal { transform: translateY(0) scale(1); }
+
+.cv-modal-head {
+  display: flex; align-items: center; gap: 16px;
+  padding: 22px 24px;
+  border-bottom: 1px solid #e0f2fe;
+}
+.cv-modal-icon {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: #ffedd5;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.cv-modal-title {
+  margin: 0;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 19px; color: #0f172a;
+}
+.cv-modal-body {
+  padding: 22px 24px 8px;
+  font-size: 14.5px; line-height: 1.55; color: #334155;
+  font-family: 'DM Sans', sans-serif;
+}
+.cv-modal-body b { color: #0f172a; font-weight: 700; }
+.cv-modal-actions {
+  display: flex; justify-content: flex-end; gap: 12px;
+  padding: 18px 24px 24px;
+}
+.cv-btn {
+  padding: 11px 22px; border: none; border-radius: 12px;
+  font-size: 14px; font-weight: 700;
+  font-family: 'DM Sans', sans-serif; cursor: pointer;
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+}
+.cv-btn:hover:not(:disabled) { transform: translateY(-2px); }
+.cv-btn:disabled { opacity: .7; cursor: not-allowed; }
+.cv-btn-cancel { background: #f1f5f9; color: #334155; }
+.cv-btn-cancel:hover { background: #e2e8f0; }
+.cv-btn-danger {
+  background: linear-gradient(160deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(220, 38, 38, .35);
+}
+.cv-btn-danger:hover:not(:disabled) { box-shadow: 0 10px 22px rgba(220, 38, 38, .45); }
+.cv-btn:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+@media print { .cv-modal-overlay { display: none !important; } }
 </style>
 </head>
 <body>
@@ -374,6 +444,21 @@ select { cursor: pointer; }
   </main>
 </div>
 
+<!-- Delete confirmation popup (used by both saved-report tables) -->
+<div class="cv-modal-overlay" id="deleteModal">
+  <div class="cv-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="cv-modal-head">
+      <div class="cv-modal-icon">🗑️</div>
+      <h3 class="cv-modal-title" id="deleteModalTitle">Delete Report?</h3>
+    </div>
+    <div class="cv-modal-body" id="deleteModalBody"></div>
+    <div class="cv-modal-actions">
+      <button class="cv-btn cv-btn-cancel" id="deleteModalCancel">Cancel</button>
+      <button class="cv-btn cv-btn-danger" id="deleteModalConfirm">Delete Report</button>
+    </div>
+  </div>
+</div>
+
 <script src="shared.js"></script>
 
 <script type="module">
@@ -450,6 +535,8 @@ function buildCommentsPayload(rows){
 }
 
 let allEvals = {}, currentReport = null, currentCommentsReport = null;
+// Used only to show the office name inside the delete popup
+let savedReportsCache = {}, savedCommentsCache = {};
 
 onSnapshot(officesCol, snapshot => {
   const select = document.getElementById("officeFilter"), prev = select.value;
@@ -482,6 +569,7 @@ function renderKPIs(){
 
 onSnapshot(reportsCol, snapshot => {
   const data = {}; snapshot.forEach(d => data[d.id] = d.data());
+  savedReportsCache = data;
   const keys = Object.keys(data);
   document.getElementById("kpiSavedCount").textContent = keys.length;
   document.getElementById("savedCountPill").textContent = keys.length+" report"+(keys.length!==1?"s":"");
@@ -653,11 +741,57 @@ window.viewSavedReport = key => {
     currentReport = r; renderPreview(r); switchReportsTab('ratings');
   }, { once:true });
 };
-window.deleteSavedReport = async key => {
-  if (!confirm("Delete this saved report? This cannot be undone.")) return;
-  try { await deleteDoc(doc(db,"services","reports","records",key)); }
-  catch (err){ alert("Failed to delete: "+err.message); }
-};
+
+/* ================= DELETE CONFIRM POPUP ================= */
+// pendingDelete = { type: "report" | "comments", key }
+let pendingDelete = null;
+
+function openDeleteModal(type, key){
+  const cache = type === "comments" ? savedCommentsCache : savedReportsCache;
+  const office = (cache[key] && cache[key].office) || "this office";
+  pendingDelete = { type, key };
+  const isComments = type === "comments";
+  document.getElementById("deleteModalTitle").textContent   = isComments ? "Delete Comments Report?" : "Delete Report?";
+  document.getElementById("deleteModalConfirm").textContent = isComments ? "Delete Comments Report" : "Delete Report";
+  const body = document.getElementById("deleteModalBody");
+  body.innerHTML = `Remove the saved ${isComments ? "comments report" : "report"} for "<b></b>" from the list? This action cannot be undone.`;
+  body.querySelector("b").textContent = office;   // textContent keeps office names safe from HTML injection
+  document.getElementById("deleteModal").classList.add("show");
+}
+
+function closeDeleteModal(){
+  document.getElementById("deleteModal").classList.remove("show");
+  pendingDelete = null;
+}
+
+window.deleteSavedReport         = key => openDeleteModal("report", key);
+window.deleteSavedCommentsReport = key => openDeleteModal("comments", key);
+
+document.getElementById("deleteModalCancel").addEventListener("click", closeDeleteModal);
+document.getElementById("deleteModal").addEventListener("click", e => {
+  if (e.target.id === "deleteModal") closeDeleteModal();   // click outside to close
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeDeleteModal();
+});
+
+document.getElementById("deleteModalConfirm").addEventListener("click", async () => {
+  if (!pendingDelete) return;
+  const { type, key } = pendingDelete;
+  const btn = document.getElementById("deleteModalConfirm");
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Deleting…";
+  try {
+    const path = type === "comments" ? "commentReports" : "reports";
+    await deleteDoc(doc(db,"services",path,"records",key));
+  } catch (err){
+    alert("Failed to delete: "+err.message);
+  }
+  btn.disabled = false;
+  btn.textContent = label;
+  closeDeleteModal();
+});
 
 /* PDF export: captures the same DOM the preview/print use, so the header/footer are identical. */
 async function renderElementToPdf(pdf, element, { usableW, usableH, addPageBefore }){
@@ -755,14 +889,10 @@ window.viewSavedCommentsReport = key => {
     currentCommentsReport = r; renderCommentsPreview(r); switchReportsTab('comments');
   }, { once:true });
 };
-window.deleteSavedCommentsReport = async key => {
-  if (!confirm("Delete this saved comments report? This cannot be undone.")) return;
-  try { await deleteDoc(doc(db,"services","commentReports","records",key)); }
-  catch (err){ alert("Failed to delete: "+err.message); }
-};
 
 onSnapshot(commentReportsCol, snapshot => {
   const data = {}; snapshot.forEach(d => data[d.id] = d.data());
+  savedCommentsCache = data;
   const keys = Object.keys(data);
   document.getElementById("commentsSavedCountPill").textContent = keys.length+" report"+(keys.length!==1?"s":"");
   const tbody = document.getElementById("commentsReportsTableBody");
