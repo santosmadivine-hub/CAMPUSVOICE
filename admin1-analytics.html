@@ -1128,11 +1128,40 @@ function normalizeClientType(item) {
 }
 
 
+/* Legacy/manually-entered evaluations stored a bare option number (e.g. "2")
+   instead of the full-meaning text the Android app writes via its radio
+   groups. Normalize those numeric codes back to the exact full-meaning
+   strings from ServiceEvalActivity.kt's bilingualText map, so they group
+   and display under their real label instead of a bare digit. */
+const CC_OPTION_TEXT = {
+  cc1: {
+    "1": "I know what a CC is and I saw this office's CC",
+    "2": "I know what a CC is but I did NOT see this office's CC",
+    "3": "I learned of the CC only when I saw this office's CC",
+    "4": "I do not know what a CC is and I did not see one in this office. (Answer N/A on CC2 and CC3)"
+  },
+  cc2: {
+    "1": "Easy to see",
+    "2": "Somewhat easy to see",
+    "3": "Difficult to see",
+    "4": "Not visible at all",
+    "5": "N/A"
+  },
+  cc3: {
+    "1": "Helped very much",
+    "2": "Somewhat helped",
+    "3": "Did not help",
+    "4": "N/A"
+  }
+};
+
 function getCCText(item, key) {
   const n = key.replace("cc", "");
   const raw = item[key] ?? item[key.toUpperCase()] ?? item["cc_" + n] ?? item["CC_" + n] ?? item["CC" + n];
-  if (typeof raw === "string" && raw.trim()) return raw.trim();
-  return null;
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  return CC_OPTION_TEXT[key]?.[trimmed] || trimmed;
 }
 
 onSnapshot(officesCol, (snap) => {
@@ -1433,12 +1462,11 @@ function renderCategoricalDist(containerId, rows, fieldKey) {
       `${pct.toFixed(1)}% share`
     ]));
     return `
-      <div class="sqd-row" style="grid-template-columns:1fr 2fr 46px;">
-        <div class="sqd-label" title="${safeLabel}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${label}</div>
+      <div class="sqd-row" style="display:flex;flex-direction:column;align-items:stretch;gap:4px;margin-bottom:10px;">
+        <div class="sqd-label" style="white-space:normal;line-height:1.35;">${label}</div>
         <div class="sqd-track cv-hover" data-tt-title="${safeLabel}" data-tt-lines='${lines}'>
           <div class="sqd-fill" style="width:${pct}%;background:${color};"></div>
         </div>
-        <div class="sqd-val">${count}</div>
       </div>
     `;
   }).join("") + `</div>`;
