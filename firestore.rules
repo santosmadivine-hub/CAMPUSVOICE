@@ -101,17 +101,21 @@ service cloud.firestore {
                         && request.resource.data.officeId == '');
 
       // Admin 1 manages every account. Anyone else may only stamp their own
-      // last-login time or change their own profile photo — they cannot
+      // last-login time, profile photo, username or email — they cannot
       // grant themselves a role, change which office they belong to, or
-      // reactivate themselves. photoURL must be a real address or absent
-      // entirely, never some other type smuggled in.
+      // reactivate themselves. Each self-editable field must still hold a
+      // sane type, never some other value smuggled in.
       allow update: if isAdmin1()
                     || (signedIn()
                         && request.auth.uid == uid
-                        && onlyChanges(['lastLoginAt', 'photoURL'])
+                        && onlyChanges(['lastLoginAt', 'photoURL', 'username', 'email'])
                         && (!('photoURL' in request.resource.data)
                             || request.resource.data.photoURL == null
-                            || request.resource.data.photoURL is string));
+                            || request.resource.data.photoURL is string)
+                        && (!('username' in request.resource.data)
+                            || request.resource.data.username is string)
+                        && (!('email' in request.resource.data)
+                            || request.resource.data.email is string));
 
       allow delete: if isAdmin1();
     }
@@ -127,10 +131,32 @@ service cloud.firestore {
     match /account_index/{username} {
       allow get: if true;
       allow list: if isAdmin1();
-      allow write: if isAdmin1()
-                   || (signedIn()
-                       && request.resource.data.uid == request.auth.uid
-                       && request.resource.data.role in ['admin1', 'admin2', 'admin3']);
+
+      // Admin 1 may write any entry. Anyone else may only write an entry for
+      // THEMSELVES (request.resource.data.uid must be their own uid), and
+      // only onto a username that is free or already theirs — `resource` is
+      // the document as it stands before this write, so a username already
+      // claimed by a different uid is refused outright, which is what stops
+      // a rename from hijacking someone else's login.
+      //
+      // The role written must match the caller's own role: admin bootstrap
+      // (admins/{uid} does not exist yet) is allowed on the admin roles
+      // alone, since accountDoc() can't be read before that first write;
+      // an office account's self-service rename additionally has to match
+      // the role already on its (already-existing) account record.
+      allow create, update: if isAdmin1()
+                            || (signedIn()
+                                && request.resource.data.uid == request.auth.uid
+                                && (resource == null || resource.data.uid == request.auth.uid)
+                                && (
+                                  request.resource.data.role in ['admin1', 'admin2', 'admin3']
+                                  || (request.resource.data.role == 'office' && accountDoc().role == 'office')
+                                ));
+
+      // Delete only your own entry (freeing a username you're renaming away
+      // from), or Admin 1 cleaning up after any account.
+      allow delete: if isAdmin1()
+                    || (signedIn() && resource.data.uid == request.auth.uid);
     }
 
     /* ---------------------------------------------------------------- *
