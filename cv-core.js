@@ -194,10 +194,8 @@ export async function logout() {
 
 const OFFICE_NAV = [
   { id: "dashboard", icon: "📊", label: "Dashboard",             href: "office-dashboard.html" },
-  { id: "eval-mgmt", icon: "📑", label: "Evaluation Management", href: "office-eval-mgmt.html" },
   { id: "codes",     icon: "🎟", label: "Transaction Codes",     href: "office-codes.html" },
-  { id: "analytics", icon: "📈", label: "Summary Analytics",     href: "office-analytics.html" },
-  { id: "reports",   icon: "📁", label: "Reports",               href: "office-reports.html" }
+  { id: "analytics", icon: "📈", label: "Summary Analytics",     href: "office-analytics.html" }
 ];
 
 export function buildOfficeSidebar(activePage, session) {
@@ -570,8 +568,10 @@ export async function fetchOffices() {
       id: d.id,
       name: d.data().name || d.id,
       status: d.data().status || "active",
-      accountUid: d.data().accountUid || "",
-      accountEmail: d.data().accountEmail || "",
+      inCharge: d.data().inCharge || "",
+      accountUid: d.data().accountUid || d.data().authUid || "",
+      accountEmail: d.data().accountEmail || d.data().email || "",
+      accountUsername: d.data().accountUsername || d.data().username || "",
       createdAt: toMillis(d.data().createdAt)
     }))
     .filter(o => o.name)
@@ -587,8 +587,10 @@ export async function fetchOffice(officeId) {
     id: snap.id,
     name: data.name || snap.id,
     status: data.status || "active",
-    accountUid: data.accountUid || "",
-    accountEmail: data.accountEmail || "",
+    inCharge: data.inCharge || "",
+    accountUid: data.accountUid || data.authUid || "",
+    accountEmail: data.accountEmail || data.email || "",
+    accountUsername: data.accountUsername || data.username || "",
     createdAt: toMillis(data.createdAt)
   };
 }

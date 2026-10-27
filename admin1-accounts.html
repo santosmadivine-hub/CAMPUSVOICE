@@ -116,8 +116,9 @@
               <tr>
                 <th>#</th>
                 <th>Office / Unit</th>
+                <th>In-Charge</th>
                 <th>Username</th>
-                <th>Role</th>
+                <th>Gmail Address</th>
                 <th>Status</th>
                 <th>Created</th>
                 <th>Last Sign-in</th>
@@ -125,7 +126,7 @@
               </tr>
             </thead>
             <tbody id="account-rows">
-              <tr><td colspan="8" class="loading-row">Loading offices and accounts…</td></tr>
+              <tr><td colspan="9" class="loading-row">Loading offices and accounts…</td></tr>
             </tbody>
           </table>
         </div>
@@ -135,23 +136,30 @@
   </main>
 </div>
 
-<!-- ===================== Create account modal ===================== -->
+<!-- ===================== Create office + account modal ===================== -->
 <div class="modal-overlay" id="create-modal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="create-title">
     <div class="modal-head">
-      <div class="modal-icon">🔑</div>
+      <div class="modal-icon">🏢</div>
       <div>
         <h3 class="modal-title" id="create-title">Create Office Account</h3>
-        <div class="modal-subtitle">The office signs in with this username and password.</div>
+        <div class="modal-subtitle" id="create-subtitle">Register a new campus unit or office and its login, together.</div>
       </div>
     </div>
 
     <div class="modal-body">
       <div class="form-grid">
         <label class="field full">
-          <span class="field-label">Office / Unit *</span>
-          <select id="c-office" class="input"></select>
-          <span class="field-hint">Offices that already have an account are not listed.</span>
+          <span class="field-label">Office Name *</span>
+          <input type="text" id="c-office-name" class="input" autocomplete="off"
+                 placeholder="e.g. Registrar, Accounting, Cashier, Library, Guidance Office">
+          <span class="field-hint" id="c-office-name-hint">The name of the campus unit or office — must be unique.</span>
+        </label>
+
+        <label class="field full">
+          <span class="field-label">Office In-Charge *</span>
+          <input type="text" id="c-incharge" class="input" autocomplete="off"
+                 placeholder="Full name of the person responsible for this office">
         </label>
 
         <label class="field">
@@ -161,6 +169,12 @@
         </label>
 
         <label class="field">
+          <span class="field-label">Gmail Address *</span>
+          <input type="email" id="c-email" class="input" autocomplete="off" placeholder="office@gmail.com">
+          <span class="field-hint">Must be a valid @gmail.com address — this is what the office signs in with.</span>
+        </label>
+
+        <label class="field full">
           <span class="field-label">Password *</span>
           <input type="text" id="c-password" class="input input-mono" autocomplete="new-password">
           <span class="field-hint">At least 8 characters, with a letter and a number.</span>
@@ -182,7 +196,7 @@
 
     <div class="modal-actions">
       <button class="btn" id="c-cancel">Cancel</button>
-      <button class="btn btn-primary" id="c-save">Create Account</button>
+      <button class="btn btn-primary" id="c-save">Save Office</button>
     </div>
   </div>
 </div>
@@ -201,16 +215,20 @@
       <p>Give these credentials to the office. They sign in at the normal CampusVoice login page.</p>
       <div class="credential-box">
         <div class="credential-row">
+          <span class="credential-key">Office</span>
+          <span class="credential-val" id="done-office"></span>
+        </div>
+        <div class="credential-row">
           <span class="credential-key">Username</span>
           <span class="credential-val" id="done-username"></span>
         </div>
         <div class="credential-row">
-          <span class="credential-key">Password</span>
-          <span class="credential-val" id="done-password"></span>
+          <span class="credential-key">Gmail</span>
+          <span class="credential-val" id="done-email"></span>
         </div>
         <div class="credential-row">
-          <span class="credential-key">Office</span>
-          <span class="credential-val" id="done-office"></span>
+          <span class="credential-key">Password</span>
+          <span class="credential-val" id="done-password"></span>
         </div>
       </div>
     </div>
@@ -271,7 +289,7 @@ import {
   fetchOfficeAccounts, createOfficeAccount, suggestUsername, suggestPassword,
   changeAccountUsername, reassignAccountOffice, setAccountStatus,
   revokeAccount, repairAccountLink, migrateLegacyCodes, slugUsername,
-  validateUsername, validatePassword
+  validateUsername, validatePassword, validateGmailAddress
 } from "./cv-accounts.js";
 
 /* Admin 1 only. Admin 2 and Admin 3 are bounced to their own dashboards. */
@@ -369,7 +387,7 @@ async function reload() {
     el("error-banner").textContent = friendlyError(err);
     el("error-banner").style.display = "block";
     el("account-rows").innerHTML =
-      `<tr><td colspan="8" class="empty-row">Offices and accounts could not be loaded.</td></tr>`;
+      `<tr><td colspan="9" class="empty-row">Offices and accounts could not be loaded.</td></tr>`;
   }
 }
 
@@ -400,8 +418,8 @@ function render() {
 
   if (!shown.length) {
     el("account-rows").innerHTML = offices.length
-      ? `<tr><td colspan="8" class="empty-row">Nothing matches these filters.</td></tr>`
-      : `<tr><td colspan="8" class="empty-row">No offices registered yet. Add them in Office Management first.</td></tr>`;
+      ? `<tr><td colspan="9" class="empty-row">Nothing matches these filters.</td></tr>`
+      : `<tr><td colspan="9" class="empty-row">No offices registered yet. Add them in Office Management first.</td></tr>`;
     return;
   }
 
@@ -433,8 +451,9 @@ function render() {
             ${r.office.orphan ? `<span class="badge-pill badge-warn">office record missing</span>` : ""}
           </div>
         </td>
+        <td class="cell-muted">${a?.inCharge ? escapeHtml(a.inCharge) : "—"}</td>
         <td>${a ? `<span class="username-pill">${escapeHtml(a.username)}</span>` : `<span class="no-account">no account</span>`}</td>
-        <td class="cell-muted">${a ? "Office Administrator" : "—"}</td>
+        <td class="cell-muted">${a?.email ? escapeHtml(a.email) : "—"}</td>
         <td>${a
               ? `<span class="badge-pill ${a.status === "active" ? "badge-active" : "badge-inactive"}">${a.status === "active" ? "Active" : "Deactivated"}</span>`
               : `<span class="badge-pill badge-warn">Cannot sign in</span>`}</td>
@@ -447,34 +466,55 @@ function render() {
 
 /* ------------------------------------------------------------------ *
  * Create
+ *
+ * Two entry points share this one modal:
+ *   - the toolbar button (attachOfficeId = null)  -> registers a brand-new
+ *     office and its login together; Office Name is free text.
+ *   - a row's "Create account" button (attachOfficeId = that office's id)
+ *     -> attaches a login to an office that is already registered but has
+ *     no account yet; Office Name is locked to that office's existing name.
  * ------------------------------------------------------------------ */
-function openCreate(preselectOfficeId) {
-  const available = offices.filter(o => !accounts.some(a => a.officeId === o.id));
+const CREATE_FIELDS = ["c-office-name", "c-incharge", "c-username", "c-email", "c-password"];
+let attachOfficeId = null;
 
-  if (!available.length) {
-    toast("Every registered office already has an account.", true);
-    return;
+function clearCreateErrors() {
+  el("c-error").textContent = "";
+  CREATE_FIELDS.forEach(id => el(id).classList.remove("has-error"));
+}
+
+function openCreate(preselectOfficeId) {
+  attachOfficeId = preselectOfficeId || null;
+
+  if (attachOfficeId) {
+    const office = offices.find(o => o.id === attachOfficeId);
+    if (!office) { toast("That office could not be found. Please refresh and try again.", true); return; }
+
+    el("create-subtitle").textContent = `Add the login for ${office.name}.`;
+    el("c-office-name").value = office.name;
+    el("c-office-name").disabled = true;
+    el("c-office-name-hint").textContent = "This office already exists — its name cannot be changed here.";
+    el("c-incharge").value = office.inCharge || "";
+  } else {
+    el("create-subtitle").textContent = "Register a new campus unit or office and its login, together.";
+    el("c-office-name").value = "";
+    el("c-office-name").disabled = false;
+    el("c-office-name-hint").textContent = "The name of the campus unit or office — must be unique.";
+    el("c-incharge").value = "";
   }
 
-  el("c-office").innerHTML = available.map(o =>
-    `<option value="${escapeHtml(o.id)}"${o.id === preselectOfficeId ? " selected" : ""}>${escapeHtml(o.name)}</option>`
-  ).join("");
-
+  el("c-email").value = "";
   syncSuggestedUsername();
   el("c-password").value = suggestPassword();
-  el("c-error").textContent = "";
-  el("c-username").classList.remove("has-error");
-  el("c-password").classList.remove("has-error");
+  clearCreateErrors();
 
   openModal("create-modal");
 }
 
 function syncSuggestedUsername() {
-  const officeId = el("c-office").value;
-  const office = offices.find(o => o.id === officeId);
-  if (!office) return;
+  const name = el("c-office-name").value.trim();
+  if (!name) return;
 
-  let base = suggestUsername(office.name);
+  let base = suggestUsername(name);
   let candidate = base;
   let n = 2;
   while (accounts.some(a => a.username === candidate)) candidate = `${base}-${n++}`;
@@ -482,7 +522,7 @@ function syncSuggestedUsername() {
 }
 
 el("create-btn").addEventListener("click", () => openCreate());
-el("c-office").addEventListener("change", syncSuggestedUsername);
+el("c-office-name").addEventListener("blur", () => { if (!attachOfficeId) syncSuggestedUsername(); });
 el("c-cancel").addEventListener("click", () => closeModal("create-modal"));
 el("c-suggest").addEventListener("click", () => { el("c-password").value = suggestPassword(); });
 
@@ -490,49 +530,78 @@ el("c-username").addEventListener("blur", () => {
   el("c-username").value = slugUsername(el("c-username").value);
 });
 
+el("c-email").addEventListener("blur", () => {
+  el("c-email").value = el("c-email").value.trim().toLowerCase();
+});
+
 el("c-save").addEventListener("click", async () => {
-  const officeId = el("c-office").value;
-  const office = offices.find(o => o.id === officeId);
-  const username = slugUsername(el("c-username").value);
-  const password = el("c-password").value;
+  const officeName = el("c-office-name").value.trim();
+  const inCharge   = el("c-incharge").value.trim();
+  const username   = slugUsername(el("c-username").value);
+  const email      = el("c-email").value.trim().toLowerCase();
+  const password   = el("c-password").value;
 
-  el("c-error").textContent = "";
-  el("c-username").classList.remove("has-error");
-  el("c-password").classList.remove("has-error");
+  clearCreateErrors();
 
+  const fail = (fieldId, message) => {
+    el(fieldId).classList.add("has-error");
+    el("c-error").textContent = message;
+  };
+
+  // --- All fields are required ---
+  if (!attachOfficeId && !officeName) return fail("c-office-name", "Office name is required.");
+  if (!inCharge) return fail("c-incharge", "Office in-charge is required.");
+  if (!username) return fail("c-username", "Username is required.");
+  if (!email)    return fail("c-email", "Gmail address is required.");
+  if (!password) return fail("c-password", "Password is required.");
+
+  // --- Prevent duplicate office names (new-office path only — the attach
+  //     path reuses an existing office's name, so there is nothing to check) ---
+  if (!attachOfficeId) {
+    const duplicateOffice = offices.some(
+      o => o.name.trim().toLowerCase() === officeName.toLowerCase()
+    );
+    if (duplicateOffice) return fail("c-office-name", `An office named "${officeName}" already exists.`);
+  }
+
+  // --- Username: format + duplicate ---
   const usernameError = validateUsername(username);
-  if (usernameError) {
-    el("c-error").textContent = usernameError;
-    el("c-username").classList.add("has-error");
-    return;
-  }
+  if (usernameError) return fail("c-username", usernameError);
+  if (accounts.some(a => a.username === username))
+    return fail("c-username", `The username "${username}" is already in use.`);
 
+  // --- Gmail address: format + duplicate ---
+  const emailError = validateGmailAddress(email);
+  if (emailError) return fail("c-email", emailError);
+  if (accounts.some(a => a.email === email))
+    return fail("c-email", `The email "${email}" is already associated with another account.`);
+
+  // --- Password security requirements ---
   const passwordError = validatePassword(password);
-  if (passwordError) {
-    el("c-error").textContent = passwordError;
-    el("c-password").classList.add("has-error");
-    return;
-  }
+  if (passwordError) return fail("c-password", passwordError);
 
   const btn = el("c-save");
   btn.disabled = true;
-  btn.textContent = "Creating…";
+  btn.textContent = "Saving…";
 
   try {
     const result = await createOfficeAccount({
-      officeId,
-      officeName: office.name,
+      officeId: attachOfficeId || undefined,
+      officeName,
+      inCharge,
       username,
+      email,
       password,
       createdBy: session.uid
     });
 
     closeModal("create-modal");
 
-    el("done-subtitle").textContent = office.name;
+    el("done-subtitle").textContent = result.officeName;
+    el("done-office").textContent   = result.officeName;
     el("done-username").textContent = result.username;
+    el("done-email").textContent    = result.email;
     el("done-password").textContent = password;
-    el("done-office").textContent   = office.name;
     openModal("done-modal");
 
     await reload();
@@ -542,7 +611,7 @@ el("c-save").addEventListener("click", async () => {
     el("c-error").textContent = err.message || friendlyError(err);
   } finally {
     btn.disabled = false;
-    btn.textContent = "Create Account";
+    btn.textContent = "Save Office";
   }
 });
 
@@ -552,6 +621,7 @@ el("done-copy").addEventListener("click", async () => {
     `CampusVoice office account\n` +
     `Office:   ${el("done-office").textContent}\n` +
     `Username: ${el("done-username").textContent}\n` +
+    `Gmail:    ${el("done-email").textContent}\n` +
     `Password: ${el("done-password").textContent}`;
   try {
     await navigator.clipboard.writeText(text);

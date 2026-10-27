@@ -28,9 +28,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
-  db, auth, firebaseConfig, PATHS, getDoc, getDocs, setDoc, updateDoc,
+  db, auth, firebaseConfig, PATHS, doc, getDoc, getDocs, setDoc, updateDoc,
   deleteDoc, query, where, collection, writeBatch, runTransaction,
-  toMillis, normalizeName, friendlyError
+  toMillis, normalizeName, friendlyError, fetchOffice, fetchOffices
 } from "./cv-core.js";
 
 /* ----------------------------------------------------------------------------
@@ -76,6 +76,16 @@ export function validatePassword(password) {
   return null;
 }
 
+/** A Gmail address, specifically — @gmail.com or its @googlemail.com alias. */
+const GMAIL_PATTERN = /^[a-z0-9](?:[a-z0-9._%+-]{0,63})@(gmail\.com|googlemail\.com)$/i;
+
+export function validateGmailAddress(email) {
+  const value = String(email || "").trim();
+  if (!value) return "Gmail address is required.";
+  if (!GMAIL_PATTERN.test(value)) return "Enter a valid Gmail address (it must end in @gmail.com).";
+  return null;
+}
+
 /** A password Admin 1 can hand over once; the office changes it on first sign-in. */
 export function suggestPassword() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
@@ -101,6 +111,7 @@ export async function fetchAccounts() {
       role: a.role || "",
       officeId: a.officeId || "",
       officeName: a.officeName || "",
+      inCharge: a.inCharge || "",
       username: a.username || "",
       email: a.email || "",
       status: a.status || "active",
@@ -134,6 +145,22 @@ export async function officeHasAccount(officeId, exceptUid = "") {
   return snap.docs.some(d => d.id !== exceptUid);
 }
 
+/** True when some other account already uses this email address. */
+export async function emailTaken(email, exceptUid = "") {
+  const target = String(email || "").trim().toLowerCase();
+  if (!target) return false;
+  const snap = await getDocs(query(PATHS.accounts(), where("email", "==", target)));
+  return snap.docs.some(d => d.id !== exceptUid);
+}
+
+/** True when a DIFFERENT office already uses this name (case-insensitive). */
+export async function officeNameTaken(name, exceptOfficeId = "") {
+  const target = normalizeName(name);
+  if (!target) return false;
+  const offices = await fetchOffices();
+  return offices.some(o => o.id !== exceptOfficeId && normalizeName(o.name) === target);
+}
+
 /* ----------------------------------------------------------------------------
  * Creating an office account
  * -------------------------------------------------------------------------- */
@@ -141,32 +168,73 @@ export async function officeHasAccount(officeId, exceptUid = "") {
 /**
  * Creates the Firebase Auth user for an office and writes its role mapping.
  *
- * @param {object}   p
- * @param {string}   p.officeId    doc id under services/offices/records
- * @param {string}   p.officeName
- * @param {string}   p.username
- * @param {string}   p.password    handed to the office once; never stored
- * @param {string}   p.createdBy   uid of the signed-in Admin 1
- * @returns {Promise<{uid:string, username:string, email:string}>}
+ * Two modes, chosen by whether `officeId` is given:
+ *
+ *   - officeId omitted: registers a brand-new campus unit or office — the
+ *     office record and its login are created together, in one step.
+ *     `officeName` is required and must not collide with an existing office.
+ *
+ *   - officeId given: attaches a login to an office that is already
+ *     registered (e.g. via Office Management) but has no account yet.
+ *     `officeName` is ignored; the office keeps its existing name.
+ *
+ * The office's `email` is a real Gmail address and is what Firebase
+ * Authentication signs the office in with — it is not a synthetic address.
+ * `username` is a separate, human-friendly identifier the office can also
+ * sign in with (resolved to this same email via account_index).
+ *
+ * @param {object}  p
+ * @param {string} [p.officeId]    doc id under services/offices/records — attach mode when given
+ * @param {string}  p.officeName   required when creating a new office; ignored otherwise
+ * @param {string}  p.inCharge     full name of the person responsible for the office
+ * @param {string}  p.username     unique sign-in identifier
+ * @param {string}  p.email        the office's Gmail address — used for Firebase Auth
+ * @param {string}  p.password     handed to the office once; never stored
+ * @param {string}  p.createdBy    uid of the signed-in Admin 1
+ * @returns {Promise<{uid:string, officeId:string, officeName:string, username:string, email:string}>}
  */
-export async function createOfficeAccount({ officeId, officeName, username, password, createdBy }) {
-  if (!officeId)   throw new Error("Select the office this account belongs to.");
-  if (!officeName) throw new Error("The selected office has no name.");
+export async function createOfficeAccount({
+  officeId, officeName, inCharge, username, email, password, createdBy
+}) {
+  const creatingNewOffice = !officeId;
+
+  const name = String(officeName || "").trim();
+  if (creatingNewOffice && !name) throw new Error("Office name is required.");
+
+  const chargeName = String(inCharge || "").trim();
+  if (!chargeName) throw new Error("Office in-charge is required.");
 
   const usernameError = validateUsername(username);
   if (usernameError) throw new Error(usernameError);
+
+  const emailError = validateGmailAddress(email);
+  if (emailError) throw new Error(emailError);
 
   const passwordError = validatePassword(password);
   if (passwordError) throw new Error(passwordError);
 
   const user = slugUsername(username);
-  const email = usernameToEmail(user);
+  const normalizedEmail = String(email).trim().toLowerCase();
 
   if (await usernameTaken(user))
     throw new Error(`The username "${user}" is already in use.`);
 
-  if (await officeHasAccount(officeId))
-    throw new Error(`${officeName} already has an account. Edit that account instead.`);
+  if (await emailTaken(normalizedEmail))
+    throw new Error(`The email "${normalizedEmail}" is already associated with another account.`);
+
+  let targetOfficeName = name;
+
+  if (creatingNewOffice) {
+    if (await officeNameTaken(name))
+      throw new Error(`An office named "${name}" already exists.`);
+  } else {
+    if (await officeHasAccount(officeId))
+      throw new Error("This office already has an account. Edit that account instead.");
+
+    const existing = await fetchOffice(officeId);
+    if (!existing) throw new Error("That office could not be found. Please refresh and try again.");
+    targetOfficeName = existing.name;
+  }
 
   // --- provision the Auth user on a throwaway app so Admin 1 stays signed in ---
   const secondary = initializeApp(firebaseConfig, `cv-provision-${Date.now()}`);
@@ -174,7 +242,7 @@ export async function createOfficeAccount({ officeId, officeName, username, pass
   let uid;
 
   try {
-    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    const cred = await createUserWithEmailAndPassword(secondaryAuth, normalizedEmail, password);
     uid = cred.user.uid;
   } catch (err) {
     await signOutSecondary(secondaryAuth).catch(() => {});
@@ -185,16 +253,20 @@ export async function createOfficeAccount({ officeId, officeName, username, pass
   await signOutSecondary(secondaryAuth).catch(() => {});
   await deleteApp(secondary).catch(() => {});
 
-  // --- role mapping, username index and the office back-reference, together ---
+  // --- office record, role mapping and username index, together ---
   const now = Date.now();
+  const officeRef = creatingNewOffice ? doc(PATHS.offices()) : PATHS.office(officeId);
+  const finalOfficeId = officeRef.id;
+
   const batch = writeBatch(db);
 
   batch.set(PATHS.account(uid), {
     role: "office",
-    officeId,
-    officeName,
+    officeId: finalOfficeId,
+    officeName: targetOfficeName,
+    inCharge: chargeName,
     username: user,
-    email,
+    email: normalizedEmail,
     status: "active",
     permissions: OFFICE_PERMISSIONS,
     createdAt: now,
@@ -202,14 +274,34 @@ export async function createOfficeAccount({ officeId, officeName, username, pass
     updatedAt: now
   });
 
-  batch.set(PATHS.accountIndex(user), { uid, email, role: "office", officeId });
+  batch.set(PATHS.accountIndex(user), {
+    uid, email: normalizedEmail, role: "office", officeId: finalOfficeId
+  });
 
-  batch.update(PATHS.office(officeId), {
+  const officeFields = {
+    inCharge: chargeName,
+    username: user,
+    email: normalizedEmail,
+    authUid: uid,
+    // Kept alongside authUid/email/username above for compatibility with
+    // pages that still read the office record under these older field names.
     accountUid: uid,
-    accountEmail: email,
+    accountEmail: normalizedEmail,
     accountUsername: user,
     status: "active"
-  });
+  };
+
+  if (creatingNewOffice) {
+    batch.set(officeRef, {
+      name,
+      officeName: name,
+      ...officeFields,
+      createdAt: now,
+      createdBy: createdBy || ""
+    });
+  } else {
+    batch.set(officeRef, officeFields, { merge: true });
+  }
 
   try {
     await batch.commit();
@@ -217,12 +309,15 @@ export async function createOfficeAccount({ officeId, officeName, username, pass
     // The Auth user now exists without a role mapping, so it can sign in but
     // reach nothing. Say so plainly rather than reporting a clean success.
     throw new Error(
-      "The login was created but its office link could not be saved " +
+      "The login was created but its office record could not be saved " +
       `(${friendlyError(err)}). Use "Repair account link" on the account row to finish setup.`
     );
   }
 
-  return { uid, username: user, email };
+  return {
+    uid, officeId: finalOfficeId, officeName: targetOfficeName,
+    username: user, email: normalizedEmail
+  };
 }
 
 /** The capability set an office account carries. Read by the UI and the rules. */
@@ -291,11 +386,13 @@ export async function reassignAccountOffice(uid, officeId, officeName) {
   batch.update(PATHS.office(officeId), {
     accountUid: uid,
     accountEmail: previous.email || "",
-    accountUsername: previous.username || ""
+    accountUsername: previous.username || "",
+    authUid: uid,
+    inCharge: previous.inCharge || ""
   });
   if (previous.officeId && previous.officeId !== officeId) {
     batch.update(PATHS.office(previous.officeId), {
-      accountUid: "", accountEmail: "", accountUsername: ""
+      accountUid: "", accountEmail: "", accountUsername: "", authUid: ""
     });
   }
   if (previous.username) {
@@ -358,7 +455,7 @@ export async function revokeAccount(uid) {
   if (account.username) batch.delete(PATHS.accountIndex(account.username));
   if (account.officeId) {
     batch.update(PATHS.office(account.officeId), {
-      accountUid: "", accountEmail: "", accountUsername: ""
+      accountUid: "", accountEmail: "", accountUsername: "", authUid: ""
     });
   }
   await batch.commit();
@@ -381,7 +478,8 @@ export async function repairAccountLink(uid) {
   }
   if (a.officeId) {
     batch.update(PATHS.office(a.officeId), {
-      accountUid: uid, accountEmail: a.email || "", accountUsername: a.username || ""
+      accountUid: uid, accountEmail: a.email || "", accountUsername: a.username || "",
+      authUid: uid, inCharge: a.inCharge || ""
     });
   }
   await batch.commit();

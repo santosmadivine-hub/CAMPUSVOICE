@@ -28,10 +28,8 @@ cv-accounts.js             office account provisioning (Admin 1)
 cv-analytics.css           Summary Analytics styles
 cv-office.css              shared styles for the office pages
 office-dashboard.html      office home
-office-eval-mgmt.html      evaluations, comments, uploaded evidence
 office-codes.html          generate / track / export this office's codes
 office-analytics.html      Summary Analytics (Admin 1 and offices)
-office-reports.html        office report, exportable to CSV / Excel / PDF
 admin1-accounts.html       Admin 1: create and manage office accounts
 firestore.rules            security rules
 functions/                 optional Cloud Functions for Admin-SDK-only operations
@@ -342,13 +340,14 @@ lock is in the rules; the disabled dropdown is only the visible half.
 | Page | Purpose |
 |---|---|
 | Dashboard | Totals, rating, codes remaining, latest comments |
-| Evaluation Management | Submissions, comments, photo/video evidence; filter by date, rating and feedback status; update feedback status; export |
 | Transaction Codes | Generate in batches, filter by status and generation date, export |
 | Summary Analytics | As §7 |
-| Reports | Office name, covered period, totals, satisfaction, overall rating, dimension scores, comments, code usage, date generated — CSV / Excel / PDF / print |
 
-Office reports reuse the letterhead from **Report Settings**, so they carry the
-same official header and footer as the Admin 1 reports.
+Evaluation Management and Reports were removed from the office navigation.
+An office account's own evaluation data still feeds its Dashboard and Summary
+Analytics (both read `services/evaluations/records` filtered to that office),
+but there is no longer a dedicated page for browsing individual submissions,
+updating feedback status, or exporting a per-office report.
 
 ---
 
