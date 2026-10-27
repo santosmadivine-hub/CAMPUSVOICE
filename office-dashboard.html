@@ -47,7 +47,7 @@
 
       <!-- Which office and which account is signed in -->
       <div class="office-context">
-        <div class="office-context-icon">🏢</div>
+        <div class="office-context-icon" id="ctx-mood">🏢</div>
         <div class="office-context-text">
           <div class="office-context-name" id="ctx-office">Loading…</div>
           <div class="office-context-meta">
@@ -243,7 +243,7 @@
 import {
   guard, mountOfficeChrome, fetchOffices, loadOfficeAnalytics,
   escapeHtml, formatDate, friendlyError, safeChart,
-  CHART_PALETTE, SUPER_ADMIN, ROLES, startOfDay, endOfDay
+  CHART_PALETTE, SUPER_ADMIN, ROLES, startOfDay, endOfDay, ratingEmoji
 } from "./cv-core.js";
 
 /* ------------------------------------------------------------------ *
@@ -383,6 +383,14 @@ function renderContext(payload) {
   const inactive = payload.office.status === "inactive";
   el("ctx-status").textContent = inactive ? "Inactive" : "Active";
   el("ctx-status").className   = `badge-pill ${inactive ? "badge-inactive" : "badge-active"}`;
+
+  // A quick mood read on the office's standing — the same icon spot used to
+  // be a plain 🏢; it now smiles or frowns with the overall rating instead.
+  const mood = el("ctx-mood");
+  mood.textContent = ratingEmoji(payload.stats.overall);
+  mood.title = payload.stats.total
+    ? `Overall rating: ${payload.stats.overall.toFixed(1)} / 5 (${payload.stats.overallLabel})`
+    : "No evaluations yet";
 
   document.title = `CampusVoice – Dashboard | ${payload.officeName}`;
 }

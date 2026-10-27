@@ -20,7 +20,8 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12
 import {
   getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail,
-  reauthenticateWithCredential, EmailAuthProvider
+  reauthenticateWithCredential, EmailAuthProvider,
+  updateEmail, verifyBeforeUpdateEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, collection, collectionGroup, doc, getDoc, getDocs,
@@ -376,6 +377,92 @@ export async function changeOwnPassword(currentPassword, newPassword) {
   }
 }
 
+/**
+ * Changes the signed-in user's own Gmail address — used by
+ * office-settings.html's Profile section.
+ *
+ * Tries the direct update first; some Firebase projects enforce email
+ * verification before letting the sign-in address change (enumeration
+ * protection), which surfaces as `auth/operation-not-allowed` — that case
+ * falls back to emailing a confirmation link to the NEW address instead.
+ * Firestore's cached `email` is intentionally left untouched until the
+ * change is confirmed, either immediately (direct update) or by
+ * `syncOwnEmailRecord()` once the real Authentication record has changed —
+ * updating it eagerly would point this account's own login at an email
+ * Firebase doesn't actually recognise yet.
+ *
+ * @returns {Promise<{verified:boolean, email:string}>} verified is false
+ *   when a confirmation link was sent instead of changing the address outright.
+ */
+export async function changeOwnEmail(currentPassword, newEmail) {
+  const emailError = validateGmailAddress(newEmail);
+  if (emailError) throw new Error(emailError);
+
+  const normalizedEmail = String(newEmail).trim().toLowerCase();
+
+  const user = auth.currentUser;
+  if (!user || !user.email) {
+    throw new Error("Your session has expired. Please sign in again.");
+  }
+
+  if (normalizedEmail === user.email.toLowerCase()) {
+    throw new Error("That is already your current Gmail address.");
+  }
+
+  try {
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+  } catch (err) {
+    const code = err?.code || "";
+    if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
+      throw new Error("Incorrect current password.");
+    }
+    throw new Error(friendlyError(err));
+  }
+
+  try {
+    await updateEmail(user, normalizedEmail);
+    await syncOwnEmailRecord(normalizedEmail);
+    return { verified: true, email: normalizedEmail };
+  } catch (err) {
+    const code = err?.code || "";
+
+    if (code === "auth/operation-not-allowed") {
+      await verifyBeforeUpdateEmail(user, normalizedEmail);
+      return { verified: false, email: normalizedEmail };
+    }
+    if (code === "auth/email-already-in-use") {
+      throw new Error("That Gmail address is already associated with another account.");
+    }
+    throw new Error(friendlyError(err));
+  }
+}
+
+/** Mirrors a just-confirmed email change into Firestore: the account
+ *  record, its username index entry, and its office's cached copy. */
+async function syncOwnEmailRecord(newEmail) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
+
+  const snap = await getDoc(PATHS.account(uid));
+  const data = snap.exists() ? snap.data() || {} : {};
+
+  const batch = writeBatch(db);
+  batch.update(PATHS.account(uid), { email: newEmail, updatedAt: Date.now() });
+
+  if (data.username) {
+    batch.set(PATHS.accountIndex(data.username), {
+      uid, email: newEmail, role: data.role || "office", officeId: data.officeId || ""
+    });
+  }
+  if (data.officeId) {
+    batch.update(PATHS.office(data.officeId), { accountEmail: newEmail });
+  }
+
+  await batch.commit();
+  patchSessionCache({ email: newEmail });
+}
+
 /* ----------------------------------------------------------------------------
  * 4b. Profile photo (Cloudinary)
  *
@@ -508,6 +595,20 @@ export function validatePassword(password) {
   if (p.length < 8) return "Password must be at least 8 characters.";
   if (!/[a-z]/i.test(p)) return "Password must contain at least one letter.";
   if (!/[0-9]/.test(p)) return "Password must contain at least one number.";
+  return null;
+}
+
+/**
+ * A Gmail address, specifically — @gmail.com or its @googlemail.com alias.
+ * Lives here, not cv-accounts.js, for the same reason validatePassword does:
+ * this module's own changeOwnEmail() needs it without a circular import.
+ */
+const GMAIL_PATTERN = /^[a-z0-9](?:[a-z0-9._%+-]{0,63})@(gmail\.com|googlemail\.com)$/i;
+
+export function validateGmailAddress(email) {
+  const value = String(email || "").trim();
+  if (!value) return "Gmail address is required.";
+  if (!GMAIL_PATTERN.test(value)) return "Enter a valid Gmail address (it must end in @gmail.com).";
   return null;
 }
 
@@ -654,6 +755,20 @@ export function ratingLabel(avg) {
   if (avg >= 1.5) return "Fair";
   if (avg >  0)   return "Poor";
   return "No data";
+}
+
+/**
+ * A face that reacts to the same tiers as ratingLabel(), so the two never
+ * disagree — low ratings read as unhappy, high ones as pleased. Falls back
+ * to the plain office icon when there is nothing to react to yet.
+ */
+export function ratingEmoji(avg) {
+  if (avg >= 4.5) return "😄";
+  if (avg >= 3.5) return "🙂";
+  if (avg >= 2.5) return "😐";
+  if (avg >= 1.5) return "🙁";
+  if (avg >  0)   return "😢";
+  return "🏢";
 }
 
 /**

@@ -31,14 +31,14 @@ import {
   db, auth, firebaseConfig, PATHS, doc, getDoc, getDocs, setDoc, updateDoc,
   deleteDoc, query, where, collection, writeBatch, runTransaction,
   toMillis, normalizeName, friendlyError, fetchOffice, fetchOffices,
-  validatePassword
+  validatePassword, validateGmailAddress
 } from "./cv-core.js";
 
-// Re-exported so pages that already import validatePassword from here
-// (admin1-accounts.html) keep working — the canonical definition now lives
-// in cv-core.js, which this module's own password-touching functions need
+// Re-exported so pages that already import these from here
+// (admin1-accounts.html) keep working — the canonical definitions now live
+// in cv-core.js, which this module's own account-touching functions need
 // without creating a circular import back into cv-core.js.
-export { validatePassword };
+export { validatePassword, validateGmailAddress };
 
 /* ----------------------------------------------------------------------------
  * Username / email conventions
@@ -72,16 +72,6 @@ export function validateUsername(username) {
   const u = slugUsername(username);
   if (u.length < 3) return "Username must be at least 3 characters.";
   if (!/^[a-z0-9]/.test(u)) return "Username must start with a letter or number.";
-  return null;
-}
-
-/** A Gmail address, specifically — @gmail.com or its @googlemail.com alias. */
-const GMAIL_PATTERN = /^[a-z0-9](?:[a-z0-9._%+-]{0,63})@(gmail\.com|googlemail\.com)$/i;
-
-export function validateGmailAddress(email) {
-  const value = String(email || "").trim();
-  if (!value) return "Gmail address is required.";
-  if (!GMAIL_PATTERN.test(value)) return "Enter a valid Gmail address (it must end in @gmail.com).";
   return null;
 }
 
