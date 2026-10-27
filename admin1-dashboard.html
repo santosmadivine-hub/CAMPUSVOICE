@@ -10,7 +10,7 @@
 
 .dashboard-container {
   flex: 1;
-  padding: 25px 30px 12px;
+  padding: 8px 30px 12px;
   max-width: none;
   margin: 0;
   width: 100%;
@@ -32,14 +32,43 @@
   position: relative;
   overflow: hidden;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
   min-height: 92px;
-  padding: 20px 26px;
+  padding: 18px 26px;
   border-radius: 20px;
   background: linear-gradient(120deg, #1d4ed8, #2563eb 55%, #3b82f6);
   box-shadow: 0 10px 24px rgba(37, 99, 235, .25);
+}
+
+.welcome-avatar {
+  position: relative;
+  z-index: 1;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .18);
+  border: 2px solid rgba(255, 255, 255, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.welcome-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.welcome-avatar .avatar-fallback {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; color: #fff;
+}
+
+.welcome-text {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .welcome-banner::before,
@@ -757,7 +786,10 @@
 
     <div class="dashboard-container">
 
-      <div class="welcome-banner" id="welcomeBanner" style="display:none;"></div>
+      <div class="welcome-banner" id="welcomeBanner" style="display:none;">
+        <div class="welcome-avatar" id="welcomeAvatar"></div>
+        <div class="welcome-text" id="welcomeText"></div>
+      </div>
 
       <div class="stat-grid">
         <div class="stat-card blue">
@@ -859,7 +891,8 @@
 <script src="shared.js"></script>
 <script type="module">
 import {
-  db, guard, collection, onSnapshot, SUPER_ADMIN, escapeHtml
+  db, guard, collection, onSnapshot, SUPER_ADMIN, escapeHtml,
+  avatarInitial, avatarInnerHtml
 } from "./cv-core.js";
 
 const session = await guard([SUPER_ADMIN]);
@@ -870,7 +903,9 @@ if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 const welcomeName = session.displayName || session.username || "Admin 1";
 const welcomeBanner = document.getElementById('welcomeBanner');
-welcomeBanner.innerHTML = `
+document.getElementById('welcomeAvatar').innerHTML =
+  avatarInnerHtml(session.photoURL, avatarInitial(session));
+document.getElementById('welcomeText').innerHTML = `
   <div class="welcome-banner-title">👋 Hello, ${escapeHtml(welcomeName)}!</div>
   <div class="welcome-banner-sub">Welcome back to CampusVoice</div>
 `;
