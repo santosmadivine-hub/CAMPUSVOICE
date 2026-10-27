@@ -775,8 +775,8 @@ export async function loadOfficeAnalytics(officeId, officeName, filters = {}) {
  * -------------------------------------------------------------------------- */
 
 /**
- * Office prefix for generated codes. Mirrors the rule the existing
- * Generate Code page already uses, so new codes look like the old ones:
+ * Office prefix for generated codes. Mirrors the rule office-codes.html
+ * already uses, so new codes look like the existing ones:
  *   1. the last acronym-like token  ("SIPP Coordinator (OJT-BSOA)" -> BSOA)
  *   2. otherwise the word initials  ("Guidance Counselor" -> GC)
  *   3. otherwise the first 6 letters of a single-word name

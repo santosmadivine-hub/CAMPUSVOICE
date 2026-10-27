@@ -207,10 +207,10 @@
   gap:12px;
 }
 
-#codeUtilWrap {
+#respondentsWrap {
   order: 1;
 }
-#code-pie-legend {
+#respondents-pie-legend {
   order: 2;
 }
 
@@ -736,15 +736,15 @@
         
         <div class="chart-card">
           <div class="card-header-row">
-            <div class="card-title">Code Utilization <span class="card-sub">— Used vs Unused</span></div>
-            <div class="badge-pill">Total Codes: <span id="codeCountBadge">0</span></div>
+            <div class="card-title">Respondents <span class="card-sub">— Male vs Female</span></div>
+            <div class="badge-pill">Total Respondents: <span id="respondentCountBadge">0</span></div>
           </div>
           <div class="donut-wrap">
-            <div class="pie-wrap" id="codeUtilWrap">
-              <svg id="code-pie-svg" viewBox="0 0 120 120" width="200" height="200"></svg>
-              <div class="pie-tooltip" id="code-pie-tooltip"></div>
+            <div class="pie-wrap" id="respondentsWrap">
+              <svg id="respondents-pie-svg" viewBox="0 0 120 120" width="200" height="200"></svg>
+              <div class="pie-tooltip" id="respondents-pie-tooltip"></div>
             </div>
-            <div class="donut-legend" id="code-pie-legend"></div>
+            <div class="donut-legend" id="respondents-pie-legend"></div>
           </div>
         </div>
 
@@ -785,10 +785,6 @@
               <div class="qa-icon">🏛</div>
               <div class="qa-label">Office Management</div>
             </a>
-            <a href="admin1-gen-code.html" class="quick-access-btn">
-              <div class="qa-icon">📋</div>
-              <div class="qa-label">Generate Code</div>
-            </a>
             <a href="admin1-eval-mgmt.html" class="quick-access-btn">
               <div class="qa-icon">📑</div>
               <div class="qa-label">Evaluation Management</div>
@@ -807,8 +803,7 @@
 <script src="shared.js"></script>
 <script type="module">
 import {
-  db, guard, PATHS, collection, collectionGroup, onSnapshot, getDocs,
-  SUPER_ADMIN
+  db, guard, collection, onSnapshot, SUPER_ADMIN
 } from "./cv-core.js";
 
 const session = await guard([SUPER_ADMIN]);
@@ -821,7 +816,6 @@ const evaluationsCol = collection(db, "services", "evaluations", "records");
 const officesCol      = collection(db, "services", "offices", "records");
 
 let offices   = {};
-let allCodes  = {};
 let allEvaluations = [];
 
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -836,48 +830,25 @@ function avgScore(item) {
   return c ? s / c : 0;
 }
 
-/* Transaction codes now live in the top-level `transaction_codes` collection.
-   Codes created before that change are still read from the old per-office
-   subcollections so the utilization figures stay complete until Admin 1 has
-   migrated them (Office Accounts -> Migrate codes). */
-async function loadAllCodes() {
-  const merged = {};
-
-  try {
-    const snap = await getDocs(PATHS.codes());
-    snap.forEach(d => {
-      const c = d.data() || {};
-      merged[c.code || d.id] = { ...c, office: c.officeName || "" };
-    });
-  } catch (err) {
-    console.error("Could not load transaction codes:", err);
-  }
-
-  try {
-    const legacy = await getDocs(collectionGroup(db, "codes"));
-    legacy.forEach(d => {
-      const c = d.data() || {};
-      const code = c.code || d.id;
-      if (merged[code]) return;
-      merged[code] = { ...c, office: d.ref.parent.parent?.id || "" };
-    });
-  } catch (err) {
-    console.warn("Legacy codes unavailable:", err?.code || err);
-  }
-
-  allCodes = merged;
-  renderCodeUtilization();
+/* Counts individuals, not submissions: respondents identified by userId or
+   email are deduplicated, while anyone with neither is counted on their own
+   (there is no way to know two anonymous entries are the same person, so
+   they are never collapsed together). */
+function countRespondents(rows) {
+  const known = new Set();
+  let anonymous = 0;
+  rows.forEach(r => {
+    const key = r.userId || r.email;
+    if (key) known.add(key); else anonymous++;
+  });
+  return known.size + anonymous;
 }
-
-onSnapshot(PATHS.codes(), () => { loadAllCodes(); }, (err) => {
-  console.warn("Live code updates unavailable:", err?.code || err);
-});
 
 onSnapshot(officesCol, (snapshot) => {
   offices = {};
   if (snapshot.empty) {
     document.getElementById("officeCount").textContent = 0;
-    renderCodeUtilization();
+    renderRespondents();
     return;
   }
   snapshot.forEach(docSnap => {
@@ -885,7 +856,7 @@ onSnapshot(officesCol, (snapshot) => {
     if (name) offices[name] = { total: 0, count: 0 };
   });
   document.getElementById("officeCount").textContent = Object.keys(offices).length;
-  renderCodeUtilization();
+  renderRespondents();
 });
 
 onSnapshot(evaluationsCol, (snapshot) => {
@@ -912,7 +883,7 @@ onSnapshot(evaluationsCol, (snapshot) => {
   document.getElementById("weeklySubmissions").textContent = weekly;
   document.getElementById("monthlySubmissions").textContent = monthly;
 
-  renderCodeUtilization();
+  renderRespondents();
   renderBarChart(total, pos, neu, neg);
   renderLineChart();
 });
@@ -937,37 +908,47 @@ function describeSlice(cx, cy, r, startAngle, endAngle) {
   ].join(" ");
 }
 
-function renderCodeUtilization(){
-  const svg     = document.getElementById("code-pie-svg");
-  const legend  = document.getElementById("code-pie-legend");
-  const tooltip = document.getElementById("code-pie-tooltip");
-  const wrap    = document.getElementById("codeUtilWrap");
+function renderRespondents(){
+  const svg     = document.getElementById("respondents-pie-svg");
+  const legend  = document.getElementById("respondents-pie-legend");
+  const tooltip = document.getElementById("respondents-pie-tooltip");
+  const wrap    = document.getElementById("respondentsWrap");
 
   svg.innerHTML = "";
   tooltip.classList.remove("show");
 
-  const totalCodes  = Object.values(allCodes).length;
-  const usedCodes   = Object.values(allCodes).filter(c => c.status === "used").length;
-  const unusedCodes = totalCodes - usedCodes;
+  const totalRespondents = countRespondents(allEvaluations);
+  document.getElementById("respondentCountBadge").textContent = totalRespondents;
 
-  document.getElementById("codeCountBadge").textContent = totalCodes;
+  let maleCount = 0, femaleCount = 0;
+  allEvaluations.forEach(item => {
+    const sex = String(item.sex || "").trim().toLowerCase();
+    if (sex === "male") maleCount++;
+    else if (sex === "female") femaleCount++;
+  });
 
-  if (totalCodes === 0) {
-    legend.innerHTML = `<div class="legend-item">No codes generated yet</div>`;
+  const knownSex = maleCount + femaleCount;
+
+  if (totalRespondents === 0) {
+    legend.innerHTML = `<div class="legend-item">No respondents yet</div>`;
+    return;
+  }
+  if (knownSex === 0) {
+    legend.innerHTML = `<div class="legend-item">Sex not recorded for any respondent yet</div>`;
     return;
   }
 
   const segments = [
-    { key: "used",   label: "Used",   color: "orange", count: usedCodes },
-    { key: "unused", label: "Unused", color: "blue", count: unusedCodes }
+    { key: "male",   label: "Male",   color: "blue",   count: maleCount },
+    { key: "female", label: "Female", color: "orange", count: femaleCount }
   ].filter(seg => seg.count > 0);
 
   const cx = 60, cy = 60, r = 50;
   let startAngle = 0;
 
   segments.forEach(seg => {
-    const pct = (seg.count / totalCodes) * 100;
-    const angle = (seg.count / totalCodes) * 360;
+    const pct = (seg.count / knownSex) * 100;
+    const angle = (seg.count / knownSex) * 360;
     const endAngle = startAngle + angle;
 
     let slice;
@@ -989,9 +970,9 @@ function renderCodeUtilization(){
     const showTooltip = (evt) => {
       tooltip.classList.add("show");
       tooltip.innerHTML = `
-        <div class="tt-title">${seg.label} Codes</div>
-        <div>${seg.count} of ${totalCodes} codes</div>
-        <div class="tt-sub">${pct.toFixed(1)}% coverage</div>
+        <div class="tt-title">${seg.label} Respondents</div>
+        <div>${seg.count} of ${knownSex} with sex recorded</div>
+        <div class="tt-sub">${pct.toFixed(1)}% share</div>
       `;
       moveTooltip(evt);
     };
@@ -1018,7 +999,7 @@ function renderCodeUtilization(){
   legend.innerHTML = segments.map(seg => `
     <div class="legend-item">
       <div class="legend-dot" style="background:${seg.color}"></div>
-      <span>${seg.label} (${seg.count} — ${((seg.count/totalCodes)*100).toFixed(0)}%)</span>
+      <span>${seg.label} (${seg.count} — ${((seg.count/knownSex)*100).toFixed(0)}%)</span>
     </div>
   `).join("");
 }
