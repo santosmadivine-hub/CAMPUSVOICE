@@ -239,6 +239,42 @@
   </div>
 </div>
 
+<!-- ===================== Edit account modal (username + office, combined) ===================== -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+    <div class="modal-head">
+      <div class="modal-icon">✏️</div>
+      <div>
+        <h3 class="modal-title" id="edit-title">Edit Account</h3>
+        <div class="modal-subtitle" id="edit-subtitle"></div>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <label class="field full">
+          <span class="field-label">Username *</span>
+          <input type="text" id="e-username" class="input input-mono" autocomplete="off">
+          <span class="field-hint">Lowercase letters, numbers, dots and dashes. The office signs in with this.</span>
+        </label>
+
+        <label class="field full">
+          <span class="field-label">Office *</span>
+          <select id="e-office" class="input"></select>
+          <span class="field-hint">Moving an account does not move its evaluations or transaction codes.</span>
+        </label>
+      </div>
+
+      <div class="field-error" id="e-error"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" id="e-cancel">Cancel</button>
+      <button class="btn btn-primary" id="e-save">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== Generic confirm ===================== -->
 <div class="modal-overlay" id="confirm-modal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
@@ -250,28 +286,6 @@
     <div class="modal-actions">
       <button class="btn" id="confirm-cancel">Cancel</button>
       <button class="btn btn-primary" id="confirm-ok">Confirm</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===================== Single-field prompt ===================== -->
-<div class="modal-overlay" id="prompt-modal">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="prompt-title">
-    <div class="modal-head">
-      <div class="modal-icon">✏️</div>
-      <h3 class="modal-title" id="prompt-title">Edit</h3>
-    </div>
-    <div class="modal-body">
-      <label class="field">
-        <span class="field-label" id="prompt-label">Value</span>
-        <input type="text" id="prompt-input" class="input input-mono">
-        <span class="field-hint" id="prompt-hint"></span>
-      </label>
-      <div class="field-error" id="prompt-error"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn" id="prompt-cancel">Cancel</button>
-      <button class="btn btn-primary" id="prompt-ok">Save</button>
     </div>
   </div>
 </div>
@@ -288,7 +302,7 @@ import {
 import {
   fetchOfficeAccounts, createOfficeAccount, suggestUsername, suggestPassword,
   changeAccountUsername, reassignAccountOffice, setAccountStatus,
-  revokeAccount, repairAccountLink, migrateLegacyCodes, slugUsername,
+  repairAccountLink, migrateLegacyCodes, slugUsername,
   validateUsername, validatePassword, validateGmailAddress
 } from "./cv-accounts.js";
 
@@ -335,28 +349,6 @@ function settleConfirm(result) {
 }
 el("confirm-ok").addEventListener("click", () => settleConfirm(true));
 el("confirm-cancel").addEventListener("click", () => settleConfirm(false));
-
-let promptResolve = null;
-function promptValue({ title, label, hint, value, confirmText, error }) {
-  el("prompt-title").textContent = title;
-  el("prompt-label").textContent = label;
-  el("prompt-hint").textContent = hint || "";
-  el("prompt-input").value = value || "";
-  el("prompt-error").textContent = error || "";
-  el("prompt-ok").textContent = confirmText || "Save";
-  openModal("prompt-modal");
-  requestAnimationFrame(() => { el("prompt-input").focus(); el("prompt-input").select(); });
-  return new Promise(resolve => { promptResolve = resolve; });
-}
-function settlePrompt(result) {
-  closeModal("prompt-modal");
-  if (promptResolve) { const r = promptResolve; promptResolve = null; r(result); }
-}
-el("prompt-ok").addEventListener("click", () => settlePrompt(el("prompt-input").value));
-el("prompt-cancel").addEventListener("click", () => settlePrompt(null));
-el("prompt-input").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") { e.preventDefault(); settlePrompt(el("prompt-input").value); }
-});
 
 /* ------------------------------------------------------------------ *
  * Load + render
@@ -429,14 +421,12 @@ function render() {
 
     const actions = a
       ? `
-        <button class="btn btn-sm" data-act="username" data-uid="${escapeHtml(uid)}">Username</button>
-        <button class="btn btn-sm" data-act="reassign" data-uid="${escapeHtml(uid)}">Office</button>
+        <button class="btn btn-sm" data-act="edit" data-uid="${escapeHtml(uid)}">Edit</button>
         ${a.status === "active"
           ? `<button class="btn btn-sm btn-danger" data-act="deactivate" data-uid="${escapeHtml(uid)}">Deactivate</button>`
           : `<button class="btn btn-sm btn-success" data-act="activate" data-uid="${escapeHtml(uid)}">Activate</button>`}
         <button class="btn btn-sm" data-act="migrate" data-office="${escapeHtml(r.office.id)}">Migrate codes</button>
-        <button class="btn btn-sm" data-act="repair" data-uid="${escapeHtml(uid)}">Repair link</button>
-        <button class="btn btn-sm btn-danger" data-act="revoke" data-uid="${escapeHtml(uid)}">Revoke</button>`
+        <button class="btn btn-sm" data-act="repair" data-uid="${escapeHtml(uid)}">Repair link</button>`
       : `
         <button class="btn btn-sm btn-primary" data-act="create" data-office="${escapeHtml(r.office.id)}">Create account</button>
         <button class="btn btn-sm" data-act="migrate" data-office="${escapeHtml(r.office.id)}">Migrate codes</button>`;
@@ -632,6 +622,89 @@ el("done-copy").addEventListener("click", async () => {
 });
 
 /* ------------------------------------------------------------------ *
+ * Edit — username and office reassignment, combined into one form.
+ * ------------------------------------------------------------------ */
+let editUid = null;
+
+function openEdit(uid) {
+  const account = accounts.find(a => a.uid === uid);
+  if (!account) { toast("That account could not be found. Please refresh and try again.", true); return; }
+
+  editUid = uid;
+  el("edit-subtitle").textContent = account.officeName;
+  el("e-username").value = account.username;
+  el("e-username").classList.remove("has-error");
+  el("e-office").classList.remove("has-error");
+  el("e-error").textContent = "";
+
+  // Offices this account can move to: its current office, plus any office
+  // that has no account yet (moving can't bump another office's login).
+  const available = offices.filter(
+    o => o.id === account.officeId || !accounts.some(a => a.officeId === o.id)
+  );
+  el("e-office").innerHTML = available.map(o =>
+    `<option value="${escapeHtml(o.id)}"${o.id === account.officeId ? " selected" : ""}>${escapeHtml(o.name)}</option>`
+  ).join("");
+
+  openModal("edit-modal");
+}
+
+el("e-cancel").addEventListener("click", () => closeModal("edit-modal"));
+el("e-username").addEventListener("blur", () => {
+  el("e-username").value = slugUsername(el("e-username").value);
+});
+
+el("e-save").addEventListener("click", async () => {
+  const account = accounts.find(a => a.uid === editUid);
+  if (!account) { closeModal("edit-modal"); return; }
+
+  const nextUsername = slugUsername(el("e-username").value);
+  const targetOfficeId = el("e-office").value;
+  const target = offices.find(o => o.id === targetOfficeId);
+
+  el("e-error").textContent = "";
+  el("e-username").classList.remove("has-error");
+  el("e-office").classList.remove("has-error");
+
+  const usernameError = validateUsername(nextUsername);
+  if (usernameError) {
+    el("e-error").textContent = usernameError;
+    el("e-username").classList.add("has-error");
+    return;
+  }
+
+  if (!target) {
+    el("e-error").textContent = "Select an office.";
+    el("e-office").classList.add("has-error");
+    return;
+  }
+
+  const btn = el("e-save");
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+
+  try {
+    if (nextUsername !== account.username) {
+      await changeAccountUsername(editUid, nextUsername);
+    }
+    if (target.id !== account.officeId) {
+      await reassignAccountOffice(editUid, target.id, target.name);
+    }
+
+    closeModal("edit-modal");
+    toast("Account updated.");
+    await reload();
+
+  } catch (err) {
+    console.error("Account update failed:", err);
+    el("e-error").textContent = err.message || friendlyError(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Save Changes";
+  }
+});
+
+/* ------------------------------------------------------------------ *
  * Row actions
  * ------------------------------------------------------------------ */
 el("account-rows").addEventListener("click", async (e) => {
@@ -650,62 +723,8 @@ el("account-rows").addEventListener("click", async (e) => {
       openCreate(officeId);
     }
 
-    else if (act === "username") {
-      let error = "";
-      let value = account.username;
-
-      while (true) {
-        const result = await promptValue({
-          title: "Change Username",
-          label: `Username for ${account.officeName}`,
-          hint: "Lowercase letters, numbers, dots and dashes. The office signs in with this.",
-          value, confirmText: "Save Username", error
-        });
-        if (result === null) break;
-
-        try {
-          const next = slugUsername(result);
-          const out = await changeAccountUsername(uid, next);
-          toast(out.changed ? `Username changed to “${out.username}”.` : "No change made.");
-          await reload();
-          break;
-        } catch (err) {
-          value = result;
-          error = err.message || friendlyError(err);
-        }
-      }
-    }
-
-    else if (act === "reassign") {
-      const available = offices.filter(o => o.id === account.officeId || !accounts.some(a => a.officeId === o.id));
-      const list = available.map((o, i) => `${i + 1}. ${o.name}`).join("\n");
-
-      const answer = await promptValue({
-        title: "Move Account to Another Office",
-        label: "Type the number of the office",
-        hint: list,
-        value: "",
-        confirmText: "Move Account"
-      });
-      if (answer === null) return;
-
-      const index = parseInt(answer, 10) - 1;
-      const target = available[index];
-      if (!target) { toast("That is not one of the listed numbers.", true); return; }
-      if (target.id === account.officeId) { toast("That is already this account's office."); return; }
-
-      const ok = await confirmAction({
-        title: "Move this account?",
-        body: `<strong>${escapeHtml(account.username)}</strong> will stop seeing ` +
-              `<strong>${escapeHtml(account.officeName)}</strong> and will see ` +
-              `<strong>${escapeHtml(target.name)}</strong> instead. No evaluation or code data is moved.`,
-        confirmText: "Move Account"
-      });
-      if (!ok) return;
-
-      await reassignAccountOffice(uid, target.id, target.name);
-      toast(`Account moved to ${target.name}.`);
-      await reload();
+    else if (act === "edit") {
+      openEdit(uid);
     }
 
     else if (act === "deactivate") {
@@ -733,24 +752,6 @@ el("account-rows").addEventListener("click", async (e) => {
     else if (act === "repair") {
       await repairAccountLink(uid);
       toast("Account link repaired.");
-      await reload();
-    }
-
-    else if (act === "revoke") {
-      const ok = await confirmAction({
-        title: "Revoke this account?",
-        body: `This removes the office link for <strong>${escapeHtml(account.username)}</strong> ` +
-              `permanently. The sign-in itself survives — deleting it needs the Firebase console ` +
-              `or the optional Cloud Function — but it will reach nothing. ` +
-              `<br><br>Deactivate instead if you only need to suspend access.`,
-        confirmText: "Revoke Account",
-        tone: "danger"
-      });
-      if (!ok) return;
-
-      await setAccountStatus(uid, "inactive").catch(() => {});
-      await revokeAccount(uid);
-      toast("Account revoked. Delete the sign-in in the Firebase console to finish.");
       await reload();
     }
 
