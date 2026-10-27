@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Office Reports</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="cv-office.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  /* ---- The printable sheet ---- */
+  .sheet-scroll { overflow-x:auto; background:#e8eef6; border-radius:16px; padding:clamp(10px,2vw,24px); }
+  .sheet {
+    width:210mm; min-height:297mm; margin:0 auto;
+    background:#fff; padding:14mm 14mm 12mm;
+    box-shadow:0 10px 36px rgba(15,23,42,.14);
+    font-size:10.5pt; color:#111827; line-height:1.5;
+  }
+
+  /* Header / footer rendered by the existing ReportSettings module */
+  .lh-row { display:flex; align-items:center; gap:10px; }
+  .lh-text { flex:1; min-width:0; }
+  .lh-text .rep  { font-size:9.5pt; }
+  .lh-text .uni  { font-size:12pt; font-weight:700; line-height:1.3; }
+  .lh-text .dept { font-size:10pt; font-weight:600; margin-top:2px; }
+  .lh-text .addr { font-size:8.5pt; color:#374151; }
+  .lh-divider { border:none; border-top:1.5px solid #111827; margin:8px 0 10px; }
+  .csm-doc-title { text-align:center; font-weight:700; font-size:13pt; margin:4px 0 14px; }
+  .csm-sigs { display:flex; gap:34px; flex-wrap:wrap; margin-top:26px; }
+  .csm-sig-block { min-width:190px; }
+  .csm-sig-label { font-size:9.5pt; margin-bottom:22px; }
+  .csm-sig-name  { font-size:10.5pt; font-weight:700; border-top:1px solid #111827; padding-top:3px; }
+  .csm-sig-title { font-size:9pt; color:#374151; }
+  .csm-footer { margin-top:16px; text-align:center; }
+  .csm-footer img { max-width:100%; }
+
+  /* Report body */
+  .rp-meta { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:7px 22px; margin-bottom:16px; }
+  .rp-meta div { font-size:9.5pt; }
+  .rp-meta b { font-weight:700; }
+
+  .rp-section { font-weight:700; font-size:11pt; margin:18px 0 8px; padding-bottom:3px; border-bottom:1.5px solid #2563eb; }
+
+  .rp-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; }
+  .rp-card { border:1px solid #cbd5e1; border-radius:8px; padding:9px 11px; text-align:center; }
+  .rp-card-label { font-size:7.5pt; text-transform:uppercase; letter-spacing:.05em; color:#4b5563; }
+  .rp-card-value { font-size:15pt; font-weight:700; margin-top:2px; }
+  .rp-card-sub { font-size:7.5pt; color:#6b7280; }
+
+  table.rp-table { width:100%; border-collapse:collapse; font-size:9.5pt; }
+  table.rp-table th, table.rp-table td { border:1px solid #cbd5e1; padding:6px 8px; text-align:left; }
+  table.rp-table th { background:#eff6ff; font-weight:700; font-size:8.5pt; text-transform:uppercase; letter-spacing:.04em; }
+  table.rp-table td.num { text-align:right; white-space:nowrap; }
+  table.rp-table tr.total-row td { font-weight:700; background:#f8fafc; }
+
+  .rp-bar-track { display:inline-block; width:62px; height:6px; background:#e2e8f0; border-radius:999px; overflow:hidden; vertical-align:middle; margin-right:6px; }
+  .rp-bar-fill { display:block; height:100%; background:#2563eb; }
+
+  .rp-comment { border-bottom:1px solid #e5e7eb; padding:7px 0; font-size:9.5pt; }
+  .rp-comment:last-child { border-bottom:none; }
+  .rp-comment-text { font-style:italic; }
+  .rp-comment-meta { font-size:8pt; color:#6b7280; margin-top:2px; }
+  .rp-note { font-size:8.5pt; color:#6b7280; font-style:italic; margin-top:8px; }
+
+  @media (max-width:760px) {
+    .rp-cards { grid-template-columns:repeat(2,1fr); }
+  }
+
+  @media print {
+    body { background:#fff; }
+    .layout, .main { display:block; margin:0 !important; padding:0 !important; }
+    .sidebar, .sidebar-overlay, .topbar, .card, .office-context, .btn, .banner { display:none !important; }
+    .sheet-scroll { overflow:visible; background:none; padding:0; border-radius:0; }
+    #report-sheet-card { display:block !important; }
+    .sheet { width:auto; min-height:0; box-shadow:none; padding:0; margin:0; }
+    @page { size:A4; margin:12mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <div id="sidebar-mount"></div>
+  <div class="sidebar-overlay"></div>
+
+  <main class="main fade-in">
+
+    <div id="topbar-mount"></div>
+
+    <div class="page">
+
+      <a href="office-dashboard.html" class="btn btn-ghost btn-sm" style="margin-bottom:14px;">← Back</a>
+
+      <div class="office-context">
+        <div class="office-context-icon">📁</div>
+        <div class="office-context-text">
+          <div class="office-context-name" id="ctx-office">Loading…</div>
+          <div class="office-context-meta">
+            Reports cover this office's evaluation records only · Office ID <code id="ctx-office-id">—</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner banner-error" id="error-banner" style="display:none;"></div>
+
+      <!-- ===================== Report builder ===================== -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2 class="card-title">Build Report</h2>
+            <div class="card-sub">Choose the period to cover, then generate, print or export.</div>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <label class="field">
+            <span class="field-label">Covered from</span>
+            <input type="date" id="f-start" class="input">
+          </label>
+          <label class="field">
+            <span class="field-label">Covered to</span>
+            <input type="date" id="f-end" class="input">
+          </label>
+          <label class="field">
+            <span class="field-label">Evaluation category</span>
+            <select id="f-category" class="input"><option value="">All categories</option></select>
+          </label>
+          <label class="field">
+            <span class="field-label">Comments &amp; suggestions</span>
+            <select id="f-comments" class="input">
+              <option value="all">Include all comments</option>
+              <option value="limited">Include the 15 most recent</option>
+              <option value="none">Exclude comments</option>
+            </select>
+          </label>
+          <div class="field">
+            <span class="field-label">&nbsp;</span>
+            <button class="btn btn-primary" id="build-btn">Generate Report</button>
+          </div>
+        </div>
+
+        <div class="toolbar-actions">
+          <button class="btn btn-sm" id="export-csv">⬇ CSV / Excel</button>
+          <button class="btn btn-sm" id="export-pdf">⬇ PDF</button>
+          <button class="btn btn-sm" id="print-btn">🖨 Print</button>
+        </div>
+        <div class="field-error" id="build-error"></div>
+      </div>
+
+      <!-- ===================== The report ===================== -->
+      <div class="card" id="report-sheet-card" style="display:none;">
+        <div class="sheet-scroll">
+          <div class="sheet" id="report-sheet">
+
+            <div data-report-header data-title-key="reportTitle"></div>
+
+            <div class="rp-meta" id="rp-meta"></div>
+
+            <div class="rp-section">Summary</div>
+            <div class="rp-cards" id="rp-cards"></div>
+
+            <div class="rp-section">Evaluation Dimension Scores</div>
+            <table class="rp-table">
+              <thead>
+                <tr>
+                  <th>Evaluation Dimension</th>
+                  <th style="width:92px;">Avg. Rating</th>
+                  <th style="width:140px;">Satisfaction</th>
+                  <th style="width:84px;">Responses</th>
+                </tr>
+              </thead>
+              <tbody id="rp-dimensions"></tbody>
+            </table>
+
+            <div class="rp-section">Transaction Code Usage</div>
+            <table class="rp-table">
+              <thead>
+                <tr><th>Measure</th><th style="width:110px;">Count</th><th style="width:110px;">Share</th></tr>
+              </thead>
+              <tbody id="rp-codes"></tbody>
+            </table>
+
+            <div id="rp-comments-wrap">
+              <div class="rp-section">Comments &amp; Suggestions</div>
+              <div id="rp-comments"></div>
+            </div>
+
+            <p class="rp-note" id="rp-note"></p>
+
+            <div data-report-footer></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="banner banner-state" id="idle-banner">
+        Choose a period above and select <strong>Generate Report</strong>.
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+import {
+  guard, mountOfficeChrome, loadOfficeAnalytics,
+  escapeHtml, formatDate, formatDateTime, friendlyError, toast,
+  toCSV, downloadFile, startOfDay, endOfDay
+} from "./cv-core.js";
+
+// Reuses the existing report header/footer settings so office reports carry
+// the same official letterhead as the Admin 1 reports. It needs the default
+// Firebase app, which cv-core.js has already initialised above.
+import "./admin1-report-settings.js";
+
+const session = await guard(["office"]);
+
+mountOfficeChrome({
+  activePage: "reports",
+  title: "Reports",
+  subtitle: "Generate and Export Evaluation Reports for Your Office",
+  session
+});
+
+const el = (id) => document.getElementById(id);
+
+el("ctx-office").textContent    = session.officeName;
+el("ctx-office-id").textContent = session.officeId;
+document.title = `CampusVoice – Reports | ${session.officeName}`;
+
+let payload = null;      // the data behind the report currently on screen
+let generatedAt = null;
+
+/* Populate the category filter from what this office has actually received. */
+try {
+  const probe = await loadOfficeAnalytics(session.officeId, session.officeName);
+  const categories = [...new Set(probe.evaluations.map(e => e.category).filter(Boolean))].sort();
+  el("f-category").innerHTML = `<option value="">All categories</option>` +
+    categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+} catch (err) {
+  console.error("Could not pre-load the office record:", err);
+  el("error-banner").textContent = friendlyError(err);
+  el("error-banner").style.display = "block";
+}
+
+/* ------------------------------------------------------------------ *
+ * Build
+ * ------------------------------------------------------------------ */
+async function build() {
+  const start = el("f-start").value;
+  const end   = el("f-end").value;
+
+  el("build-error").textContent = "";
+
+  if (start && end && start > end) {
+    el("build-error").textContent = "The start date is after the end date.";
+    return;
+  }
+
+  const btn = el("build-btn");
+  btn.disabled = true;
+  btn.textContent = "Generating…";
+
+  try {
+    payload = await loadOfficeAnalytics(session.officeId, session.officeName, {
+      startDate: start, endDate: end, category: el("f-category").value
+    });
+
+    generatedAt = Date.now();
+
+    if (window.ReportSettings?.loadReportSettings) {
+      await window.ReportSettings.loadReportSettings();
+    }
+
+    renderReport(start, end);
+
+    el("idle-banner").style.display = "none";
+    el("report-sheet-card").style.display = "block";
+    el("error-banner").style.display = "none";
+
+    toast(payload.filteredEvals.length
+      ? `Report generated from ${payload.filteredEvals.length} evaluation${payload.filteredEvals.length === 1 ? "" : "s"}.`
+      : "Report generated. There are no evaluations in this period.");
+
+  } catch (err) {
+    console.error("Could not build the report:", err);
+    el("error-banner").textContent = friendlyError(err);
+    el("error-banner").style.display = "block";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Generate Report";
+  }
+}
+
+function coveredRange(startValue, endValue) {
+  const s = payload.stats;
+  // Local-time parsing, so a yyyy-mm-dd value never prints a day out.
+  const start = startOfDay(startValue);
+  const end   = endOfDay(endValue);
+
+  if (start && end) return `${formatDate(start)} – ${formatDate(end)}`;
+  if (start)        return `${formatDate(start)} onwards`;
+  if (end)          return `Up to ${formatDate(end)}`;
+  if (s.minTs && s.maxTs) return `${formatDate(s.minTs)} – ${formatDate(s.maxTs)} (all records)`;
+  return "All records";
+}
+
+function renderReport(start, end) {
+  const s = payload.stats;
+  const range = coveredRange(start, end);
+
+  el("rp-meta").innerHTML = `
+    <div><b>Office / Unit:</b> ${escapeHtml(payload.officeName)}</div>
+    <div><b>Office ID:</b> ${escapeHtml(payload.office.id)}</div>
+    <div><b>Covered Period:</b> ${escapeHtml(range)}</div>
+    <div><b>Evaluation Category:</b> ${escapeHtml(el("f-category").value || "All categories")}</div>
+    <div><b>Total Evaluations:</b> ${s.total}</div>
+    <div><b>Unique Respondents:</b> ${s.respondents}</div>
+    <div><b>Date Generated:</b> ${escapeHtml(formatDateTime(generatedAt))}</div>
+    <div><b>Prepared Through:</b> CampusVoice — ISUFST-SEC</div>
+  `;
+
+  el("rp-cards").innerHTML = `
+    <div class="rp-card">
+      <div class="rp-card-label">Total Evaluations</div>
+      <div class="rp-card-value">${s.total}</div>
+      <div class="rp-card-sub">submissions</div>
+    </div>
+    <div class="rp-card">
+      <div class="rp-card-label">Avg Satisfaction</div>
+      <div class="rp-card-value">${s.satisfaction.toFixed(1)}%</div>
+      <div class="rp-card-sub">of maximum</div>
+    </div>
+    <div class="rp-card">
+      <div class="rp-card-label">Overall Rating</div>
+      <div class="rp-card-value">${s.overall.toFixed(2)}</div>
+      <div class="rp-card-sub">out of 5 — ${escapeHtml(s.overallLabel)}</div>
+    </div>
+    <div class="rp-card">
+      <div class="rp-card-label">Respondents</div>
+      <div class="rp-card-value">${s.respondents}</div>
+      <div class="rp-card-sub">unique</div>
+    </div>
+  `;
+
+  el("rp-dimensions").innerHTML = s.dimensions.map(d => `
+    <tr>
+      <td>${escapeHtml(d.label)}</td>
+      <td class="num">${d.responses ? d.avg.toFixed(2) : "—"}</td>
+      <td class="num">
+        <span class="rp-bar-track"><span class="rp-bar-fill" style="width:${d.pct}%"></span></span>
+        ${d.responses ? `${d.pct.toFixed(1)}%` : "—"}
+      </td>
+      <td class="num">${d.responses}</td>
+    </tr>
+  `).join("") + `
+    <tr class="total-row">
+      <td>Overall</td>
+      <td class="num">${s.overall.toFixed(2)}</td>
+      <td class="num">${s.satisfaction.toFixed(1)}%</td>
+      <td class="num">${s.total}</td>
+    </tr>`;
+
+  const c = s.codes;
+  const share = (n) => (c.total ? `${((n / c.total) * 100).toFixed(1)}%` : "—");
+  el("rp-codes").innerHTML = `
+    <tr><td>Total codes generated</td><td class="num">${c.total}</td><td class="num">100%</td></tr>
+    <tr><td>Codes used (evaluation submitted)</td><td class="num">${c.used}</td><td class="num">${share(c.used)}</td></tr>
+    <tr><td>Codes unused (still valid)</td><td class="num">${c.unused}</td><td class="num">${share(c.unused)}</td></tr>
+    ${c.other ? `<tr><td>Other / unrecognised status</td><td class="num">${c.other}</td><td class="num">${share(c.other)}</td></tr>` : ""}
+  `;
+
+  // Comments
+  const mode = el("f-comments").value;
+  const withComments = payload.filteredEvals.filter(e => e.suggestions && e.suggestions.trim());
+  const list = mode === "none" ? [] : (mode === "limited" ? withComments.slice(0, 15) : withComments);
+
+  el("rp-comments-wrap").style.display = mode === "none" ? "none" : "block";
+  el("rp-comments").innerHTML = list.length
+    ? list.map(e => `
+        <div class="rp-comment">
+          <div class="rp-comment-text">“${escapeHtml(e.suggestions)}”</div>
+          <div class="rp-comment-meta">
+            ${escapeHtml(e.timestamp ? formatDate(e.timestamp) : "date unavailable")} ·
+            rating ${e.avg.toFixed(1)} / 5
+            ${e.transactionCode ? ` · code ${escapeHtml(e.transactionCode)}` : ""}
+          </div>
+        </div>`).join("")
+    : `<div class="rp-comment"><div class="rp-comment-meta">No written comments were submitted in this period.</div></div>`;
+
+  const notes = [];
+  if (!s.total) notes.push("No evaluations fall within the covered period, so all rating figures read zero.");
+  if (mode === "limited" && withComments.length > 15)
+    notes.push(`${withComments.length - 15} further comments are not shown; export the CSV for the complete list.`);
+  notes.push(`Overall rating is the mean of the dimensions that received at least one response. "N/A" answers are excluded rather than counted as zero.`);
+  el("rp-note").textContent = notes.join(" ");
+}
+
+/* ------------------------------------------------------------------ *
+ * Export
+ * ------------------------------------------------------------------ */
+function requireReport() {
+  if (!payload) { toast("Generate the report first.", true); return false; }
+  return true;
+}
+
+el("build-btn").addEventListener("click", build);
+el("print-btn").addEventListener("click", () => { if (requireReport()) window.print(); });
+
+el("export-csv").addEventListener("click", () => {
+  if (!requireReport()) return;
+
+  const s = payload.stats;
+  const rows = [
+    ["CampusVoice — Office Evaluation Report"],
+    ["Office / Unit", payload.officeName],
+    ["Office ID", payload.office.id],
+    ["Covered Period", coveredRange(el("f-start").value, el("f-end").value)],
+    ["Evaluation Category", el("f-category").value || "All categories"],
+    ["Date Generated", formatDateTime(generatedAt)],
+    [],
+    ["Summary"],
+    ["Total Evaluations", s.total],
+    ["Unique Respondents", s.respondents],
+    ["Average Satisfaction (%)", s.satisfaction.toFixed(1)],
+    ["Overall Rating (out of 5)", s.overall.toFixed(2)],
+    ["Rating Description", s.overallLabel],
+    [],
+    ["Evaluation Dimension", "Average Rating", "Satisfaction %", "Responses"],
+    ...s.dimensions.map(d => [
+      d.label,
+      d.responses ? d.avg.toFixed(2) : "",
+      d.responses ? d.pct.toFixed(1) : "",
+      d.responses
+    ]),
+    ["Overall", s.overall.toFixed(2), s.satisfaction.toFixed(1), s.total],
+    [],
+    ["Transaction Code Usage", "Count"],
+    ["Total generated", s.codes.total],
+    ["Used", s.codes.used],
+    ["Unused", s.codes.unused],
+    ...(s.codes.other ? [["Other status", s.codes.other]] : []),
+    []
+  ];
+
+  if (el("f-comments").value !== "none") {
+    rows.push(["Comments & Suggestions", "Submitted", "Rating", "Transaction Code"]);
+    const withComments = payload.filteredEvals.filter(e => e.suggestions && e.suggestions.trim());
+    const list = el("f-comments").value === "limited" ? withComments.slice(0, 15) : withComments;
+
+    if (list.length) {
+      list.forEach(e => rows.push([
+        e.suggestions,
+        e.timestamp ? formatDateTime(e.timestamp) : "",
+        e.avg.toFixed(2),
+        e.transactionCode
+      ]));
+    } else {
+      rows.push(["No written comments in this period."]);
+    }
+  }
+
+  const slug = payload.officeName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+  downloadFile(`office-report-${slug}.csv`, "text/csv", toCSV(rows[0], rows.slice(1)));
+  toast("📥 Report exported as CSV.");
+});
+
+el("export-pdf").addEventListener("click", async () => {
+  if (!requireReport()) return;
+
+  const btn = el("export-pdf");
+  btn.disabled = true;
+  btn.textContent = "Preparing…";
+
+  try {
+    const sheet = el("report-sheet");
+    const canvas = await html2canvas(sheet, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: "mm", format: "a4" });
+
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgH  = (canvas.height * pageW) / canvas.width;
+
+    // Slice a tall sheet across as many A4 pages as it needs.
+    let remaining = imgH;
+    let offset = 0;
+    const image = canvas.toDataURL("image/jpeg", 0.95);
+
+    pdf.addImage(image, "JPEG", 0, 0, pageW, imgH);
+    remaining -= pageH;
+
+    while (remaining > 0) {
+      offset -= pageH;
+      pdf.addPage();
+      pdf.addImage(image, "JPEG", 0, offset, pageW, imgH);
+      remaining -= pageH;
+    }
+
+    const slug = payload.officeName.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+    pdf.save(`office-report-${slug}.pdf`);
+    toast("📥 Report exported as PDF.");
+
+  } catch (err) {
+    console.error("PDF export failed:", err);
+    toast("Could not build the PDF. Try Print instead, then save as PDF.", true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "⬇ PDF";
+  }
+});
+</script>
+
+</body>
+</html>

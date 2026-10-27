@@ -1,0 +1,433 @@
+rules_version = '2';
+
+/* ============================================================================
+ * CampusVoice — Cloud Firestore Security Rules
+ * ISUFST-SEC · School Evaluation System
+ *
+ * Office-level access control is enforced HERE, server-side. Hiding pages and
+ * navigation items in the browser is a convenience, not a boundary: an office
+ * account that crafts its own query still cannot read another office's
+ * evaluations, codes, feedback, reports or analytics.
+ *
+ * Roles live in accounts/{uid}:
+ *   admin1  — Services administrator; manages offices and accounts
+ *   admin2  — Cleanliness administrator
+ *   admin3  — Facilities administrator
+ *   office  — one campus unit or office, scoped to accounts/{uid}.officeId
+ *
+ * A respondent using the Android app is any other signed-in user.
+ *
+ * Deploy:  firebase deploy --only firestore:rules
+ * See SETUP-OFFICE-ACCOUNTS.md for the required deployment order.
+ * ========================================================================== */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ---------------------------------------------------------------- *
+     * Helpers
+     * ---------------------------------------------------------------- */
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function accountDoc() {
+      return get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data;
+    }
+
+    function hasAccount() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/accounts/$(request.auth.uid));
+    }
+
+    /* A deactivated account is refused everything, which is what makes
+       "Deactivate" in Office Accounts a real suspension and not just a
+       hidden button. */
+    function activeAccount() {
+      return hasAccount() && accountDoc().status == 'active';
+    }
+
+    function role() {
+      return activeAccount() ? accountDoc().role : '';
+    }
+
+    function isAdmin1() { return role() == 'admin1'; }
+    function isAdmin2() { return role() == 'admin2'; }
+    function isAdmin3() { return role() == 'admin3'; }
+    function isAnyAdmin() { return role() in ['admin1', 'admin2', 'admin3']; }
+
+    function isOffice() { return role() == 'office'; }
+
+    function myOfficeId() {
+      return isOffice() ? accountDoc().officeId : '';
+    }
+
+    /* The office this request is allowed to touch. */
+    function ownsOffice(officeId) {
+      return isOffice() && officeId != null && officeId == myOfficeId();
+    }
+
+    /* Admin 1 or the office itself. Used for everything office-scoped. */
+    function admin1OrOwner(officeId) {
+      return isAdmin1() || ownsOffice(officeId);
+    }
+
+    /* Exactly which fields an update is allowed to touch. */
+    function onlyChanges(allowed) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowed);
+    }
+
+    /* ---------------------------------------------------------------- *
+     * accounts/{uid} — role and office mapping
+     *
+     * Holds no password. Firebase Authentication holds credentials.
+     * ---------------------------------------------------------------- */
+    match /accounts/{uid} {
+
+      // Everyone may read their own record — the page guard needs it to know
+      // which office to show. Admin 1 reads them all to manage accounts.
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin1());
+      allow list: if isAdmin1();
+
+      // First sign-in after the upgrade: an administrator bootstraps their own
+      // record. It may only claim an admin role for themselves, never 'office',
+      // and never another user's document.
+      allow create: if isAdmin1()
+                    || (signedIn()
+                        && request.auth.uid == uid
+                        && request.resource.data.role in ['admin1', 'admin2', 'admin3']
+                        && request.resource.data.status == 'active'
+                        && request.resource.data.officeId == '');
+
+      // Admin 1 manages every account. Anyone else may only stamp their own
+      // last-login time — they cannot grant themselves a role, change which
+      // office they belong to, or reactivate themselves.
+      allow update: if isAdmin1()
+                    || (signedIn()
+                        && request.auth.uid == uid
+                        && onlyChanges(['lastLoginAt']));
+
+      allow delete: if isAdmin1();
+    }
+
+    /* ---------------------------------------------------------------- *
+     * account_index/{username} — username -> email, for sign-in
+     *
+     * Readable before sign-in, because the login page must resolve a typed
+     * username into the email Firebase Authentication expects. It exposes
+     * only the generated address and the office id; no password, no personal
+     * data, and knowing it grants nothing without the password.
+     * ---------------------------------------------------------------- */
+    match /account_index/{username} {
+      allow get: if true;
+      allow list: if isAdmin1();
+      allow write: if isAdmin1()
+                   || (signedIn()
+                       && request.resource.data.uid == request.auth.uid
+                       && request.resource.data.role in ['admin1', 'admin2', 'admin3']);
+    }
+
+    /* ---------------------------------------------------------------- *
+     * transaction_codes/{codeId} — canonical code store, codeId == code
+     * ---------------------------------------------------------------- */
+    match /transaction_codes/{codeId} {
+
+      /* A respondent types a code and the app looks up that exact document.
+         Single-document reads are open to signed-in users; listing is not, so
+         nobody can enumerate the unused codes of any office. */
+      allow get: if signedIn();
+
+      /* Only Admin 1 and the owning office may browse, count or export.
+         Firestore evaluates this against every document a query would return,
+         so a query filtered by `where officeId == <my office>` is allowed and
+         an unfiltered one is refused — an office cannot enumerate another
+         office's codes by crafting its own query. */
+      allow list: if isAdmin1()
+                  || (isOffice() && resource.data.officeId == myOfficeId());
+
+      /* An office generates codes only for itself, and they must start unused,
+         so no pre-used code can be planted and no code can be created on
+         another office's behalf.
+
+         Admin 1 is additionally allowed to write a code that is already marked
+         used, because migrating the pre-upgrade codes has to preserve the ones
+         respondents already spent. The document ID must still equal the code
+         in both cases, which is what makes duplicates impossible. */
+      allow create: if (
+                        isAdmin1()
+                        && request.resource.data.code == codeId
+                        && request.resource.data.officeId is string
+                        && request.resource.data.officeId != ''
+                      )
+                      || (
+                        ownsOffice(request.resource.data.officeId)
+                        && request.resource.data.code == codeId
+                        && request.resource.data.status == 'unused'
+                        && request.resource.data.usedAt == null
+                        && request.resource.data.evaluationId == null
+                      );
+
+      /* Claiming a code: a respondent may only flip unused -> used, and only
+         on those three fields. The code's office is immutable, so a code
+         issued for one office can never be moved to another.
+
+         Admin 1 and the owning office may also correct a code's status. */
+      allow update: if (
+                        signedIn()
+                        && resource.data.status == 'unused'
+                        && request.resource.data.status == 'used'
+                        && request.resource.data.officeId == resource.data.officeId
+                        && request.resource.data.code == resource.data.code
+                        && onlyChanges(['status', 'usedAt', 'evaluationId'])
+                      )
+                      || (
+                        admin1OrOwner(resource.data.officeId)
+                        && request.resource.data.officeId == resource.data.officeId
+                        && request.resource.data.code == resource.data.code
+                      );
+
+      /* Deleting is Admin 1's call only — an office cannot destroy its own
+         audit trail, and a used code cannot be removed and reissued at all. */
+      allow delete: if isAdmin1() && resource.data.status == 'unused';
+    }
+
+    /* ---------------------------------------------------------------- *
+     * services/... — the Services domain (Admin 1)
+     * ---------------------------------------------------------------- */
+    /* The intermediate container documents (services/offices,
+       services/evaluations, …) hold no data of their own. Matching the
+       document does NOT match its subcollections, so each one is granted
+       explicitly below. */
+    match /services/{containerId} {
+      allow read: if signedIn();
+      allow write: if isAdmin1();
+    }
+
+    /* ---- Office registry ----
+       Every path below is spelled out rather than wildcarded: a
+       `services/{any}/records/{id}` rule would also match the evaluation
+       records and expose them to every signed-in user. */
+    match /services/offices/records/{officeId} {
+      // Respondents need the office list to choose who they are evaluating.
+      allow read: if signedIn();
+
+      allow create, delete: if isAdmin1();
+
+      /* Admin 1 edits offices freely. An office account may only maintain its
+         own account back-reference — it cannot rename itself, and it cannot
+         flip its own status back to active after being deactivated. */
+      allow update: if isAdmin1()
+                    || (ownsOffice(officeId)
+                        && onlyChanges(['accountEmail', 'accountUsername']));
+    }
+
+    /* ---- Saved reports and comment reports (Admin 1 only) ---- */
+    match /services/reports/records/{reportId} {
+      allow read, write: if isAdmin1();
+    }
+
+    match /services/commentReports/records/{reportId} {
+      allow read, write: if isAdmin1();
+    }
+
+    /* ---- Report letterhead settings ----
+       Office reports reuse the same official header and footer, so an office
+       account must be able to read them. Only Admin 1 may change them. */
+    match /services/reportSettings/records/{settingsId} {
+      allow read: if isAdmin1() || isOffice();
+      allow write: if isAdmin1();
+    }
+
+    /* ---- Service evaluations — what the office-facing pages read ---- */
+    match /services/evaluations/records/{evaluationId} {
+
+      /* Admin 1 sees everything. An office sees only its own evaluations:
+         either stamped with its officeId, or — for records submitted before
+         officeId stamping existed — matching its office name.
+
+         A respondent may read back their own submission. */
+      allow get: if isAdmin1()
+                 || (isOffice() && (
+                       resource.data.get('officeId', '') == myOfficeId()
+                       || resource.data.get('office', '') == accountDoc().officeName
+                     ))
+                 || (signedIn() && resource.data.get('userId', '') == request.auth.uid);
+
+      /* The office pages run two narrow queries — `where officeId == mine` and
+         `where office == my office name`. Firestore applies this rule to every
+         document such a query returns, so both are allowed while an
+         unfiltered read of the collection is refused. */
+      allow list: if isAdmin1()
+                  || (isOffice() && (
+                        resource.data.get('officeId', '') == myOfficeId()
+                        || resource.data.get('office', '') == accountDoc().officeName
+                      ));
+
+      /* A respondent submits their own evaluation. */
+      allow create: if signedIn()
+                    && request.resource.data.get('userId', '') == request.auth.uid;
+
+      /* An office may only annotate feedback handling — never alter a
+         respondent's answers, rating, office or comments. */
+      allow update: if isAdmin1()
+                    || (
+                      isOffice()
+                      && (resource.data.get('officeId', '') == myOfficeId()
+                          || resource.data.get('office', '') == accountDoc().officeName)
+                      && onlyChanges(['feedbackStatus', 'feedbackUpdatedAt',
+                                      'feedbackUpdatedBy', 'officeNotes'])
+                    );
+
+      allow delete: if isAdmin1();
+    }
+
+    /* ---------------------------------------------------------------- *
+     * Legacy transaction codes
+     *   services/transaction_code/office_name/{officeName}/codes/{codeId}
+     *
+     * Read-only history. New codes are never written here, and the Android
+     * app no longer looks here either — Admin 1 migrates these into
+     * transaction_codes, after which every code resolves by direct lookup.
+     *
+     * Scoped by the {officeName} path segment, so an office listing its own
+     * legacy codes is allowed and reaching into another office's path is not.
+     * The old collection-group query that let any signed-in user enumerate
+     * every office's codes is deliberately not reproduced.
+     * ---------------------------------------------------------------- */
+    match /services/transaction_code/office_name/{officeName}/codes/{codeId} {
+      allow read: if isAdmin1()
+                  || (isOffice() && officeName == accountDoc().officeName);
+
+      /* Admin 1 may correct a legacy record or clean one up after migrating. */
+      allow write: if isAdmin1();
+    }
+
+    /* Collection-group access to the legacy `codes` subcollections, needed
+       because a collectionGroup() query is only ever matched by a rule in
+       this `{path=**}` form — the explicit path rule above does not cover it.
+       Restricted to Admin 1, who uses it to review and migrate legacy codes
+       across every office at once. */
+    match /{path=**}/codes/{codeId} {
+      allow read, write: if isAdmin1();
+    }
+
+    /* ---------------------------------------------------------------- *
+     * Cleanliness domain (Admin 2)
+     * ---------------------------------------------------------------- */
+    match /office-names-comfort-room/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin2() || isAdmin1();
+    }
+
+    match /office_names_surroundings/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin2() || isAdmin1();
+    }
+
+    match /cleanliness_evaluations/{document=**} {
+      allow read: if isAdmin2() || isAdmin1();
+      allow write: if signedIn();
+    }
+
+    match /savedReports/{docId} {
+      allow read, write: if isAdmin2() || isAdmin1();
+    }
+
+    match /savedCommentsReports/{docId} {
+      allow read, write: if isAdmin2() || isAdmin1();
+    }
+
+    match /reportSettingsAdmin2/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin2() || isAdmin1();
+    }
+
+    /* ---------------------------------------------------------------- *
+     * Facilities domain (Admin 3)
+     *
+     * Note: the top-level `offices` collection belongs to Facilities. The
+     * Services office registry lives at services/offices/records, which is
+     * why office accounts are keyed to that path and not this one.
+     * ---------------------------------------------------------------- */
+    match /offices/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin3() || isAdmin1();
+    }
+
+    match /facility_evaluations/{docId} {
+      allow get: if isAdmin3() || isAdmin1()
+                 || (signedIn() && resource.data.get('userId', '') == request.auth.uid);
+      allow list: if isAdmin3() || isAdmin1();
+      allow create: if signedIn()
+                    && request.resource.data.get('userId', '') == request.auth.uid;
+      allow update, delete: if isAdmin3() || isAdmin1();
+    }
+
+    match /facility_saved_reports/{docId} {
+      allow read, write: if isAdmin3() || isAdmin1();
+    }
+
+    match /reportSettingsAdmin3/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin3() || isAdmin1();
+    }
+
+    /* ---------------------------------------------------------------- *
+     * Shared app collections
+     * ---------------------------------------------------------------- */
+
+    /* Every evaluation category also writes a copy here for the respondent's
+       own history screen. Respondents read their own; admins read all. */
+    match /evaluation_history/{recordId} {
+      allow get: if isAnyAdmin()
+                 || (signedIn() && resource.data.get('userId', '') == request.auth.uid);
+      allow list: if isAnyAdmin();
+      allow create: if signedIn()
+                    && request.resource.data.get('userId', '') == request.auth.uid;
+      allow update: if isAnyAdmin();
+      allow delete: if isAnyAdmin();
+    }
+
+    match /users/{userId} {
+      allow get: if signedIn() && (request.auth.uid == userId || isAnyAdmin());
+      allow list: if isAnyAdmin();
+      allow create, update: if signedIn() && request.auth.uid == userId;
+      allow delete: if isAnyAdmin();
+    }
+
+    match /notifications/{userId}/items/{itemId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAnyAdmin());
+      allow write: if signedIn() && (request.auth.uid == userId || isAnyAdmin());
+    }
+
+    match /conversations/{evalId} {
+      allow read, write: if isAnyAdmin()
+                         || (signedIn() && resource == null)
+                         || (signedIn() && resource.data.get('userId', '') == request.auth.uid);
+
+      match /messages/{messageId} {
+        allow read, write: if signedIn();
+      }
+    }
+
+    /* ---------------------------------------------------------------- *
+     * admin_settings — DEPRECATED
+     *
+     * This collection held administrator usernames and passwords in plain
+     * text. Credentials now live in Firebase Authentication, so nothing may
+     * read it any more. Delete the collection once all three administrators
+     * have signed in once; see SETUP-OFFICE-ACCOUNTS.md.
+     * ---------------------------------------------------------------- */
+    match /admin_settings/{adminId} {
+      allow read, write: if false;
+    }
+
+    /* ---------------------------------------------------------------- *
+     * Anything not matched above is denied.
+     * ---------------------------------------------------------------- */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Transaction Codes</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="cv-office.css">
+<style>
+  .gen-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+  .gen-row .field { flex:0 0 150px; }
+  .gen-progress { font-size:12px; color:var(--muted); margin-top:10px; min-height:1.2em; }
+  .new-codes { margin-top:14px; display:none; }
+  .new-codes-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <div id="sidebar-mount"></div>
+  <div class="sidebar-overlay"></div>
+
+  <main class="main fade-in">
+
+    <div id="topbar-mount"></div>
+
+    <div class="page">
+
+      <a href="office-dashboard.html" class="btn btn-ghost btn-sm" style="margin-bottom:14px;">← Back</a>
+
+      <div class="office-context">
+        <div class="office-context-icon">🎟️</div>
+        <div class="office-context-text">
+          <div class="office-context-name" id="ctx-office">Loading…</div>
+          <div class="office-context-meta">
+            Codes generated here belong to this office only · Office ID <code id="ctx-office-id">—</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner banner-error" id="error-banner" style="display:none;"></div>
+
+      <!-- ===================== Totals ===================== -->
+      <section class="stat-grid">
+        <div class="stat-card stat-primary">
+          <div class="stat-icon">🎟️</div>
+          <div class="stat-label">Total Generated</div>
+          <div class="stat-value" id="s-total">0</div>
+          <div class="stat-sub" id="s-total-sub">—</div>
+        </div>
+        <div class="stat-card stat-success">
+          <div class="stat-icon">✅</div>
+          <div class="stat-label">Unused</div>
+          <div class="stat-value" id="s-unused">0</div>
+          <div class="stat-sub" id="s-unused-sub">0% of total</div>
+        </div>
+        <div class="stat-card stat-danger">
+          <div class="stat-icon">🔒</div>
+          <div class="stat-label">Used</div>
+          <div class="stat-value" id="s-used">0</div>
+          <div class="stat-sub" id="s-used-sub">0% of total</div>
+        </div>
+        <div class="stat-card stat-warning">
+          <div class="stat-icon">📅</div>
+          <div class="stat-label">Generated Today</div>
+          <div class="stat-value" id="s-today">0</div>
+          <div class="stat-sub">in the last 24 hours</div>
+        </div>
+      </section>
+
+      <!-- ===================== Generate ===================== -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2 class="card-title">Generate Transaction Codes</h2>
+            <div class="card-sub">
+              Each code is randomly generated, unique and permanently tied to this office.
+              A code is marked <strong>Used</strong> only after an evaluation has been submitted successfully.
+            </div>
+          </div>
+        </div>
+
+        <div class="gen-row">
+          <label class="field">
+            <span class="field-label">How many?</span>
+            <input type="number" id="gen-qty" class="input" value="10" min="1" max="200">
+            <span class="field-hint">1–200 per batch</span>
+          </label>
+          <button class="btn btn-primary" id="gen-btn">🎟 Generate Codes</button>
+        </div>
+
+        <div class="gen-progress" id="gen-progress"></div>
+
+        <div class="banner banner-success new-codes" id="new-codes">
+          <strong id="new-codes-title">Codes generated.</strong>
+          <div class="card-sub" style="margin-top:4px;">
+            Hand these out to respondents. Each one can be used for a single evaluation of this office.
+          </div>
+          <div class="new-codes-list" id="new-codes-list"></div>
+          <div style="margin-top:12px;">
+            <button class="btn btn-sm" id="copy-new">📋 Copy codes</button>
+            <button class="btn btn-sm" id="export-new">⬇ Export this batch (CSV)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== Code list ===================== -->
+      <div class="card">
+        <div class="toolbar">
+          <div>
+            <h2 class="card-title">Your Transaction Codes</h2>
+            <div class="card-sub" id="list-summary">—</div>
+          </div>
+          <div class="toolbar-actions">
+            <button class="btn btn-sm" id="export-csv">⬇ Export CSV / Excel</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <label class="field">
+            <span class="field-label">Search</span>
+            <input type="search" id="f-search" class="input" placeholder="Search a code…">
+          </label>
+          <label class="field">
+            <span class="field-label">Status</span>
+            <select id="f-status" class="input">
+              <option value="">All statuses</option>
+              <option value="unused">Unused</option>
+              <option value="used">Used</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">Generated from</span>
+            <input type="date" id="f-start" class="input">
+          </label>
+          <label class="field">
+            <span class="field-label">Generated to</span>
+            <input type="date" id="f-end" class="input">
+          </label>
+          <div class="field">
+            <span class="field-label">&nbsp;</span>
+            <button class="btn" id="f-reset">Reset filters</button>
+          </div>
+        </div>
+
+        <div class="table-wrap table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Code</th>
+                <th>Status</th>
+                <th>Generated</th>
+                <th>Used</th>
+                <th>Evaluation</th>
+              </tr>
+            </thead>
+            <tbody id="code-rows">
+              <tr><td colspan="6" class="loading-row">Loading transaction codes…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+import {
+  guard, mountOfficeChrome, fetchOfficeCodes, generateCodes, filterCodes,
+  escapeHtml, formatDate, formatDateTime, friendlyError, toast,
+  exportCodesCSV, startOfDay
+} from "./cv-core.js";
+
+const session = await guard(["office"]);
+
+mountOfficeChrome({
+  activePage: "codes",
+  title: "Transaction Codes",
+  subtitle: "Create and Manage Evaluation Transaction Codes for Your Office",
+  session
+});
+
+const el = (id) => document.getElementById(id);
+
+el("ctx-office").textContent    = session.officeName;
+el("ctx-office-id").textContent = session.officeId;
+document.title = `CampusVoice – Transaction Codes | ${session.officeName}`;
+
+let allCodes = [];
+let shownCodes = [];
+let lastBatch = [];
+
+/* ------------------------------------------------------------------ *
+ * Load + render
+ * ------------------------------------------------------------------ */
+async function reload() {
+  try {
+    allCodes = await fetchOfficeCodes(session.officeId, session.officeName);
+    el("error-banner").style.display = "none";
+    renderTotals();
+    renderTable();
+  } catch (err) {
+    console.error("Could not load transaction codes:", err);
+    el("error-banner").textContent = friendlyError(err);
+    el("error-banner").style.display = "block";
+    el("code-rows").innerHTML =
+      `<tr><td colspan="6" class="empty-row">Transaction codes could not be loaded.</td></tr>`;
+  }
+}
+
+function renderTotals() {
+  const total  = allCodes.length;
+  const used   = allCodes.filter(c => c.status === "used").length;
+  const unused = allCodes.filter(c => c.status === "unused").length;
+
+  const since = Date.now() - 24 * 60 * 60 * 1000;
+  const today = allCodes.filter(c => c.generatedAt && c.generatedAt >= since).length;
+
+  const pct = (n) => (total ? Math.round((n / total) * 100) : 0);
+
+  el("s-total").textContent  = total;
+  el("s-unused").textContent = unused;
+  el("s-used").textContent   = used;
+  el("s-today").textContent  = today;
+
+  el("s-total-sub").textContent  = total ? `for ${session.officeName}` : "none yet";
+  el("s-unused-sub").textContent = `${pct(unused)}% of total`;
+  el("s-used-sub").textContent   = `${pct(used)}% of total`;
+}
+
+function renderTable() {
+  shownCodes = filterCodes(allCodes, {
+    startDate: el("f-start").value,
+    endDate:   el("f-end").value,
+    status:    el("f-status").value
+  });
+
+  const search = el("f-search").value.trim().toLowerCase();
+  if (search) shownCodes = shownCodes.filter(c => c.code.toLowerCase().includes(search));
+
+  el("list-summary").textContent =
+    `Showing ${shownCodes.length} of ${allCodes.length} code${allCodes.length === 1 ? "" : "s"}`;
+
+  if (!shownCodes.length) {
+    el("code-rows").innerHTML = allCodes.length
+      ? `<tr><td colspan="6" class="empty-row">No codes match these filters.</td></tr>`
+      : `<tr><td colspan="6" class="empty-row">No codes generated yet. Use the form above to create your first batch.</td></tr>`;
+    return;
+  }
+
+  el("code-rows").innerHTML = shownCodes.map((c, i) => `
+    <tr>
+      <td class="row-num">${i + 1}</td>
+      <td>
+        <span class="code-pill">${escapeHtml(c.code)}</span>
+        ${c.legacy ? `<span class="badge-pill badge-legacy" title="Generated before this upgrade">legacy</span>` : ""}
+      </td>
+      <td>
+        <span class="badge-pill ${c.status === "used" ? "badge-used" : "badge-unused"}">
+          ${c.status === "used" ? "Used" : "Unused"}
+        </span>
+      </td>
+      <td class="cell-muted">${escapeHtml(c.generatedAt ? formatDateTime(c.generatedAt) : "—")}</td>
+      <td class="cell-muted">${escapeHtml(c.usedAt ? formatDateTime(c.usedAt) : "—")}</td>
+      <td class="cell-muted cell-wrap" title="${escapeHtml(c.evaluationId || "")}">
+        ${escapeHtml(c.evaluationId || "—")}
+      </td>
+    </tr>
+  `).join("");
+}
+
+/* ------------------------------------------------------------------ *
+ * Generate
+ * ------------------------------------------------------------------ */
+el("gen-btn").addEventListener("click", async () => {
+  const btn = el("gen-btn");
+  const progress = el("gen-progress");
+  const qty = Math.min(200, Math.max(1, parseInt(el("gen-qty").value, 10) || 1));
+
+  btn.disabled = true;
+  btn.textContent = "Generating…";
+  el("new-codes").style.display = "none";
+
+  try {
+    const { created, failed } = await generateCodes({
+      officeId:   session.officeId,
+      officeName: session.officeName,
+      quantity:   qty,
+      generatedBy: session.uid,
+      onProgress: (done, total) => { progress.textContent = `Saved ${done} of ${total}…`; }
+    });
+
+    progress.textContent = "";
+    lastBatch = created;
+
+    if (created.length) {
+      el("new-codes-title").textContent =
+        `${created.length} code${created.length === 1 ? "" : "s"} generated for ${session.officeName}.`;
+      el("new-codes-list").innerHTML =
+        created.map(c => `<span class="code-pill">${escapeHtml(c)}</span>`).join("");
+      el("new-codes").style.display = "block";
+      toast(`✅ ${created.length} code${created.length === 1 ? "" : "s"} generated.`);
+    }
+
+    if (failed) {
+      toast(`${failed} code${failed === 1 ? "" : "s"} could not be generated. Please try again.`, true);
+    }
+
+    await reload();
+
+  } catch (err) {
+    console.error("Code generation failed:", err);
+    progress.textContent = "";
+    toast(friendlyError(err), true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "🎟 Generate Codes";
+  }
+});
+
+el("copy-new").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(lastBatch.join("\n"));
+    toast("📋 Codes copied to the clipboard.");
+  } catch (err) {
+    toast("Could not access the clipboard. Select and copy the codes manually.", true);
+  }
+});
+
+el("export-new").addEventListener("click", () => {
+  const batch = allCodes.filter(c => lastBatch.includes(c.code));
+  exportCodesCSV(batch, `${session.officeName}-new-batch`);
+  toast(`📥 Exported ${batch.length} codes.`);
+});
+
+/* ------------------------------------------------------------------ *
+ * Filters + export
+ * ------------------------------------------------------------------ */
+["f-search", "f-status", "f-start", "f-end"].forEach(id => {
+  el(id).addEventListener(id === "f-search" ? "input" : "change", renderTable);
+});
+
+el("f-reset").addEventListener("click", () => {
+  el("f-search").value = "";
+  el("f-status").value = "";
+  el("f-start").value = "";
+  el("f-end").value = "";
+  renderTable();
+});
+
+el("export-csv").addEventListener("click", () => {
+  if (!shownCodes.length) { toast("There is nothing to export.", true); return; }
+  const count = exportCodesCSV(shownCodes, session.officeName);
+  toast(`📥 Exported ${count} code${count === 1 ? "" : "s"}.`);
+});
+
+await reload();
+</script>
+
+</body>
+</html>

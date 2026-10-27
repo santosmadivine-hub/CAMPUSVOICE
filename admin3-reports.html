@@ -531,6 +531,13 @@
 
 <script src="shared.js"></script>
 <script type="module">
+/* Firebase Authentication session + role gate.
+   Imported first so the persisted sign-in is attached to Firestore before any
+   query runs, and so a visitor without the right role never reaches this page.
+   Firestore Security Rules enforce the same boundary server-side. */
+import { guard as cvGuard } from "./cv-core.js";
+await cvGuard(["admin3"]);
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore,

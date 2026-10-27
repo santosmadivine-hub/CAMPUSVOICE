@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Office Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="cv-office.css">
+<style>
+  .quick-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
+  .quick-link {
+    display:flex; align-items:center; gap:14px;
+    padding:16px 18px; border-radius:16px;
+    border:1px solid var(--line); background:var(--paper);
+    text-decoration:none; color:var(--ink);
+    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .quick-link:hover { transform:translateY(-3px); background:#fff; border-color:#7dd3fc; box-shadow:0 10px 22px rgba(2,132,199,.14); }
+  .quick-icon { width:44px; height:44px; border-radius:13px; background:#eff6ff; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+  .quick-text { display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .quick-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14.5px; }
+  .quick-desc { font-size:12px; color:var(--muted); line-height:1.4; }
+
+  .recent-comment { padding:14px 0; border-bottom:1px solid #f1f5f9; }
+  .recent-comment:last-child { border-bottom:none; }
+  .recent-comment-text { font-size:14px; color:var(--ink); line-height:1.6; font-style:italic; }
+  .recent-comment-meta { font-size:11.5px; color:var(--muted); margin-top:6px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <div id="sidebar-mount"></div>
+  <div class="sidebar-overlay"></div>
+
+  <main class="main fade-in">
+
+    <div id="topbar-mount"></div>
+
+    <div class="page">
+
+      <!-- Which office and which account is signed in -->
+      <div class="office-context">
+        <div class="office-context-icon">🏢</div>
+        <div class="office-context-text">
+          <div class="office-context-name" id="ctx-office">Loading…</div>
+          <div class="office-context-meta">
+            Office ID <code id="ctx-office-id">—</code> ·
+            <span id="ctx-role">—</span> ·
+            <span id="ctx-user">—</span>
+          </div>
+        </div>
+        <div class="office-context-spacer"></div>
+        <span class="badge-pill badge-active" id="ctx-status">Active</span>
+      </div>
+
+      <div class="banner banner-error" id="error-banner" style="display:none;"></div>
+      <div class="banner banner-state" id="loading-banner">Loading your office data…</div>
+
+      <div id="content" style="display:none;">
+
+        <section class="stat-grid">
+          <div class="stat-card stat-primary">
+            <div class="stat-icon">📋</div>
+            <div class="stat-label">Total Evaluations</div>
+            <div class="stat-value" id="s-evals">0</div>
+            <div class="stat-sub" id="s-evals-sub">—</div>
+          </div>
+          <div class="stat-card stat-primary">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-label">Overall Rating</div>
+            <div class="stat-value" id="s-rating">0.0 / 5</div>
+            <div class="stat-sub" id="s-rating-label">—</div>
+          </div>
+          <div class="stat-card stat-success">
+            <div class="stat-icon">😊</div>
+            <div class="stat-label">Avg Satisfaction</div>
+            <div class="stat-value" id="s-satisfaction">0%</div>
+            <div class="stat-sub">of the maximum 5.0 rating</div>
+          </div>
+          <div class="stat-card stat-warning">
+            <div class="stat-icon">🎟️</div>
+            <div class="stat-label">Codes Remaining</div>
+            <div class="stat-value" id="s-codes-unused">0</div>
+            <div class="stat-sub" id="s-codes-sub">—</div>
+          </div>
+        </section>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title">Quick Actions</h2>
+              <div class="card-sub">Everything below is limited to your own office.</div>
+            </div>
+          </div>
+
+          <div class="quick-grid">
+            <a class="quick-link" href="office-eval-mgmt.html">
+              <div class="quick-icon">📑</div>
+              <div class="quick-text">
+                <div class="quick-title">Evaluation Management</div>
+                <div class="quick-desc">Read submissions, comments and attached evidence</div>
+              </div>
+            </a>
+            <a class="quick-link" href="office-codes.html">
+              <div class="quick-icon">🎟</div>
+              <div class="quick-text">
+                <div class="quick-title">Transaction Codes</div>
+                <div class="quick-desc">Generate, track and export your codes</div>
+              </div>
+            </a>
+            <a class="quick-link" href="office-analytics.html">
+              <div class="quick-icon">📈</div>
+              <div class="quick-text">
+                <div class="quick-title">Summary Analytics</div>
+                <div class="quick-desc">Dimension scores, code usage and trends</div>
+              </div>
+            </a>
+            <a class="quick-link" href="office-reports.html">
+              <div class="quick-icon">📁</div>
+              <div class="quick-text">
+                <div class="quick-title">Reports</div>
+                <div class="quick-desc">Build and export an office report</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title">Latest Comments &amp; Suggestions</h2>
+              <div class="card-sub">The five most recent submissions that included written feedback.</div>
+            </div>
+            <a class="btn btn-sm" href="office-eval-mgmt.html">View all →</a>
+          </div>
+          <div id="recent-comments"></div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+import {
+  guard, mountOfficeChrome, loadOfficeAnalytics,
+  escapeHtml, formatDate, friendlyError
+} from "./cv-core.js";
+
+const session = await guard(["office"]);
+
+mountOfficeChrome({
+  activePage: "dashboard",
+  title: "Dashboard",
+  subtitle: "Overview of Your Office's Evaluation Results",
+  session
+});
+
+const el = (id) => document.getElementById(id);
+
+el("ctx-office").textContent    = session.officeName || "Office";
+el("ctx-office-id").textContent = session.officeId || "—";
+el("ctx-role").textContent      = "Office Administrator";
+el("ctx-user").textContent      = session.username || session.email || "—";
+document.title = `CampusVoice – Dashboard | ${session.officeName}`;
+
+try {
+  const { stats, filteredEvals, office } = await loadOfficeAnalytics(
+    session.officeId, session.officeName
+  );
+
+  el("ctx-status").textContent = office.status === "inactive" ? "Inactive" : "Active";
+  el("ctx-status").className =
+    `badge-pill ${office.status === "inactive" ? "badge-inactive" : "badge-active"}`;
+
+  el("s-evals").textContent = stats.total;
+  el("s-evals-sub").textContent = stats.minTs
+    ? `since ${formatDate(stats.minTs)}`
+    : "no submissions yet";
+
+  el("s-rating").textContent       = `${stats.overall.toFixed(1)} / 5`;
+  el("s-rating-label").textContent = stats.overallLabel;
+  el("s-satisfaction").textContent = `${stats.satisfaction.toFixed(1)}%`;
+
+  el("s-codes-unused").textContent = stats.codes.unused;
+  el("s-codes-sub").textContent =
+    `${stats.codes.used} used of ${stats.codes.total} generated`;
+
+  // Recent written feedback
+  const comments = filteredEvals
+    .filter(e => e.suggestions && e.suggestions.trim())
+    .slice(0, 5);
+
+  el("recent-comments").innerHTML = comments.length
+    ? comments.map(c => `
+        <div class="recent-comment">
+          <div class="recent-comment-text">“${escapeHtml(c.suggestions)}”</div>
+          <div class="recent-comment-meta">
+            <span>${escapeHtml(formatDate(c.timestamp))}</span>
+            <span class="badge-pill badge-info">${c.avg.toFixed(1)} / 5</span>
+            ${c.transactionCode ? `<span class="code-pill">${escapeHtml(c.transactionCode)}</span>` : ""}
+          </div>
+        </div>
+      `).join("")
+    : `<p class="media-empty">No written comments yet. Ratings-only submissions still appear in Evaluation Management.</p>`;
+
+  el("loading-banner").style.display = "none";
+  el("content").style.display = "block";
+
+} catch (err) {
+  console.error("Could not load the office dashboard:", err);
+  el("loading-banner").style.display = "none";
+  el("error-banner").textContent = friendlyError(err);
+  el("error-banner").style.display = "block";
+}
+</script>
+
+</body>
+</html>

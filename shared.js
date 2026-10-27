@@ -3,10 +3,12 @@ const PAGE_SUBTITLES = {
   admin1: {
     'dashboard':             'Overview of Campus Evaluation Results and Activities',
     'office management':     'Manage Campus Offices and Evaluation Areas',
+    'office accounts':       'Create and Manage Login Accounts for Each Unit or Office',
     'generate code':         'Create and Manage Evaluation Transaction Codes',
     'evaluation management': 'Review and Manage Submitted Evaluations',
     'reports':               'Generate and Review Evaluation Reports',
-    'analytics':             'Analyze Evaluation Results and Performance Trends'
+    'analytics':             'Analyze Evaluation Results and Performance Trends',
+    'summary analytics':     'Analyze Evaluation Results and Performance Trends'
   },
   admin2: {
     'dashboard':             'Overview of Campus Evaluation Results and Activities',
@@ -33,6 +35,7 @@ function buildSidebar(role, activePage) {
   const navAdmin1 = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard', href: 'admin1-dashboard.html' },
     { id: 'office-mgmt', icon: '🏛', label: 'Office Management', href: 'admin1-office-mgmt.html' },
+    { id: 'accounts', icon: '🔑', label: 'Office Accounts', href: 'admin1-accounts.html' },
     { id: 'gen-code', icon: '📋', label: 'Generate Code', href: 'admin1-gen-code.html' },
     { id: 'eval-mgmt', icon: '📑', label: 'Evaluation Management', href: 'admin1-eval-mgmt.html' },
     { id: 'reports', icon: '📁', label: 'Reports', href: 'admin1-reports.html' },
@@ -211,6 +214,23 @@ function initSidebarToggle() {
 }
 
 document.addEventListener('DOMContentLoaded', initSidebarToggle);
+
+/* Logout must end the Firebase Authentication session, not just navigate away,
+   otherwise the next visitor to this browser is still signed in. Delegated so
+   it works for sidebars injected after load. */
+document.addEventListener('click', function (e) {
+  const link = e.target.closest && e.target.closest('.logout-btn');
+  if (!link || link.id === 'cv-logout') return;   // cv-logout handles itself
+
+  e.preventDefault();
+
+  import('./cv-core.js')
+    .then(m => m.logout())
+    .catch(err => {
+      console.error('Could not sign out cleanly:', err);
+      window.location.replace('index.html');
+    });
+});
 
 function animateBars() {
   setTimeout(() => {

@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Office Accounts | Admin 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="cv-office.css">
+<style>
+  .office-cell { display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .office-cell-name { font-weight:700; color:var(--ink); overflow-wrap:anywhere; }
+  .office-cell-id { font-family:'Courier New',monospace; font-size:11px; color:var(--muted); }
+  .username-pill {
+    font-family:'Courier New',monospace; font-size:12.5px; font-weight:700;
+    background:#eff6ff; color:#1d4ed8; padding:4px 10px; border-radius:8px; white-space:nowrap;
+  }
+  .no-account { color:var(--muted); font-style:italic; font-size:13px; }
+  .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <div id="sidebar-mount"></div>
+  <div class="sidebar-overlay"></div>
+
+  <main class="main fade-in">
+
+    <div id="topbar-mount"></div>
+
+    <div class="page">
+
+      <a href="admin1-dashboard.html" class="btn btn-ghost btn-sm" style="margin-bottom:14px;">← Back</a>
+
+      <div class="banner banner-info">
+        Each campus unit or office gets its own login. An office account can only
+        reach <strong>its own</strong> dashboard, evaluations, transaction codes, feedback,
+        reports and analytics — enforced by Firestore Security Rules, not just by hidden pages.
+        Passwords are held by Firebase Authentication and are never stored in Firestore.
+      </div>
+
+      <div class="banner banner-error" id="error-banner" style="display:none;"></div>
+
+      <!-- Shown only while transaction codes remain in the pre-upgrade location -->
+      <div class="banner banner-warn" id="legacy-banner" style="display:none;">
+        <strong>Transaction codes still need migrating.</strong>
+        <span id="legacy-count"></span>
+        The mobile app now looks codes up in the current <code>transaction_codes</code> collection,
+        so codes already handed out will not be accepted until they are moved across.
+        Nothing is deleted and running this more than once is safe.
+        <div style="margin-top:12px;">
+          <button class="btn btn-sm btn-primary" id="migrate-all-btn">⇪ Migrate codes for all offices</button>
+        </div>
+      </div>
+
+      <section class="stat-grid">
+        <div class="stat-card stat-primary">
+          <div class="stat-icon">🏛</div>
+          <div class="stat-label">Registered Offices</div>
+          <div class="stat-value" id="s-offices">0</div>
+          <div class="stat-sub">in Office Management</div>
+        </div>
+        <div class="stat-card stat-success">
+          <div class="stat-icon">🔑</div>
+          <div class="stat-label">Active Accounts</div>
+          <div class="stat-value" id="s-active">0</div>
+          <div class="stat-sub">can sign in right now</div>
+        </div>
+        <div class="stat-card stat-warning">
+          <div class="stat-icon">⏸</div>
+          <div class="stat-label">Deactivated</div>
+          <div class="stat-value" id="s-inactive">0</div>
+          <div class="stat-sub">access blocked</div>
+        </div>
+        <div class="stat-card stat-danger">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-label">Without an Account</div>
+          <div class="stat-value" id="s-missing">0</div>
+          <div class="stat-sub">offices that cannot sign in</div>
+        </div>
+      </section>
+
+      <div class="card">
+        <div class="toolbar">
+          <div>
+            <h2 class="card-title">Office Accounts</h2>
+            <div class="card-sub" id="list-summary">—</div>
+          </div>
+          <div class="toolbar-actions">
+            <button class="btn btn-sm" id="refresh-btn">↻ Refresh</button>
+            <button class="btn btn-sm btn-primary" id="create-btn">➕ Create Office Account</button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <label class="field">
+            <span class="field-label">Search</span>
+            <input type="search" id="f-search" class="input" placeholder="Office or username…">
+          </label>
+          <label class="field">
+            <span class="field-label">Account state</span>
+            <select id="f-state" class="input">
+              <option value="">All offices</option>
+              <option value="active">Active account</option>
+              <option value="inactive">Deactivated account</option>
+              <option value="none">No account yet</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="table-wrap table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Office / Unit</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Last Sign-in</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="account-rows">
+              <tr><td colspan="8" class="loading-row">Loading offices and accounts…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ===================== Create account modal ===================== -->
+<div class="modal-overlay" id="create-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="create-title">
+    <div class="modal-head">
+      <div class="modal-icon">🔑</div>
+      <div>
+        <h3 class="modal-title" id="create-title">Create Office Account</h3>
+        <div class="modal-subtitle">The office signs in with this username and password.</div>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <label class="field full">
+          <span class="field-label">Office / Unit *</span>
+          <select id="c-office" class="input"></select>
+          <span class="field-hint">Offices that already have an account are not listed.</span>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Username *</span>
+          <input type="text" id="c-username" class="input input-mono" autocomplete="off">
+          <span class="field-hint">Lowercase letters, numbers, dots and dashes.</span>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Password *</span>
+          <input type="text" id="c-password" class="input input-mono" autocomplete="new-password">
+          <span class="field-hint">At least 8 characters, with a letter and a number.</span>
+        </label>
+
+        <div class="field full">
+          <button class="btn btn-sm" id="c-suggest">🎲 Suggest a strong password</button>
+        </div>
+      </div>
+
+      <div class="field-error" id="c-error"></div>
+
+      <div class="banner banner-warn" style="margin:14px 0 0;">
+        Write the password down before saving — Firebase Authentication stores it in a form
+        nobody can read back, so it cannot be shown again. If it is lost, set a new one from
+        this page.
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" id="c-cancel">Cancel</button>
+      <button class="btn btn-primary" id="c-save">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Credentials hand-off ===================== -->
+<div class="modal-overlay" id="done-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="done-title">
+    <div class="modal-head">
+      <div class="modal-icon">✅</div>
+      <div>
+        <h3 class="modal-title" id="done-title">Account Created</h3>
+        <div class="modal-subtitle" id="done-subtitle"></div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <p>Give these credentials to the office. They sign in at the normal CampusVoice login page.</p>
+      <div class="credential-box">
+        <div class="credential-row">
+          <span class="credential-key">Username</span>
+          <span class="credential-val" id="done-username"></span>
+        </div>
+        <div class="credential-row">
+          <span class="credential-key">Password</span>
+          <span class="credential-val" id="done-password"></span>
+        </div>
+        <div class="credential-row">
+          <span class="credential-key">Office</span>
+          <span class="credential-val" id="done-office"></span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="done-copy">📋 Copy credentials</button>
+      <button class="btn btn-primary" id="done-close">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Generic confirm ===================== -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal-head">
+      <div class="modal-icon warn" id="confirm-icon">❓</div>
+      <h3 class="modal-title" id="confirm-title">Confirm</h3>
+    </div>
+    <div class="modal-body" id="confirm-body"></div>
+    <div class="modal-actions">
+      <button class="btn" id="confirm-cancel">Cancel</button>
+      <button class="btn btn-primary" id="confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Single-field prompt ===================== -->
+<div class="modal-overlay" id="prompt-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="prompt-title">
+    <div class="modal-head">
+      <div class="modal-icon">✏️</div>
+      <h3 class="modal-title" id="prompt-title">Edit</h3>
+    </div>
+    <div class="modal-body">
+      <label class="field">
+        <span class="field-label" id="prompt-label">Value</span>
+        <input type="text" id="prompt-input" class="input input-mono">
+        <span class="field-hint" id="prompt-hint"></span>
+      </label>
+      <div class="field-error" id="prompt-error"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="prompt-cancel">Cancel</button>
+      <button class="btn btn-primary" id="prompt-ok">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+import {
+  guard, fetchOffices, escapeHtml, formatDate, formatDateTime,
+  friendlyError, toast, SUPER_ADMIN,
+  db, PATHS, collectionGroup, getDocs
+} from "./cv-core.js";
+
+import {
+  fetchOfficeAccounts, createOfficeAccount, suggestUsername, suggestPassword,
+  changeAccountUsername, reassignAccountOffice, setAccountStatus,
+  revokeAccount, repairAccountLink, migrateLegacyCodes, slugUsername,
+  validateUsername, validatePassword
+} from "./cv-accounts.js";
+
+/* Admin 1 only. Admin 2 and Admin 3 are bounced to their own dashboards. */
+const session = await guard([SUPER_ADMIN]);
+
+document.getElementById("sidebar-mount").innerHTML = buildSidebar(SUPER_ADMIN, "accounts");
+document.getElementById("topbar-mount").innerHTML  = buildTopbar("Office Accounts", SUPER_ADMIN);
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
+
+const el = (id) => document.getElementById(id);
+
+let offices = [];
+let accounts = [];
+let rows = [];
+
+/* ------------------------------------------------------------------ *
+ * Modal plumbing
+ * ------------------------------------------------------------------ */
+function openModal(id)  { el(id).classList.add("open"); }
+function closeModal(id) { el(id).classList.remove("open"); }
+
+document.querySelectorAll(".modal-overlay").forEach(overlay => {
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.remove("open"); });
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") document.querySelectorAll(".modal-overlay.open").forEach(o => o.classList.remove("open"));
+});
+
+let confirmResolve = null;
+function confirmAction({ title, body, confirmText, tone }) {
+  el("confirm-title").textContent = title;
+  el("confirm-body").innerHTML = body;
+  el("confirm-ok").textContent = confirmText || "Confirm";
+  el("confirm-ok").className = `btn ${tone === "danger" ? "btn-danger" : "btn-primary"}`;
+  el("confirm-icon").className = `modal-icon ${tone === "danger" ? "danger" : "warn"}`;
+  el("confirm-icon").textContent = tone === "danger" ? "⚠️" : "❓";
+  openModal("confirm-modal");
+  return new Promise(resolve => { confirmResolve = resolve; });
+}
+function settleConfirm(result) {
+  closeModal("confirm-modal");
+  if (confirmResolve) { const r = confirmResolve; confirmResolve = null; r(result); }
+}
+el("confirm-ok").addEventListener("click", () => settleConfirm(true));
+el("confirm-cancel").addEventListener("click", () => settleConfirm(false));
+
+let promptResolve = null;
+function promptValue({ title, label, hint, value, confirmText, error }) {
+  el("prompt-title").textContent = title;
+  el("prompt-label").textContent = label;
+  el("prompt-hint").textContent = hint || "";
+  el("prompt-input").value = value || "";
+  el("prompt-error").textContent = error || "";
+  el("prompt-ok").textContent = confirmText || "Save";
+  openModal("prompt-modal");
+  requestAnimationFrame(() => { el("prompt-input").focus(); el("prompt-input").select(); });
+  return new Promise(resolve => { promptResolve = resolve; });
+}
+function settlePrompt(result) {
+  closeModal("prompt-modal");
+  if (promptResolve) { const r = promptResolve; promptResolve = null; r(result); }
+}
+el("prompt-ok").addEventListener("click", () => settlePrompt(el("prompt-input").value));
+el("prompt-cancel").addEventListener("click", () => settlePrompt(null));
+el("prompt-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); settlePrompt(el("prompt-input").value); }
+});
+
+/* ------------------------------------------------------------------ *
+ * Load + render
+ * ------------------------------------------------------------------ */
+async function reload() {
+  try {
+    [offices, accounts] = await Promise.all([fetchOffices(), fetchOfficeAccounts()]);
+    el("error-banner").style.display = "none";
+
+    const byOffice = new Map(accounts.map(a => [a.officeId, a]));
+
+    // One row per registered office, so offices without an account are visible.
+    rows = offices.map(o => ({ office: o, account: byOffice.get(o.id) || null }));
+
+    // Any account whose office record has since been deleted still needs showing.
+    accounts
+      .filter(a => !offices.some(o => o.id === a.officeId))
+      .forEach(a => rows.push({
+        office: { id: a.officeId, name: a.officeName || "(office record missing)", status: "inactive", orphan: true },
+        account: a
+      }));
+
+    renderStats();
+    render();
+    checkLegacyCodes();
+  } catch (err) {
+    console.error("Could not load accounts:", err);
+    el("error-banner").textContent = friendlyError(err);
+    el("error-banner").style.display = "block";
+    el("account-rows").innerHTML =
+      `<tr><td colspan="8" class="empty-row">Offices and accounts could not be loaded.</td></tr>`;
+  }
+}
+
+function renderStats() {
+  el("s-offices").textContent  = offices.length;
+  el("s-active").textContent   = accounts.filter(a => a.status === "active").length;
+  el("s-inactive").textContent = accounts.filter(a => a.status !== "active").length;
+  el("s-missing").textContent  = rows.filter(r => !r.account).length;
+}
+
+function render() {
+  const search = el("f-search").value.trim().toLowerCase();
+  const state  = el("f-state").value;
+
+  let shown = rows.filter(r => {
+    if (state === "none"     && r.account) return false;
+    if (state === "active"   && r.account?.status !== "active") return false;
+    if (state === "inactive" && (!r.account || r.account.status === "active")) return false;
+    if (search) {
+      const haystack = `${r.office.name} ${r.office.id} ${r.account?.username || ""}`.toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+
+  el("list-summary").textContent =
+    `Showing ${shown.length} of ${rows.length} office${rows.length === 1 ? "" : "s"}`;
+
+  if (!shown.length) {
+    el("account-rows").innerHTML = offices.length
+      ? `<tr><td colspan="8" class="empty-row">Nothing matches these filters.</td></tr>`
+      : `<tr><td colspan="8" class="empty-row">No offices registered yet. Add them in Office Management first.</td></tr>`;
+    return;
+  }
+
+  el("account-rows").innerHTML = shown.map((r, i) => {
+    const a = r.account;
+    const uid = a?.uid || "";
+
+    const actions = a
+      ? `
+        <button class="btn btn-sm" data-act="username" data-uid="${escapeHtml(uid)}">Username</button>
+        <button class="btn btn-sm" data-act="reassign" data-uid="${escapeHtml(uid)}">Office</button>
+        ${a.status === "active"
+          ? `<button class="btn btn-sm btn-danger" data-act="deactivate" data-uid="${escapeHtml(uid)}">Deactivate</button>`
+          : `<button class="btn btn-sm btn-success" data-act="activate" data-uid="${escapeHtml(uid)}">Activate</button>`}
+        <button class="btn btn-sm" data-act="migrate" data-office="${escapeHtml(r.office.id)}">Migrate codes</button>
+        <button class="btn btn-sm" data-act="repair" data-uid="${escapeHtml(uid)}">Repair link</button>
+        <button class="btn btn-sm btn-danger" data-act="revoke" data-uid="${escapeHtml(uid)}">Revoke</button>`
+      : `
+        <button class="btn btn-sm btn-primary" data-act="create" data-office="${escapeHtml(r.office.id)}">Create account</button>
+        <button class="btn btn-sm" data-act="migrate" data-office="${escapeHtml(r.office.id)}">Migrate codes</button>`;
+
+    return `
+      <tr>
+        <td class="row-num">${i + 1}</td>
+        <td>
+          <div class="office-cell">
+            <span class="office-cell-name">${escapeHtml(r.office.name)}</span>
+            <span class="office-cell-id">${escapeHtml(r.office.id)}</span>
+            ${r.office.orphan ? `<span class="badge-pill badge-warn">office record missing</span>` : ""}
+          </div>
+        </td>
+        <td>${a ? `<span class="username-pill">${escapeHtml(a.username)}</span>` : `<span class="no-account">no account</span>`}</td>
+        <td class="cell-muted">${a ? "Office Administrator" : "—"}</td>
+        <td>${a
+              ? `<span class="badge-pill ${a.status === "active" ? "badge-active" : "badge-inactive"}">${a.status === "active" ? "Active" : "Deactivated"}</span>`
+              : `<span class="badge-pill badge-warn">Cannot sign in</span>`}</td>
+        <td class="cell-muted">${a?.createdAt ? escapeHtml(formatDate(a.createdAt)) : "—"}</td>
+        <td class="cell-muted">${a?.lastLoginAt ? escapeHtml(formatDateTime(a.lastLoginAt)) : "never"}</td>
+        <td class="cell-actions"><div class="row-actions">${actions}</div></td>
+      </tr>`;
+  }).join("");
+}
+
+/* ------------------------------------------------------------------ *
+ * Create
+ * ------------------------------------------------------------------ */
+function openCreate(preselectOfficeId) {
+  const available = offices.filter(o => !accounts.some(a => a.officeId === o.id));
+
+  if (!available.length) {
+    toast("Every registered office already has an account.", true);
+    return;
+  }
+
+  el("c-office").innerHTML = available.map(o =>
+    `<option value="${escapeHtml(o.id)}"${o.id === preselectOfficeId ? " selected" : ""}>${escapeHtml(o.name)}</option>`
+  ).join("");
+
+  syncSuggestedUsername();
+  el("c-password").value = suggestPassword();
+  el("c-error").textContent = "";
+  el("c-username").classList.remove("has-error");
+  el("c-password").classList.remove("has-error");
+
+  openModal("create-modal");
+}
+
+function syncSuggestedUsername() {
+  const officeId = el("c-office").value;
+  const office = offices.find(o => o.id === officeId);
+  if (!office) return;
+
+  let base = suggestUsername(office.name);
+  let candidate = base;
+  let n = 2;
+  while (accounts.some(a => a.username === candidate)) candidate = `${base}-${n++}`;
+  el("c-username").value = candidate;
+}
+
+el("create-btn").addEventListener("click", () => openCreate());
+el("c-office").addEventListener("change", syncSuggestedUsername);
+el("c-cancel").addEventListener("click", () => closeModal("create-modal"));
+el("c-suggest").addEventListener("click", () => { el("c-password").value = suggestPassword(); });
+
+el("c-username").addEventListener("blur", () => {
+  el("c-username").value = slugUsername(el("c-username").value);
+});
+
+el("c-save").addEventListener("click", async () => {
+  const officeId = el("c-office").value;
+  const office = offices.find(o => o.id === officeId);
+  const username = slugUsername(el("c-username").value);
+  const password = el("c-password").value;
+
+  el("c-error").textContent = "";
+  el("c-username").classList.remove("has-error");
+  el("c-password").classList.remove("has-error");
+
+  const usernameError = validateUsername(username);
+  if (usernameError) {
+    el("c-error").textContent = usernameError;
+    el("c-username").classList.add("has-error");
+    return;
+  }
+
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    el("c-error").textContent = passwordError;
+    el("c-password").classList.add("has-error");
+    return;
+  }
+
+  const btn = el("c-save");
+  btn.disabled = true;
+  btn.textContent = "Creating…";
+
+  try {
+    const result = await createOfficeAccount({
+      officeId,
+      officeName: office.name,
+      username,
+      password,
+      createdBy: session.uid
+    });
+
+    closeModal("create-modal");
+
+    el("done-subtitle").textContent = office.name;
+    el("done-username").textContent = result.username;
+    el("done-password").textContent = password;
+    el("done-office").textContent   = office.name;
+    openModal("done-modal");
+
+    await reload();
+
+  } catch (err) {
+    console.error("Account creation failed:", err);
+    el("c-error").textContent = err.message || friendlyError(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Create Account";
+  }
+});
+
+el("done-close").addEventListener("click", () => closeModal("done-modal"));
+el("done-copy").addEventListener("click", async () => {
+  const text =
+    `CampusVoice office account\n` +
+    `Office:   ${el("done-office").textContent}\n` +
+    `Username: ${el("done-username").textContent}\n` +
+    `Password: ${el("done-password").textContent}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("📋 Credentials copied to the clipboard.");
+  } catch (err) {
+    toast("Could not access the clipboard. Copy the details manually.", true);
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * Row actions
+ * ------------------------------------------------------------------ */
+el("account-rows").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-act]");
+  if (!btn) return;
+
+  const act = btn.dataset.act;
+  const uid = btn.dataset.uid;
+  const account = accounts.find(a => a.uid === uid);
+  const officeId = btn.dataset.office;
+
+  btn.disabled = true;
+
+  try {
+    if (act === "create") {
+      openCreate(officeId);
+    }
+
+    else if (act === "username") {
+      let error = "";
+      let value = account.username;
+
+      while (true) {
+        const result = await promptValue({
+          title: "Change Username",
+          label: `Username for ${account.officeName}`,
+          hint: "Lowercase letters, numbers, dots and dashes. The office signs in with this.",
+          value, confirmText: "Save Username", error
+        });
+        if (result === null) break;
+
+        try {
+          const next = slugUsername(result);
+          const out = await changeAccountUsername(uid, next);
+          toast(out.changed ? `Username changed to “${out.username}”.` : "No change made.");
+          await reload();
+          break;
+        } catch (err) {
+          value = result;
+          error = err.message || friendlyError(err);
+        }
+      }
+    }
+
+    else if (act === "reassign") {
+      const available = offices.filter(o => o.id === account.officeId || !accounts.some(a => a.officeId === o.id));
+      const list = available.map((o, i) => `${i + 1}. ${o.name}`).join("\n");
+
+      const answer = await promptValue({
+        title: "Move Account to Another Office",
+        label: "Type the number of the office",
+        hint: list,
+        value: "",
+        confirmText: "Move Account"
+      });
+      if (answer === null) return;
+
+      const index = parseInt(answer, 10) - 1;
+      const target = available[index];
+      if (!target) { toast("That is not one of the listed numbers.", true); return; }
+      if (target.id === account.officeId) { toast("That is already this account's office."); return; }
+
+      const ok = await confirmAction({
+        title: "Move this account?",
+        body: `<strong>${escapeHtml(account.username)}</strong> will stop seeing ` +
+              `<strong>${escapeHtml(account.officeName)}</strong> and will see ` +
+              `<strong>${escapeHtml(target.name)}</strong> instead. No evaluation or code data is moved.`,
+        confirmText: "Move Account"
+      });
+      if (!ok) return;
+
+      await reassignAccountOffice(uid, target.id, target.name);
+      toast(`Account moved to ${target.name}.`);
+      await reload();
+    }
+
+    else if (act === "deactivate") {
+      const ok = await confirmAction({
+        title: "Deactivate this account?",
+        body: `<strong>${escapeHtml(account.username)}</strong> (${escapeHtml(account.officeName)}) ` +
+              `will be blocked from reading or writing any data, and will be signed out on their ` +
+              `next page load. Nothing is deleted and you can reactivate at any time.`,
+        confirmText: "Deactivate",
+        tone: "danger"
+      });
+      if (!ok) return;
+
+      await setAccountStatus(uid, "inactive");
+      toast("Account deactivated.");
+      await reload();
+    }
+
+    else if (act === "activate") {
+      await setAccountStatus(uid, "active");
+      toast("Account activated.");
+      await reload();
+    }
+
+    else if (act === "repair") {
+      await repairAccountLink(uid);
+      toast("Account link repaired.");
+      await reload();
+    }
+
+    else if (act === "revoke") {
+      const ok = await confirmAction({
+        title: "Revoke this account?",
+        body: `This removes the office link for <strong>${escapeHtml(account.username)}</strong> ` +
+              `permanently. The sign-in itself survives — deleting it needs the Firebase console ` +
+              `or the optional Cloud Function — but it will reach nothing. ` +
+              `<br><br>Deactivate instead if you only need to suspend access.`,
+        confirmText: "Revoke Account",
+        tone: "danger"
+      });
+      if (!ok) return;
+
+      await setAccountStatus(uid, "inactive").catch(() => {});
+      await revokeAccount(uid);
+      toast("Account revoked. Delete the sign-in in the Firebase console to finish.");
+      await reload();
+    }
+
+    else if (act === "migrate") {
+      const office = offices.find(o => o.id === officeId) ||
+                     rows.find(r => r.office.id === officeId)?.office;
+      if (!office) { toast("That office could not be found.", true); return; }
+
+      const ok = await confirmAction({
+        title: "Migrate legacy transaction codes?",
+        body: `Copies codes from the old <code>transaction_code/office_name/${escapeHtml(office.name)}</code> ` +
+              `location into the current <code>transaction_codes</code> collection and stamps each one ` +
+              `with this office's ID.<br><br>Existing codes are never overwritten and nothing is deleted, ` +
+              `so this is safe to run more than once.`,
+        confirmText: "Migrate Codes"
+      });
+      if (!ok) return;
+
+      btn.textContent = "Migrating…";
+      const { migrated, skipped } = await migrateLegacyCodes(office.id, office.name, session.uid);
+      toast(migrated
+        ? `Migrated ${migrated} code${migrated === 1 ? "" : "s"}${skipped ? `, skipped ${skipped} already present` : ""}.`
+        : skipped
+          ? `Nothing to do — all ${skipped} legacy codes are already migrated.`
+          : "No legacy codes found for this office.");
+      await reload();
+    }
+
+  } catch (err) {
+    console.error(`Action "${act}" failed:`, err);
+    toast(err.message || friendlyError(err), true);
+  } finally {
+    btn.disabled = false;
+    if (act === "migrate") btn.textContent = "Migrate codes";
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * Legacy transaction codes
+ *
+ * Counts codes still sitting in the pre-upgrade per-office subcollections.
+ * Those are invisible to the mobile app, which now resolves a code by direct
+ * lookup in `transaction_codes`, so they have to be moved across.
+ * ------------------------------------------------------------------ */
+async function checkLegacyCodes() {
+  try {
+    const [legacySnap, currentSnap] = await Promise.all([
+      getDocs(collectionGroup(db, "codes")),
+      getDocs(PATHS.codes())
+    ]);
+
+    const migrated = new Set();
+    currentSnap.forEach(d => migrated.add(d.data()?.code || d.id));
+
+    let pending = 0;
+    legacySnap.forEach(d => {
+      const code = String(d.data()?.code || d.id).trim().toUpperCase();
+      if (!migrated.has(code)) pending++;
+    });
+
+    if (pending > 0) {
+      el("legacy-count").textContent =
+        ` ${pending} code${pending === 1 ? "" : "s"} have not been moved yet.`;
+      el("legacy-banner").style.display = "block";
+    } else {
+      el("legacy-banner").style.display = "none";
+    }
+  } catch (err) {
+    // No legacy data, or no permission to read it — nothing to warn about.
+    console.warn("Legacy code check skipped:", err?.code || err);
+    el("legacy-banner").style.display = "none";
+  }
+}
+
+el("migrate-all-btn").addEventListener("click", async () => {
+  const ok = await confirmAction({
+    title: "Migrate every office's codes?",
+    body: `Copies all remaining legacy transaction codes into the current ` +
+          `<code>transaction_codes</code> collection, stamping each with its office ID. ` +
+          `<br><br>Existing codes are never overwritten and nothing is deleted.`,
+    confirmText: "Migrate All"
+  });
+  if (!ok) return;
+
+  const btn = el("migrate-all-btn");
+  btn.disabled = true;
+
+  let migrated = 0;
+  let skipped = 0;
+  const failures = [];
+
+  for (let i = 0; i < offices.length; i++) {
+    const office = offices[i];
+    btn.textContent = `Migrating ${i + 1} / ${offices.length} — ${office.name}…`;
+
+    try {
+      const result = await migrateLegacyCodes(office.id, office.name, session.uid);
+      migrated += result.migrated;
+      skipped  += result.skipped;
+    } catch (err) {
+      console.error(`Migration failed for ${office.name}:`, err);
+      failures.push(office.name);
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = "⇪ Migrate codes for all offices";
+
+  if (failures.length) {
+    toast(`Migrated ${migrated}, but ${failures.length} office${failures.length === 1 ? "" : "s"} failed: ` +
+          failures.join(", "), true);
+  } else {
+    toast(migrated
+      ? `Migrated ${migrated} code${migrated === 1 ? "" : "s"}` +
+        (skipped ? `, skipped ${skipped} already present.` : ".")
+      : "Nothing left to migrate.");
+  }
+
+  await reload();
+});
+
+/* ------------------------------------------------------------------ *
+ * Filters
+ * ------------------------------------------------------------------ */
+el("f-search").addEventListener("input", render);
+el("f-state").addEventListener("change", render);
+el("refresh-btn").addEventListener("click", reload);
+
+await reload();
+</script>
+
+</body>
+</html>

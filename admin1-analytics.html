@@ -991,33 +991,16 @@ svg rect.cv-hover:hover {
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 import {
-  getFirestore,
-  collection,
-  collectionGroup,
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  db, guard, PATHS, collection, collectionGroup, onSnapshot, getDocs,
+  SUPER_ADMIN
+} from "./cv-core.js";
 
-
-const firebaseConfig = {
-  apiKey:            "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
-  authDomain:        "kristal-adb78.firebaseapp.com",
-  databaseURL:       "https://kristal-adb78-default-rtdb.firebaseio.com",
-  projectId:         "kristal-adb78",
-  storageBucket:     "kristal-adb78.firebasestorage.app",
-  messagingSenderId: "1016283938031",
-  appId:             "1:1016283938031:web:54c4d13409d9784ad7af1a",
-  measurementId:     "G-LK8D1CBQ2J"
-};
-
-const app = initializeApp(firebaseConfig);
-getAnalytics(app);
-const db = getFirestore(app);
+const session = await guard([SUPER_ADMIN]);
 
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1', 'analytics');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Analytics', 'admin1');
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 document.getElementById("otDropdownBtn").addEventListener("click", (e) => {
   e.stopPropagation();
@@ -1087,7 +1070,8 @@ const evaluationsCol = collection(db, "services", "evaluations", "records");
 const officesCol     = collection(db, "services", "offices", "records");
 
 
-const codesGroup = collectionGroup(db, "codes");
+/* Codes are read by loadAllCodes() below: the canonical `transaction_codes`
+   collection, plus any legacy per-office subcollections not yet migrated. */
 
 
 const SQD_LABELS = [
@@ -1174,20 +1158,50 @@ onSnapshot(evaluationsCol, (snap) => {
   render();
 });
 
-onSnapshot(codesGroup, (snap) => {
-  allCodes = {};
-  snap.forEach((docSnap) => {
+/* Codes are grouped by office name for the KPI and status bar. The canonical
+   `transaction_codes` collection is authoritative; codes created before the
+   move are still folded in from the old per-office subcollections so the
+   totals stay complete until Admin 1 migrates them. */
+async function loadAllCodes() {
+  const grouped = {};
+  const seen = new Set();
 
-    const officeName =
-      (docSnap.ref.parent && docSnap.ref.parent.parent)
-        ? docSnap.ref.parent.parent.id
-        : "Unknown";
+  const add = (officeName, codeId, data) => {
+    const code = data.code || codeId;
+    if (seen.has(code)) return;
+    seen.add(code);
+    const key = officeName || "Unknown";
+    if (!grouped[key]) grouped[key] = {};
+    grouped[key][code] = data;
+  };
 
-    if (!allCodes[officeName]) allCodes[officeName] = {};
-    allCodes[officeName][docSnap.id] = docSnap.data();
-  });
+  try {
+    const snap = await getDocs(PATHS.codes());
+    snap.forEach(d => {
+      const c = d.data() || {};
+      add(c.officeName, d.id, c);
+    });
+  } catch (err) {
+    console.error("Could not load transaction codes:", err);
+  }
+
+  try {
+    const legacy = await getDocs(collectionGroup(db, "codes"));
+    legacy.forEach(d => {
+      const officeName = (d.ref.parent && d.ref.parent.parent) ? d.ref.parent.parent.id : "Unknown";
+      add(officeName, d.id, d.data() || {});
+    });
+  } catch (err) {
+    console.warn("Legacy codes unavailable:", err?.code || err);
+  }
+
+  allCodes = grouped;
   renderCodeKPI();
   renderCodeStatusBar();
+}
+
+onSnapshot(PATHS.codes(), () => { loadAllCodes(); }, (err) => {
+  console.warn("Live code updates unavailable:", err?.code || err);
 });
 
 function render() {

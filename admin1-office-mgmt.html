@@ -660,6 +660,13 @@
 
 <script src="shared.js"></script>
 <script type="module">
+/* Firebase Authentication session + role gate.
+   Imported first so the persisted sign-in is attached to Firestore before any
+   query runs, and so a visitor without the right role never reaches this page.
+   Firestore Security Rules enforce the same boundary server-side. */
+import { guard as cvGuard } from "./cv-core.js";
+await cvGuard(["admin1"]);
+
 import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAnalytics }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
 import {
@@ -865,8 +872,16 @@ async function handleAddOffice() {
     }
 
     try {
-      await addDoc(officesCol, { name: trimmed });
-      showToast(`✓ "${trimmed}" added successfully!`);
+      await addDoc(officesCol, {
+        name: trimmed,
+        status: "active",
+        createdAt: Date.now(),
+        // Filled in by Office Accounts once a login is created for this office.
+        accountUid: "",
+        accountEmail: "",
+        accountUsername: ""
+      });
+      showToast(`✓ "${trimmed}" added. Create its login in Office Accounts.`);
       return;
     } catch (error) {
       prefillValue = trimmed;
@@ -1003,8 +1018,13 @@ function renderOfficeTable() {
 
 window.viewOffice = function(office) {
   const key = officeKeys[office];
-  const params = new URLSearchParams({ office: key || "", name: office });
-  window.location.href = `admin1-office-analytics.html?${params.toString()}`;
+  if (!key) {
+    showToast("Could not find this office's record. Please refresh and try again.", true);
+    return;
+  }
+  // Summary Analytics is driven by the office ID so it can enforce which
+  // office the signed-in account is allowed to see.
+  window.location.href = `office-analytics.html?office=${encodeURIComponent(key)}`;
 };
 
 
@@ -1154,7 +1174,40 @@ window.editOffice = async function(office) {
 async function migrateOfficeData(oldName, newName, targetOfficeId) {
   await batchUpdateFieldWhere(evaluationsCol, "office", oldName, newName, targetOfficeId);
   await batchUpdateFieldWhere(reportsCol, "office", oldName, newName, targetOfficeId);
+  await renameCurrentTransactionCodes(oldName, newName, targetOfficeId);
   await migrateTransactionCodes(oldName, newName, targetOfficeId);
+}
+
+// Transaction codes in the current `transaction_codes` collection are bound to
+// an office by `officeId`, not by name, so a rename never moves a document —
+// it only refreshes the cached display name. A merge re-points the codes at
+// the surviving office's ID instead.
+async function renameCurrentTransactionCodes(oldName, newName, targetOfficeId) {
+  const codesCol = collection(db, "transaction_codes");
+
+  // Codes already attached to the surviving office: just refresh the name.
+  // Codes still carrying the old name (a merge source, or an unstamped
+  // record): re-point them at the surviving office.
+  const [byId, byName] = await Promise.all([
+    getDocs(query(codesCol, where("officeId", "==", targetOfficeId))),
+    getDocs(query(codesCol, where("officeName", "==", oldName)))
+  ]);
+
+  const updates = new Map();
+  byId.docs.forEach(d => updates.set(d.id, d.ref));
+  byName.docs.forEach(d => updates.set(d.id, d.ref));
+  if (!updates.size) return;
+
+  const refs = [...updates.values()];
+  const CHUNK = 450;
+
+  for (let i = 0; i < refs.length; i += CHUNK) {
+    const batch = writeBatch(db);
+    refs.slice(i, i + CHUNK).forEach(ref => {
+      batch.update(ref, { officeId: targetOfficeId, officeName: newName });
+    });
+    await batch.commit();
+  }
 }
 
 // Batch-updates every document in `colRef` where `field === oldValue`,

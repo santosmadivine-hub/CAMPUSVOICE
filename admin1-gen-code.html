@@ -556,6 +556,15 @@
           <option value="unused">Unused</option>
           <option value="used">Used</option>
         </select>
+        <label style="font-size:12px;color:#64748b;display:flex;align-items:center;gap:6px;">
+          Generated from
+          <input type="date" id="filterStart" />
+        </label>
+        <label style="font-size:12px;color:#64748b;display:flex;align-items:center;gap:6px;">
+          to
+          <input type="date" id="filterEnd" />
+        </label>
+        <button class="btn-action btn-export-csv" id="filterReset">Reset</button>
       </div>
 
       <div class="table-scroll">
@@ -567,6 +576,7 @@
               <th>OFFICE</th>
               <th>STATUS</th>
               <th>CREATED</th>
+              <th>USED</th>
               <th>ACTIONS</th>
             </tr>
           </thead>
@@ -601,35 +611,31 @@
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAnalytics }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+/* ==========================================================================
+ * Transaction codes are now stored canonically in the top-level
+ * `transaction_codes` collection, with the document ID equal to the code
+ * itself. Firestore therefore guarantees uniqueness, and every code carries
+ * the generating office's ID — so a code issued for one office can never be
+ * used to evaluate another.
+ *
+ * Codes created before this upgrade still live under
+ * services/transaction_code/office_name/{officeName}/codes and are shown here
+ * marked "legacy". Use "Migrate codes" on the Office Accounts page to move
+ * them across; nothing is deleted.
+ * ========================================================================== */
+
 import {
-  getFirestore,
-  collection,
-  collectionGroup,
-  doc,
-  addDoc,
-  deleteDoc,
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  db, auth, guard, PATHS, collection, doc, deleteDoc, onSnapshot,
+  collectionGroup, getDocs, generateCodes as createCodes, fetchOffices,
+  toMillis, escapeHtml, formatDate, formatDateTime, friendlyError,
+  startOfDay, endOfDay, toCSV, downloadFile, SUPER_ADMIN
+} from "./cv-core.js";
 
-const firebaseConfig = {
-  apiKey:            "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
-  authDomain:        "kristal-adb78.firebaseapp.com",
-  databaseURL:       "https://kristal-adb78-default-rtdb.firebaseio.com",
-  projectId:         "kristal-adb78",
-  storageBucket:     "kristal-adb78.firebasestorage.app",
-  messagingSenderId: "1016283938031",
-  appId:             "1:1016283938031:web:54c4d13409d9784ad7af1a",
-  measurementId:     "G-LK8D1CBQ2J"
-};
-
-const app       = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db        = getFirestore(app);
+const session = await guard([SUPER_ADMIN]);
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar('admin1', 'gen-code');
 document.getElementById("topbar-mount").innerHTML  = buildTopbar("Generate Code", "admin1");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 function showToast(msg) {
   const t = document.getElementById("toast");
@@ -638,125 +644,90 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 3000);
 }
 
-/**
- * Builds a transaction code with a prefix derived from the office name,
- * followed by a random 6-character suffix.
- *
- * Prefix logic (in priority order):
- * 1. If the office name contains acronym-like tokens (2+ consecutive
- *    uppercase letters, e.g. "BSOA", "BSIT", "OJT"), use the LAST one
- *    found — this is usually the most specific/differentiating part
- *    of the name (e.g. "SIPP Coodinator (OJT-BSOA)" -> "BSOA").
- * 2. Otherwise, if the office name has multiple words, use the first
- *    letter of each word (e.g. "Guidance Counselor" -> "GC").
- * 3. Otherwise (single word), use the first 6 letters of that word.
- *
- * This avoids the old behavior where every office name sharing the
- * same first 4 characters (e.g. all "SIPP Coodinator (...)" offices)
- * produced identical, ambiguous prefixes.
- */
-function makeCode(officePrefix) {
-  const chars  = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const random = Array.from({ length: 6 }, () =>
-    chars[Math.floor(Math.random() * chars.length)]
-  ).join("");
+let offices = [];                     // [{ id, name, ... }]
+const officeIdByName = new Map();
 
-  // Look for acronym-like tokens (2+ consecutive uppercase letters)
-  const acronyms = officePrefix.match(/\b[A-Z]{2,}\b/g) || [];
+async function loadOffices() {
+  const grid = document.getElementById("officeGenGrid");
 
-  let prefix;
-  if (acronyms.length) {
-    // Prioritize the most specific acronym — typically the last one
-    // (e.g. "OJT-BSOA" -> BSOA is more specific than OJT)
-    prefix = acronyms[acronyms.length - 1].substring(0, 6);
-  } else {
-    const words = officePrefix.trim().split(/\s+/).filter(Boolean);
-    if (words.length > 1) {
-      // Multi-word name with no acronym -> use word initials
-      prefix = words.map(w => w[0]).join("").toUpperCase().substring(0, 6);
-    } else {
-      // Single word -> use its first 6 letters
-      prefix = officePrefix.replace(/\s+/g, "").substring(0, 6).toUpperCase();
-    }
+  try {
+    offices = await fetchOffices();
+    officeIdByName.clear();
+    offices.forEach(o => officeIdByName.set(o.name, o.id));
+    buildOfficeCards();
+  } catch (err) {
+    console.error("Could not load offices:", err);
+    grid.innerHTML = `<p class="no-offices-msg">${escapeHtml(friendlyError(err))}</p>`;
   }
-
-  // Safety fallback in case prefix ends up empty for any edge case
-  if (!prefix) prefix = "GEN";
-
-  return `${prefix}-${random}`;
 }
-
-
-let dynamicOffices = []; 
-
-onSnapshot(collection(db, "services", "offices", "records"), (snapshot) => {
-  dynamicOffices = [];
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const name = data.name || docSnap.id;
-    if (name) dynamicOffices.push(name);
-  });
-  dynamicOffices.sort((a, b) => a.localeCompare(b));
-  buildOfficeCards();
-});
-
 
 function buildOfficeCards() {
   const grid = document.getElementById("officeGenGrid");
 
-  if (!dynamicOffices.length) {
-    grid.innerHTML = `<p class="no-offices-msg">No offices found. Add offices from the Dashboard first.</p>`;
+  if (!offices.length) {
+    grid.innerHTML = `<p class="no-offices-msg">No offices found. Add offices in Office Management first.</p>`;
     return;
   }
 
-  grid.innerHTML = dynamicOffices.map(office => {
-    const id = office.replace(/\s+/g, "_");
+  grid.innerHTML = offices.map(office => {
+    const slug = office.id.replace(/[^A-Za-z0-9_-]/g, "_");
     return `
       <div class="office-gen-card">
         <div class="office-gen-top">
-          <span class="office-gen-label"> ${office}</span>
-          <button class="btn-generate" id="genBtn-${id}" onclick="generateCodes('${office}')">
+          <span class="office-gen-label">${escapeHtml(office.name)}</span>
+          <button class="btn-generate" id="genBtn-${slug}" data-office-id="${escapeHtml(office.id)}">
              Generate
           </button>
         </div>
         <div class="qty-row">
-          <label for="qty-${id}">Quantity:</label>
-          <input class="qty-input" type="number" id="qty-${id}" value="1" min="1" max="50" />
-          <span style="font-size:12px;color:#94a3b8;">(max 50)</span>
+          <label for="qty-${slug}">Quantity:</label>
+          <input class="qty-input" type="number" id="qty-${slug}" value="1" min="1" max="200" />
+          <span style="font-size:12px;color:#94a3b8;">(max 200)</span>
         </div>
-        <div class="gen-progress" id="prog-${id}"></div>
+        <div class="gen-progress" id="prog-${slug}"></div>
       </div>
     `;
   }).join("");
 }
 
+document.getElementById("officeGenGrid").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-office-id]");
+  if (!btn) return;
 
-window.generateCodes = async (office) => {
-  const id   = office.replace(/\s+/g, "_");
-  const btn  = document.getElementById(`genBtn-${id}`);
-  const prog = document.getElementById(`prog-${id}`);
-  const qty  = Math.min(50, Math.max(1, parseInt(document.getElementById(`qty-${id}`).value) || 1));
+  const office = offices.find(o => o.id === btn.dataset.officeId);
+  if (!office) { showToast("That office could not be found. Refresh and try again."); return; }
 
-  btn.disabled    = true;
+  const slug = office.id.replace(/[^A-Za-z0-9_-]/g, "_");
+  const prog = document.getElementById(`prog-${slug}`);
+  const qty  = Math.min(200, Math.max(1, parseInt(document.getElementById(`qty-${slug}`).value, 10) || 1));
+
+  btn.disabled = true;
   btn.textContent = "Saving…";
   prog.style.display = "block";
 
-  const codesCol = collection(db, "services", "transaction_code", "office_name", office, "codes");
-
-  for (let i = 0; i < qty; i++) {
-    prog.textContent = `Saving ${i + 1} / ${qty}…`;
-    await addDoc(codesCol, {
-      code:      makeCode(office),
-      status:    "unused",
-      createdAt: Date.now()
+  try {
+    const { created, failed } = await createCodes({
+      officeId:    office.id,
+      officeName:  office.name,
+      quantity:    qty,
+      generatedBy: session.uid,
+      onProgress:  (done, total) => { prog.textContent = `Saving ${done} / ${total}…`; }
     });
-  }
 
-  prog.style.display = "none";
-  btn.disabled    = false;
-  btn.textContent = "Generate";
-  showToast(`✅ ${qty} code${qty > 1 ? "s" : ""} generated for ${office}`);
-};
+    showToast(`✅ ${created.length} code${created.length === 1 ? "" : "s"} generated for ${office.name}` +
+              (failed ? ` — ${failed} failed` : ""));
+    await loadCodes();
+
+  } catch (err) {
+    console.error("Code generation failed:", err);
+    showToast(`❌ ${friendlyError(err)}`);
+  } finally {
+    prog.style.display = "none";
+    prog.textContent = "";
+    btn.disabled = false;
+    btn.textContent = "Generate";
+  }
+});
 
 
 let allCodes       = {};
@@ -793,20 +764,25 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.getElementById("deleteModalConfirm").addEventListener("click", async () => {
-  const key    = pendingDeleteKey;
-  const office = allCodes[key]?.office;
-  if (!key || !office) { closeDeleteModal(); return; }
+  const key = pendingDeleteKey;
+  const entry = allCodes[key];
+  if (!key || !entry) { closeDeleteModal(); return; }
 
   const btn = document.getElementById("deleteModalConfirm");
   btn.disabled = true;
   btn.textContent = "Deleting…";
 
   try {
-    await deleteDoc(doc(db, "services", "transaction_code", "office_name", office, "codes", key));
+    if (entry.legacy) {
+      await deleteDoc(doc(db, "services", "transaction_code", "office_name", entry.office, "codes", entry.docId));
+    } else {
+      await deleteDoc(PATHS.code(entry.docId));
+    }
     showToast("🗑️ Code deleted.");
+    await loadCodes();
   } catch (err) {
     console.error(err);
-    showToast("❌ Failed to delete code.");
+    showToast(`❌ ${friendlyError(err)}`);
   }
 
   btn.disabled = false;
@@ -815,17 +791,66 @@ document.getElementById("deleteModalConfirm").addEventListener("click", async ()
 });
 
 
-onSnapshot(collectionGroup(db, "codes"), (snapshot) => {
+/* ---------------------------------------------------------------------- *
+ * Load every code: the canonical collection first, then any legacy codes
+ * that have not been migrated yet. A code present in both is counted once.
+ * ---------------------------------------------------------------------- */
+async function loadCodes() {
   allCodes = {};
-  snapshot.forEach(docSnap => {
-    const officeName = docSnap.ref.parent.parent?.id || "";
-    allCodes[docSnap.id] = { office: officeName, ...docSnap.data() };
-  });
+
+  try {
+    const snap = await getDocs(PATHS.codes());
+    snap.forEach(d => {
+      const c = d.data() || {};
+      const code = c.code || d.id;
+      allCodes[code] = {
+        docId:       d.id,
+        code,
+        office:      c.officeName || "",
+        officeId:    c.officeId || "",
+        status:      String(c.status || "unused").toLowerCase(),
+        createdAt:   toMillis(c.generatedAt),
+        usedAt:      toMillis(c.usedAt),
+        evaluationId: c.evaluationId || "",
+        generatedBy: c.generatedBy || "",
+        legacy:      false
+      };
+    });
+  } catch (err) {
+    console.error("Could not load transaction codes:", err);
+    showToast(`❌ ${friendlyError(err)}`);
+  }
+
+  try {
+    const legacySnap = await getDocs(collectionGroup(db, "codes"));
+    legacySnap.forEach(d => {
+      const c = d.data() || {};
+      const code = c.code || d.id;
+      if (allCodes[code]) return;                   // already migrated
+
+      const officeName = d.ref.parent.parent?.id || "";
+      allCodes[code] = {
+        docId:       d.id,
+        code,
+        office:      officeName,
+        officeId:    c.officeId || officeIdByName.get(officeName) || "",
+        status:      String(c.status || "unused").toLowerCase(),
+        createdAt:   toMillis(c.createdAt ?? c.generatedAt),
+        usedAt:      toMillis(c.usedAt),
+        evaluationId: c.evaluationId || "",
+        generatedBy: c.generatedBy || "",
+        legacy:      true
+      };
+    });
+  } catch (err) {
+    // Legacy codes are optional history; a failure here must not blank the page.
+    console.warn("Legacy codes unavailable:", err?.code || err);
+  }
 
   updateStats(allCodes);
   populateOfficeFilter(allCodes);
   renderTable();
-});
+}
 
 
 function updateStats(data) {
@@ -833,41 +858,49 @@ function updateStats(data) {
   const total   = e.length;
   const unused  = e.filter(c => c.status === "unused").length;
   const used    = e.filter(c => c.status === "used").length;
-  const offices = new Set(e.map(c => c.office)).size;
+  const officeCount = new Set(e.map(c => c.office).filter(Boolean)).size;
 
   document.getElementById("scTotal").textContent   = total;
   document.getElementById("scUnused").textContent  = unused;
   document.getElementById("scUsed").textContent    = used;
-  document.getElementById("scOffices").textContent = offices;
+  document.getElementById("scOffices").textContent = officeCount;
 
   const unusedPct = total ? Math.round((unused / total) * 100) : 0;
   const usedPct   = total ? Math.round((used   / total) * 100) : 0;
-  const avgPerOffice = offices ? Math.round((total / offices) * 10) / 10 : 0;
+  const avgPerOffice = officeCount ? Math.round((total / officeCount) * 10) / 10 : 0;
 
-  document.getElementById("scTotalBadge").textContent   = offices ? `Across ${offices} office${offices > 1 ? "s" : ""}` : "No offices yet";
+  document.getElementById("scTotalBadge").textContent =
+    officeCount ? `Across ${officeCount} office${officeCount > 1 ? "s" : ""}` : "No codes yet";
   document.getElementById("scUnusedBadge").textContent  = `${unusedPct}% of total`;
   document.getElementById("scUsedBadge").textContent    = `${usedPct}% of total`;
   document.getElementById("scOfficesBadge").textContent = `${avgPerOffice} avg / office`;
 }
 
 function populateOfficeFilter(data) {
-  const sel     = document.getElementById("filterOffice");
-  const prev    = sel.value;
-  const offices = [...new Set(Object.values(data).map(c => c.office))].sort();
+  const sel  = document.getElementById("filterOffice");
+  const prev = sel.value;
+  const names = [...new Set(Object.values(data).map(c => c.office).filter(Boolean))].sort();
   sel.innerHTML = `<option value="">All Offices</option>` +
-    offices.map(o => `<option value="${o}"${o === prev ? " selected" : ""}>${o}</option>`).join("");
+    names.map(o =>
+      `<option value="${escapeHtml(o)}"${o === prev ? " selected" : ""}>${escapeHtml(o)}</option>`
+    ).join("");
 }
 
 function renderTable() {
   const search = document.getElementById("searchInput").value.toLowerCase();
   const office = document.getElementById("filterOffice").value;
   const status = document.getElementById("filterStatus").value;
+  const from   = startOfDay(document.getElementById("filterStart").value);
+  const to     = endOfDay(document.getElementById("filterEnd").value);
 
-  filteredEntries = Object.entries(allCodes).filter(([, c]) =>
-    (c.code.toLowerCase().includes(search) || c.office.toLowerCase().includes(search))
-    && (!office || c.office === office)
-    && (!status || c.status === status)
-  ).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+  filteredEntries = Object.entries(allCodes).filter(([, c]) => {
+    if (search && !(c.code.toLowerCase().includes(search) || c.office.toLowerCase().includes(search))) return false;
+    if (office && c.office !== office) return false;
+    if (status && c.status !== status) return false;
+    if (from && (!c.createdAt || c.createdAt < from)) return false;
+    if (to   && (!c.createdAt || c.createdAt > to))   return false;
+    return true;
+  }).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
 
   const tbody    = document.getElementById("codeTableBody");
   const emptyMsg = document.getElementById("emptyMsg");
@@ -879,61 +912,97 @@ function renderTable() {
   }
 
   emptyMsg.style.display = "none";
-  tbody.innerHTML = filteredEntries.map(([key, c], i) => {
-    const date = c.createdAt
-      ? new Date(c.createdAt).toLocaleDateString("en-PH", { month:"short", day:"numeric", year:"numeric" })
-      : "—";
-    return `
-      <tr>
-        <td style="color:#94a3b8;font-size:12px;">${i + 1}</td>
-        <td><span class="code-pill">${c.code}</span></td>
-        <td>${c.office}</td>
-        <td>
-          <span class="status-badge ${c.status === "used" ? "status-used" : "status-unused"}">
-            ${c.status === "used" ? "Used" : "Unused"}
-          </span>
-        </td>
-        <td style="font-size:12px;color:#64748b;">${date}</td>
-        <td><button class="btn-action btn-delete" onclick="deleteCode('${key}')">🗑 Delete</button></td>
-      </tr>
-    `;
-  }).join("");
+  tbody.innerHTML = filteredEntries.map(([key, c], i) => `
+    <tr>
+      <td style="color:#94a3b8;font-size:12px;">${i + 1}</td>
+      <td>
+        <span class="code-pill">${escapeHtml(c.code)}</span>
+        ${c.legacy ? `<span style="font-size:10px;color:#6d28d9;background:#ede9fe;padding:2px 7px;border-radius:999px;margin-left:6px;">legacy</span>` : ""}
+      </td>
+      <td>${escapeHtml(c.office || "—")}</td>
+      <td>
+        <span class="status-badge ${c.status === "used" ? "status-used" : "status-unused"}">
+          ${c.status === "used" ? "Used" : "Unused"}
+        </span>
+      </td>
+      <td style="font-size:12px;color:#64748b;">${escapeHtml(c.createdAt ? formatDate(c.createdAt) : "—")}</td>
+      <td style="font-size:12px;color:#64748b;">${escapeHtml(c.usedAt ? formatDate(c.usedAt) : "—")}</td>
+      <td>${c.status === "used"
+            ? `<span style="font-size:11px;color:#94a3b8;font-style:italic;" title="A used code is kept as the audit trail for its evaluation.">Kept on record</span>`
+            : `<button class="btn-action btn-delete" data-delete="${escapeHtml(key)}">🗑 Delete</button>`}</td>
+    </tr>
+  `).join("");
 }
 
+document.getElementById("codeTableBody").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-delete]");
+  if (btn) window.deleteCode(btn.dataset.delete);
+});
+
+function exportRows() {
+  return filteredEntries.map(([, c], i) => [
+    i + 1, c.code, c.office, c.officeId,
+    c.status === "used" ? "Used" : "Unused",
+    c.createdAt ? formatDateTime(c.createdAt) : "",
+    c.generatedBy || "",
+    c.usedAt ? formatDateTime(c.usedAt) : "",
+    c.evaluationId || "",
+    c.legacy ? "Legacy (not yet migrated)" : "Current"
+  ]);
+}
+
+const EXPORT_HEADERS = [
+  "#", "Code", "Office", "Office ID", "Status",
+  "Generated At", "Generated By", "Used At", "Evaluation ID", "Record"
+];
+
 window.exportCSV = () => {
-  const rows = [["#", "Code", "Office", "Status", "Created At"]];
-  filteredEntries.forEach(([, c], i) => {
-    const date = c.createdAt ? new Date(c.createdAt).toLocaleString("en-PH") : "";
-    rows.push([i + 1, c.code, c.office, c.status, date]);
-  });
-  const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
-  downloadFile("transaction-codes.csv", "text/csv", csv);
+  if (!filteredEntries.length) { showToast("There is nothing to export."); return; }
+  downloadFile("transaction-codes.csv", "text/csv", toCSV(EXPORT_HEADERS, exportRows()));
   showToast(`📥 Exported ${filteredEntries.length} codes as CSV`);
 };
 
 window.exportJSON = () => {
-  const data = filteredEntries.map(([key, c]) => ({
-    key,
-    code:      c.code,
-    office:    c.office,
-    status:    c.status,
-    createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : null
+  if (!filteredEntries.length) { showToast("There is nothing to export."); return; }
+  const data = filteredEntries.map(([, c]) => ({
+    code: c.code, office: c.office, officeId: c.officeId, status: c.status,
+    generatedAt: c.createdAt ? new Date(c.createdAt).toISOString() : null,
+    generatedBy: c.generatedBy || null,
+    usedAt: c.usedAt ? new Date(c.usedAt).toISOString() : null,
+    evaluationId: c.evaluationId || null,
+    legacy: c.legacy
   }));
   downloadFile("transaction-codes.json", "application/json", JSON.stringify(data, null, 2));
   showToast(`📥 Exported ${filteredEntries.length} codes as JSON`);
 };
 
-function downloadFile(filename, mime, content) {
-  const blob = new Blob([content], { type: mime });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
-}
-
 document.getElementById("searchInput").addEventListener("input",   renderTable);
 document.getElementById("filterOffice").addEventListener("change", renderTable);
 document.getElementById("filterStatus").addEventListener("change", renderTable);
+document.getElementById("filterStart").addEventListener("change",  renderTable);
+document.getElementById("filterEnd").addEventListener("change",    renderTable);
+
+document.getElementById("filterReset").addEventListener("click", () => {
+  ["searchInput", "filterOffice", "filterStatus", "filterStart", "filterEnd"]
+    .forEach(id => { document.getElementById(id).value = ""; });
+  renderTable();
+});
+
+// Offices first: the legacy codes resolve their office ID through this map.
+await loadOffices();
+await loadCodes();
+
+/* Live updates for the canonical collection, so a code consumed by a
+   respondent flips to "Used" here without a manual refresh. Registered after
+   the initial load so it does not race it. */
+let codeReloadPending = false;
+onSnapshot(PATHS.codes(), () => {
+  // onSnapshot fires once on attach; skip that, the initial load just ran.
+  if (!codeReloadPending) { codeReloadPending = true; return; }
+  loadCodes();
+}, (err) => {
+  console.warn("Live code updates unavailable:", err?.code || err);
+});
 
 </script>
 </body>

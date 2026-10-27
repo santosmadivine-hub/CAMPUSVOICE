@@ -376,6 +376,21 @@
       75%      { transform: translateX(4px); }
     }
 
+    /* Redirect notice (deactivated account, session expired, no access) */
+    .login-notice {
+      display: none;
+      margin-top: 18px;
+      padding: 13px 18px;
+      background: rgba(37, 99, 235, 0.22);
+      border: 1px solid rgba(147, 197, 253, 0.55);
+      border-radius: 10px;
+      color: #dbeafe;
+      font-size: 0.95rem;
+      font-weight: 500;
+      text-align: center;
+      line-height: 1.45;
+    }
+
     .login-hint {
       margin-top: clamp(14px, 2.6vh, 26px);
       text-align: center;
@@ -473,70 +488,219 @@
     <!-- Error -->
     <div class="login-error" id="login-error">❌ Invalid credentials. Please try again.</div>
 
+    <!-- Notice shown when a page redirected back here (signed out, deactivated, etc.) -->
+    <div class="login-notice" id="login-notice"></div>
+
     <div class="login-hint">Authorized <span>ISUFST-SEC</span> personnel only</div>
 
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    /* ======================================================================
+     * Login — Firebase Authentication for every account.
+     *
+     * Three kinds of sign-in arrive here:
+     *   · Office accounts  — username (or email) + password, created by Admin 1
+     *   · Administrators   — admin1 / admin2 / admin3, same credentials as before
+     *   · First-run admins — their Auth account does not exist yet, so it is
+     *                        provisioned from the password they just typed and
+     *                        every later sign-in goes through Auth directly
+     *
+     * Passwords are held by Firebase Authentication. Firestore stores only the
+     * role and office mapping, never a password.
+     * ==================================================================== */
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
-      authDomain: "kristal-adb78.firebaseapp.com",
-      databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
-      projectId: "kristal-adb78",
-      storageBucket: "kristal-adb78.firebasestorage.app",
-      messagingSenderId: "1016283938031",
-      appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
-      measurementId: "G-LK8D1CBQ2J"
+    import {
+      auth, db, doc, getDoc, signInWithEmailAndPassword,
+      createUserWithEmailAndPassword, signOut, PATHS, ROLES as ROLE_INFO,
+      adminEmail, friendlyError
+    } from "./cv-core.js";
+
+    import {
+      usernameToEmail, slugUsername, ensureAdminAccount, recordLogin
+    } from "./cv-accounts.js";
+
+    /* Seed credentials for the three built-in administrators. A document under
+       admin_settings/{adminId} still overrides these, exactly as before, so an
+       admin who already changed their username or password keeps it. */
+    const ADMIN_SEEDS = {
+      admin1: { user: 'admin1', pass: 'admin123' },
+      admin2: { user: 'admin2', pass: 'admin456' },
+      admin3: { user: 'admin3', pass: 'admin789' }
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const errorEl  = document.getElementById('login-error');
+    const noticeEl  = document.getElementById('login-notice');
+    const btn      = document.getElementById('loginBtn');
 
-    /* Fallback / seed credentials — used the first time, before any admin
-       has changed their username or password via Settings. Once a
-       Firestore doc exists for an admin, its username/password win. */
-    const ROLES = {
-      admin1: { user: 'admin1', pass: 'admin123', redirect: 'admin1-dashboard.html' },
-      admin2: { user: 'admin2', pass: 'admin456', redirect: 'admin2-dashboard.html' },
-      admin3: { user: 'admin3', pass: 'admin789', redirect: 'admin3-dashboard.html' }
-    };
+    /* A page that bounced the visitor back here left an explanation. */
+    const notice = sessionStorage.getItem('cv-login-notice');
+    if (notice) {
+      sessionStorage.removeItem('cv-login-notice');
+      noticeEl.textContent = notice;
+      noticeEl.style.display = 'block';
+    }
+
+    function showError(message) {
+      errorEl.textContent = `❌ ${message}`;
+      errorEl.style.display = 'block';
+      noticeEl.style.display = 'none';
+    }
+
+    /* Resolves whatever was typed into the email address Auth expects. */
+    async function resolveEmail(identifier) {
+      if (identifier.includes('@')) return identifier.toLowerCase();
+
+      const key = slugUsername(identifier);
+
+      // An account created by Admin 1 is registered in the username index.
+      try {
+        const snap = await getDoc(PATHS.accountIndex(key));
+        if (snap.exists() && snap.data()?.email) return snap.data().email;
+      } catch (err) {
+        console.warn('Username lookup unavailable, falling back to conventions:', err?.code || err);
+      }
+
+      if (ADMIN_SEEDS[key]) return adminEmail(key);
+      return usernameToEmail(key);
+    }
+
+    /* Which administrator, if any, do these credentials match? Reads
+       admin_settings first so a changed username or password still wins. */
+    async function matchLegacyAdmin(username, password) {
+      for (const [adminId, seed] of Object.entries(ADMIN_SEEDS)) {
+        let user = seed.user;
+        let pass = seed.pass;
+
+        try {
+          const snap = await getDoc(doc(db, 'admin_settings', adminId));
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data.username) user = data.username;
+            if (data.password) pass = data.password;
+          }
+        } catch (err) {
+          console.error(`Could not read admin_settings/${adminId}; using seed values`, err);
+        }
+
+        if (user === username && pass === password) return { adminId, username: user };
+      }
+      return null;
+    }
+
+    /* Reads the role mapping and sends the visitor to the right dashboard. */
+    async function routeSignedInUser(uid, fallbackRole) {
+      let account = null;
+      try {
+        const snap = await getDoc(PATHS.account(uid));
+        if (snap.exists()) account = snap.data();
+      } catch (err) {
+        console.error('Could not read the account record:', err);
+      }
+
+      const role = account?.role || fallbackRole || '';
+
+      if (!role) {
+        await signOut(auth).catch(() => {});
+        showError('This account is not assigned to a role yet. Please contact Admin 1.');
+        return false;
+      }
+
+      if ((account?.status || 'active') !== 'active') {
+        await signOut(auth).catch(() => {});
+        showError('This account has been deactivated. Please contact Admin 1.');
+        return false;
+      }
+
+      if (role === 'office' && !account?.officeId) {
+        await signOut(auth).catch(() => {});
+        showError('This office account is not linked to an office yet. Please contact Admin 1.');
+        return false;
+      }
+
+      recordLogin(uid);
+      window.location.href = ROLE_INFO[role]?.home || 'office-dashboard.html';
+      return true;
+    }
 
     window.doLogin = async () => {
-      const username = document.getElementById('login-user').value.trim();
-      const password = document.getElementById('login-pass').value;
-      const errorEl  = document.getElementById('login-error');
-      const btn      = document.getElementById('loginBtn');
+      const identifier = document.getElementById('login-user').value.trim();
+      const password   = document.getElementById('login-pass').value;
 
       errorEl.style.display = 'none';
+
+      if (!identifier || !password) {
+        showError('Enter your username and password.');
+        return;
+      }
+
       btn.disabled = true;
       btn.textContent = 'Checking…';
 
       try {
-        for (const [adminId, fallback] of Object.entries(ROLES)) {
-          let effectiveUser = fallback.user;
-          let effectivePass = fallback.pass;
+        const email = await resolveEmail(identifier);
 
-          try {
-            const snap = await getDoc(doc(db, 'admin_settings', adminId));
-            if (snap.exists()) {
-              const data = snap.data();
-              if (data.username) effectiveUser = data.username;
-              if (data.password) effectivePass = data.password;
-            }
-          } catch (e) {
-            console.error(`Could not check Firestore credentials for ${adminId}, using fallback`, e);
-          }
+        /* --- 1. the normal path: authenticate against Firebase Auth --- */
+        try {
+          const cred = await signInWithEmailAndPassword(auth, email, password);
+          await routeSignedInUser(cred.user.uid);
+          return;
+        } catch (authErr) {
+          const code = authErr?.code || '';
+          const recoverable =
+            code === 'auth/user-not-found' ||
+            code === 'auth/invalid-credential' ||
+            code === 'auth/wrong-password' ||
+            code === 'auth/invalid-email';
 
-          if (effectiveUser === username && effectivePass === password) {
-            window.location.href = fallback.redirect;
+          if (!recoverable) {
+            showError(friendlyError(authErr));
             return;
           }
         }
 
-        errorEl.style.display = 'block';
+        /* --- 2. first run for an administrator: no Auth account exists yet,
+                 so create one from the credentials that just verified --- */
+        const legacy = await matchLegacyAdmin(identifier, password);
+
+        if (!legacy) {
+          showError('Invalid credentials. Please try again.');
+          return;
+        }
+
+        const adminAuthEmail = adminEmail(legacy.adminId);
+
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, adminAuthEmail, password);
+          await ensureAdminAccount(cred.user.uid, legacy.adminId, adminAuthEmail, legacy.username);
+          await routeSignedInUser(cred.user.uid, legacy.adminId);
+          return;
+        } catch (createErr) {
+          if (createErr?.code === 'auth/email-already-in-use') {
+            // The secure login exists but its password differs from the one in
+            // admin_settings — someone edited Firestore after the first sign-in.
+            showError(
+              'Your dashboard password was changed in the database but your secure ' +
+              'login still uses the previous one. Sign in with the previous password, ' +
+              'or ask Admin 1 to reset this account.'
+            );
+            return;
+          }
+
+          if (createErr?.code === 'auth/weak-password') {
+            showError(
+              'Your current password is too short for secure sign-in. It must be at ' +
+              'least 6 characters. Update admin_settings and try again.'
+            );
+            return;
+          }
+
+          showError(friendlyError(createErr));
+          return;
+        }
+      } catch (err) {
+        console.error('Sign-in failed:', err);
+        showError(friendlyError(err));
       } finally {
         btn.disabled = false;
         btn.textContent = 'Sign In to Dashboard';

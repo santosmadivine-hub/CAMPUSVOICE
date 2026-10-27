@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Evaluation Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="cv-office.css">
+<style>
+  .status-select {
+    padding:5px 9px; border:1.5px solid var(--line); border-radius:9px;
+    font-size:12px; font-family:'DM Sans',sans-serif; background:#f8fafc;
+    color:#334155; cursor:pointer; outline:none; max-width:130px;
+  }
+  .status-select:focus { border-color:#0284c7; box-shadow:0 0 0 3px rgba(2,132,199,.14); background:#fff; }
+  .comment-cell { max-width:240px; font-size:13px; color:var(--ink-soft); }
+  .comment-cell em { color:#94a3b8; }
+  .sqd-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:10px; }
+  .sqd-item { background:var(--paper); border:1px solid var(--line); border-radius:11px; padding:10px 12px; }
+  .sqd-item-label { font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); }
+  .sqd-item-value { font-family:'Syne',sans-serif; font-weight:800; font-size:17px; color:var(--ink); margin-top:2px; }
+  .modal-section { font-family:'Syne',sans-serif; font-weight:700; font-size:13px; color:var(--brand-deep);
+                   text-transform:uppercase; letter-spacing:.05em; margin:20px 0 6px; }
+  .modal-section:first-child { margin-top:0; }
+  .quote { background:var(--paper); border-left:3px solid var(--brand); border-radius:0 12px 12px 0;
+           padding:14px 16px; font-style:italic; line-height:1.65; color:var(--ink); }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <div id="sidebar-mount"></div>
+  <div class="sidebar-overlay"></div>
+
+  <main class="main fade-in">
+
+    <div id="topbar-mount"></div>
+
+    <div class="page">
+
+      <a href="office-dashboard.html" class="btn btn-ghost btn-sm" style="margin-bottom:14px;">← Back</a>
+
+      <div class="office-context">
+        <div class="office-context-icon">📑</div>
+        <div class="office-context-text">
+          <div class="office-context-name" id="ctx-office">Loading…</div>
+          <div class="office-context-meta">
+            You can only see evaluations submitted for this office · Office ID <code id="ctx-office-id">—</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner banner-error" id="error-banner" style="display:none;"></div>
+
+      <section class="stat-grid">
+        <div class="stat-card stat-primary">
+          <div class="stat-icon">📋</div>
+          <div class="stat-label">Total Evaluations</div>
+          <div class="stat-value" id="s-total">0</div>
+          <div class="stat-sub" id="s-total-sub">—</div>
+        </div>
+        <div class="stat-card stat-primary">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-label">Average Rating</div>
+          <div class="stat-value" id="s-avg">0.0 / 5</div>
+          <div class="stat-sub" id="s-avg-label">—</div>
+        </div>
+        <div class="stat-card stat-success">
+          <div class="stat-icon">💬</div>
+          <div class="stat-label">With Comments</div>
+          <div class="stat-value" id="s-comments">0</div>
+          <div class="stat-sub">written suggestions received</div>
+        </div>
+        <div class="stat-card stat-warning">
+          <div class="stat-icon">🔔</div>
+          <div class="stat-label">Needs Review</div>
+          <div class="stat-value" id="s-pending">0</div>
+          <div class="stat-sub">not yet marked reviewed</div>
+        </div>
+      </section>
+
+      <div class="card">
+        <div class="toolbar">
+          <div>
+            <h2 class="card-title">Submitted Evaluations</h2>
+            <div class="card-sub" id="list-summary">—</div>
+          </div>
+          <div class="toolbar-actions">
+            <button class="btn btn-sm" id="export-csv">⬇ Export CSV / Excel</button>
+            <a class="btn btn-sm btn-primary" href="office-reports.html">📁 Generate Report</a>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <label class="field">
+            <span class="field-label">Search</span>
+            <input type="search" id="f-search" class="input" placeholder="Code, comment, service…">
+          </label>
+          <label class="field">
+            <span class="field-label">From date</span>
+            <input type="date" id="f-start" class="input">
+          </label>
+          <label class="field">
+            <span class="field-label">To date</span>
+            <input type="date" id="f-end" class="input">
+          </label>
+          <label class="field">
+            <span class="field-label">Rating</span>
+            <select id="f-rating" class="input">
+              <option value="">All ratings</option>
+              <option value="5">5.0 only (Excellent)</option>
+              <option value="4">4.0 and above</option>
+              <option value="3">3.0 and above</option>
+              <option value="2">Below 3.0 (needs attention)</option>
+              <option value="1">Below 2.0 (critical)</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">Feedback status</span>
+            <select id="f-status" class="input">
+              <option value="">All statuses</option>
+              <option value="New">New</option>
+              <option value="In Review">In Review</option>
+              <option value="Reviewed">Reviewed</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+          </label>
+          <div class="field">
+            <span class="field-label">&nbsp;</span>
+            <button class="btn" id="f-reset">Reset filters</button>
+          </div>
+        </div>
+
+        <div class="table-wrap table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Code</th>
+                <th>Submitted</th>
+                <th>Rating</th>
+                <th>Comments &amp; Suggestions</th>
+                <th>Evidence</th>
+                <th>Feedback Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="eval-rows">
+              <tr><td colspan="8" class="loading-row">Loading evaluations…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ===================== Detail modal ===================== -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+    <div class="modal-head">
+      <div class="modal-icon">📋</div>
+      <div>
+        <h3 class="modal-title" id="detail-title">Evaluation Details</h3>
+        <div class="modal-subtitle" id="detail-subtitle"></div>
+      </div>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+    <div class="modal-actions">
+      <button class="btn" id="detail-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+import {
+  guard, mountOfficeChrome, fetchOfficeEvaluations, applyFilters,
+  computeAnalytics, DIMENSION_LABELS, escapeHtml, formatDate, formatDateTime,
+  friendlyError, toast, exportEvaluationsCSV, ratingLabel,
+  db, doc, updateDoc, PATHS
+} from "./cv-core.js";
+
+const session = await guard(["office"]);
+
+mountOfficeChrome({
+  activePage: "eval-mgmt",
+  title: "Evaluation Management",
+  subtitle: "Review Evaluations, Comments and Evidence for Your Office",
+  session
+});
+
+const el = (id) => document.getElementById(id);
+
+el("ctx-office").textContent    = session.officeName;
+el("ctx-office-id").textContent = session.officeId;
+document.title = `CampusVoice – Evaluation Management | ${session.officeName}`;
+
+const STATUSES = ["New", "In Review", "Reviewed", "Resolved"];
+
+let allEvals = [];
+let shown = [];
+const byId = new Map();
+
+/* ------------------------------------------------------------------ *
+ * Load
+ * ------------------------------------------------------------------ */
+async function reload() {
+  try {
+    allEvals = await fetchOfficeEvaluations(session.officeId, session.officeName);
+    byId.clear();
+    allEvals.forEach(e => byId.set(e.id, e));
+    el("error-banner").style.display = "none";
+    render();
+  } catch (err) {
+    console.error("Could not load evaluations:", err);
+    el("error-banner").textContent = friendlyError(err);
+    el("error-banner").style.display = "block";
+    el("eval-rows").innerHTML =
+      `<tr><td colspan="8" class="empty-row">Evaluations could not be loaded.</td></tr>`;
+  }
+}
+
+/* Rating filter: exact 5, "x and above", or "below x". */
+function matchesRating(ev, value) {
+  if (!value) return true;
+  const avg = ev.avg;
+  if (value === "5") return avg >= 4.95;
+  if (value === "4") return avg >= 4;
+  if (value === "3") return avg >= 3;
+  if (value === "2") return avg > 0 && avg < 3;
+  if (value === "1") return avg > 0 && avg < 2;
+  return true;
+}
+
+function render() {
+  const search = el("f-search").value.trim().toLowerCase();
+  const status = el("f-status").value;
+  const rating = el("f-rating").value;
+
+  shown = applyFilters(allEvals, {
+    startDate: el("f-start").value,
+    endDate:   el("f-end").value
+  }).filter(ev => {
+    if (!matchesRating(ev, rating)) return false;
+    if (status && (ev.status || "New") !== status) return false;
+    if (search) {
+      const haystack = [
+        ev.transactionCode, ev.suggestions, ev.serviceAvailed,
+        ev.region, ev.clientType, ev.sex
+      ].join(" ").toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+
+  renderStats();
+  renderRows();
+}
+
+function renderStats() {
+  const stats = computeAnalytics(shown, []);
+
+  el("s-total").textContent = stats.total;
+  el("s-total-sub").textContent = shown.length === allEvals.length
+    ? "all submissions"
+    : `of ${allEvals.length} on record`;
+
+  el("s-avg").textContent       = `${stats.overall.toFixed(1)} / 5`;
+  el("s-avg-label").textContent = stats.overallLabel;
+
+  el("s-comments").textContent = shown.filter(e => e.suggestions && e.suggestions.trim()).length;
+  el("s-pending").textContent  = shown.filter(e => {
+    const s = e.status || "New";
+    return s === "New" || s === "In Review";
+  }).length;
+
+  el("list-summary").textContent =
+    `Showing ${shown.length} of ${allEvals.length} evaluation${allEvals.length === 1 ? "" : "s"}`;
+}
+
+function ratingBar(avg) {
+  const pct = (avg / 5) * 100;
+  return `
+    <div class="bar-cell">
+      <div class="bar-track"><div class="bar-fill-sm" style="width:${pct}%"></div></div>
+      <span class="bar-num">${avg.toFixed(1)}</span>
+    </div>`;
+}
+
+function renderRows() {
+  if (!shown.length) {
+    el("eval-rows").innerHTML = allEvals.length
+      ? `<tr><td colspan="8" class="empty-row">No evaluations match these filters.</td></tr>`
+      : `<tr><td colspan="8" class="empty-row">No evaluations have been submitted for ${escapeHtml(session.officeName)} yet.</td></tr>`;
+    return;
+  }
+
+  el("eval-rows").innerHTML = shown.map((ev, i) => {
+    const current = ev.status || "New";
+    const options = STATUSES.map(s =>
+      `<option value="${s}"${s === current ? " selected" : ""}>${s}</option>`
+    ).join("");
+
+    const comment = ev.suggestions && ev.suggestions.trim()
+      ? escapeHtml(ev.suggestions)
+      : `<em>No written comment</em>`;
+
+    return `
+      <tr>
+        <td class="row-num">${i + 1}</td>
+        <td>${ev.transactionCode ? `<span class="code-pill">${escapeHtml(ev.transactionCode)}</span>` : `<span class="cell-muted">—</span>`}</td>
+        <td class="cell-muted">${escapeHtml(ev.timestamp ? formatDate(ev.timestamp) : "—")}</td>
+        <td>${ratingBar(ev.avg)}</td>
+        <td class="comment-cell cell-wrap" title="${escapeHtml(ev.suggestions || "")}">${comment}</td>
+        <td>${ev.media.length
+              ? `<span class="badge-pill badge-info">${ev.media.length} file${ev.media.length === 1 ? "" : "s"}</span>`
+              : `<span class="cell-muted">—</span>`}</td>
+        <td>
+          <select class="status-select" data-id="${escapeHtml(ev.id)}" aria-label="Feedback status">
+            ${options}
+          </select>
+        </td>
+        <td class="cell-actions">
+          <button class="btn btn-sm" data-view="${escapeHtml(ev.id)}">View</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+/* ------------------------------------------------------------------ *
+ * Feedback status — the only field an office may write on an evaluation
+ * ------------------------------------------------------------------ */
+el("eval-rows").addEventListener("change", async (e) => {
+  const select = e.target.closest(".status-select");
+  if (!select) return;
+
+  const id = select.dataset.id;
+  const next = select.value;
+  const ev = byId.get(id);
+  const previous = ev?.status || "New";
+
+  select.disabled = true;
+  try {
+    await updateDoc(PATHS.evaluation(id), {
+      feedbackStatus: next,
+      feedbackUpdatedAt: Date.now(),
+      feedbackUpdatedBy: session.uid
+    });
+    if (ev) ev.status = next;
+    renderStats();
+    toast(`Feedback status set to “${next}”.`);
+  } catch (err) {
+    console.error("Could not update the feedback status:", err);
+    select.value = previous;
+    toast(friendlyError(err), true);
+  } finally {
+    select.disabled = false;
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * Detail modal — full record, comments and uploaded evidence
+ * ------------------------------------------------------------------ */
+const modal = el("detail-modal");
+
+function closeModal() { modal.classList.remove("open"); }
+el("detail-close").addEventListener("click", closeModal);
+modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+/**
+ * Renders the photo and video evidence attached to an evaluation.
+ * `media` is [{ url, type }] as produced by parseEvidence() in cv-core.js.
+ */
+function mediaMarkup(media) {
+  if (!media.length) {
+    return `<p class="media-empty">No photos or videos were attached to this evaluation.</p>`;
+  }
+
+  return `<div class="media-grid">` + media.map(({ url, type }) => {
+    const safe = escapeHtml(url);
+    return type === "video"
+      ? `<div class="media-item">
+           <video src="${safe}" controls preload="metadata"></video>
+           <span class="media-badge">Video</span>
+         </div>`
+      : `<div class="media-item">
+           <img src="${safe}" alt="Evaluation evidence" loading="lazy"
+                onerror="this.closest('.media-item').innerHTML='<span class=&quot;media-badge&quot;>Unavailable</span>'">
+           <a href="${safe}" target="_blank" rel="noopener" aria-label="Open full size"></a>
+           <span class="media-badge">Photo</span>
+         </div>`;
+  }).join("") + `</div>`;
+}
+
+el("eval-rows").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-view]");
+  if (!btn) return;
+
+  const ev = byId.get(btn.dataset.view);
+  if (!ev) return;
+
+  el("detail-title").textContent = `Evaluation — ${ev.avg.toFixed(1)} / 5 (${ratingLabel(ev.avg)})`;
+  el("detail-subtitle").textContent =
+    `${session.officeName} · ${ev.timestamp ? formatDateTime(ev.timestamp) : "date unavailable"}`;
+
+  const row = (label, value) => `
+    <div class="detail-row">
+      <span class="detail-label">${escapeHtml(label)}</span>
+      <span class="detail-value">${escapeHtml(value || "—")}</span>
+    </div>`;
+
+  el("detail-body").innerHTML = `
+    <div class="modal-section">Respondent</div>
+    ${row("Client Type", ev.clientType)}
+    ${row("Sex", ev.sex)}
+    ${row("Age", ev.age)}
+    ${row("Region of Residence", ev.region)}
+    ${row("Service Availed", ev.serviceAvailed)}
+
+    <div class="modal-section">Citizen's Charter</div>
+    ${row("CC1 — Awareness", ev.cc1)}
+    ${row("CC2 — Visibility", ev.cc2)}
+    ${row("CC3 — Helpfulness", ev.cc3)}
+
+    <div class="modal-section">Service Quality Dimensions</div>
+    ${row("SQD0 — Overall satisfaction", ev.sqd0)}
+    <div class="sqd-grid">
+      ${DIMENSION_LABELS.map((label, i) => `
+        <div class="sqd-item">
+          <div class="sqd-item-label">${escapeHtml(label)}</div>
+          <div class="sqd-item-value">${ev.dims[i] === null ? "N/A" : ev.dims[i]}</div>
+        </div>
+      `).join("")}
+    </div>
+
+    <div class="modal-section">Comments &amp; Suggestions</div>
+    ${ev.suggestions && ev.suggestions.trim()
+        ? `<div class="quote">${escapeHtml(ev.suggestions)}</div>`
+        : `<p class="media-empty">The respondent did not leave a written comment.</p>`}
+
+    <div class="modal-section">Uploaded Evidence</div>
+    ${mediaMarkup(ev.media)}
+
+    <div class="modal-section">Record</div>
+    ${row("Transaction Code", ev.transactionCode)}
+    ${row("Evaluation Category", ev.category)}
+    ${row("Feedback Status", ev.status || "New")}
+    ${row("Evaluation ID", ev.id)}
+    ${row("Submitted", ev.timestamp ? formatDateTime(ev.timestamp) : "")}
+  `;
+
+  modal.classList.add("open");
+});
+
+/* ------------------------------------------------------------------ *
+ * Filters + export
+ * ------------------------------------------------------------------ */
+["f-search", "f-start", "f-end", "f-rating", "f-status"].forEach(id => {
+  el(id).addEventListener(id === "f-search" ? "input" : "change", render);
+});
+
+el("f-reset").addEventListener("click", () => {
+  ["f-search", "f-start", "f-end", "f-rating", "f-status"].forEach(id => { el(id).value = ""; });
+  render();
+});
+
+el("export-csv").addEventListener("click", () => {
+  if (!shown.length) { toast("There is nothing to export.", true); return; }
+  const count = exportEvaluationsCSV(shown, session.officeName);
+  toast(`📥 Exported ${count} evaluation${count === 1 ? "" : "s"}.`);
+});
+
+await reload();
+</script>
+
+</body>
+</html>
