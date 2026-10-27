@@ -404,6 +404,23 @@
       font-weight: 700;
     }
 
+    .portal-switch {
+      margin-top: 14px;
+      text-align: center;
+      font-size: clamp(0.8rem, 1.8vh, 0.92rem);
+      color: rgba(255,255,255,0.75);
+    }
+
+    .portal-switch a {
+      color: var(--accent2);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .portal-switch a:hover {
+      text-decoration: underline;
+    }
+
     /* Small screens: keep large text but tighten padding */
     @media (max-width: 480px) {
       .login-box {
@@ -492,15 +509,21 @@
     <div class="login-notice" id="login-notice"></div>
 
     <div class="login-hint">Authorized <span>ISUFST-SEC</span> personnel only</div>
+    <div class="portal-switch">
+      Signing in for an office or unit? <a href="office-login.html">Office Sign-In →</a>
+    </div>
 
   </div>
 
   <script type="module">
     /* ======================================================================
-     * Login — Firebase Authentication for every account.
+     * Login — Firebase Authentication for administrators only.
      *
-     * Three kinds of sign-in arrive here:
-     *   · Office accounts  — username (or email) + password, created by Admin 1
+     * Office accounts have their own separate sign-in page (office-login.html)
+     * and are deliberately never completed through this one — see
+     * routeSignedInUser() below.
+     *
+     * Two kinds of sign-in arrive here:
      *   · Administrators   — admin1 / admin2 / admin3, same credentials as before
      *   · First-run admins — their Auth account does not exist yet, so it is
      *                        provisioned from the password they just typed and
@@ -612,14 +635,17 @@
         return false;
       }
 
-      if (role === 'office' && !account?.officeId) {
+      // This page signs in administrators only. An office account that
+      // authenticates here is sent to its own sign-in page instead of being
+      // completed through this one — the two never share a login flow.
+      if (role === 'office') {
         await signOut(auth).catch(() => {});
-        showError('This office account is not linked to an office yet. Please contact Admin 1.');
+        showError('This is an office account. Please sign in at the office portal below.');
         return false;
       }
 
       recordLogin(uid);
-      window.location.href = ROLE_INFO[role]?.home || 'office-dashboard.html';
+      window.location.href = ROLE_INFO[role]?.home || 'admin1-dashboard.html';
       return true;
     }
 

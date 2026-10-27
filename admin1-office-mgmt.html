@@ -1022,9 +1022,10 @@ window.viewOffice = function(office) {
     showToast("Could not find this office's record. Please refresh and try again.", true);
     return;
   }
-  // Summary Analytics is driven by the office ID so it can enforce which
-  // office the signed-in account is allowed to see.
-  window.location.href = `office-analytics.html?office=${encodeURIComponent(key)}`;
+  // The office dashboard (which now includes Summary Analytics) is driven by
+  // the office ID so it can enforce which office the signed-in account is
+  // allowed to see.
+  window.location.href = `office-dashboard.html?office=${encodeURIComponent(key)}`;
 };
 
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CampusVoice – Summary Analytics</title>
+<title>CampusVoice – Office Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
@@ -32,19 +32,19 @@
 <body>
 
 <!--
-  Summary Analytics now lives in office-analytics.html, which serves both
-  Admin 1 and the individual office accounts from one implementation. It keeps
-  the same layout and visual style and adds the office, start date, end date
-  and evaluation category filters.
+  Summary Analytics is no longer a separate page — it now lives inside
+  office-dashboard.html, which serves both Admin 1 and the individual office
+  accounts from one implementation, combining the dashboard overview and the
+  analytics charts/filters into a single page.
 
   This page is kept so existing links and bookmarks still work: it forwards,
   preserving the ?office= parameter used by Office Management.
 -->
 <div class="forward">
-  <h1>Opening Summary Analytics…</h1>
+  <h1>Opening the Office Dashboard…</h1>
   <p>
     If you are not redirected automatically,
-    <a id="manual-link" href="office-analytics.html">continue to Summary Analytics</a>.
+    <a id="manual-link" href="office-dashboard.html">continue to the Office Dashboard</a>.
   </p>
 </div>
 
@@ -52,8 +52,8 @@
   const params = new URLSearchParams(window.location.search);
   const office = params.get("office") || "";
   const target = office
-    ? `office-analytics.html?office=${encodeURIComponent(office)}`
-    : "office-analytics.html";
+    ? `office-dashboard.html?office=${encodeURIComponent(office)}`
+    : "office-dashboard.html";
 
   document.getElementById("manual-link").setAttribute("href", target);
   window.location.replace(target);

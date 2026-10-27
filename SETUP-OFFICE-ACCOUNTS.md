@@ -14,6 +14,7 @@ ISUFST-SEC · Firebase project `kristal-adb78`
 | Area | Before | Now |
 |---|---|---|
 | Login | Three hard-coded admins; passwords in plain text in `admin_settings` | Firebase Authentication for every account; Firestore holds only roles |
+| Login pages | One page for everyone | Two separate pages: `index.html` for admins, `office-login.html` for offices — neither completes a sign-in for the other's role |
 | Accounts | Admin 1/2/3 only | Plus one account per campus unit or office |
 | Transaction codes | `services/transaction_code/office_name/{name}/codes/*`, marked used on *entry* | `transaction_codes/{code}`, tied to an `officeId`, marked used only after a **successful submission** |
 | Code uniqueness | Random, collisions possible | Document ID *is* the code, so Firestore enforces uniqueness |
@@ -27,16 +28,18 @@ cv-core.js                 shared module: auth, session guard, office data acces
 cv-accounts.js             office account provisioning (Admin 1)
 cv-analytics.css           Summary Analytics styles
 cv-office.css              shared styles for the office pages
-office-dashboard.html      office home
+office-login.html          office sign-in — separate from index.html, the admin login
+office-dashboard.html      office home + Summary Analytics, combined (Admin 1 and offices)
 office-codes.html          generate / track / export this office's codes
-office-analytics.html      Summary Analytics (Admin 1 and offices)
 admin1-accounts.html       Admin 1: create and manage office accounts
 firestore.rules            security rules
 functions/                 optional Cloud Functions for Admin-SDK-only operations
 ```
 
-`admin1-office-analytics.html` now forwards to `office-analytics.html`, so old
-links and bookmarks keep working.
+Summary Analytics is no longer a separate page — its filters, charts and
+breakdown table now live directly inside `office-dashboard.html`, below the
+dashboard's own summary cards. `admin1-office-analytics.html` now forwards to
+`office-dashboard.html`, so old links and bookmarks keep working.
 
 ---
 
@@ -126,10 +129,13 @@ in Firestore that `accounts` holds three documents with roles `admin1`,
 
 Still signed in as Admin 1:
 
-1. **Office Management** — confirm every campus unit or office is registered.
-2. **Office Accounts** → **Create Office Account** for each one. Note the
-   username and password shown; they are displayed once and cannot be
-   recovered, only reset.
+1. **Office Management** — confirm every campus unit or office is registered,
+   or add new ones directly from **Office Accounts** → **Create Office
+   Account** (it registers the office and its login together).
+2. **Office Accounts** → **Create Office Account** for each office that still
+   needs one. Note the username, Gmail address and password shown — they are
+   displayed once and cannot be recovered, only reset. Hand these to the
+   office and point them at **`office-login.html`**, not the admin login page.
 3. If the yellow banner reports codes still needing migration, choose
    **Migrate codes for all offices**. This copies codes out of the old
    per-office subcollections into `transaction_codes` and stamps each with its
@@ -264,43 +270,65 @@ unused in the dashboard and Admin 1 can correct it.
 
 | Action | Where | Mechanism |
 |---|---|---|
-| Create | Office Accounts → Create | Auth user created on a secondary Firebase app, so Admin 1 stays signed in |
-| Change username | Row → Username | Rewrites `accounts` and `account_index` together |
-| Move to another office | Row → Office | Re-points the mapping; no evaluation or code data moves |
+| Create (new office + account) | Office Accounts → Create Office Account (toolbar) | Office Name is free text; validated and created together with the login, on a secondary Firebase app so Admin 1 stays signed in |
+| Create (existing bare office) | Office Accounts → a row's "Create account" | Same modal, Office Name locked to that office — attaches a login instead of making a new office |
+| Edit username / office | Row → Edit | One form; changes whichever field was actually edited |
 | Deactivate | Row → Deactivate | `status: "inactive"`; rules deny everything, guard signs them out |
 | Activate | Row → Activate | `status: "active"` |
 | Repair link | Row → Repair link | Rebuilds the index entry and office back-reference after an interrupted creation |
-| Revoke | Row → Revoke | Removes the Firestore mapping; the sign-in survives but reaches nothing |
+
+There is no "Revoke" action — a login is removed only by deactivating it (or
+deleting the Firebase Authentication user in the console / via
+`deleteOfficeAccount`, §below).
+
+### Two separate sign-in pages
+
+Administrators sign in at `index.html`; offices sign in at
+`office-login.html`. The pages are deliberately not combined:
+
+- `index.html` reads the signed-in account's role and, if it is `"office"`,
+  signs them straight back out with a message pointing at the office portal —
+  it never completes an office sign-in, even if the credentials are valid.
+- `office-login.html` does the same in reverse for an administrator's
+  credentials, and has no "first sign-in creates the account" bootstrap
+  (office accounts always already exist by the time anyone signs in).
+- `guard()` and `logout()` in `cv-core.js` pick the matching page
+  automatically based on the session's role, so a redirect — session expired,
+  deactivated, wrong page — never lands someone on the other portal.
 
 ### What needs the Admin SDK
 
-Three operations cannot be done from the browser, because the client SDK can
+Two operations cannot be done from the browser, because the client SDK can
 only act on the *currently signed-in* user:
 
 - **Disabling the sign-in itself.** Deactivation blocks all data access and
   signs the account out, which is sufficient in practice — but the credentials
   still authenticate. `setOfficeAccountDisabled` closes that.
-- **Setting someone else's password.** Use `setOfficeAccountPassword`, or delete
-  and recreate the account.
-- **Deleting an Authentication user.** Use `deleteOfficeAccount`, or remove it
-  in the Firebase console.
+- **Setting someone else's password.** Use `setOfficeAccountPassword`, or
+  delete and recreate the account.
 
-Deploy `functions/` if you want these. Without them, deactivate + revoke, then
-delete the user in the console.
+Deploying an Authentication user is handled by `deleteOfficeAccount` or by
+removing it in the Firebase console directly.
 
-> Office usernames resolve to `<username>@offices.campusvoice.isufst`, which is
-> not a real mailbox — so password-reset emails cannot be delivered. Reset
-> passwords from this page, not by email.
+Deploy `functions/` if you want these. Without them, deactivate the account,
+then remove the Authentication user in the console.
+
+> An office's `email` is a real Gmail address, typed when the account is
+> created — not a synthetic one. Password-reset emails work normally for it;
+> `sendAccountPasswordReset` only refuses addresses left over from before this
+> change, under the old `@offices.campusvoice.isufst` convention.
 
 ---
 
 ## 7. Summary Analytics
 
-`office-analytics.html` serves both Admin 1 and the office accounts from one
-implementation, keeping the existing layout and visual style.
+Summary Analytics is not a separate page — it is the lower half of
+`office-dashboard.html`, below the office-context banner and the filter bar.
+The same implementation serves both Admin 1 and the office accounts; there is
+no "Latest Comments & Suggestions" section any more (removed in this merge).
 
-- **Summary cards** — Total Evaluations, Avg Satisfaction, Overall Rating with
-  its descriptive label, Respondents
+- **Summary cards** — Total Evaluations, Overall Rating with its descriptive
+  label, Avg Satisfaction, Respondents, Codes Remaining
 - **Evaluation Dimensions** — mean per criterion, flipping to horizontal bars on
   phones
 - **Transaction Code Usage** — generated / used / unused totals, donut, legend
@@ -339,15 +367,16 @@ lock is in the rules; the disabled dropdown is only the visible half.
 
 | Page | Purpose |
 |---|---|
-| Dashboard | Totals, rating, codes remaining, latest comments |
+| Dashboard | Office-context banner, filters, summary cards and the full Summary Analytics charts/table — see §7 |
 | Transaction Codes | Generate in batches, filter by status and generation date, export |
-| Summary Analytics | As §7 |
 
-Evaluation Management and Reports were removed from the office navigation.
-An office account's own evaluation data still feeds its Dashboard and Summary
-Analytics (both read `services/evaluations/records` filtered to that office),
-but there is no longer a dedicated page for browsing individual submissions,
-updating feedback status, or exporting a per-office report.
+Evaluation Management, Reports, and the standalone Summary Analytics page
+were all removed from the office navigation (the last was merged into
+Dashboard, not removed outright). An office account's own evaluation data
+still feeds the Dashboard — it reads `services/evaluations/records` filtered
+to that office — but there is no dedicated page for browsing individual
+submissions, updating feedback status, exporting a per-office report, or a
+"Latest Comments & Suggestions" list.
 
 ---
 

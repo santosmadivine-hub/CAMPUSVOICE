@@ -138,8 +138,22 @@ export function getSession() {
 export function clearSessionCache() { cachedSession = null; }
 
 /**
- * Page-level access gate. Redirects to the login page when the visitor is not
- * signed in, lacks an allowed role, or has been deactivated by Admin 1.
+ * Office accounts and administrators sign in on two separate pages — see
+ * index.html (admin1/2/3) and office-login.html (office). Picks whichever one
+ * fits the roles a page allows, so a redirect never lands someone on the
+ * wrong portal.
+ */
+function loginPageFor(allowedRoles) {
+  if (allowedRoles && allowedRoles.length === 1 && allowedRoles[0] === "office") {
+    return "office-login.html";
+  }
+  return "index.html";
+}
+
+/**
+ * Page-level access gate. Redirects to the appropriate login page when the
+ * visitor is not signed in, lacks an allowed role, or has been deactivated
+ * by Admin 1.
  *
  * Firestore Security Rules enforce the same boundaries server-side — this only
  * keeps the UI honest and gives a readable message.
@@ -152,7 +166,7 @@ export async function guard(allowedRoles) {
 
   if (!session) {
     sessionStorage.setItem("cv-login-notice", "Please sign in to continue.");
-    location.replace("index.html");
+    location.replace(loginPageFor(allowedRoles));
     return new Promise(() => {});            // halt the caller
   }
 
@@ -160,14 +174,14 @@ export async function guard(allowedRoles) {
     await signOut(auth).catch(() => {});
     sessionStorage.setItem("cv-login-notice",
       "This account has been deactivated. Please contact Admin 1.");
-    location.replace("index.html");
+    location.replace(session.role === "office" ? "office-login.html" : "index.html");
     return new Promise(() => {});
   }
 
   if (allowedRoles && allowedRoles.length && !allowedRoles.includes(session.role)) {
     sessionStorage.setItem("cv-login-notice",
       "Your account does not have access to that page.");
-    location.replace(ROLES[session.role]?.home || "index.html");
+    location.replace(ROLES[session.role]?.home || loginPageFor(allowedRoles));
     return new Promise(() => {});
   }
 
@@ -175,7 +189,7 @@ export async function guard(allowedRoles) {
     sessionStorage.setItem("cv-login-notice",
       "This office account is not linked to an office yet. Please contact Admin 1.");
     await signOut(auth).catch(() => {});
-    location.replace("index.html");
+    location.replace("office-login.html");
     return new Promise(() => {});
   }
 
@@ -183,19 +197,23 @@ export async function guard(allowedRoles) {
 }
 
 export async function logout() {
+  // Read the role BEFORE clearing the cache, so each account type lands back
+  // on its own sign-in page rather than a shared one.
+  const wasOffice = cachedSession?.role === "office";
   clearSessionCache();
   try { await signOut(auth); } catch (err) { console.error(err); }
-  location.replace("index.html");
+  location.replace(wasOffice ? "office-login.html" : "index.html");
 }
 
 /* ----------------------------------------------------------------------------
  * 4. Office-account navigation — mirrors shared.js styling exactly
  * -------------------------------------------------------------------------- */
 
+/* Summary Analytics lives inside Dashboard now, so it has no nav entry of
+   its own — office-dashboard.html already covers it. */
 const OFFICE_NAV = [
-  { id: "dashboard", icon: "📊", label: "Dashboard",             href: "office-dashboard.html" },
-  { id: "codes",     icon: "🎟", label: "Transaction Codes",     href: "office-codes.html" },
-  { id: "analytics", icon: "📈", label: "Summary Analytics",     href: "office-analytics.html" }
+  { id: "dashboard", icon: "📊", label: "Dashboard",         href: "office-dashboard.html" },
+  { id: "codes",     icon: "🎟", label: "Transaction Codes", href: "office-codes.html" }
 ];
 
 export function buildOfficeSidebar(activePage, session) {

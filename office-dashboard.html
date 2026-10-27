@@ -7,7 +7,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="cv-office.css">
+<link rel="stylesheet" href="cv-analytics.css">
 <style>
+  /* This page shows five summary cards instead of the usual four, so the
+     fixed 4-column grid from cv-office.css / cv-analytics.css is loosened
+     here only — every other page keeps its original layout. */
+  .stat-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+
   .quick-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
   .quick-link {
     display:flex; align-items:center; gap:14px;
@@ -21,11 +27,6 @@
   .quick-text { display:flex; flex-direction:column; gap:2px; min-width:0; }
   .quick-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14.5px; }
   .quick-desc { font-size:12px; color:var(--muted); line-height:1.4; }
-
-  .recent-comment { padding:14px 0; border-bottom:1px solid #f1f5f9; }
-  .recent-comment:last-child { border-bottom:none; }
-  .recent-comment-text { font-size:14px; color:var(--ink); line-height:1.6; font-style:italic; }
-  .recent-comment-meta { font-size:11.5px; color:var(--muted); margin-top:6px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 </style>
 </head>
 <body>
@@ -40,6 +41,9 @@
     <div id="topbar-mount"></div>
 
     <div class="page">
+
+      <!-- Admin 1 only — an office account is already home on this page -->
+      <a href="admin1-office-mgmt.html" class="btn btn-ghost btn-sm" id="back-link" style="display:none; margin-bottom:14px;">← Back</a>
 
       <!-- Which office and which account is signed in -->
       <div class="office-context">
@@ -56,38 +60,85 @@
         <span class="badge-pill badge-active" id="ctx-status">Active</span>
       </div>
 
-      <div class="banner banner-error" id="error-banner" style="display:none;"></div>
-      <div class="banner banner-state" id="loading-banner">Loading your office data…</div>
+      <!-- ===================== Analytics filters ===================== -->
+      <section class="filter-card" aria-label="Analytics filters">
+        <div class="filter-grid">
+
+          <label class="filter-field">
+            <span class="filter-label">Office</span>
+            <select id="filter-office" class="filter-input">
+              <option value="">Loading…</option>
+            </select>
+            <span class="filter-hint" id="office-lock-hint"></span>
+          </label>
+
+          <label class="filter-field">
+            <span class="filter-label">Start date</span>
+            <input type="date" id="filter-start" class="filter-input">
+          </label>
+
+          <label class="filter-field">
+            <span class="filter-label">End date</span>
+            <input type="date" id="filter-end" class="filter-input">
+          </label>
+
+          <label class="filter-field">
+            <span class="filter-label">Evaluation category</span>
+            <select id="filter-category" class="filter-input">
+              <option value="">All categories</option>
+            </select>
+          </label>
+
+          <div class="filter-actions">
+            <button class="filter-btn filter-btn-primary" id="apply-filters">Apply</button>
+            <button class="filter-btn" id="reset-filters">Reset</button>
+          </div>
+
+        </div>
+        <div class="filter-summary" id="filter-summary"></div>
+      </section>
+
+      <div class="state-banner state-error" id="error-banner" style="display:none;"></div>
+      <div class="state-banner" id="loading-banner">Loading your office data…</div>
+      <div class="state-banner state-empty" id="empty-banner" style="display:none;"></div>
 
       <div id="content" style="display:none;">
 
+        <!-- ===================== Summary cards ===================== -->
         <section class="stat-grid">
           <div class="stat-card stat-primary">
             <div class="stat-icon">📋</div>
             <div class="stat-label">Total Evaluations</div>
-            <div class="stat-value" id="s-evals">0</div>
-            <div class="stat-sub" id="s-evals-sub">—</div>
-          </div>
-          <div class="stat-card stat-primary">
-            <div class="stat-icon">⭐</div>
-            <div class="stat-label">Overall Rating</div>
-            <div class="stat-value" id="s-rating">0.0 / 5</div>
-            <div class="stat-sub" id="s-rating-label">—</div>
-          </div>
-          <div class="stat-card stat-success">
-            <div class="stat-icon">😊</div>
-            <div class="stat-label">Avg Satisfaction</div>
-            <div class="stat-value" id="s-satisfaction">0%</div>
-            <div class="stat-sub">of the maximum 5.0 rating</div>
+            <div class="stat-value" id="stat-total-evals">0</div>
+            <div class="stat-sub" id="stat-total-sub">—</div>
           </div>
           <div class="stat-card stat-warning">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-label">Overall Rating</div>
+            <div class="stat-value" id="stat-overall-rating">0.0 / 5</div>
+            <div class="stat-sub" id="stat-overall-label">—</div>
+          </div>
+          <div class="stat-card stat-primary">
+            <div class="stat-icon">😊</div>
+            <div class="stat-label">Avg Satisfaction</div>
+            <div class="stat-value" id="stat-satisfaction">0%</div>
+            <div class="stat-sub">of the maximum 5.0 rating</div>
+          </div>
+          <div class="stat-card stat-success">
+            <div class="stat-icon">🧑‍🤝‍🧑</div>
+            <div class="stat-label">Respondents</div>
+            <div class="stat-value" id="stat-respondents">0</div>
+            <div class="stat-sub" id="stat-respondents-sub">—</div>
+          </div>
+          <div class="stat-card stat-success">
             <div class="stat-icon">🎟️</div>
             <div class="stat-label">Codes Remaining</div>
-            <div class="stat-value" id="s-codes-unused">0</div>
-            <div class="stat-sub" id="s-codes-sub">—</div>
+            <div class="stat-value" id="stat-codes-unused">0</div>
+            <div class="stat-sub" id="stat-codes-sub">—</div>
           </div>
         </section>
 
+        <!-- ===================== Quick Actions ===================== -->
         <div class="card">
           <div class="card-head">
             <div>
@@ -104,24 +155,79 @@
                 <div class="quick-desc">Generate, track and export your codes</div>
               </div>
             </a>
-            <a class="quick-link" href="office-analytics.html">
-              <div class="quick-icon">📈</div>
-              <div class="quick-text">
-                <div class="quick-title">Summary Analytics</div>
-                <div class="quick-desc">Dimension scores, code usage and trends</div>
-              </div>
-            </a>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-head">
-            <div>
-              <h2 class="card-title">Latest Comments &amp; Suggestions</h2>
-              <div class="card-sub">The five most recent submissions that included written feedback.</div>
+        <!-- ============ Evaluation Dimensions + Code Usage ============ -->
+        <section class="charts-grid">
+
+          <div class="chart-card">
+            <div class="card-title">Evaluation Dimensions<span class="card-sub">— average score per criterion</span></div>
+            <div class="chart-wrap" id="chart-dimensions-wrap">
+              <canvas id="chart-dimensions"></canvas>
             </div>
           </div>
-          <div id="recent-comments"></div>
+
+          <div class="chart-card">
+            <div class="card-title">Transaction Code Usage<span class="card-sub">— codes issued by this office</span></div>
+
+            <div class="code-usage-totals" id="code-usage-totals">
+              <div class="code-total">
+                <span class="code-total-value" id="code-total">0</span>
+                <span class="code-total-label">Generated</span>
+              </div>
+              <div class="code-total">
+                <span class="code-total-value code-used" id="code-used">0</span>
+                <span class="code-total-label">Used</span>
+              </div>
+              <div class="code-total">
+                <span class="code-total-value code-unused" id="code-unused">0</span>
+                <span class="code-total-label">Unused</span>
+              </div>
+            </div>
+
+            <div class="chart-wrap chart-wrap-donut" id="chart-codes-wrap">
+              <canvas id="chart-codes"></canvas>
+              <div class="donut-center" id="donut-center-label">0</div>
+            </div>
+
+            <div class="code-usage-legend" id="code-usage-legend"></div>
+          </div>
+
+        </section>
+
+        <!-- ===================== Evaluations Over Time ===================== -->
+        <div class="card">
+          <div class="card-title">
+            Evaluations Over Time<span class="card-sub" id="trend-sub">— average rating per submission date</span>
+          </div>
+
+          <div class="trend-toggle" role="group" aria-label="Trend metric">
+            <button class="trend-btn active" data-metric="avg">Average rating</button>
+            <button class="trend-btn" data-metric="count">Number of evaluations</button>
+          </div>
+
+          <div class="chart-wrap chart-wrap-wide" id="chart-trend-wrap">
+            <canvas id="chart-trend"></canvas>
+          </div>
+        </div>
+
+        <!-- ===================== Dimension Breakdown ===================== -->
+        <div class="card">
+          <div class="card-title">Dimension Breakdown<span class="card-sub">— detailed scores</span></div>
+          <div class="breakdown-table-wrap">
+            <table class="breakdown-table">
+              <thead>
+                <tr>
+                  <th>Evaluation Dimension</th>
+                  <th class="col-score">Avg. Rating</th>
+                  <th class="col-pct">Satisfaction %</th>
+                </tr>
+              </thead>
+              <tbody id="breakdown-table-body"></tbody>
+            </table>
+          </div>
+          <p class="table-note" id="breakdown-note"></p>
         </div>
 
       </div>
@@ -130,80 +236,519 @@
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="shared.js"></script>
 
 <script type="module">
 import {
-  guard, mountOfficeChrome, loadOfficeAnalytics,
-  escapeHtml, formatDate, friendlyError
+  guard, mountOfficeChrome, fetchOffices, loadOfficeAnalytics,
+  escapeHtml, formatDate, friendlyError, safeChart,
+  CHART_PALETTE, SUPER_ADMIN, ROLES, startOfDay, endOfDay
 } from "./cv-core.js";
 
-const session = await guard(["office"]);
+/* ------------------------------------------------------------------ *
+ * Access: office accounts see only their own office. Admin 1 may use
+ * this page too (via Office Management -> View) and is the only role
+ * allowed to switch offices.
+ * ------------------------------------------------------------------ */
+const session = await guard(["office", SUPER_ADMIN]);
+const isSuperAdmin = session.role === SUPER_ADMIN;
 
-mountOfficeChrome({
-  activePage: "dashboard",
-  title: "Dashboard",
-  subtitle: "Overview of Your Office's Evaluation Results",
-  session
+/* --- Chrome --------------------------------------------------------- */
+if (isSuperAdmin) {
+  // Keep Admin 1 inside their own navigation rather than the office sidebar.
+  document.getElementById("sidebar-mount").innerHTML = buildSidebar(SUPER_ADMIN, "office-mgmt");
+  document.getElementById("topbar-mount").innerHTML  = buildTopbar("Office Dashboard", SUPER_ADMIN);
+  if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
+  document.getElementById("back-link").style.display = "inline-block";
+} else {
+  mountOfficeChrome({
+    activePage: "dashboard",
+    title: "Dashboard",
+    subtitle: "Overview of Your Office's Evaluation Results and Performance Trends",
+    session
+  });
+}
+
+if (window.Chart) {
+  Chart.defaults.font.family = "'DM Sans', sans-serif";
+  Chart.defaults.font.size = 12;
+}
+
+/* --- Elements ------------------------------------------------------- */
+const el = (id) => document.getElementById(id);
+const officeSelect   = el("filter-office");
+const startInput     = el("filter-start");
+const endInput       = el("filter-end");
+const categorySelect = el("filter-category");
+const loadingBanner  = el("loading-banner");
+const emptyBanner    = el("empty-banner");
+const errorBanner    = el("error-banner");
+const reportContent  = el("content");
+
+const narrowMQ = window.matchMedia("(max-width:640px)");
+
+let currentOfficeId   = session.officeId || "";
+let currentOfficeName = session.officeName || "";
+let dimChart = null;
+let codeChart = null;
+let trendChart = null;
+let lastPayload = null;
+let trendMetric = "avg";
+
+/* ------------------------------------------------------------------ *
+ * Office picker — locked to one office unless Admin 1 is viewing.
+ * ------------------------------------------------------------------ */
+async function initOfficePicker() {
+  if (!isSuperAdmin) {
+    officeSelect.innerHTML =
+      `<option value="${escapeHtml(currentOfficeId)}">${escapeHtml(currentOfficeName)}</option>`;
+    officeSelect.value = currentOfficeId;
+    officeSelect.disabled = true;
+    el("office-lock-hint").textContent = "Office accounts can only view their own office.";
+    return;
+  }
+
+  // Admin 1: list every office, honouring ?office= from Office Management.
+  try {
+    const offices = await fetchOffices();
+    if (!offices.length) {
+      officeSelect.innerHTML = `<option value="">No offices registered</option>`;
+      officeSelect.disabled = true;
+      return;
+    }
+
+    const requested = new URLSearchParams(location.search).get("office");
+    currentOfficeId = offices.some(o => o.id === requested) ? requested : offices[0].id;
+    currentOfficeName = offices.find(o => o.id === currentOfficeId)?.name || "";
+
+    officeSelect.innerHTML = offices.map(o =>
+      `<option value="${escapeHtml(o.id)}"${o.id === currentOfficeId ? " selected" : ""}>` +
+      `${escapeHtml(o.name)}${o.status === "inactive" ? " (inactive)" : ""}</option>`
+    ).join("");
+    el("office-lock-hint").textContent = "Admin 1 can switch between offices.";
+  } catch (err) {
+    console.error("Could not load the office list:", err);
+    officeSelect.innerHTML = `<option value="">Could not load offices</option>`;
+    officeSelect.disabled = true;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Rendering
+ * ------------------------------------------------------------------ */
+
+function setBanner(which, message) {
+  loadingBanner.style.display = which === "loading" ? "block" : "none";
+  emptyBanner.style.display   = which === "empty"   ? "block" : "none";
+  errorBanner.style.display   = which === "error"   ? "block" : "none";
+  reportContent.style.display = which === "content" ? "block" : "none";
+  if (which === "error") errorBanner.textContent = message || "Something went wrong.";
+}
+
+function destroyCharts() {
+  [dimChart, codeChart, trendChart].forEach(c => { if (c) { try { c.destroy(); } catch (e) {} } });
+  dimChart = codeChart = trendChart = null;
+}
+
+function describeFilters(payload) {
+  const parts = [];
+  // startOfDay/endOfDay build local-time dates, so a yyyy-mm-dd value is never
+  // shown a day out the way `new Date("2026-10-01")` (parsed as UTC) can be.
+  const start = startOfDay(startInput.value);
+  const end   = endOfDay(endInput.value);
+
+  if (start && end)      parts.push(`${formatDate(start)} – ${formatDate(end)}`);
+  else if (start)        parts.push(`from ${formatDate(start)}`);
+  else if (end)          parts.push(`up to ${formatDate(end)}`);
+  else                   parts.push("all dates");
+
+  if (categorySelect.value) parts.push(categorySelect.value);
+
+  const shown = payload.filteredEvals.length;
+  const all   = payload.evaluations.length;
+  const scope = shown === all
+    ? `${all} evaluation${all === 1 ? "" : "s"}`
+    : `${shown} of ${all} evaluations`;
+
+  el("filter-summary").textContent = `Showing ${scope} · ${parts.join(" · ")}`;
+}
+
+function renderContext(payload) {
+  el("ctx-office").textContent    = payload.officeName || "Office";
+  el("ctx-office-id").textContent = payload.office.id || "—";
+  el("ctx-role").textContent      = isSuperAdmin ? ROLES[SUPER_ADMIN].label : "Office Administrator";
+  el("ctx-user").textContent      = isSuperAdmin ? "Admin 1" : (session.username || session.email || "—");
+
+  const inactive = payload.office.status === "inactive";
+  el("ctx-status").textContent = inactive ? "Inactive" : "Active";
+  el("ctx-status").className   = `badge-pill ${inactive ? "badge-inactive" : "badge-active"}`;
+
+  document.title = `CampusVoice – Dashboard | ${payload.officeName}`;
+}
+
+function renderSummaryCards(stats, payload) {
+  el("stat-total-evals").textContent = stats.total;
+  el("stat-total-sub").textContent =
+    payload.evaluations.length === stats.total
+      ? "all submissions on record"
+      : `of ${payload.evaluations.length} on record`;
+
+  el("stat-overall-rating").textContent = `${stats.overall.toFixed(1)} / 5`;
+  el("stat-overall-label").textContent  = stats.overallLabel;
+  el("stat-satisfaction").textContent   = `${stats.satisfaction.toFixed(1)}%`;
+
+  el("stat-respondents").textContent    = stats.respondents;
+  el("stat-respondents-sub").textContent =
+    stats.respondents === stats.total
+      ? "one evaluation each"
+      : `across ${stats.total} evaluation${stats.total === 1 ? "" : "s"}`;
+
+  el("stat-codes-unused").textContent = stats.codes.unused;
+  el("stat-codes-sub").textContent    = `${stats.codes.used} used of ${stats.codes.total} generated`;
+}
+
+function renderDimensionsChart(stats) {
+  if (dimChart) { dimChart.destroy(); dimChart = null; }
+
+  const horizontal = narrowMQ.matches;
+  const labels = stats.dimensions.map(d => d.label);
+  const values = stats.dimensions.map(d => d.avg);
+
+  const valueAxis = { beginAtZero: true, max: 5, ticks: { stepSize: 1 } };
+
+  // Wrap multi-word labels onto separate lines instead of rotating them.
+  const wrap = function (value) {
+    const label = this.getLabelForValue(value);
+    if (horizontal) return label;
+    const words = label.split(" ");
+    if (words.length === 3 && words[1] === "&") return [words[0] + " &", words[2]];
+    return words.length > 1 ? words : label;
+  };
+
+  const labelAxis = {
+    ticks: { autoSkip: false, maxRotation: 0, minRotation: 0, callback: wrap,
+             font: { size: horizontal ? 12 : 11 } },
+    grid: { display: horizontal }
+  };
+
+  dimChart = safeChart("chart-dimensions-wrap", "chart-dimensions", (canvas) => new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: CHART_PALETTE.map(c => c + "cc"),
+        hoverBackgroundColor: CHART_PALETTE,
+        borderColor: CHART_PALETTE,
+        hoverBorderWidth: 2,
+        borderRadius: 8
+      }]
+    },
+    options: {
+      indexAxis: horizontal ? "y" : "x",
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      animation: { duration: 400 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#0b1220", padding: 12, cornerRadius: 8, displayColors: false,
+          callbacks: {
+            title: items => items[0].label,
+            label: (ctx) => {
+              const d = stats.dimensions[ctx.dataIndex];
+              return [
+                `Average: ${d.avg.toFixed(2)} / 5`,
+                `Satisfaction: ${d.pct.toFixed(0)}%`,
+                `${d.responses} response${d.responses === 1 ? "" : "s"}`
+              ];
+            }
+          }
+        }
+      },
+      scales: horizontal ? { x: valueAxis, y: labelAxis } : { y: valueAxis, x: labelAxis }
+    }
+  }));
+}
+
+function renderCodeUsage(stats) {
+  if (codeChart) { codeChart.destroy(); codeChart = null; }
+
+  const { total, used, unused, other, usageRate } = stats.codes;
+
+  el("code-total").textContent  = total;
+  el("code-used").textContent   = used;
+  el("code-unused").textContent = unused;
+
+  const legend = el("code-usage-legend");
+  const wrap   = el("chart-codes-wrap");
+
+  if (total === 0) {
+    wrap.style.display = "none";
+    legend.innerHTML =
+      `<div class="code-usage-empty">No transaction codes have been generated for this office yet.</div>`;
+    return;
+  }
+
+  wrap.style.display = "";
+  el("donut-center-label").innerHTML =
+    `${total}<span class="donut-sub">code${total === 1 ? "" : "s"}</span>`;
+
+  const segments = [
+    { name: "Unused", value: unused, color: "#16a34a" },
+    { name: "Used",   value: used,   color: "#ef4444" }
+  ];
+  if (other > 0) segments.push({ name: "Other", value: other, color: "#94a3b8" });
+
+  legend.innerHTML = segments.map(s => `
+    <div class="legend-item">
+      <span class="legend-dot" style="background:${s.color}"></span>
+      ${s.name} (${s.value})
+    </div>
+  `).join("") + `<div class="legend-rate">${usageRate.toFixed(0)}% of codes used</div>`;
+
+  codeChart = safeChart("chart-codes-wrap", "chart-codes", (canvas) => new Chart(canvas, {
+    type: "doughnut",
+    data: {
+      labels: segments.map(s => s.name),
+      datasets: [{
+        data: segments.map(s => s.value),
+        backgroundColor: segments.map(s => s.color),
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "72%",
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#0b1220", padding: 10, cornerRadius: 8,
+          callbacks: {
+            label: (ctx) => {
+              const pct = total ? ((ctx.parsed / total) * 100).toFixed(0) : 0;
+              return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  }));
+}
+
+function renderTrendChart(stats) {
+  if (trendChart) { trendChart.destroy(); trendChart = null; }
+
+  const trend = stats.trend;
+  const wrap  = el("chart-trend-wrap");
+
+  if (!trend.length) {
+    wrap.innerHTML = `<div class="chart-empty">No dated submissions in the selected range.</div>`;
+    return;
+  }
+
+  if (!wrap.querySelector("canvas")) {
+    wrap.innerHTML = `<canvas id="chart-trend"></canvas>`;
+  }
+
+  const byCount = trendMetric === "count";
+
+  el("trend-sub").textContent = byCount
+    ? "— number of evaluations per submission date"
+    : "— average rating per submission date";
+
+  const labels = trend.map(t => {
+    const [y, m, d] = t.day.split("-").map(Number);
+    return formatDate(new Date(y, m - 1, d).getTime());
+  });
+
+  const maxCount = Math.max(...trend.map(t => t.count));
+
+  trendChart = safeChart("chart-trend-wrap", "chart-trend", (canvas) => new Chart(canvas, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data: trend.map(t => (byCount ? t.count : t.avg)),
+        borderColor: "#2563eb",
+        backgroundColor: "rgba(37,99,235,0.12)",
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 8,
+        pointBackgroundColor: "#2563eb",
+        pointHoverBackgroundColor: "#f97316",
+        pointBorderColor: "#ffffff",
+        pointBorderWidth: 2,
+        pointHoverBorderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#0b1220", padding: 12, cornerRadius: 8, displayColors: false,
+          callbacks: {
+            label: (ctx) => {
+              const t = trend[ctx.dataIndex];
+              return [
+                `Average: ${t.avg.toFixed(2)} / 5`,
+                `${t.count} evaluation${t.count === 1 ? "" : "s"}`
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        y: byCount
+          ? { beginAtZero: true, ticks: { precision: 0, stepSize: Math.max(1, Math.ceil(maxCount / 5)) } }
+          : { beginAtZero: true, max: 5, ticks: { stepSize: 1 } },
+        x: { ticks: { autoSkip: true, maxTicksLimit: 8, maxRotation: 0 } }
+      }
+    }
+  }));
+}
+
+function renderBreakdownTable(stats) {
+  el("breakdown-table-body").innerHTML = stats.dimensions.map(d => `
+    <tr>
+      <td class="dim-name">${escapeHtml(d.label)}</td>
+      <td class="dim-score">${d.responses ? `${d.avg.toFixed(1)} / 5` : "—"}</td>
+      <td>
+        <div class="dim-pct-cell">
+          <div class="dim-pct-track"><div class="dim-pct-fill" style="width:${d.pct}%"></div></div>
+          <span class="dim-pct-num">${d.responses ? `${d.pct.toFixed(0)}%` : "—"}</span>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+
+  const unanswered = stats.dimensions.filter(d => !d.responses).length;
+  el("breakdown-note").textContent = unanswered
+    ? `${unanswered} dimension${unanswered === 1 ? " has" : "s have"} no responses in this range and ` +
+      `${unanswered === 1 ? "is" : "are"} excluded from the overall rating.`
+    : `Overall rating is the mean of all ${stats.dimensions.length} dimensions. ` +
+      `"N/A" answers are excluded rather than counted as zero.`;
+}
+
+function renderCategoryOptions(payload) {
+  const previous = categorySelect.value;
+  const categories = [...new Set(payload.evaluations.map(e => e.category).filter(Boolean))].sort();
+
+  categorySelect.innerHTML = `<option value="">All categories</option>` +
+    categories.map(c =>
+      `<option value="${escapeHtml(c)}"${c === previous ? " selected" : ""}>${escapeHtml(c)}</option>`
+    ).join("");
+
+  categorySelect.disabled = categories.length <= 1;
+}
+
+/* ------------------------------------------------------------------ *
+ * Load + draw
+ * ------------------------------------------------------------------ */
+async function refresh() {
+  if (!currentOfficeId) {
+    setBanner("error", "No office is selected.");
+    return;
+  }
+
+  setBanner("loading");
+  destroyCharts();
+
+  try {
+    const payload = await loadOfficeAnalytics(currentOfficeId, currentOfficeName, {
+      startDate: startInput.value,
+      endDate:   endInput.value,
+      category:  categorySelect.value
+    });
+
+    lastPayload = payload;
+    currentOfficeName = payload.officeName;
+
+    renderContext(payload);
+    renderCategoryOptions(payload);
+    describeFilters(payload);
+
+    if (!payload.filteredEvals.length) {
+      // Codes still matter even with no evaluations, so show them in the banner.
+      const c = payload.stats.codes;
+      emptyBanner.innerHTML =
+        `No evaluations have been submitted for <strong>${escapeHtml(payload.officeName)}</strong> ` +
+        `in the selected range yet.` +
+        (c.total
+          ? `<br><span class="state-note">${c.total} transaction code${c.total === 1 ? "" : "s"} ` +
+            `generated · ${c.used} used · ${c.unused} unused.</span>`
+          : `<br><span class="state-note">No transaction codes generated yet either.</span>`);
+      setBanner("empty");
+      return;
+    }
+
+    // Reveal before drawing so each canvas has real dimensions to measure.
+    setBanner("content");
+
+    const stats = payload.stats;
+    renderSummaryCards(stats, payload);
+    renderDimensionsChart(stats);
+    renderCodeUsage(stats);
+    renderTrendChart(stats);
+    renderBreakdownTable(stats);
+
+  } catch (err) {
+    console.error("Could not load the office dashboard:", err);
+    setBanner("error", friendlyError(err));
+  }
+}
+
+/* --- Filter wiring -------------------------------------------------- */
+el("apply-filters").addEventListener("click", () => {
+  const start = startInput.value;
+  const end   = endInput.value;
+
+  if (start && end && start > end) {
+    setBanner("error", "The start date is after the end date. Please correct the range.");
+    return;
+  }
+  refresh();
 });
 
-const el = (id) => document.getElementById(id);
+el("reset-filters").addEventListener("click", () => {
+  startInput.value = "";
+  endInput.value = "";
+  categorySelect.value = "";
+  refresh();
+});
 
-el("ctx-office").textContent    = session.officeName || "Office";
-el("ctx-office-id").textContent = session.officeId || "—";
-el("ctx-role").textContent      = "Office Administrator";
-el("ctx-user").textContent      = session.username || session.email || "—";
-document.title = `CampusVoice – Dashboard | ${session.officeName}`;
+officeSelect.addEventListener("change", () => {
+  if (!isSuperAdmin) return;            // locked for office accounts
+  currentOfficeId = officeSelect.value;
+  currentOfficeName = officeSelect.options[officeSelect.selectedIndex]?.textContent || "";
+  refresh();
+});
 
-try {
-  const { stats, filteredEvals, office } = await loadOfficeAnalytics(
-    session.officeId, session.officeName
-  );
+document.querySelectorAll(".trend-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".trend-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    trendMetric = btn.dataset.metric;
+    if (lastPayload) renderTrendChart(lastPayload.stats);
+  });
+});
 
-  el("ctx-status").textContent = office.status === "inactive" ? "Inactive" : "Active";
-  el("ctx-status").className =
-    `badge-pill ${office.status === "inactive" ? "badge-inactive" : "badge-active"}`;
+// Redraw the dimensions chart when crossing the phone breakpoint, so the bars
+// flip between vertical and horizontal on rotation.
+const onBreakpoint = () => { if (lastPayload) renderDimensionsChart(lastPayload.stats); };
+if (narrowMQ.addEventListener) narrowMQ.addEventListener("change", onBreakpoint);
+else narrowMQ.addListener(onBreakpoint);
 
-  el("s-evals").textContent = stats.total;
-  el("s-evals-sub").textContent = stats.minTs
-    ? `since ${formatDate(stats.minTs)}`
-    : "no submissions yet";
-
-  el("s-rating").textContent       = `${stats.overall.toFixed(1)} / 5`;
-  el("s-rating-label").textContent = stats.overallLabel;
-  el("s-satisfaction").textContent = `${stats.satisfaction.toFixed(1)}%`;
-
-  el("s-codes-unused").textContent = stats.codes.unused;
-  el("s-codes-sub").textContent =
-    `${stats.codes.used} used of ${stats.codes.total} generated`;
-
-  // Recent written feedback
-  const comments = filteredEvals
-    .filter(e => e.suggestions && e.suggestions.trim())
-    .slice(0, 5);
-
-  el("recent-comments").innerHTML = comments.length
-    ? comments.map(c => `
-        <div class="recent-comment">
-          <div class="recent-comment-text">“${escapeHtml(c.suggestions)}”</div>
-          <div class="recent-comment-meta">
-            <span>${escapeHtml(formatDate(c.timestamp))}</span>
-            <span class="badge-pill badge-info">${c.avg.toFixed(1)} / 5</span>
-            ${c.transactionCode ? `<span class="code-pill">${escapeHtml(c.transactionCode)}</span>` : ""}
-          </div>
-        </div>
-      `).join("")
-    : `<p class="media-empty">No written comments yet.</p>`;
-
-  el("loading-banner").style.display = "none";
-  el("content").style.display = "block";
-
-} catch (err) {
-  console.error("Could not load the office dashboard:", err);
-  el("loading-banner").style.display = "none";
-  el("error-banner").textContent = friendlyError(err);
-  el("error-banner").style.display = "block";
-}
+/* --- Go ------------------------------------------------------------- */
+await initOfficePicker();
+await refresh();
 </script>
 
 </body>

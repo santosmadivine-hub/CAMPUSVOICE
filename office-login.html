@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusVoice – Office Sign-In | ISUFST-SEC</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+    rel="stylesheet"
+  >
+  <style>
+
+    :root {
+      --bg:       #0b1120;
+      --surface:  #111827;
+      --surface2: #1a2537;
+      --border:   #1e2d45;
+      --accent1:  #2563eb;
+      --accent2:  #06b6d4;
+      --accent3:  #8b5cf6;
+      --text:     #ffffff;
+      --muted:    #cbd5e1;
+      --label:    #e2e8f0;
+      --red:      #ef4444;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(12px, 2vh, 24px) 24px;
+      position: relative;
+      overflow-x: hidden;
+      overflow-y: auto;   /* safety net: scroll instead of clipping on very short screens */
+    }
+
+    /* Blurred campus gate photo (blur applies only to the picture, not the card) */
+    .bg-image {
+      position: fixed;
+      inset: -40px;               /* extra bleed so blurred edges don't show */
+      z-index: -1;
+      background:
+        linear-gradient(
+          160deg,
+          rgba(8,13,26,0.35),
+          rgba(9,15,28,0.25) 40%,
+          rgba(7,11,22,0.38)
+        ),
+        url('8.png');
+      background-size: cover;
+      background-position: center 30%;
+      background-repeat: no-repeat;
+      filter: blur(4px);          /* slightly blurred: photo stays visible */
+      pointer-events: none;
+    }
+
+    /* Soft ambient glow blobs behind the card — teal/green tint, distinct from
+       the admin portal's blue/purple, so the two pages read as separate */
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      width: 480px;
+      height: 480px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.28;
+      z-index: 0;
+      pointer-events: none;
+    }
+    body::before {
+      background: var(--accent2);
+      top: -160px;
+      left: -140px;
+    }
+    body::after {
+      background: #10b981;
+      bottom: -160px;
+      right: -140px;
+    }
+
+    .login-box {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 500px;
+      background: linear-gradient(160deg, rgba(20, 44, 96, 0.80), rgba(11, 22, 52, 0.86));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(125, 175, 255, 0.35);
+      border-radius: 26px;
+      padding: clamp(24px, 4.5vh, 52px) 48px clamp(20px, 3.5vh, 42px);
+      box-shadow:
+        0 12px 44px rgba(0,0,0,0.45),
+        0 1px 0 rgba(255,255,255,0.06) inset;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    /* Top accent bar — teal/green, matching the glow blobs above */
+    .login-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      border-radius: 26px 26px 0 0;
+      background: linear-gradient(90deg, #10b981, var(--accent2), var(--accent1));
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Logo */
+    .login-logo {
+      text-align: center;
+      margin-bottom: clamp(14px, 2.5vh, 30px);
+    }
+
+    .login-logo .logo-mark {
+      width: clamp(68px, 12vh, 112px);
+      height: clamp(68px, 12vh, 112px);
+      margin: 0 auto clamp(10px, 1.6vh, 16px);
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--surface2), var(--surface));
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+    }
+
+    .login-logo .logo-mark img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    /* Fallback glyph shown if 5.png fails to load */
+    .login-logo .logo-mark .logo-fallback {
+      display: none;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent2), var(--accent1));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .login-logo .title {
+      color: white;
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.4rem, min(6vw, 4vh), 2.2rem);
+      font-weight: 900;
+      line-height: 1.2;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.45);
+    }
+
+    /* Office portal badge — the visual cue that this is NOT the admin page */
+    .portal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: clamp(8px, 1.6vh, 14px);
+      padding: 7px 16px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      color: #6ee7b7;
+      font-size: clamp(0.78rem, 1.8vh, 0.88rem);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .login-logo .campus {
+      margin-top: clamp(6px, 1.4vh, 12px);
+      font-size: clamp(0.78rem, 1.7vh, 0.88rem);
+      font-weight: 700;
+      color: rgba(255,255,255,0.75);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .form-group {
+      margin-bottom: clamp(14px, 2.6vh, 26px);
+    }
+
+    .form-group label {
+      display: block;
+      font-size: clamp(0.9rem, 2.2vh, 1.05rem);
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: clamp(6px, 1vh, 10px);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: clamp(11px, 2vh, 17px) 20px;
+      background: rgba(6, 12, 30, 0.72);
+      border: 2px solid rgba(110, 231, 183, 0.45);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: clamp(1rem, 2.5vh, 1.2rem);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input::placeholder {
+      color: rgba(255,255,255,0.75);
+    }
+
+    .form-group input:focus {
+      border-color: #10b981;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
+    }
+
+    .form-group input:focus-visible {
+      outline: 2px solid var(--accent2);
+      outline-offset: 2px;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper input {
+      width: 100%;
+      padding-right: 60px;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 38px;
+      height: 38px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      opacity: 0.95;
+      transition: opacity 0.2s;
+    }
+
+    .toggle-password::before {
+      content: '';
+      width: 24px;
+      height: 24px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+
+    .toggle-password.is-visible::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M3 3l18 18'/%3E%3C/svg%3E");
+    }
+
+    .toggle-password:hover {
+      opacity: 1;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: clamp(13px, 2.3vh, 19px);
+      margin-top: clamp(6px, 1.2vh, 12px);
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.05rem, 2.6vh, 1.25rem);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: white;
+      background: linear-gradient(135deg, #10b981, var(--accent1));
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 12px 28px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-login:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+      box-shadow: 0 16px 34px rgba(16, 185, 129, 0.45);
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-login:focus-visible {
+      outline: 2px solid var(--accent2);
+      outline-offset: 3px;
+    }
+
+    .login-error {
+      display: none;
+      margin-top: 18px;
+      padding: 13px 18px;
+      background: rgba(239, 68, 68, 0.22);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      border-radius: 10px;
+      color: #fca5a5;
+      font-size: 1rem;
+      font-weight: 500;
+      text-align: center;
+      animation: shake 0.3s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%      { transform: translateX(-4px); }
+      75%      { transform: translateX(4px); }
+    }
+
+    /* Redirect notice (deactivated account, session expired, no access) */
+    .login-notice {
+      display: none;
+      margin-top: 18px;
+      padding: 13px 18px;
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid rgba(110, 231, 183, 0.5);
+      border-radius: 10px;
+      color: #d1fae5;
+      font-size: 0.95rem;
+      font-weight: 500;
+      text-align: center;
+      line-height: 1.45;
+    }
+
+    .login-hint {
+      margin-top: clamp(14px, 2.6vh, 26px);
+      text-align: center;
+      font-size: clamp(0.85rem, 2vh, 1rem);
+      color: rgba(255,255,255,0.95);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+    }
+
+    .login-hint span {
+      color: #6ee7b7;
+      font-weight: 700;
+    }
+
+    .portal-switch {
+      margin-top: 14px;
+      text-align: center;
+      font-size: clamp(0.8rem, 1.8vh, 0.92rem);
+      color: rgba(255,255,255,0.75);
+    }
+
+    .portal-switch a {
+      color: var(--accent2);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .portal-switch a:hover {
+      text-decoration: underline;
+    }
+
+    /* Small screens: keep large text but tighten padding */
+    @media (max-width: 480px) {
+      .login-box {
+        padding: 38px 24px 30px;
+      }
+      .form-group input { font-size: 1.1rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .login-box { animation: none; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Blurred background photo -->
+  <div class="bg-image" aria-hidden="true"></div>
+
+  <div class="login-box">
+
+    <!-- Header / Logo -->
+    <div class="login-logo">
+      <div class="logo-mark">
+        <img
+          src="5.png"
+          alt="CampusVoice logo"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        >
+        <div class="logo-fallback">CV</div>
+      </div>
+
+      <div class="title">CampusVoice</div>
+      <div class="portal-badge">🏢 Office / Unit Sign-In</div>
+      <div class="campus">ISUFST – San Enrique Campus</div>
+    </div>
+
+    <!-- Credentials -->
+    <div class="form-group">
+      <label for="login-user">Username or Gmail Address</label>
+      <input type="text" id="login-user" placeholder="Enter your username or Gmail address" autocomplete="username">
+    </div>
+
+    <div class="form-group">
+      <label for="login-pass">Password</label>
+
+      <div class="password-wrapper">
+        <input
+          type="password"
+          id="login-pass"
+          placeholder="Enter password"
+          autocomplete="current-password"
+          onkeydown="if (event.key === 'Enter') doLogin()"
+        >
+
+        <span class="toggle-password" onclick="togglePassword()" role="button" tabindex="0" aria-label="Show password" onkeydown="if(event.key==='Enter'||event.key===' '){togglePassword();}"></span>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Sign In to Office Dashboard</button>
+
+    <!-- Error -->
+    <div class="login-error" id="login-error">❌ Invalid credentials. Please try again.</div>
+
+    <!-- Notice shown when a page redirected back here (signed out, deactivated, etc.) -->
+    <div class="login-notice" id="login-notice"></div>
+
+    <div class="login-hint">For <span>office &amp; unit</span> accounts only</div>
+    <div class="portal-switch">
+      Are you an administrator? <a href="index.html">Admin Sign-In →</a>
+    </div>
+
+  </div>
+
+  <script type="module">
+    /* ======================================================================
+     * Office sign-in — a page of its own, separate from the administrator
+     * login (index.html). It is deliberately NOT combined with that page:
+     *
+     *   · Every office account here must have role "office" in its
+     *     accounts/{uid} record. An administrator's credentials are refused
+     *     here and sent back to the admin portal instead.
+     *   · There is no "first sign-in creates the account" bootstrap, unlike
+     *     index.html's admin1/2/3 flow — office accounts are always created
+     *     ahead of time by Admin 1 (Office Accounts -> Create Office
+     *     Account), so the Firebase Authentication user and the Firestore
+     *     role mapping already exist by the time anyone signs in here.
+     *
+     * Passwords are held by Firebase Authentication. Firestore stores only
+     * the role and office mapping, never a password.
+     * ==================================================================== */
+
+    import {
+      auth, signInWithEmailAndPassword, signOut, PATHS, getDoc, friendlyError
+    } from "./cv-core.js";
+
+    import { slugUsername, recordLogin } from "./cv-accounts.js";
+
+    const errorEl  = document.getElementById('login-error');
+    const noticeEl = document.getElementById('login-notice');
+    const btn      = document.getElementById('loginBtn');
+    const DEFAULT_BTN_TEXT = 'Sign In to Office Dashboard';
+
+    /* A page that bounced the visitor back here left an explanation. */
+    const notice = sessionStorage.getItem('cv-login-notice');
+    if (notice) {
+      sessionStorage.removeItem('cv-login-notice');
+      noticeEl.textContent = notice;
+      noticeEl.style.display = 'block';
+    }
+
+    function showError(message) {
+      errorEl.textContent = `❌ ${message}`;
+      errorEl.style.display = 'block';
+      noticeEl.style.display = 'none';
+    }
+
+    /* Resolves whatever was typed into the email address Auth expects.
+       Office accounts always have a real email, either typed directly or
+       looked up from the username index Admin 1's account creation wrote —
+       there is no synthetic-domain fallback here. */
+    async function resolveEmail(identifier) {
+      if (identifier.includes('@')) return identifier.toLowerCase();
+
+      try {
+        const snap = await getDoc(PATHS.accountIndex(slugUsername(identifier)));
+        if (snap.exists() && snap.data()?.email) return snap.data().email;
+      } catch (err) {
+        console.warn('Username lookup failed:', err?.code || err);
+      }
+
+      return null;
+    }
+
+    /* Confirms this is an active office account linked to an office, and
+       sends anything else (an admin account, a deactivated one, an
+       unlinked one) away with an explanation rather than letting it through. */
+    async function routeSignedInUser(uid) {
+      let account = null;
+      try {
+        const snap = await getDoc(PATHS.account(uid));
+        if (snap.exists()) account = snap.data();
+      } catch (err) {
+        console.error('Could not read the account record:', err);
+      }
+
+      const role = account?.role || '';
+
+      if (role !== 'office') {
+        await signOut(auth).catch(() => {});
+        showError(
+          role
+            ? 'This is an administrator account. Please sign in at the admin portal below.'
+            : 'This account is not assigned to a role yet. Please contact Admin 1.'
+        );
+        return false;
+      }
+
+      if ((account?.status || 'active') !== 'active') {
+        await signOut(auth).catch(() => {});
+        showError('This account has been deactivated. Please contact Admin 1.');
+        return false;
+      }
+
+      if (!account?.officeId) {
+        await signOut(auth).catch(() => {});
+        showError('This office account is not linked to an office yet. Please contact Admin 1.');
+        return false;
+      }
+
+      recordLogin(uid);
+      window.location.href = 'office-dashboard.html';
+      return true;
+    }
+
+    window.doLogin = async () => {
+      const identifier = document.getElementById('login-user').value.trim();
+      const password   = document.getElementById('login-pass').value;
+
+      errorEl.style.display = 'none';
+
+      if (!identifier || !password) {
+        showError('Enter your username or Gmail address, and your password.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Checking…';
+
+      try {
+        const email = await resolveEmail(identifier);
+
+        if (!email) {
+          showError('Invalid credentials. Please try again.');
+          return;
+        }
+
+        try {
+          const cred = await signInWithEmailAndPassword(auth, email, password);
+          await routeSignedInUser(cred.user.uid);
+        } catch (authErr) {
+          const code = authErr?.code || '';
+          const recoverable =
+            code === 'auth/user-not-found' ||
+            code === 'auth/invalid-credential' ||
+            code === 'auth/wrong-password' ||
+            code === 'auth/invalid-email';
+
+          showError(recoverable ? 'Invalid credentials. Please try again.' : friendlyError(authErr));
+        }
+      } catch (err) {
+        console.error('Sign-in failed:', err);
+        showError(friendlyError(err));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = DEFAULT_BTN_TEXT;
+      }
+    };
+
+    window.togglePassword = () => {
+      const input = document.getElementById('login-pass');
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      const toggle = document.querySelector('.toggle-password');
+      toggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+      toggle.classList.toggle('is-visible', isHidden);
+    };
+  </script>
+
+</body>
+</html>
