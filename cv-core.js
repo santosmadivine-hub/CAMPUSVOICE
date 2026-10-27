@@ -272,6 +272,19 @@ export function buildOfficeSidebar(activePage, session) {
   `;
 }
 
+/** First letter shown on an avatar that has no photo — a stand-in identicon. */
+function avatarInitial(session) {
+  const source = session?.username || session?.officeName || session?.email || "O";
+  return String(source).trim().charAt(0).toUpperCase() || "O";
+}
+
+/** The <img> or lettered-circle markup for one avatar, given a photo URL. */
+function avatarInnerHtml(photoURL, initial) {
+  return photoURL
+    ? `<img src="${escapeHtml(photoURL)}" alt="">`
+    : `<span class="avatar-fallback">${escapeHtml(initial)}</span>`;
+}
+
 export function buildOfficeTopbar(pageTitle, subtitle, session) {
   return `
     <div class="topbar">
@@ -285,8 +298,15 @@ export function buildOfficeTopbar(pageTitle, subtitle, session) {
         </div>
       </div>
       <div class="topbar-right">
-        <span class="badge badge-blue">🏢 ${escapeHtml(session?.officeName || "Office")}</span>
-        <span class="badge badge-blue">${escapeHtml(roleBadge(session))}</span>
+        <button class="profile-chip" id="cv-profile-chip" type="button" title="Open Settings">
+          <span class="profile-avatar" id="cv-profile-avatar">
+            ${avatarInnerHtml(session?.photoURL, avatarInitial(session))}
+          </span>
+          <span class="profile-info">
+            <span class="profile-name">${escapeHtml(session?.username || session?.officeName || "Office")}</span>
+            <span class="profile-role">${escapeHtml(roleBadge(session))}</span>
+          </span>
+        </button>
       </div>
     </div>
   `;
@@ -551,7 +571,7 @@ function mountSettingsModal(session) {
             <div class="settings-avatar-row">
               <div class="settings-avatar" id="settings-avatar">
                 <img id="settings-avatar-img" alt="Profile photo" style="display:none;">
-                <span id="settings-avatar-fallback">🏢</span>
+                <span id="settings-avatar-fallback" class="avatar-fallback">${escapeHtml(avatarInitial(session))}</span>
               </div>
               <div class="settings-avatar-actions">
                 <input type="file" id="settings-photo-input" accept="image/*" style="display:none;">
@@ -612,6 +632,7 @@ function mountSettingsModal(session) {
 
   const overlay      = document.getElementById("cv-settings-modal");
   const triggerLink   = document.getElementById("cv-settings");
+  const profileChip   = document.getElementById("cv-profile-chip");
   const closeBtn      = document.getElementById("settings-close");
   const tabs          = overlay.querySelectorAll(".settings-tab");
   const panels        = {
@@ -638,6 +659,11 @@ function mountSettingsModal(session) {
       avatarFallback.style.display = "flex";
       photoRemoveBtn.style.display = "none";
     }
+
+    // The topbar's profile chip shows the same photo, so it has to change
+    // the instant the modal's own avatar does — not just on the next reload.
+    const chipAvatar = document.getElementById("cv-profile-avatar");
+    if (chipAvatar) chipAvatar.innerHTML = avatarInnerHtml(url, avatarInitial(session));
   }
 
   function openModal() {
@@ -651,9 +677,12 @@ function mountSettingsModal(session) {
 
   function closeModal() { overlay.classList.remove("open"); }
 
-  if (triggerLink) {
-    triggerLink.addEventListener("click", (e) => { e.preventDefault(); openModal(); });
-  }
+  // Two ways in: the sidebar's "Settings" link, and the topbar's profile
+  // chip itself — clicking your own name/avatar to edit it is the pattern
+  // most dashboards use.
+  [triggerLink, profileChip].forEach(el => {
+    if (el) el.addEventListener("click", (e) => { e.preventDefault(); openModal(); });
+  });
   closeBtn.addEventListener("click", closeModal);
   overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
   document.addEventListener("keydown", (e) => {
