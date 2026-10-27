@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="cv-office.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <div id="sidebar-mount"></div>
+  <div class="sidebar-overlay"></div>
+
+  <main class="main fade-in">
+
+    <div id="topbar-mount"></div>
+
+    <div class="page">
+
+      <a href="office-dashboard.html" class="btn btn-ghost btn-sm" style="margin-bottom:14px;">← Back</a>
+
+      <div class="card">
+
+        <div class="settings-tabs" role="tablist">
+          <button class="settings-tab active" type="button" data-tab="profile" role="tab" aria-selected="true">👤 Profile</button>
+          <button class="settings-tab" type="button" data-tab="password" role="tab" aria-selected="false">🔑 Change Password</button>
+          <button class="settings-tab" type="button" data-tab="about" role="tab" aria-selected="false">ℹ️ About App</button>
+        </div>
+
+        <!-- ===================== Profile ===================== -->
+        <div class="settings-panel" id="settings-panel-profile" role="tabpanel">
+          <div class="settings-avatar-row">
+            <div class="settings-avatar" id="settings-avatar">
+              <img id="settings-avatar-img" alt="Profile photo" style="display:none;">
+              <span id="settings-avatar-fallback" class="avatar-fallback"></span>
+            </div>
+            <div class="settings-avatar-actions">
+              <input type="file" id="settings-photo-input" accept="image/*" style="display:none;">
+              <div class="settings-avatar-btns">
+                <button class="btn btn-sm btn-primary" type="button" id="settings-photo-btn">Change Photo</button>
+                <button class="btn btn-sm btn-danger" type="button" id="settings-photo-remove" style="display:none;">Remove</button>
+              </div>
+              <div class="field-hint">JPG or PNG, up to 5MB.</div>
+              <div class="field-error" id="settings-photo-error"></div>
+            </div>
+          </div>
+
+          <div class="settings-identity">
+            <div class="detail-row"><span class="detail-label">Office</span><span class="detail-value" id="settings-office-name">—</span></div>
+            <div class="detail-row"><span class="detail-label">Username</span><span class="detail-value" id="settings-username">—</span></div>
+            <div class="detail-row"><span class="detail-label">Gmail</span><span class="detail-value" id="settings-email">—</span></div>
+          </div>
+        </div>
+
+        <!-- ===================== Change Password ===================== -->
+        <div class="settings-panel" id="settings-panel-password" role="tabpanel" hidden>
+          <div class="form-grid">
+            <label class="field full">
+              <span class="field-label">Current Password *</span>
+              <input type="password" id="pw-current" class="input" autocomplete="current-password">
+            </label>
+            <label class="field full">
+              <span class="field-label">New Password *</span>
+              <input type="password" id="pw-new" class="input" autocomplete="new-password">
+              <span class="field-hint">At least 8 characters, with a letter and a number.</span>
+            </label>
+            <label class="field full">
+              <span class="field-label">Confirm New Password *</span>
+              <input type="password" id="pw-confirm" class="input" autocomplete="new-password">
+            </label>
+          </div>
+          <div class="field-error" id="pw-error"></div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" type="button" id="pw-save">Save New Password</button>
+          </div>
+        </div>
+
+        <!-- ===================== About App ===================== -->
+        <div class="settings-panel" id="settings-panel-about" role="tabpanel" hidden>
+          <div class="about-app-header">
+            <div class="about-app-icon">🏢</div>
+            <div>
+              <div class="about-app-name">CampusVoice</div>
+              <div class="about-app-version">Version 1.0 · ISUFST-SEC</div>
+            </div>
+          </div>
+
+          <p class="about-app-desc">
+            CampusVoice is a mobile and web-based school evaluation system for the
+            Iloilo State University of Fisheries Science and Technology – San Enrique
+            Campus (ISUFST-SEC). It lets students, staff and visitors evaluate campus
+            offices and facilities, and gives each office its own dashboard,
+            transaction codes and analytics.
+          </p>
+
+          <div class="about-section-title">Developers</div>
+          <!-- Placeholder credits — replace with the actual development team. -->
+          <ul class="developer-list" id="cv-developer-list">
+            <li class="developer-item">
+              <span class="developer-avatar">👤</span>
+              <span class="developer-text">
+                <span class="developer-name">Developer Name</span>
+                <span class="developer-role">Role / Position</span>
+              </span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+import {
+  guard, mountOfficeChrome, escapeHtml, friendlyError, toast,
+  uploadProfilePhoto, updateOwnProfilePhoto, changeOwnPassword,
+  avatarInitial
+} from "./cv-core.js";
+
+const session = await guard(["office"]);
+
+mountOfficeChrome({
+  activePage: "settings",
+  title: "Settings",
+  subtitle: "Profile, password and app information",
+  session
+});
+
+const el = (id) => document.getElementById(id);
+
+/* ------------------------------------------------------------------ *
+ * Tabs
+ * ------------------------------------------------------------------ */
+const tabs = document.querySelectorAll(".settings-tab");
+const panels = {
+  profile:  el("settings-panel-profile"),
+  password: el("settings-panel-password"),
+  about:    el("settings-panel-about")
+};
+
+tabs.forEach(tabBtn => {
+  tabBtn.addEventListener("click", () => {
+    tabs.forEach(t => { t.classList.remove("active"); t.setAttribute("aria-selected", "false"); });
+    tabBtn.classList.add("active");
+    tabBtn.setAttribute("aria-selected", "true");
+    Object.entries(panels).forEach(([key, panel]) => { panel.hidden = key !== tabBtn.dataset.tab; });
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * Profile — identity + photo
+ * ------------------------------------------------------------------ */
+el("settings-office-name").textContent = session.officeName || "—";
+el("settings-username").textContent    = session.username || "—";
+el("settings-email").textContent       = session.email || "—";
+
+const avatarImg      = el("settings-avatar-img");
+const avatarFallback = el("settings-avatar-fallback");
+const photoInput      = el("settings-photo-input");
+const photoBtn        = el("settings-photo-btn");
+const photoRemoveBtn  = el("settings-photo-remove");
+const photoError      = el("settings-photo-error");
+
+avatarFallback.textContent = avatarInitial(session);
+
+function renderAvatar(url) {
+  if (url) {
+    avatarImg.src = url;
+    avatarImg.style.display = "block";
+    avatarFallback.style.display = "none";
+    photoRemoveBtn.style.display = "inline-flex";
+  } else {
+    avatarImg.removeAttribute("src");
+    avatarImg.style.display = "none";
+    avatarFallback.style.display = "flex";
+    photoRemoveBtn.style.display = "none";
+  }
+}
+renderAvatar(session.photoURL || "");
+
+photoBtn.addEventListener("click", () => photoInput.click());
+
+photoInput.addEventListener("change", async () => {
+  const file = photoInput.files?.[0];
+  photoInput.value = "";   // allow re-selecting the same file later
+  if (!file) return;
+
+  photoError.textContent = "";
+  photoBtn.disabled = true;
+  photoBtn.textContent = "Uploading…";
+
+  try {
+    const url = await uploadProfilePhoto(file);
+    await updateOwnProfilePhoto(url);
+    session.photoURL = url;
+    renderAvatar(url);
+    toast("✅ Profile photo updated.");
+  } catch (err) {
+    photoError.textContent = err.message || friendlyError(err);
+  } finally {
+    photoBtn.disabled = false;
+    photoBtn.textContent = "Change Photo";
+  }
+});
+
+photoRemoveBtn.addEventListener("click", async () => {
+  photoError.textContent = "";
+  photoRemoveBtn.disabled = true;
+
+  try {
+    await updateOwnProfilePhoto(null);
+    session.photoURL = "";
+    renderAvatar("");
+    toast("Profile photo removed.");
+  } catch (err) {
+    photoError.textContent = err.message || friendlyError(err);
+  } finally {
+    photoRemoveBtn.disabled = false;
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * Change Password
+ * ------------------------------------------------------------------ */
+const pwCurrent = el("pw-current");
+const pwNew     = el("pw-new");
+const pwConfirm = el("pw-confirm");
+const pwError   = el("pw-error");
+const pwSaveBtn = el("pw-save");
+
+pwSaveBtn.addEventListener("click", async () => {
+  const current = pwCurrent.value;
+  const next    = pwNew.value;
+  const confirm = pwConfirm.value;
+
+  pwError.textContent = "";
+
+  if (!current || !next || !confirm) {
+    pwError.textContent = "Fill in all three fields.";
+    return;
+  }
+  if (next !== confirm) {
+    pwError.textContent = "New password and confirmation do not match.";
+    return;
+  }
+
+  pwSaveBtn.disabled = true;
+  pwSaveBtn.textContent = "Saving…";
+
+  try {
+    await changeOwnPassword(current, next);
+    pwCurrent.value = "";
+    pwNew.value = "";
+    pwConfirm.value = "";
+    toast("✅ Password changed successfully.");
+  } catch (err) {
+    pwError.textContent = err.message || friendlyError(err);
+  } finally {
+    pwSaveBtn.disabled = false;
+    pwSaveBtn.textContent = "Save New Password";
+  }
+});
+</script>
+
+</body>
+</html>
