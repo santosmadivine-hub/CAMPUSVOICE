@@ -50,8 +50,31 @@
 
         <div class="settings-identity">
           <div class="detail-row"><span class="detail-label">Office</span><span class="detail-value" id="settings-office-name">—</span></div>
-          <div class="detail-row"><span class="detail-label">Username</span><span class="detail-value" id="settings-username">—</span></div>
-          <div class="detail-row"><span class="detail-label">Gmail</span><span class="detail-value" id="settings-email">—</span></div>
+        </div>
+
+        <div class="form-grid" style="margin-top:14px;">
+          <label class="field">
+            <span class="field-label">Username *</span>
+            <input type="text" id="settings-username" class="input input-mono" autocomplete="off">
+            <span class="field-hint">Lowercase letters, numbers, dots and dashes.</span>
+          </label>
+          <label class="field">
+            <span class="field-label">Gmail Address *</span>
+            <input type="email" id="settings-email" class="input" autocomplete="off">
+            <span class="field-hint">This is what you sign in with — changing it is a bigger step.</span>
+          </label>
+          <label class="field full">
+            <span class="field-label">Current Password</span>
+            <input type="password" id="identity-password" class="input" autocomplete="current-password">
+            <span class="field-hint">Only needed if you change your Gmail address.</span>
+          </label>
+        </div>
+
+        <div class="field-error" id="identity-error"></div>
+        <div class="banner banner-info" id="identity-note" style="display:none; margin-top:10px;"></div>
+
+        <div style="margin-top:14px;">
+          <button class="btn btn-primary" type="button" id="identity-save">Save Changes</button>
         </div>
       </div>
 
@@ -131,9 +154,11 @@
 <script type="module">
 import {
   guard, mountOfficeChrome, escapeHtml, friendlyError, toast,
-  uploadProfilePhoto, updateOwnProfilePhoto, changeOwnPassword,
+  uploadProfilePhoto, updateOwnProfilePhoto, changeOwnPassword, changeOwnEmail,
   avatarInitial
 } from "./cv-core.js";
+
+import { changeAccountUsername } from "./cv-accounts.js";
 
 const session = await guard(["office"]);
 
@@ -150,8 +175,6 @@ const el = (id) => document.getElementById(id);
  * Profile — identity + photo
  * ------------------------------------------------------------------ */
 el("settings-office-name").textContent = session.officeName || "—";
-el("settings-username").textContent    = session.username || "—";
-el("settings-email").textContent       = session.email || "—";
 
 const avatarImg      = el("settings-avatar-img");
 const avatarFallback = el("settings-avatar-fallback");
@@ -215,6 +238,106 @@ photoRemoveBtn.addEventListener("click", async () => {
     photoError.textContent = err.message || friendlyError(err);
   } finally {
     photoRemoveBtn.disabled = false;
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * Username + Gmail address
+ *
+ * A username change is Firestore-only and takes effect immediately.
+ * A Gmail change touches Firebase Authentication itself, so it needs the
+ * current password — and depending on how this Firebase project is
+ * configured, it may require confirming a link sent to the new address
+ * before the sign-in email actually changes (see changeOwnEmail() in
+ * cv-core.js). Either way, the field is only updated here once Firebase
+ * has actually accepted it.
+ * ------------------------------------------------------------------ */
+const usernameInput   = el("settings-username");
+const emailInput      = el("settings-email");
+const identityPassword = el("identity-password");
+const identityError   = el("identity-error");
+const identityNote    = el("identity-note");
+const identitySaveBtn = el("identity-save");
+
+usernameInput.value = session.username || "";
+emailInput.value    = session.email || "";
+
+function showIdentityNote(message) {
+  identityNote.textContent = message;
+  identityNote.style.display = "block";
+}
+
+identitySaveBtn.addEventListener("click", async () => {
+  const nextUsername = usernameInput.value.trim().toLowerCase();
+  const nextEmail     = emailInput.value.trim().toLowerCase();
+  const password       = identityPassword.value;
+
+  identityError.textContent = "";
+  identityNote.style.display = "none";
+
+  if (!nextUsername || !nextEmail) {
+    identityError.textContent = "Username and Gmail address are both required.";
+    return;
+  }
+
+  const usernameChanged = nextUsername !== session.username;
+  const emailChanged    = nextEmail !== (session.email || "").toLowerCase();
+
+  if (!usernameChanged && !emailChanged) {
+    toast("Nothing to save — no changes were made.");
+    return;
+  }
+
+  if (emailChanged && !password) {
+    identityError.textContent = "Enter your current password to change your Gmail address.";
+    return;
+  }
+
+  identitySaveBtn.disabled = true;
+  identitySaveBtn.textContent = "Saving…";
+
+  try {
+    if (usernameChanged) {
+      const result = await changeAccountUsername(session.uid, nextUsername);
+      if (result.changed) {
+        session.username = result.username;
+        usernameInput.value = result.username;
+      }
+    }
+
+    if (emailChanged) {
+      const result = await changeOwnEmail(password, nextEmail);
+      identityPassword.value = "";
+
+      if (result.verified) {
+        session.email = result.email;
+        emailInput.value = result.email;
+        toast("✅ Gmail address updated.");
+      } else {
+        // Firebase is still signed in with the OLD email until the link in
+        // the new inbox is confirmed, so the field is put back to match —
+        // showing the new address here without it actually being usable yet
+        // would be misleading.
+        emailInput.value = session.email || "";
+        showIdentityNote(
+          `We sent a verification link to ${result.email}. Your sign-in email will ` +
+          `change once you click it — until then, keep signing in with ${session.email}.`
+        );
+      }
+    } else if (usernameChanged) {
+      toast("✅ Username updated.");
+    }
+
+  } catch (err) {
+    identityError.textContent = err.message || friendlyError(err);
+    // A failed email change should not leave a half-changed username applied
+    // silently without the person knowing which part actually went through.
+    if (usernameChanged && session.username === nextUsername) {
+      toast(`Username saved as "${nextUsername}", but the Gmail change did not go through.`, true);
+    }
+  } finally {
+    identitySaveBtn.disabled = false;
+    identitySaveBtn.textContent = "Save Changes";
   }
 });
 
