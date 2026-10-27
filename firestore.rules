@@ -101,12 +101,17 @@ service cloud.firestore {
                         && request.resource.data.officeId == '');
 
       // Admin 1 manages every account. Anyone else may only stamp their own
-      // last-login time — they cannot grant themselves a role, change which
-      // office they belong to, or reactivate themselves.
+      // last-login time or change their own profile photo — they cannot
+      // grant themselves a role, change which office they belong to, or
+      // reactivate themselves. photoURL must be a real address or absent
+      // entirely, never some other type smuggled in.
       allow update: if isAdmin1()
                     || (signedIn()
                         && request.auth.uid == uid
-                        && onlyChanges(['lastLoginAt']));
+                        && onlyChanges(['lastLoginAt', 'photoURL'])
+                        && (!('photoURL' in request.resource.data)
+                            || request.resource.data.photoURL == null
+                            || request.resource.data.photoURL is string));
 
       allow delete: if isAdmin1();
     }

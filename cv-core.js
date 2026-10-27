@@ -19,7 +19,8 @@
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail
+  signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail,
+  reauthenticateWithCredential, EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, collection, collectionGroup, doc, getDoc, getDocs,
@@ -51,7 +52,8 @@ export {
   deleteDoc, addDoc, onSnapshot, query, where, orderBy, limit, writeBatch,
   runTransaction, serverTimestamp, signOut, onAuthStateChanged,
   signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  updatePassword, sendPasswordResetEmail
+  updatePassword, sendPasswordResetEmail,
+  reauthenticateWithCredential, EmailAuthProvider
 };
 
 /* ----------------------------------------------------------------------------
@@ -127,6 +129,7 @@ export function getSession() {
         officeName: data.officeName || "",
         username:   data.username || "",
         status:     data.status || "active",
+        photoURL:   data.photoURL || "",
         isAdmin:    String(data.role || "").startsWith("admin"),
         canSwitchOffice: data.role === SUPER_ADMIN
       };
@@ -136,6 +139,11 @@ export function getSession() {
 }
 
 export function clearSessionCache() { cachedSession = null; }
+
+/** Updates the cached session in place, e.g. right after a profile photo change. */
+function patchSessionCache(patch) {
+  if (cachedSession) Object.assign(cachedSession, patch);
+}
 
 /**
  * Office accounts and administrators sign in on two separate pages — see
@@ -241,6 +249,14 @@ export function buildOfficeSidebar(activePage, session) {
       </nav>
 
       <div class="sidebar-footer">
+        <a class="nav-item" href="#" id="cv-settings" aria-label="Settings" title="Settings" style="margin-bottom:6px;">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings</span>
+        </a>
+        <a class="nav-item" href="#" id="cv-change-password" aria-label="Change password" title="Change password" style="margin-bottom:10px;">
+          <span class="nav-icon">🔑</span>
+          <span>Change Password</span>
+        </a>
         <a class="logout-btn" href="#" id="cv-logout" aria-label="Logout" title="Logout">
           <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -283,8 +299,9 @@ function roleBadge(session) {
 }
 
 /**
- * Mounts the office chrome and wires logout + the existing hamburger toggle.
- * Pages call this once, right after `guard(["office"])`.
+ * Mounts the office chrome and wires logout, Change Password, and the
+ * existing hamburger toggle. Pages call this once, right after
+ * `guard(["office"])`.
  */
 export function mountOfficeChrome({ activePage, title, subtitle, session }) {
   const sidebarMount = document.getElementById("sidebar-mount");
@@ -298,9 +315,400 @@ export function mountOfficeChrome({ activePage, title, subtitle, session }) {
     logoutLink.addEventListener("click", (e) => { e.preventDefault(); logout(); });
   }
 
+  mountChangePasswordModal();
+  mountSettingsModal(session);
+
   // shared.js binds the hamburger on DOMContentLoaded, which has already fired
   // by the time the guard resolves — so bind it again for this freshly injected markup.
   if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
+}
+
+/**
+ * Injects the Change Password modal into the page and wires it to the
+ * sidebar's "Change Password" link.
+ *
+ * Changing a password is a sensitive operation, so Firebase Authentication
+ * requires a *recent* sign-in before it will allow one — reauthenticating
+ * with the current password right here satisfies that and doubles as
+ * confirming the current password is actually correct.
+ *
+ * Relies on cv-office.css's modal classes, which every page that calls
+ * mountOfficeChrome() already loads.
+ */
+function mountChangePasswordModal() {
+  if (document.getElementById("cv-password-modal")) return;   // already mounted
+
+  const holder = document.createElement("div");
+  holder.innerHTML = `
+    <div class="modal-overlay" id="cv-password-modal">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cv-password-title">
+        <div class="modal-head">
+          <div class="modal-icon">🔑</div>
+          <div>
+            <h3 class="modal-title" id="cv-password-title">Change Password</h3>
+            <div class="modal-subtitle">Confirm your current password, then choose a new one.</div>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="form-grid">
+            <label class="field full">
+              <span class="field-label">Current Password *</span>
+              <input type="password" id="cv-pw-current" class="input" autocomplete="current-password">
+            </label>
+            <label class="field full">
+              <span class="field-label">New Password *</span>
+              <input type="password" id="cv-pw-new" class="input" autocomplete="new-password">
+              <span class="field-hint">At least 8 characters, with a letter and a number.</span>
+            </label>
+            <label class="field full">
+              <span class="field-label">Confirm New Password *</span>
+              <input type="password" id="cv-pw-confirm" class="input" autocomplete="new-password">
+            </label>
+          </div>
+          <div class="field-error" id="cv-pw-error"></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" id="cv-pw-cancel">Cancel</button>
+          <button class="btn btn-primary" id="cv-pw-save">Save New Password</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(holder.firstElementChild);
+
+  const overlay    = document.getElementById("cv-password-modal");
+  const currentEl  = document.getElementById("cv-pw-current");
+  const newEl      = document.getElementById("cv-pw-new");
+  const confirmEl  = document.getElementById("cv-pw-confirm");
+  const errorEl    = document.getElementById("cv-pw-error");
+  const saveBtn    = document.getElementById("cv-pw-save");
+  const cancelBtn  = document.getElementById("cv-pw-cancel");
+  const triggerLink = document.getElementById("cv-change-password");
+
+  function openModal() {
+    currentEl.value = "";
+    newEl.value = "";
+    confirmEl.value = "";
+    errorEl.textContent = "";
+    overlay.classList.add("open");
+    requestAnimationFrame(() => currentEl.focus());
+  }
+
+  function closeModal() {
+    overlay.classList.remove("open");
+  }
+
+  if (triggerLink) {
+    triggerLink.addEventListener("click", (e) => { e.preventDefault(); openModal(); });
+  }
+
+  cancelBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && overlay.classList.contains("open")) closeModal();
+  });
+
+  saveBtn.addEventListener("click", async () => {
+    const current = currentEl.value;
+    const next    = newEl.value;
+    const confirm = confirmEl.value;
+
+    errorEl.textContent = "";
+
+    if (!current || !next || !confirm) {
+      errorEl.textContent = "Fill in all three fields.";
+      return;
+    }
+
+    const passwordError = validatePassword(next);
+    if (passwordError) { errorEl.textContent = passwordError; return; }
+
+    if (next !== confirm) {
+      errorEl.textContent = "New password and confirmation do not match.";
+      return;
+    }
+
+    if (next === current) {
+      errorEl.textContent = "Choose a password different from your current one.";
+      return;
+    }
+
+    const user = auth.currentUser;
+    if (!user || !user.email) {
+      errorEl.textContent = "Your session has expired. Please sign in again.";
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving…";
+
+    try {
+      const credential = EmailAuthProvider.credential(user.email, current);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, next);
+
+      closeModal();
+      toast("✅ Password changed successfully.");
+    } catch (err) {
+      const code = err?.code || "";
+      errorEl.textContent =
+        (code === "auth/wrong-password" || code === "auth/invalid-credential")
+          ? "Incorrect current password."
+          : friendlyError(err);
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Save New Password";
+    }
+  });
+}
+
+/* ----------------------------------------------------------------------------
+ * 4b. Settings — profile photo + About App
+ *
+ * Images are stored with Cloudinary, the same unsigned-upload target the
+ * Android app already uses (CloudinaryUploader.kt), so the web side needs no
+ * new backend of its own: same cloud name, same upload preset.
+ * -------------------------------------------------------------------------- */
+
+const CLOUDINARY_CLOUD_NAME   = "rxe2il0s";
+const CLOUDINARY_UPLOAD_PRESET = "campusvoice_upload";
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;   // 5MB
+
+/**
+ * Uploads an image file straight from the browser to Cloudinary (unsigned
+ * preset — no API secret involved) and returns its public URL.
+ */
+export async function uploadProfilePhoto(file) {
+  if (!file) throw new Error("No file selected.");
+  if (!file.type || !file.type.startsWith("image/")) {
+    throw new Error("Please choose an image file (JPG, PNG, etc.).");
+  }
+  if (file.size > MAX_PHOTO_BYTES) {
+    throw new Error("Images must be 5MB or smaller.");
+  }
+
+  const form = new FormData();
+  form.append("file", file);
+  form.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+  let response;
+  try {
+    response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+      { method: "POST", body: form }
+    );
+  } catch (err) {
+    throw new Error("Could not reach the image upload service. Check your internet connection.");
+  }
+
+  if (!response.ok) {
+    throw new Error("The image upload failed. Please try a different photo.");
+  }
+
+  const data = await response.json().catch(() => null);
+  if (!data?.secure_url) {
+    throw new Error("The image upload did not return a usable address.");
+  }
+  return data.secure_url;
+}
+
+/** Sets or clears the signed-in account's own profile photo. */
+export async function updateOwnProfilePhoto(photoURL) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("Your session has expired. Please sign in again.");
+
+  await updateDoc(PATHS.account(uid), { photoURL: photoURL || null });
+  patchSessionCache({ photoURL: photoURL || "" });
+}
+
+/**
+ * Injects the Settings modal (Profile photo + About App) and wires it to the
+ * sidebar's "Settings" link. Relies on cv-office.css, which every page that
+ * calls mountOfficeChrome() already loads.
+ */
+function mountSettingsModal(session) {
+  if (document.getElementById("cv-settings-modal")) return;   // already mounted
+
+  const holder = document.createElement("div");
+  holder.innerHTML = `
+    <div class="modal-overlay" id="cv-settings-modal">
+      <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="cv-settings-title">
+        <div class="modal-head">
+          <div class="modal-icon">⚙️</div>
+          <div>
+            <h3 class="modal-title" id="cv-settings-title">Settings</h3>
+            <div class="modal-subtitle">Profile photo and app information</div>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <div class="settings-tabs" role="tablist">
+            <button class="settings-tab active" type="button" data-tab="profile" role="tab" aria-selected="true">👤 Profile</button>
+            <button class="settings-tab" type="button" data-tab="about" role="tab" aria-selected="false">ℹ️ About App</button>
+          </div>
+
+          <div class="settings-panel" id="settings-panel-profile" role="tabpanel">
+            <div class="settings-avatar-row">
+              <div class="settings-avatar" id="settings-avatar">
+                <img id="settings-avatar-img" alt="Profile photo" style="display:none;">
+                <span id="settings-avatar-fallback">🏢</span>
+              </div>
+              <div class="settings-avatar-actions">
+                <input type="file" id="settings-photo-input" accept="image/*" style="display:none;">
+                <div class="settings-avatar-btns">
+                  <button class="btn btn-sm btn-primary" type="button" id="settings-photo-btn">Change Photo</button>
+                  <button class="btn btn-sm btn-danger" type="button" id="settings-photo-remove" style="display:none;">Remove</button>
+                </div>
+                <div class="field-hint">JPG or PNG, up to 5MB.</div>
+                <div class="field-error" id="settings-photo-error"></div>
+              </div>
+            </div>
+
+            <div class="settings-identity">
+              <div class="detail-row"><span class="detail-label">Office</span><span class="detail-value" id="settings-office-name">—</span></div>
+              <div class="detail-row"><span class="detail-label">Username</span><span class="detail-value" id="settings-username">—</span></div>
+              <div class="detail-row"><span class="detail-label">Gmail</span><span class="detail-value" id="settings-email">—</span></div>
+            </div>
+          </div>
+
+          <div class="settings-panel" id="settings-panel-about" role="tabpanel" hidden>
+            <div class="about-app-header">
+              <div class="about-app-icon">🏢</div>
+              <div>
+                <div class="about-app-name">CampusVoice</div>
+                <div class="about-app-version">Version 1.0 · ISUFST-SEC</div>
+              </div>
+            </div>
+
+            <p class="about-app-desc">
+              CampusVoice is a mobile and web-based school evaluation system for the
+              Iloilo State University of Fisheries Science and Technology – San Enrique
+              Campus (ISUFST-SEC). It lets students, staff and visitors evaluate campus
+              offices and facilities, and gives each office its own dashboard,
+              transaction codes and analytics.
+            </p>
+
+            <div class="about-section-title">Developers</div>
+            <!-- Placeholder credits — replace with the actual development team. -->
+            <ul class="developer-list" id="cv-developer-list">
+              <li class="developer-item">
+                <span class="developer-avatar">👤</span>
+                <span class="developer-text">
+                  <span class="developer-name">Developer Name</span>
+                  <span class="developer-role">Role / Position</span>
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="settings-close">Close</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(holder.firstElementChild);
+
+  const overlay      = document.getElementById("cv-settings-modal");
+  const triggerLink   = document.getElementById("cv-settings");
+  const closeBtn      = document.getElementById("settings-close");
+  const tabs          = overlay.querySelectorAll(".settings-tab");
+  const panels        = {
+    profile: document.getElementById("settings-panel-profile"),
+    about:   document.getElementById("settings-panel-about")
+  };
+
+  const avatarImg      = document.getElementById("settings-avatar-img");
+  const avatarFallback = document.getElementById("settings-avatar-fallback");
+  const photoInput      = document.getElementById("settings-photo-input");
+  const photoBtn        = document.getElementById("settings-photo-btn");
+  const photoRemoveBtn  = document.getElementById("settings-photo-remove");
+  const photoError      = document.getElementById("settings-photo-error");
+
+  function renderAvatar(url) {
+    if (url) {
+      avatarImg.src = url;
+      avatarImg.style.display = "block";
+      avatarFallback.style.display = "none";
+      photoRemoveBtn.style.display = "inline-flex";
+    } else {
+      avatarImg.removeAttribute("src");
+      avatarImg.style.display = "none";
+      avatarFallback.style.display = "flex";
+      photoRemoveBtn.style.display = "none";
+    }
+  }
+
+  function openModal() {
+    document.getElementById("settings-office-name").textContent = session?.officeName || "—";
+    document.getElementById("settings-username").textContent    = session?.username || "—";
+    document.getElementById("settings-email").textContent       = session?.email || "—";
+    renderAvatar(session?.photoURL || "");
+    photoError.textContent = "";
+    overlay.classList.add("open");
+  }
+
+  function closeModal() { overlay.classList.remove("open"); }
+
+  if (triggerLink) {
+    triggerLink.addEventListener("click", (e) => { e.preventDefault(); openModal(); });
+  }
+  closeBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && overlay.classList.contains("open")) closeModal();
+  });
+
+  tabs.forEach(tabBtn => {
+    tabBtn.addEventListener("click", () => {
+      tabs.forEach(t => { t.classList.remove("active"); t.setAttribute("aria-selected", "false"); });
+      tabBtn.classList.add("active");
+      tabBtn.setAttribute("aria-selected", "true");
+      Object.entries(panels).forEach(([key, panel]) => { panel.hidden = key !== tabBtn.dataset.tab; });
+    });
+  });
+
+  photoBtn.addEventListener("click", () => photoInput.click());
+
+  photoInput.addEventListener("change", async () => {
+    const file = photoInput.files?.[0];
+    photoInput.value = "";   // allow re-selecting the same file later
+    if (!file) return;
+
+    photoError.textContent = "";
+    photoBtn.disabled = true;
+    photoBtn.textContent = "Uploading…";
+
+    try {
+      const url = await uploadProfilePhoto(file);
+      await updateOwnProfilePhoto(url);
+      session.photoURL = url;
+      renderAvatar(url);
+      toast("✅ Profile photo updated.");
+    } catch (err) {
+      photoError.textContent = err.message || friendlyError(err);
+    } finally {
+      photoBtn.disabled = false;
+      photoBtn.textContent = "Change Photo";
+    }
+  });
+
+  photoRemoveBtn.addEventListener("click", async () => {
+    photoError.textContent = "";
+    photoRemoveBtn.disabled = true;
+
+    try {
+      await updateOwnProfilePhoto(null);
+      session.photoURL = "";
+      renderAvatar("");
+      toast("Profile photo removed.");
+    } catch (err) {
+      photoError.textContent = err.message || friendlyError(err);
+    } finally {
+      photoRemoveBtn.disabled = false;
+    }
+  });
 }
 
 /* ----------------------------------------------------------------------------
@@ -362,6 +770,21 @@ export function endOfDay(dateStr) {
   const [y, m, d] = dateStr.split("-").map(Number);
   if (!y || !m || !d) return null;
   return new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
+}
+
+/**
+ * The password policy shared by every account-creation and password-change
+ * flow in the app (office account creation, Change Password, etc.). Lives
+ * here rather than in cv-accounts.js so this module's own Change Password
+ * modal can use it without a circular import; cv-accounts.js re-exports it
+ * so existing pages that import it from there keep working unchanged.
+ */
+export function validatePassword(password) {
+  const p = String(password || "");
+  if (p.length < 8) return "Password must be at least 8 characters.";
+  if (!/[a-z]/i.test(p)) return "Password must contain at least one letter.";
+  if (!/[0-9]/.test(p)) return "Password must contain at least one number.";
+  return null;
 }
 
 /** Turns a Firebase error into something a campus staff member can act on. */

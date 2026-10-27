@@ -30,8 +30,15 @@ import {
 import {
   db, auth, firebaseConfig, PATHS, doc, getDoc, getDocs, setDoc, updateDoc,
   deleteDoc, query, where, collection, writeBatch, runTransaction,
-  toMillis, normalizeName, friendlyError, fetchOffice, fetchOffices
+  toMillis, normalizeName, friendlyError, fetchOffice, fetchOffices,
+  validatePassword
 } from "./cv-core.js";
+
+// Re-exported so pages that already import validatePassword from here
+// (admin1-accounts.html) keep working — the canonical definition now lives
+// in cv-core.js, which this module's own password-touching functions need
+// without creating a circular import back into cv-core.js.
+export { validatePassword };
 
 /* ----------------------------------------------------------------------------
  * Username / email conventions
@@ -65,14 +72,6 @@ export function validateUsername(username) {
   const u = slugUsername(username);
   if (u.length < 3) return "Username must be at least 3 characters.";
   if (!/^[a-z0-9]/.test(u)) return "Username must start with a letter or number.";
-  return null;
-}
-
-export function validatePassword(password) {
-  const p = String(password || "");
-  if (p.length < 8) return "Password must be at least 8 characters.";
-  if (!/[a-z]/i.test(p)) return "Password must contain at least one letter.";
-  if (!/[0-9]/.test(p)) return "Password must contain at least one number.";
   return null;
 }
 
