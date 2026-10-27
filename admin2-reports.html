@@ -98,7 +98,8 @@
   .saved-reports-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
   .saved-reports-header h2 { font-family: 'Syne', sans-serif; font-size: 18px; color: #0f1b32; margin: 0; display: flex; align-items: center; gap: 8px; }
   .saved-reports-count { background: #dbeafe; color: #1e40af; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px; }
-  .saved-reports-table { width: 100%; border-collapse: collapse; font-family: 'DM Sans', sans-serif; }
+  #saved-reports-container, #saved-comments-reports-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .saved-reports-table { width: 100%; min-width: 640px; border-collapse: collapse; font-family: 'DM Sans', sans-serif; }
   .saved-reports-table th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; border-bottom: 1px solid #e2e8f0; }
   .saved-reports-table td { padding: 14px; font-size: 13px; color: #334155; border-bottom: 1px solid #f1f5f9; }
   .saved-reports-table tbody tr:last-child td { border-bottom: none; }

@@ -141,12 +141,14 @@
   .office-table-wrap {
     max-height: 600px;
     overflow-y: auto;
+    overflow-x: auto;
     border-radius: 12px;
     border: 1px solid #bae6fd;
   }
 
   .office-table-wrap::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
   }
 
   .office-table-wrap::-webkit-scrollbar-thumb {
@@ -160,6 +162,7 @@
 
   .office-table {
     width: 100%;
+    min-width: 640px;
     border-collapse: collapse;
     background: white;
   }

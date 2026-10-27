@@ -24,11 +24,11 @@
 .category-tab.active[data-category="Surroundings"] { background: #16a34a; border-color: #16a34a; box-shadow: 0 4px 14px rgba(22,163,74,.3); }
 
 /* Office table */
-.office-table-wrap { max-height: 600px; overflow-y: auto; border-radius: 12px; border: 1px solid #bae6fd; }
-.office-table-wrap::-webkit-scrollbar { width: 6px; }
+.office-table-wrap { max-height: 600px; overflow-y: auto; overflow-x: auto; border-radius: 12px; border: 1px solid #bae6fd; }
+.office-table-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
 .office-table-wrap::-webkit-scrollbar-thumb { background: #7dd3fc; border-radius: 999px; }
 .office-table-wrap::-webkit-scrollbar-track { background: transparent; }
-.office-table { width: 100%; border-collapse: collapse; background: white; }
+.office-table { width: 100%; min-width: 640px; border-collapse: collapse; background: white; }
 .office-table th { text-align: left; padding: 14px 16px; font-size: 11px; color: #475569; letter-spacing: .06em; text-transform: uppercase; border-bottom: 2px solid #bae6fd; background: #f0f9ff; position: sticky; top: 0; font-weight: 700; }
 .office-table td { padding: 14px 16px; border-bottom: 1px solid #f0f9ff; font-size: 14px; color: #1e293b; }
 .office-table tr:hover td { background: #f0f9ff; }

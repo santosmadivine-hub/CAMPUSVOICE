@@ -17,7 +17,7 @@ body{margin:0;font-family:'DM Sans',sans-serif;background:white;color:#0f172a}
 .config-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .input,select{padding:10px 12px;border:1px solid #dbe4ee;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:#f8fafc;color:#0f172a;outline:none}
 select{min-width:0}
-#officeFilter{width:330px;max-width:330px;text-overflow:ellipsis}
+#officeFilter{width:330px;max-width:100%;text-overflow:ellipsis}
 .config-row input[type=date]{width:135px}
 .btn{padding:10px 16px;border:none;border-radius:10px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif;font-size:14px}
 .btn-primary{background:#2563eb;color:#fff}.btn-blue{background:#1d4ed8;color:#fff}.btn-green{background:#16a34a;color:#fff}.btn-gray{background:#e2e8f0;color:#475569}.btn-purple{background:#7c3aed;color:#fff}
@@ -33,6 +33,14 @@ a.btn{text-decoration:none;display:inline-block}
 @media(max-width:768px){.kpi-grid{gap:14px}}
 @media(max-width:600px){.kpi-card{padding:16px 16px 18px}.kpi-value{font-size:26px}.kpi-icon{width:32px;height:32px;font-size:14px;top:14px;right:14px}}
 @media(max-width:480px){.kpi-grid{grid-template-columns:1fr}}
+@media(max-width:640px){
+  .config-row{flex-direction:column;align-items:stretch}
+  .config-row>*{width:100%}
+  .config-row input[type=date]{width:100%}
+  #officeFilter{width:100%}
+  .preview-bar{flex-direction:column;align-items:stretch}
+  .preview-bar .preview-label{text-align:center}
+}
 
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px}
 .card-title{font-size:16px;font-weight:700;color:#0f172a}

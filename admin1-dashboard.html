@@ -366,26 +366,26 @@
 }
 
 .trend-quick-row > .trend-card {
-  flex: 2 1 380px;
+  flex: 3 1 420px;
   min-width: 0;
 }
 
 .trend-quick-row > .quick-access-card {
-  flex: 1 1 260px;
+  flex: 1 1 200px;
   min-width: 0;
-  max-width: 320px;
-  padding: 18px 18px 20px;
+  max-width: 240px;
+  padding: 14px 14px 16px;
 }
 
 .quick-access-card .card-title {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .quick-access-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .quick-access-btn {
@@ -393,8 +393,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 10px;
+  gap: 6px;
+  padding: 9px 8px;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 1.5px solid #e2e8f0;
   border-radius: 12px;
@@ -434,7 +434,7 @@
 }
 
 .qa-icon {
-  font-size: 20px;
+  font-size: 17px;
   line-height: 1;
   position: relative;
   z-index: 1;
@@ -443,7 +443,7 @@
 .qa-label {
   font-family: 'Syne', sans-serif;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
   color: #0f172a;
   text-align: center;
   position: relative;
@@ -587,6 +587,24 @@
 @media (max-width: 480px) {
   .dashboard-container {
     padding: 16px 12px 24px;
+  }
+  .welcome-banner {
+    padding: 18px 18px;
+    min-height: 0;
+    gap: 12px;
+  }
+  .welcome-avatar {
+    width: 44px;
+    height: 44px;
+  }
+  .welcome-avatar .avatar-fallback {
+    font-size: 16px;
+  }
+  .welcome-banner-title {
+    font-size: 17px;
+  }
+  .welcome-banner-sub {
+    font-size: 12px;
   }
   .stat-grid{
     grid-template-columns:1fr;
@@ -761,8 +779,8 @@
 
 /* Quick access buttons */
 .quick-access-btn {
-  border-radius: 14px;
-  padding: 14px 10px;
+  border-radius: 12px;
+  padding: 10px 8px;
 }
 .quick-access-btn:hover {
   border-color: #93c5fd;
@@ -773,8 +791,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px; height: 38px;
-  border-radius: 10px;
+  width: 30px; height: 30px;
+  border-radius: 9px;
   background: #e0f2fe;
   transition: transform .25s ease, background .25s ease;
 }
