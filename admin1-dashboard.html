@@ -111,6 +111,24 @@
   color: rgba(255, 255, 255, .85);
 }
 
+.wave-emoji {
+  display: inline-block;
+  transform-origin: 70% 70%;
+  animation: welcome-wave 2.4s ease-in-out infinite;
+}
+@keyframes welcome-wave {
+  0%  { transform: rotate(0deg); }
+  10% { transform: rotate(14deg); }
+  20% { transform: rotate(-8deg); }
+  30% { transform: rotate(14deg); }
+  40% { transform: rotate(-4deg); }
+  50% { transform: rotate(10deg); }
+  60%, 100% { transform: rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wave-emoji { animation: none; }
+}
+
 .chart-card {
   background: #ffffff;
   border: 1px solid #bae6fd;
@@ -906,7 +924,7 @@ const welcomeBanner = document.getElementById('welcomeBanner');
 document.getElementById('welcomeAvatar').innerHTML =
   avatarInnerHtml(session.photoURL, avatarInitial(session));
 document.getElementById('welcomeText').innerHTML = `
-  <div class="welcome-banner-title">👋 Hello, ${escapeHtml(welcomeName)}!</div>
+  <div class="welcome-banner-title"><span class="wave-emoji">👋</span> Hello, ${escapeHtml(welcomeName)}!</div>
   <div class="welcome-banner-sub">Welcome back to CampusVoice</div>
 `;
 welcomeBanner.style.display = "flex";
