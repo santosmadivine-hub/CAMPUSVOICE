@@ -29,14 +29,57 @@
 }
 
 .welcome-banner {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: 92px;
+  padding: 20px 26px;
+  border-radius: 20px;
+  background: linear-gradient(120deg, #1d4ed8, #2563eb 55%, #3b82f6);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, .25);
+}
+
+.welcome-banner::before,
+.welcome-banner::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .12);
+}
+
+.welcome-banner::before {
+  width: 220px;
+  height: 220px;
+  right: -70px;
+  top: -90px;
+}
+
+.welcome-banner::after {
+  width: 120px;
+  height: 120px;
+  right: 40px;
+  bottom: -70px;
+  background: rgba(255, 255, 255, .08);
+}
+
+.welcome-banner-title {
+  position: relative;
+  z-index: 1;
   font-family: 'Syne', sans-serif;
   font-weight: 700;
-  font-size: 19px;
-  color: #0f172a;
-  background: linear-gradient(135deg, #eff6ff, #f0f9ff);
-  border: 1px solid #bfdbfe;
-  border-radius: 16px;
-  padding: 16px 20px;
+  font-size: 21px;
+  color: #fff;
+}
+
+.welcome-banner-sub {
+  position: relative;
+  z-index: 1;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, .85);
 }
 
 .chart-card {
@@ -827,8 +870,11 @@ if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 const welcomeName = session.displayName || session.username || "Admin 1";
 const welcomeBanner = document.getElementById('welcomeBanner');
-welcomeBanner.innerHTML = `👋 Welcome, ${escapeHtml(welcomeName)}!`;
-welcomeBanner.style.display = "block";
+welcomeBanner.innerHTML = `
+  <div class="welcome-banner-title">👋 Hello, ${escapeHtml(welcomeName)}!</div>
+  <div class="welcome-banner-sub">Welcome back to CampusVoice</div>
+`;
+welcomeBanner.style.display = "flex";
 
 const evaluationsCol = collection(db, "services", "evaluations", "records");
 const officesCol      = collection(db, "services", "offices", "records");
