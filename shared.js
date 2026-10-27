@@ -7,7 +7,8 @@ const PAGE_SUBTITLES = {
     'evaluation management': 'Review and Manage Submitted Evaluations',
     'reports':               'Generate and Review Evaluation Reports',
     'analytics':             'Analyze Evaluation Results and Performance Trends',
-    'summary analytics':     'Analyze Evaluation Results and Performance Trends'
+    'summary analytics':     'Analyze Evaluation Results and Performance Trends',
+    'settings':              'Your Profile and App Information'
   },
   admin2: {
     'dashboard':             'Overview of Campus Evaluation Results and Activities',
@@ -38,6 +39,7 @@ function buildSidebar(role, activePage) {
     { id: 'eval-mgmt', icon: '📑', label: 'Evaluation Management', href: 'admin1-eval-mgmt.html' },
     { id: 'reports', icon: '📁', label: 'Reports', href: 'admin1-reports.html' },
     { id: 'analytics', icon: '📈', label: 'Analytics', href: 'admin1-analytics.html' },
+    { id: 'settings', icon: '⚙️', label: 'Settings', href: 'admin1-settings.html' },
   ];
 
   const navAdmin2 = [
