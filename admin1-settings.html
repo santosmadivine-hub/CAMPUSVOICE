@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Settings | Admin 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="cv-office.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <div id="sidebar-mount"></div>
+  <div class="sidebar-overlay"></div>
+
+  <main class="main fade-in">
+
+    <div id="topbar-mount"></div>
+
+    <div class="page">
+
+      <a href="admin1-dashboard.html" class="btn btn-ghost btn-sm" style="margin-bottom:14px;">← Back</a>
+
+      <!-- ===================== Profile ===================== -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2 class="card-title">👤 Profile</h2>
+            <div class="card-sub">Your photo and display name.</div>
+          </div>
+        </div>
+
+        <div class="settings-avatar-row">
+          <div class="settings-avatar" id="settings-avatar">
+            <img id="settings-avatar-img" alt="Profile photo" style="display:none;">
+            <span id="settings-avatar-fallback" class="avatar-fallback"></span>
+          </div>
+          <div class="settings-avatar-actions">
+            <input type="file" id="settings-photo-input" accept="image/*" style="display:none;">
+            <div class="settings-avatar-btns">
+              <button class="btn btn-sm btn-primary" type="button" id="settings-photo-btn">Change Photo</button>
+              <button class="btn btn-sm btn-danger" type="button" id="settings-photo-remove" style="display:none;">Remove</button>
+            </div>
+            <div class="field-hint">JPG or PNG, up to 5MB.</div>
+            <div class="field-error" id="settings-photo-error"></div>
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:14px;">
+          <label class="field full">
+            <span class="field-label">Username *</span>
+            <input type="text" id="settings-username" class="input" autocomplete="off" placeholder="e.g. Ricky June Garcia">
+            <span class="field-hint">The name shown in your greeting and profile — this does not change how you sign in.</span>
+          </label>
+        </div>
+
+        <div class="field-error" id="identity-error"></div>
+
+        <div style="margin-top:14px;">
+          <button class="btn btn-primary" type="button" id="identity-save">Save Changes</button>
+        </div>
+      </div>
+
+      <!-- ===================== About App ===================== -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2 class="card-title">ℹ️ About App</h2>
+          </div>
+        </div>
+
+        <div class="about-app-header">
+          <div class="about-app-icon">🏢</div>
+          <div>
+            <div class="about-app-name">CampusVoice</div>
+            <div class="about-app-version">Version 1.0 · ISUFST-SEC</div>
+          </div>
+        </div>
+
+        <p class="about-app-desc">
+          CampusVoice is a mobile and web-based school evaluation system for the
+          Iloilo State University of Fisheries Science and Technology – San Enrique
+          Campus (ISUFST-SEC). It lets students, staff and visitors evaluate campus
+          offices and facilities, and gives Admin 1 a dashboard to oversee every
+          office's services, transaction codes and analytics.
+        </p>
+
+        <div class="about-section-title">Developers</div>
+        <!-- Placeholder credits — replace with the actual development team. -->
+        <ul class="developer-list" id="cv-developer-list">
+          <li class="developer-item">
+            <span class="developer-avatar">👤</span>
+            <span class="developer-text">
+              <span class="developer-name">Developer Name</span>
+              <span class="developer-role">Role / Position</span>
+            </span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+import {
+  guard, SUPER_ADMIN, escapeHtml, friendlyError, toast,
+  uploadProfilePhoto, updateOwnProfilePhoto, updateOwnDisplayName, avatarInitial
+} from "./cv-core.js";
+
+const session = await guard([SUPER_ADMIN]);
+
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1', 'settings');
+document.getElementById('topbar-mount').innerHTML  = buildTopbar('Settings', 'admin1');
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
+
+const el = (id) => document.getElementById(id);
+
+/* ------------------------------------------------------------------ *
+ * Profile — photo
+ * ------------------------------------------------------------------ */
+const avatarImg      = el("settings-avatar-img");
+const avatarFallback = el("settings-avatar-fallback");
+const photoInput      = el("settings-photo-input");
+const photoBtn        = el("settings-photo-btn");
+const photoRemoveBtn  = el("settings-photo-remove");
+const photoError      = el("settings-photo-error");
+
+avatarFallback.textContent = avatarInitial(session);
+
+function renderAvatar(url) {
+  if (url) {
+    avatarImg.src = url;
+    avatarImg.style.display = "block";
+    avatarFallback.style.display = "none";
+    photoRemoveBtn.style.display = "inline-flex";
+  } else {
+    avatarImg.removeAttribute("src");
+    avatarImg.style.display = "none";
+    avatarFallback.style.display = "flex";
+    photoRemoveBtn.style.display = "none";
+  }
+}
+renderAvatar(session.photoURL || "");
+
+photoBtn.addEventListener("click", () => photoInput.click());
+
+photoInput.addEventListener("change", async () => {
+  const file = photoInput.files?.[0];
+  photoInput.value = "";
+  if (!file) return;
+
+  photoError.textContent = "";
+  photoBtn.disabled = true;
+  photoBtn.textContent = "Uploading…";
+
+  try {
+    const url = await uploadProfilePhoto(file);
+    await updateOwnProfilePhoto(url);
+    session.photoURL = url;
+    renderAvatar(url);
+    toast("✅ Profile photo updated.");
+  } catch (err) {
+    photoError.textContent = err.message || friendlyError(err);
+  } finally {
+    photoBtn.disabled = false;
+    photoBtn.textContent = "Change Photo";
+  }
+});
+
+photoRemoveBtn.addEventListener("click", async () => {
+  photoError.textContent = "";
+  photoRemoveBtn.disabled = true;
+
+  try {
+    await updateOwnProfilePhoto(null);
+    session.photoURL = "";
+    renderAvatar("");
+    toast("Profile photo removed.");
+  } catch (err) {
+    photoError.textContent = err.message || friendlyError(err);
+  } finally {
+    photoRemoveBtn.disabled = false;
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * Username (display name) — shown in the Admin 1 dashboard greeting.
+ * Firestore-only; never touches Firebase Authentication or sign-in.
+ * ------------------------------------------------------------------ */
+const usernameInput   = el("settings-username");
+const identityError   = el("identity-error");
+const identitySaveBtn = el("identity-save");
+
+usernameInput.value = session.displayName || session.username || "";
+
+identitySaveBtn.addEventListener("click", async () => {
+  const nextName = usernameInput.value.trim();
+  identityError.textContent = "";
+
+  if (!nextName) {
+    identityError.textContent = "Please enter a name.";
+    return;
+  }
+
+  if (nextName === (session.displayName || session.username || "")) {
+    toast("Nothing to save — no changes were made.");
+    return;
+  }
+
+  identitySaveBtn.disabled = true;
+  identitySaveBtn.textContent = "Saving…";
+
+  try {
+    await updateOwnDisplayName(nextName);
+    session.displayName = nextName;
+    toast("✅ Username updated.");
+  } catch (err) {
+    identityError.textContent = err.message || friendlyError(err);
+  } finally {
+    identitySaveBtn.disabled = false;
+    identitySaveBtn.textContent = "Save Changes";
+  }
+});
+</script>
+
+</body>
+</html>

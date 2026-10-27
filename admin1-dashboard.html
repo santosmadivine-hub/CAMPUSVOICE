@@ -25,7 +25,18 @@
   align-items: stretch;
   gap: 24px;
   flex-wrap: wrap;
-  margin-bottom: 0; 
+  margin-bottom: 0;
+}
+
+.welcome-banner {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  color: #0f172a;
+  background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+  border: 1px solid #bfdbfe;
+  border-radius: 16px;
+  padding: 16px 20px;
 }
 
 .chart-card {
@@ -702,7 +713,9 @@
     <div id="topbar-mount"></div>
 
     <div class="dashboard-container">
-     
+
+      <div class="welcome-banner" id="welcomeBanner" style="display:none;"></div>
+
       <div class="stat-grid">
         <div class="stat-card blue">
           <div class="stat-icon">📝</div>
@@ -803,7 +816,7 @@
 <script src="shared.js"></script>
 <script type="module">
 import {
-  db, guard, collection, onSnapshot, SUPER_ADMIN
+  db, guard, collection, onSnapshot, SUPER_ADMIN, escapeHtml
 } from "./cv-core.js";
 
 const session = await guard([SUPER_ADMIN]);
@@ -811,6 +824,11 @@ const session = await guard([SUPER_ADMIN]);
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','dashboard');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Dashboard','admin1');
 if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
+
+const welcomeName = session.displayName || session.username || "Admin 1";
+const welcomeBanner = document.getElementById('welcomeBanner');
+welcomeBanner.innerHTML = `👋 Welcome, ${escapeHtml(welcomeName)}!`;
+welcomeBanner.style.display = "block";
 
 const evaluationsCol = collection(db, "services", "evaluations", "records");
 const officesCol      = collection(db, "services", "offices", "records");
