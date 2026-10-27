@@ -129,6 +129,7 @@ export function getSession() {
         officeId:   data.officeId || "",
         officeName: data.officeName || "",
         username:   data.username || "",
+        displayName: data.displayName || "",
         status:     data.status || "active",
         photoURL:   data.photoURL || "",
         isAdmin:    String(data.role || "").startsWith("admin"),
@@ -520,6 +521,25 @@ export async function updateOwnProfilePhoto(photoURL) {
 
   await updateDoc(PATHS.account(uid), { photoURL: photoURL || null });
   patchSessionCache({ photoURL: photoURL || "" });
+}
+
+/**
+ * Sets the signed-in account's own display name — the human name shown in
+ * greetings and the profile card (e.g. "Ricky June Garcia"). Deliberately
+ * separate from `username`, which is also the sign-in identifier: changing
+ * this never touches Firebase Authentication or account_index, so it cannot
+ * break anyone's login.
+ */
+export async function updateOwnDisplayName(name) {
+  const value = String(name || "").trim();
+  if (!value) throw new Error("Please enter a name.");
+  if (value.length > 60) throw new Error("Name must be 60 characters or fewer.");
+
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("Your session has expired. Please sign in again.");
+
+  await updateDoc(PATHS.account(uid), { displayName: value, updatedAt: Date.now() });
+  patchSessionCache({ displayName: value });
 }
 
 /* ----------------------------------------------------------------------------

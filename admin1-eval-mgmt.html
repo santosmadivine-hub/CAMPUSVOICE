@@ -793,9 +793,25 @@ const fillSelect = (id, opts) => {
   document.getElementById(id).innerHTML =
     `<option value="">Select</option>` + opts.map(o => `<option value="${o}">${o}</option>`).join("");
 };
-fillSelect("f_cc1", ["1", "2", "3", "4"]);
-fillSelect("f_cc2", ["1", "2", "3", "4", "5", "N/A"]);
-fillSelect("f_cc3", ["1", "2", "3", "N/A"]);
+fillSelect("f_cc1", [
+  "I know what a CC is and I saw this office's CC",
+  "I know what a CC is but I did NOT see this office's CC",
+  "I learned of the CC only when I saw this office's CC",
+  "I do not know what a CC is and I did not see one in this office. (Answer N/A on CC2 and CC3)"
+]);
+fillSelect("f_cc2", [
+  "Easy to see",
+  "Somewhat easy to see",
+  "Difficult to see",
+  "Not visible at all",
+  "N/A"
+]);
+fillSelect("f_cc3", [
+  "Helped very much",
+  "Somewhat helped",
+  "Did not help",
+  "N/A"
+]);
 
 document.getElementById("sqdFields").innerHTML = Array.from({ length: 9 }, (_, n) => `
   <label>SQD${n}

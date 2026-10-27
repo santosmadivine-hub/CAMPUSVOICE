@@ -112,11 +112,14 @@ import {
   uploadProfilePhoto, updateOwnProfilePhoto, updateOwnDisplayName, avatarInitial
 } from "./cv-core.js";
 
-const session = await guard([SUPER_ADMIN]);
-
+// Built immediately, before the session check resolves, so the sidebar and
+// topbar never sit blank while guard() makes its round trip to Firebase —
+// neither function depends on the session, only on the fixed 'admin1' role.
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1', 'settings');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Settings', 'admin1');
 if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
+
+const session = await guard([SUPER_ADMIN]);
 
 const el = (id) => document.getElementById(id);
 

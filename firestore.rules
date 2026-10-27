@@ -101,21 +101,23 @@ service cloud.firestore {
                         && request.resource.data.officeId == '');
 
       // Admin 1 manages every account. Anyone else may only stamp their own
-      // last-login time, profile photo, username or email — they cannot
-      // grant themselves a role, change which office they belong to, or
-      // reactivate themselves. Each self-editable field must still hold a
-      // sane type, never some other value smuggled in.
+      // last-login time, profile photo, username, email or display name —
+      // they cannot grant themselves a role, change which office they
+      // belong to, or reactivate themselves. Each self-editable field must
+      // still hold a sane type, never some other value smuggled in.
       allow update: if isAdmin1()
                     || (signedIn()
                         && request.auth.uid == uid
-                        && onlyChanges(['lastLoginAt', 'photoURL', 'username', 'email'])
+                        && onlyChanges(['lastLoginAt', 'photoURL', 'username', 'email', 'displayName', 'updatedAt'])
                         && (!('photoURL' in request.resource.data)
                             || request.resource.data.photoURL == null
                             || request.resource.data.photoURL is string)
                         && (!('username' in request.resource.data)
                             || request.resource.data.username is string)
                         && (!('email' in request.resource.data)
-                            || request.resource.data.email is string));
+                            || request.resource.data.email is string)
+                        && (!('displayName' in request.resource.data)
+                            || request.resource.data.displayName is string));
 
       allow delete: if isAdmin1();
     }
