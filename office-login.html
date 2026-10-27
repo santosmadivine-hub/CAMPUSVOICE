@@ -381,6 +381,87 @@
       text-decoration: underline;
     }
 
+    .forgot-link {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: clamp(0.8rem, 1.8vh, 0.9rem);
+      color: var(--accent2);
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .forgot-link:hover {
+      text-decoration: underline;
+    }
+
+    .reset-panel {
+      display: none;
+      margin-top: 16px;
+      padding: 16px 18px;
+      background: rgba(16, 185, 129, 0.10);
+      border: 1px solid rgba(110, 231, 183, 0.35);
+      border-radius: 12px;
+    }
+
+    .reset-panel.open {
+      display: block;
+      animation: fadeUp 0.25s ease both;
+    }
+
+    .reset-text {
+      font-size: clamp(0.82rem, 1.9vh, 0.92rem);
+      color: rgba(255,255,255,0.88);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .btn-reset {
+      width: 100%;
+      padding: clamp(10px, 1.8vh, 13px);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: clamp(0.9rem, 2vh, 1rem);
+      color: #0b1120;
+      background: #6ee7b7;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .btn-reset:hover:not(:disabled) {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-reset:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-reset:focus-visible {
+      outline: 2px solid var(--accent2);
+      outline-offset: 2px;
+    }
+
+    .reset-status {
+      display: none;
+      margin-top: 10px;
+      font-size: clamp(0.8rem, 1.8vh, 0.88rem);
+      line-height: 1.5;
+      color: #d1fae5;
+    }
+
+    .reset-status.show {
+      display: block;
+    }
+
+    .reset-status.error {
+      color: #fca5a5;
+    }
+
     /* Small screens: keep large text but tighten padding */
     @media (max-width: 480px) {
       .login-box {
@@ -438,6 +519,17 @@
 
         <span class="toggle-password" onclick="togglePassword()" role="button" tabindex="0" aria-label="Show password" onkeydown="if(event.key==='Enter'||event.key===' '){togglePassword();}"></span>
       </div>
+
+      <a href="#" id="forgot-toggle" class="forgot-link">Forgot / change password?</a>
+    </div>
+
+    <!-- Password reset panel — hidden until "Forgot / change password?" is clicked -->
+    <div class="reset-panel" id="reset-panel">
+      <p class="reset-text">
+        Enter your username or Gmail address above, then send yourself a reset link.
+      </p>
+      <button type="button" class="btn-reset" id="sendResetBtn">Send Reset Link</button>
+      <div class="reset-status" id="reset-status"></div>
     </div>
 
     <!-- Submit -->
@@ -478,12 +570,17 @@
       auth, signInWithEmailAndPassword, signOut, PATHS, getDoc, friendlyError
     } from "./cv-core.js";
 
-    import { slugUsername, recordLogin } from "./cv-accounts.js";
+    import { slugUsername, recordLogin, sendAccountPasswordReset } from "./cv-accounts.js";
 
     const errorEl  = document.getElementById('login-error');
     const noticeEl = document.getElementById('login-notice');
     const btn      = document.getElementById('loginBtn');
     const DEFAULT_BTN_TEXT = 'Sign In to Office Dashboard';
+
+    const resetPanel   = document.getElementById('reset-panel');
+    const resetStatus  = document.getElementById('reset-status');
+    const forgotToggle = document.getElementById('forgot-toggle');
+    const sendResetBtn = document.getElementById('sendResetBtn');
 
     /* A page that bounced the visitor back here left an explanation. */
     const notice = sessionStorage.getItem('cv-login-notice');
@@ -609,6 +706,73 @@
       toggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
       toggle.classList.toggle('is-visible', isHidden);
     };
+
+    /* ----------------------------------------------------------------------
+     * Forgot / change password — one self-service flow covers both: either
+     * way, the office ends up with an email link that lets them set a new
+     * password. Reuses the username/Gmail address already typed above.
+     * ------------------------------------------------------------------- */
+
+    function showResetStatus(message, isError) {
+      resetStatus.textContent = message;
+      resetStatus.classList.toggle('error', !!isError);
+      resetStatus.classList.add('show');
+    }
+
+    forgotToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetPanel.classList.toggle('open');
+      resetStatus.classList.remove('show', 'error');
+      resetStatus.textContent = '';
+    });
+
+    sendResetBtn.addEventListener('click', async () => {
+      const identifier = document.getElementById('login-user').value.trim();
+
+      resetStatus.classList.remove('show', 'error');
+
+      if (!identifier) {
+        showResetStatus('Enter your username or Gmail address above first.', true);
+        return;
+      }
+
+      sendResetBtn.disabled = true;
+      sendResetBtn.textContent = 'Sending…';
+
+      try {
+        const email = await resolveEmail(identifier);
+
+        if (email) {
+          try {
+            await sendAccountPasswordReset(email);
+          } catch (err) {
+            // The one case worth naming specifically: a legacy account that
+            // predates real Gmail addresses has nowhere to deliver a reset
+            // link, so the generic "sent" message below would be misleading.
+            if (String(err?.message || '').includes('internal username')) {
+              showResetStatus(err.message, true);
+              return;
+            }
+            // Anything else — including "no such account" — is deliberately
+            // not distinguished from success below, so this form never
+            // reveals whether a given username or address has an account.
+            console.warn('Password reset request did not complete:', err?.code || err);
+          }
+        }
+
+        showResetStatus(
+          'If an account exists for that username or Gmail address, a reset link has been sent. ' +
+          'Check your inbox (and spam folder).'
+        );
+
+      } catch (err) {
+        console.error('Password reset request failed:', err);
+        showResetStatus(friendlyError(err), true);
+      } finally {
+        sendResetBtn.disabled = false;
+        sendResetBtn.textContent = 'Send Reset Link';
+      }
+    });
   </script>
 
 </body>
