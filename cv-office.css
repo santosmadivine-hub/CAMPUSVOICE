@@ -25,29 +25,41 @@
 
 /* ---------------- Context banner: which office am I? ---------------- */
 .office-context {
-  display:flex; align-items:center; gap:14px; flex-wrap:wrap;
-  background:var(--card); border:1px solid var(--line);
-  border-left:4px solid var(--brand);
-  border-radius:16px; padding:14px var(--pad);
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  background:linear-gradient(120deg, #1d4ed8, #2563eb 55%, #3b82f6);
+  border:1px solid var(--line);
+  border-left:4px solid #1e40af;
+  border-radius:18px; padding:20px var(--pad);
   margin-bottom:var(--gap);
-  box-shadow:0 4px 14px rgba(15,23,42,.05);
+  box-shadow:0 10px 24px rgba(37,99,235,.22);
 }
 .office-context-icon {
-  width:42px; height:42px; border-radius:12px; flex-shrink:0;
-  background:#eff6ff; display:flex; align-items:center; justify-content:center; font-size:19px;
+  width:54px; height:54px; border-radius:14px; flex-shrink:0;
+  background:rgba(255,255,255,.18); border:2px solid rgba(255,255,255,.4);
+  display:flex; align-items:center; justify-content:center; font-size:26px;
   transition:transform .25s ease;
+  animation:office-context-bob 2.6s ease-in-out infinite;
 }
-.office-context-icon:hover { transform:scale(1.12) rotate(-4deg); }
-.office-context-text { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.office-context-icon:hover { transform:scale(1.15) rotate(-4deg); animation-play-state:paused; }
+@keyframes office-context-bob {
+  0%, 100% { transform:translateY(0) rotate(0deg); }
+  25%      { transform:translateY(-4px) rotate(-6deg); }
+  50%      { transform:translateY(0) rotate(0deg); }
+  75%      { transform:translateY(-2px) rotate(5deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .office-context-icon { animation:none; }
+}
+.office-context-text { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .office-context-name {
   font-family:'Syne',sans-serif; font-weight:800;
-  font-size:clamp(15px, 2vw, 18px); color:var(--ink);
+  font-size:clamp(18px, 2.4vw, 22px); color:#ffffff;
   overflow-wrap:anywhere; line-height:1.25;
 }
-.office-context-meta { font-size:12.5px; color:var(--muted); }
+.office-context-meta { font-size:13px; color:rgba(255,255,255,.85); }
 .office-context-meta code {
-  font-family:'Courier New',monospace; background:#f1f5f9;
-  padding:1px 6px; border-radius:6px; font-size:11.5px; color:#334155;
+  font-family:'Courier New',monospace; background:rgba(255,255,255,.18);
+  padding:1px 6px; border-radius:6px; font-size:12px; color:#ffffff;
 }
 .office-context-spacer { flex:1; min-width:0; }
 
@@ -66,6 +78,12 @@
   font-family:'Syne',sans-serif; font-weight:700; font-size:16px;
   color:var(--ink); margin:0; line-height:1.35;
 }
+.card-title::after {
+  content:""; display:block; width:28px; height:3px; margin-top:7px;
+  border-radius:3px; background:linear-gradient(90deg, var(--brand), var(--brand-light));
+  transition:width .3s ease;
+}
+.card:hover .card-title::after, .chart-card:hover .card-title::after { width:56px; }
 .card-sub { font-size:12.5px; color:var(--muted); margin-top:4px; line-height:1.45; }
 
 /* ---------------- Stat grid ---------------- */
@@ -174,9 +192,9 @@ textarea.input { resize:vertical; min-height:84px; line-height:1.5; }
 
 .code-pill {
   font-family:'Courier New',monospace; font-size:13px; font-weight:700;
-  background:#f1f5f9; padding:4px 10px; border-radius:8px;
-  letter-spacing:.05em; color:#0f172a; white-space:nowrap;
-  transition:background .2s ease, color .2s ease;
+  background:#eff6ff; border:1px solid var(--line); padding:4px 10px; border-radius:8px;
+  letter-spacing:.05em; color:var(--brand-deep); white-space:nowrap;
+  transition:background .2s ease, color .2s ease, border-color .2s ease;
 }
 
 /* ---------------- Badges ---------------- */
@@ -313,7 +331,8 @@ textarea.input { resize:vertical; min-height:84px; line-height:1.5; }
 .settings-avatar {
   position:relative; width:84px; height:84px; flex-shrink:0;
   border-radius:50%; overflow:hidden;
-  background:var(--paper); border:1px solid var(--line);
+  background:var(--paper); border:3px solid #fff;
+  box-shadow:0 0 0 2px var(--line), 0 6px 16px rgba(37,99,235,.12);
   display:flex; align-items:center; justify-content:center;
 }
 .settings-avatar img { width:100%; height:100%; object-fit:cover; }
@@ -325,7 +344,9 @@ textarea.input { resize:vertical; min-height:84px; line-height:1.5; }
 .about-app-header { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
 .about-app-icon {
   width:48px; height:48px; border-radius:14px; flex-shrink:0;
-  background:#eff6ff; display:flex; align-items:center; justify-content:center; font-size:22px;
+  background:linear-gradient(160deg, var(--brand-light), var(--brand-deep));
+  display:flex; align-items:center; justify-content:center; font-size:22px;
+  box-shadow:0 6px 14px rgba(37,99,235,.25);
 }
 .about-app-name { font-family:'Syne',sans-serif; font-weight:800; font-size:17px; color:var(--ink); }
 .about-app-version { font-size:12.5px; color:var(--muted); margin-top:2px; }
@@ -589,7 +610,7 @@ textarea.input { resize:vertical; min-height:84px; line-height:1.5; }
   .stat-card:hover .stat-value { color:#2563eb; }
   .data-table tbody tr:hover td { background:#f0f9ff; }
   .data-table tbody tr:hover td:first-child { box-shadow:inset 4px 0 0 #0284c7; }
-  .data-table tbody tr:hover .code-pill { background:#0284c7; color:#fff; }
+  .data-table tbody tr:hover .code-pill { background:#0284c7; border-color:transparent; color:#fff; }
   .media-item { transition:transform .2s ease, box-shadow .2s ease; }
   .media-item:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(15,23,42,.18); }
 }
