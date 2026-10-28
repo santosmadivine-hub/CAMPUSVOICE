@@ -393,6 +393,185 @@ textarea.input { resize:vertical; min-height:84px; line-height:1.5; }
 .table-scroll::-webkit-scrollbar-thumb:hover, .modal-body::-webkit-scrollbar-thumb:hover { background:#7dd3fc; }
 .table-scroll, .modal-body { scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
 
+/* ==========================================
+   CAMPUSVOICE — BEAUTIFUL DEVELOPER PORTRAITS
+   Head-to-underarm portrait style
+========================================== */
+
+.dev-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin: 18px 0 30px;
+  align-items: stretch;
+}
+
+.dev-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 14px 20px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
+  border: 1px solid #dbeafe;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.07);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+/* Portrait frame — vertical head-to-underarm crop */
+.dev-avatar {
+  position: relative;
+  width: 100%;
+  max-width: 180px;
+  aspect-ratio: 4 / 5;
+  height: auto;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #dbeafe, #93c5fd);
+  border: 3px solid #ffffff;
+  box-shadow:
+    0 0 0 2px #bfdbfe,
+    0 8px 20px rgba(30, 64, 175, 0.14);
+  isolation: isolate;
+}
+
+.dev-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  /* Favors the face and upper body in portrait photos */
+  object-position: center 24%;
+
+  transition: transform 0.4s ease;
+}
+
+/* Elegant hover effect */
+@media (hover: hover) {
+  .dev-card:hover {
+    transform: translateY(-5px);
+    border-color: #93c5fd;
+    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.13);
+  }
+
+  .dev-card:hover .dev-avatar img {
+    transform: scale(1.04);
+  }
+}
+
+.dev-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #172554;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.dev-role {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* Adviser portrait */
+.adviser-section {
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid #e0edff;
+  padding-top: 24px;
+  margin-top: 8px;
+}
+
+.adviser-card {
+  width: min(100%, 240px);
+  padding: 20px 18px 22px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #eff6ff, #ffffff);
+  border: 1px solid #bfdbfe;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.10);
+}
+
+.adviser-card .dev-avatar {
+  width: 100%;
+  max-width: 190px;
+  aspect-ratio: 4 / 5;
+  height: auto;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 3px #ffffff,
+    0 0 0 5px #60a5fa,
+    0 10px 24px rgba(37, 99, 235, 0.15);
+}
+
+.adviser-card .dev-name {
+  font-size: 14px;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .dev-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .dev-avatar {
+    max-width: 200px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 420px) {
+  .dev-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .dev-card {
+    padding: 12px 8px 16px;
+    border-radius: 16px;
+  }
+
+  .dev-avatar {
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .dev-name {
+    font-size: 12px;
+  }
+
+  .dev-role {
+    font-size: 9px;
+    padding: 4px 8px;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .dev-card,
+  .dev-avatar img {
+    transition: none !important;
+  }
+}
+
 /* ---------------- Hover polish ---------------- */
 @media (hover:hover) {
   .card:hover { border-color:#7dd3fc; box-shadow:0 12px 28px rgba(15,23,42,.08); }
