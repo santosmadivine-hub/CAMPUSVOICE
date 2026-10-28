@@ -185,7 +185,6 @@ select { cursor: pointer; }
 
     <div class="card" id="rsCard">
       <div class="card-header">
-        <button class="btn btn-gray" id="rsBack" type="button">← Back to Reports</button>
         <div class="card-title">⚙️ Report Settings</div>
       </div>
 
@@ -238,7 +237,7 @@ import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.
 const db = getFirestore(getApp());
 const $ = id => document.getElementById(id);
 
-document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','reports');
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','report-settings');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Report Settings','admin1');
 
 
@@ -340,12 +339,6 @@ $("rsReset").onclick = async () => {
   } catch (err) { alert("❌ Failed to reset: " + err.message); }
 };
 
-/* ---------- back to reports ---------- */
-$("rsBack").onclick = () => {
-  if (formDirty && !confirm("You have unsaved changes. Leave without saving?")) return;
-  formDirty = false;
-  window.location.href = "admin1-reports.html";
-};
 window.addEventListener("beforeunload", e => { if (formDirty) { e.preventDefault(); e.returnValue = ""; } });
 </script>
 </body>

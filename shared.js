@@ -6,6 +6,7 @@ const PAGE_SUBTITLES = {
     'office accounts':       'Create and Manage Login Accounts for Each Unit or Office',
     'evaluation management': 'Review and Manage Submitted Evaluations',
     'reports':               'Generate and Review Evaluation Reports',
+    'report settings':       'Configure the Letterhead and Layout Used in Generated Reports',
     'analytics':             'Analyze Evaluation Results and Performance Trends',
     'summary analytics':     'Analyze Evaluation Results and Performance Trends',
     'settings':              'Your Profile and App Information'
@@ -38,6 +39,7 @@ function buildSidebar(role, activePage) {
     { id: 'accounts', icon: '🔑', label: 'Office Accounts', href: 'admin1-accounts.html' },
     { id: 'eval-mgmt', icon: '📑', label: 'Evaluation Management', href: 'admin1-eval-mgmt.html' },
     { id: 'reports', icon: '📁', label: 'Reports', href: 'admin1-reports.html' },
+    { id: 'report-settings', icon: '📝', label: 'Report Settings', href: 'admin1-report-settings.html' },
     { id: 'analytics', icon: '📈', label: 'Analytics', href: 'admin1-analytics.html' },
     { id: 'settings', icon: '⚙️', label: 'Settings', href: 'admin1-settings.html' },
   ];
