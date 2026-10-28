@@ -72,12 +72,19 @@
 .stat-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--gap); margin-bottom:var(--gap); }
 .stat-grid-3 { grid-template-columns:repeat(3, minmax(0,1fr)); }
 .stat-card {
-  position:relative; min-width:0; background:var(--card);
+  position:relative; min-width:0; overflow:hidden;
+  background:linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
   border:1px solid var(--line); border-top:4px solid var(--accent, var(--brand));
   border-radius:16px; padding:clamp(14px,2vw,20px) clamp(14px,2vw,20px) clamp(16px,2vw,22px);
   box-shadow:0 4px 14px rgba(15,23,42,.05);
   display:flex; flex-direction:column; gap:6px;
   transition:box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+}
+.stat-card::after {
+  content:""; position:absolute; right:-30px; bottom:-30px;
+  width:110px; height:110px; border-radius:50%;
+  background:radial-gradient(circle, rgba(37,99,235,.10), transparent 70%);
+  transition:transform .35s ease; pointer-events:none;
 }
 .stat-icon {
   position:absolute; top:14px; right:14px; width:34px; height:34px;
@@ -92,6 +99,7 @@
 .stat-value {
   font-family:'Syne',sans-serif; font-size:clamp(24px,3.4vw,34px);
   font-weight:800; color:var(--ink); line-height:1.1; overflow-wrap:anywhere;
+  transition:color .25s ease;
 }
 .stat-sub { font-size:12px; color:#94a3b8; }
 .stat-primary { --accent:var(--brand); }
@@ -575,8 +583,10 @@ textarea.input { resize:vertical; min-height:84px; line-height:1.5; }
 /* ---------------- Hover polish ---------------- */
 @media (hover:hover) {
   .card:hover { border-color:#7dd3fc; box-shadow:0 12px 28px rgba(15,23,42,.08); }
-  .stat-card:hover { transform:translateY(-4px); border-color:#7dd3fc; box-shadow:0 14px 30px rgba(37,99,235,.14); }
-  .stat-card:hover .stat-icon { background:#dbeafe; transform:rotate(-8deg) scale(1.1); }
+  .stat-card:hover { transform:translateY(-6px); border-color:#7dd3fc; box-shadow:0 14px 30px rgba(37,99,235,.16); }
+  .stat-card:hover::after { transform:scale(1.5); }
+  .stat-card:hover .stat-icon { background:#dbeafe; transform:rotate(-8deg) scale(1.12); }
+  .stat-card:hover .stat-value { color:#2563eb; }
   .data-table tbody tr:hover td { background:#f0f9ff; }
   .data-table tbody tr:hover td:first-child { box-shadow:inset 4px 0 0 #0284c7; }
   .data-table tbody tr:hover .code-pill { background:#0284c7; color:#fff; }
