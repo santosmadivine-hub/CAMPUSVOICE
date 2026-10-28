@@ -1126,7 +1126,7 @@ export function makeCode(officeName) {
 export async function generateCodes({ officeId, officeName, quantity, generatedBy, onProgress }) {
   if (!officeId) throw new Error("An office must be selected before generating codes.");
 
-  const count = Math.min(200, Math.max(1, parseInt(quantity, 10) || 1));
+  const count = Math.min(10000, Math.max(1, parseInt(quantity, 10) || 1));
   const created = [];
   let failed = 0;
 

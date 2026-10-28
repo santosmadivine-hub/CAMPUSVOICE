@@ -85,8 +85,8 @@
         <div class="gen-row">
           <label class="field">
             <span class="field-label">How many?</span>
-            <input type="number" id="gen-qty" class="input" value="10" min="1" max="200">
-            <span class="field-hint">1–200 per batch</span>
+            <input type="number" id="gen-qty" class="input" value="10" min="1" max="10000">
+            <span class="field-hint">1–10,000 per batch. Large batches save one code at a time and can take a while.</span>
           </label>
           <button class="btn btn-primary" id="gen-btn">🎟 Generate Codes</button>
         </div>
@@ -281,7 +281,7 @@ function renderTable() {
 el("gen-btn").addEventListener("click", async () => {
   const btn = el("gen-btn");
   const progress = el("gen-progress");
-  const qty = Math.min(200, Math.max(1, parseInt(el("gen-qty").value, 10) || 1));
+  const qty = Math.min(10000, Math.max(1, parseInt(el("gen-qty").value, 10) || 1));
 
   btn.disabled = true;
   btn.textContent = "Generating…";
