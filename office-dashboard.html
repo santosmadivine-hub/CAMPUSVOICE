@@ -13,25 +13,6 @@
      fixed 4-column grid from cv-office.css / cv-analytics.css is loosened
      here only — every other page keeps its original layout. */
   .stat-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-
-  .quick-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
-  .quick-link {
-    display:flex; align-items:center; gap:14px;
-    padding:16px 18px; border-radius:16px;
-    border:1px solid var(--line); background:var(--paper);
-    text-decoration:none; color:var(--ink);
-    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
-  }
-  .quick-link:hover { transform:translateY(-3px); background:#fff; border-color:#7dd3fc; box-shadow:0 10px 22px rgba(2,132,199,.14); }
-  .quick-icon {
-    width:44px; height:44px; border-radius:13px; background:#eff6ff;
-    display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
-    transition:transform .25s ease, background .25s ease;
-  }
-  .quick-link:hover .quick-icon { background:#dbeafe; transform:scale(1.1) rotate(-4deg); }
-  .quick-text { display:flex; flex-direction:column; gap:2px; min-width:0; }
-  .quick-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14.5px; }
-  .quick-desc { font-size:12px; color:var(--muted); line-height:1.4; }
 </style>
 </head>
 <body>
@@ -52,7 +33,7 @@
 
       <!-- Which office and which account is signed in -->
       <div class="office-context">
-        <div class="office-context-icon" id="ctx-mood">🏢</div>
+        <a class="office-context-icon" id="ctx-mood" href="office-settings.html">🏢</a>
         <div class="office-context-text">
           <div class="office-context-name" id="ctx-office">Loading…</div>
           <div class="office-context-meta">
@@ -142,26 +123,6 @@
             <div class="stat-sub" id="stat-codes-sub">—</div>
           </div>
         </section>
-
-        <!-- ===================== Quick Actions ===================== -->
-        <div class="card">
-          <div class="card-head">
-            <div>
-              <h2 class="card-title">Quick Actions</h2>
-              <div class="card-sub">Everything below is limited to your own office.</div>
-            </div>
-          </div>
-
-          <div class="quick-grid">
-            <a class="quick-link" href="office-codes.html">
-              <div class="quick-icon">🎟</div>
-              <div class="quick-text">
-                <div class="quick-title">Transaction Codes</div>
-                <div class="quick-desc">Generate, track and export your codes</div>
-              </div>
-            </a>
-          </div>
-        </div>
 
         <!-- ============ Evaluation Dimensions + Code Usage ============ -->
         <section class="charts-grid">
@@ -395,9 +356,9 @@ function renderContext(payload) {
   // be a plain 🏢; it now smiles or frowns with the overall rating instead.
   const mood = el("ctx-mood");
   mood.textContent = ratingEmoji(payload.stats.overall);
-  mood.title = payload.stats.total
+  mood.title = (payload.stats.total
     ? `Overall rating: ${payload.stats.overall.toFixed(1)} / 5 (${payload.stats.overallLabel})`
-    : "No evaluations yet";
+    : "No evaluations yet") + " — click to see what this icon means";
 
   document.title = `CampusVoice – Dashboard | ${payload.officeName}`;
 }
