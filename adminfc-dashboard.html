@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Dashboard | Admin FC</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+.pie-tooltip{position:fixed;pointer-events:none;background:#0f172a;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.4;padding:9px 13px;border-radius:10px;box-shadow:0 10px 24px rgba(15,23,42,0.28);opacity:0;transform:translate(0,0);transition:opacity .12s ease;z-index:9999;white-space:nowrap}
+.pie-tooltip.show{opacity:1}
+.pie-tooltip .tt-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:3px}
+.pie-tooltip .tt-sub{color:#cbd5e1;font-size:11px}
+.dashboard-container {
+  flex: 1;
+  padding: 25px 30px 12px;
+  max-width: none;
+  margin: 0;
+  width: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.stat-card{position:relative;background:#ffffff;border:1px solid #bae6fd;border-top:4px solid var(--accent3,#0284c7);border-radius:16px;padding:20px 20px 22px;box-shadow:0 4px 14px rgba(2,132,199,0.08);display:flex;flex-direction:column;gap:6px}
+.stat-icon{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:16px}
+.stat-label{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+.stat-value{font-family:'Syne',sans-serif;font-weight:700;font-size:30px;color:#0f172a;line-height:1.1}
+.stat-sub{font-family:'DM Sans',sans-serif;font-size:12px;color:#94a3b8}
+.charts-grid{display:grid;grid-template-columns:minmax(0,2.15fr) minmax(260px,1fr);gap:16px;align-items:stretch}
+.card{background:#ffffff;border:1px solid #bae6fd;border-radius:12px;box-shadow:0 2px 8px rgba(2,132,199,0.08);padding:20px;display:flex;flex-direction:column;gap:6px}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:#0f172a}
+.card-sub{font-family:'DM Sans',sans-serif;font-weight:400;font-size:13px;color:#94a3b8}
+.card-header-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.badge-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,0.12);color:#3b82f6;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:6px 14px;border-radius:999px}
+.line-chart-wrap{margin-top:12px}
+#line-chart-svg{width:100%;height:220px;display:block}
+.donut-wrap{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap;padding:12px 0;flex:1}
+.donut-wrap svg{flex-shrink:1;width:230px;height:230px}
+.donut-legend{display:flex;flex-direction:column;gap:12px}
+.legend-item{display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1e293b}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.category-table{display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;font-size:13px;color:#1e293b;min-width:200px}
+.category-table-head{display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;padding-bottom:8px;border-bottom:1px solid #e2e8f0;margin-bottom:4px}
+.category-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:5px 0}
+.category-row .cat-name{display:flex;align-items:center;gap:8px;font-weight:600}
+.category-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.category-count{font-weight:700;color:#0f172a}
+.eval-status-card{background:#ffffff;border:1px solid #bae6fd;border-radius:12px;box-shadow:0 2px 8px rgba(2,132,199,0.08);padding:20px;flex:1.7 1 500px}
+.quick-access-card{flex:1 1 300px}
+.quick-access-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:12px}
+.quick-access-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px 16px;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border:1.5px solid #bae6fd;border-radius:14px;text-decoration:none;color:#0f172a;transition:all 0.25s ease;cursor:pointer;font-family:'Syne',sans-serif}
+.quick-access-btn:hover{border-color:#7dd3fc;box-shadow:0 4px 12px rgba(2,132,199,0.12);transform:translateY(-2px)}
+.qa-icon{font-size:28px;line-height:1}
+.qa-label{font-family:'Syne',sans-serif;font-weight:600;font-size:13px;color:#0f172a;text-align:center}
+.status-vbar-wrap{display:flex;gap:8px}
+.status-vbar-yaxis{flex:0 0 32px;width:32px;position:relative;font-family:'DM Sans',sans-serif;font-size:10px;color:#94a3b8}
+.status-vbar-yaxis span{position:absolute;right:6px;transform:translateY(-50%)}
+.status-vbar-chart{flex:1;display:flex;align-items:flex-end;justify-content:space-around;border-left:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;padding:0 12px}
+.status-vbar-group{display:flex;align-items:flex-end;gap:8px}
+.status-vbar-col{width:34px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:help}
+.status-vbar-fill{width:100%;border-radius:4px 4px 0 0;transition:height 0.3s ease;min-height:1px}
+.status-vbar-value{font-family:'DM Sans',sans-serif;font-size:10.5px;font-weight:700;color:#334155;margin-bottom:4px}
+.status-vbar-labels{display:flex;justify-content:space-around;margin:8px 0 0;padding:0 12px;margin-left:32px}
+.status-vbar-label{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:#334155;text-align:center}
+.status-vbar-legend{display:flex;gap:16px;margin-top:14px;font-family:'DM Sans',sans-serif;font-size:12px;color:#475569}
+.status-vbar-legend-item{display:flex;align-items:center;gap:6px}
+.status-vbar-legend-swatch{width:10px;height:10px;border-radius:3px}
+.lb-empty{text-align:center;color:#94a3b8;padding:20px 0;font-family:'DM Sans',sans-serif;font-size:14px}
+@keyframes cvRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stat-card, .charts-grid > .card {
+  animation: cvRise .5s cubic-bezier(.2,.7,.2,1) backwards;
+}
+.stat-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  overflow: hidden;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.stat-card:hover {
+  transform: translateY(-6px);
+  border-color: #7dd3fc;
+  box-shadow: 0 14px 30px rgba(37,99,235,.16);
+}
+.card, .eval-status-card {
+  transition: box-shadow .25s ease, border-color .25s ease;
+}
+.card:hover, .eval-status-card:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 12px 28px rgba(15,23,42,.10);
+}
+.card-title { transition: color .2s ease; }
+.card:hover > .card-title { color: #1d4ed8; }
+.quick-access-btn {
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.donut-segment {
+  transition: filter .2s ease;
+}
+.donut-segment:hover {
+  filter: brightness(1.1);
+}
+@media (max-width:1200px){.stat-value{font-size:30px}}
+@media (max-width:1024px){.stat-grid{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}}
+@media (max-width:768px){
+  .dashboard-container{padding:20px 16px 28px;gap:18px}
+  .stat-grid{grid-template-columns:1fr 1fr;gap:14px}
+  .card{padding:18px}
+  .quick-access-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+}
+@media (max-width:600px){
+  .stat-card{padding:16px 16px 18px}
+  .stat-value{font-size:26px}
+  .stat-grid{grid-template-columns:1fr}
+  .quick-access-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+    <div class="dashboard-container">
+      <div class="stat-grid">
+        <div class="stat-card purple">
+          <div class="stat-icon">📅</div>
+          <div class="stat-label">Daily Submissions</div>
+          <div class="stat-value" data-stat="daily">0</div>
+          <div class="stat-sub">Evaluations today</div>
+        </div>
+        <div class="stat-card cyan">
+          <div class="stat-icon">🗓️</div>
+          <div class="stat-label">Weekly Submissions</div>
+          <div class="stat-value" data-stat="weekly">0</div>
+          <div class="stat-sub">Evaluations this week</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">📆</div>
+          <div class="stat-label">Monthly Submissions</div>
+          <div class="stat-value" data-stat="monthly">0</div>
+          <div class="stat-sub">Evaluations this month</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-label">Total Offices</div>
+          <div class="stat-value" data-stat="totalOffice">0</div>
+          <div class="stat-sub">Offices tracked</div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="card">
+          <div class="card-header-row">
+            <div class="card-title">Weekly Reports Trend</div>
+            <div class="badge-pill" id="office-count-badge">Total Offices: 0</div>
+          </div>
+          <div class="chart-legend" style="gap:16px;flex-wrap:wrap;margin-top:2px">
+            <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Cleanliness</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Facilities</div>
+          </div>
+          <div class="line-chart-wrap"><svg id="line-chart-svg" viewBox="0 0 600 220" preserveAspectRatio="none"></svg><div class="pie-tooltip" id="line-tooltip"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Average Ratings</div>
+          <div class="card-sub" style="margin-top:-2px;">Cleanliness vs Facilities</div>
+          <div class="donut-wrap" id="donutWrap">
+            <svg id="donut-svg" viewBox="0 0 200 200" width="240" height="240"><circle cx="100" cy="100" r="78" fill="none" stroke="#eef2f7" stroke-width="24"/></svg>
+            <div class="pie-tooltip" id="donut-tooltip"></div>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="card eval-status-card">
+          <div class="card-title">Submission Status — by category</div>
+          <div id="status-breakdown-chart" style="margin-top: 14px;"></div>
+        </div>
+        <div class="card quick-access-card">
+          <div class="card-title">Quick Tools</div>
+          <div class="quick-access-grid">
+            <a href="adminfc-analytics.html" class="quick-access-btn"><div class="qa-icon">📈</div><div class="qa-label">Analytics</div></a>
+            <a href="adminfc-office-mgmt.html" class="quick-access-btn"><div class="qa-icon">📑</div><div class="qa-label">Office Mgmt</div></a>
+            <a href="adminfc-eval-mgmt.html" class="quick-access-btn"><div class="qa-icon">📋</div><div class="qa-label">Eval Mgmt</div></a>
+            <a href="adminfc-multimedia.html" class="quick-access-btn"><div class="qa-icon">🎞️</div><div class="qa-label">Multimedia</div></a>
+            <a href="adminfc-reports.html" class="quick-access-btn"><div class="qa-icon">📁</div><div class="qa-label">Reports</div></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script type="module">
+import { guard as cvGuard } from "./cv-core.js";
+await cvGuard(["adminfc"]);
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const firebaseConfig = {apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E", authDomain: "kristal-adb78.firebaseapp.com", databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com", projectId: "kristal-adb78", storageBucket: "kristal-adb78.firebasestorage.app", messagingSenderId: "1016283938031", appId: "1:1016283938031:web:54c4d13409d9784ad7af1a", measurementId: "G-LK8D1CBQ2J"};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "dashboard");
+document.getElementById("topbar-mount").innerHTML = buildTopbar("Dashboard", "adminfc");
+const EVAL_HISTORY_COLLECTION = "evaluation_history";
+const TOTAL_RATING_QUESTIONS = 5;
+const LOW_RATING_THRESHOLD = 3;
+const STATUS_META = {pending: {label: "Pending", color: "#f59e0b"}, no_action: {label: "No Action Required", color: "#6366f1"}, resolved: {label: "Resolved", color: "#10b981"}};
+const STATUS_CATEGORY_META = {"Cleanliness": {label: "Cleanliness", color: "#2563eb"}, "Facilities": {label: "Facilities", color: "#10b981"}};
+const STATUS_VBAR_MAX_H = 200;
+let evaluations = [], officeCount = 0;
+function avgOf(ev) {
+  let sum = 0, count = 0;
+  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
+    const val = ev["rating" + i];
+    if (typeof val === "number" && !isNaN(val)) { sum += val; count++; }
+  }
+  return count > 0 ? sum / count : 0;
+}
+function renderStatCards() {
+  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+  const startOfWeek = new Date(startOfDay); startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+  const startOfMonth = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), 1);
+  const daily = evaluations.filter(e => e.timestamp >= startOfDay.getTime()).length;
+  const weekly = evaluations.filter(e => e.timestamp >= startOfWeek.getTime()).length;
+  const monthly = evaluations.filter(e => e.timestamp >= startOfMonth.getTime()).length;
+  document.querySelector('[data-stat="daily"]').textContent = daily;
+  document.querySelector('[data-stat="weekly"]').textContent = weekly;
+  document.querySelector('[data-stat="monthly"]').textContent = monthly;
+  document.querySelector('[data-stat="totalOffice"]').textContent = officeCount;
+}
+function getTimestampMillis(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value === "number") return value;
+  if (typeof value === "string") { const n = Number(value); if (!Number.isNaN(n)) return n; const parsed = Date.parse(value); return Number.isNaN(parsed) ? null : parsed; }
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (typeof value.seconds === "number") return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1e6);
+  if (value instanceof Date) return value.getTime();
+  return null;
+}
+function parseEvalStatus(data, avgRating) {
+  const stored = (data.status || "").toString().toLowerCase();
+  if (["resolved", "pending", "no_action"].includes(stored)) return stored;
+  return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
+}
+onSnapshot(collection(db, EVAL_HISTORY_COLLECTION), (snapshot) => {
+  evaluations = [];
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    const category = data.category ? data.category.toUpperCase() : "";
+    if (!["CLEANLINESS", "FACILITIES", "FACILITIES AND CLEANLINESS"].includes(category)) return;
+    const record = {id: doc.id, officeName: data.officeName || "Unknown", category: category, timestamp: getTimestampMillis(data.timestamp ?? data.date ?? data.submittedAt) ?? 0};
+    for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) record["rating" + i] = Number(data["rating" + i]) || 0;
+    record.status = parseEvalStatus(data, avgOf(record));
+    evaluations.push(record);
+  });
+  renderStatCards();
+  renderStatusBreakdown();
+}, (err) => console.error("Failed to load evaluations:", err));
+function renderAvgRatingPie() {
+  const svg = document.getElementById("donut-svg"), legend = document.getElementById("donut-legend"), tooltip = document.getElementById("donut-tooltip");
+  if (!svg || !legend || !tooltip) return;
+  svg.querySelectorAll(".donut-segment").forEach(el => el.remove());
+  if (evaluations.length === 0) {
+    legend.innerHTML = `<div class="legend-item">No evaluations yet</div>`;
+    return;
+  }
+  const cleanAvg = evaluations.filter(e => e.category.includes("CLEANLINESS")).reduce((a,e) => a + avgOf(e), 0) / Math.max(1, evaluations.filter(e => e.category.includes("CLEANLINESS")).length);
+  const facilAvg = evaluations.filter(e => e.category.includes("FACILITIES")).reduce((a,e) => a + avgOf(e), 0) / Math.max(1, evaluations.filter(e => e.category.includes("FACILITIES")).length);
+  const segments = [{key: "Cleanliness", label: "Cleanliness", color: "#2563eb", avg: cleanAvg}, {key: "Facilities", label: "Facilities", color: "#10b981", avg: facilAvg}];
+  let rows = segments.map(s => `<div class="category-row"><div class="cat-name"><div class="category-dot" style="background:${s.color}"></div>${s.label}</div><div class="category-count">${s.avg.toFixed(2)}/5</div></div>`).join("");
+  legend.innerHTML = `<div class="category-table"><div class="category-table-head"><span>Category</span><span>Avg</span></div>${rows}</div>`;
+}
+function renderStatusBreakdown() {
+  const el = document.getElementById("status-breakdown-chart");
+  if (!el || evaluations.length === 0) { el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`; renderAvgRatingPie(); return; }
+  const statusOrder = ["pending", "no_action", "resolved"];
+  const cats = ["Cleanliness", "Facilities"];
+  const totals = {}; cats.forEach(c => { totals[c] = evaluations.filter(e => e.category.includes(c.toUpperCase())).length; });
+  const groupsHtml = statusOrder.map(statusKey => {
+    const cols = cats.map(c => { const count = evaluations.filter(e => e.category.includes(c.toUpperCase()) && e.status === statusKey).length; const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0; const h = Math.max(1, Math.round((pct / 100) * STATUS_VBAR_MAX_H)); return `<div class="status-vbar-col" title="${c} — ${STATUS_META[statusKey].label}: ${count}/${totals[c]}"><div class="status-vbar-value">${pct}%</div><div class="status-vbar-fill" style="height:${h}px;background:${STATUS_CATEGORY_META[c].color};"></div></div>`; }).join("");
+    return `<div class="status-vbar-group">${cols}</div>`;
+  }).join("");
+  const yAxis = [100, 75, 50, 25, 0].map(pct => `<span style="top:${STATUS_VBAR_MAX_H - (pct / 100) * STATUS_VBAR_MAX_H}px;">${pct}%</span>`).join("");
+  const xLabels = statusOrder.map(s => `<div class="status-vbar-label">${STATUS_META[s].label}</div>`).join("");
+  const legend = cats.map(c => `<div class="status-vbar-legend-item"><span class="status-vbar-legend-swatch" style="background:${STATUS_CATEGORY_META[c].color};"></span><span>${STATUS_CATEGORY_META[c].label}</span></div>`).join("");
+  el.innerHTML = `<div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;"><div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div><div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div></div><div class="status-vbar-labels">${xLabels}</div><div class="status-vbar-legend">${legend}</div>`;
+  renderAvgRatingPie();
+}
+</script>
+</body>
+</html>
