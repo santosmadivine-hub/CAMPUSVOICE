@@ -23,14 +23,17 @@
  * ========================================================================== */
 
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getMessaging } = require("firebase-admin/messaging");
 
 initializeApp();
 
 const db = getFirestore();
 const auth = getAuth();
+const messaging = getMessaging();
 
 const SUPER_ADMIN = "admin1";
 
@@ -298,3 +301,85 @@ exports.backfillEvaluationOfficeIds = onCall(async (request) => {
              `${unmatched} could not be matched to a registered office by name.`
   };
 });
+
+/* ---------------------------------------------------------------------------
+ * Push notifications — the Android app's in-app bell (NotificationsDialog)
+ * only ever updates while the app is open. These two triggers pop a real
+ * system notification on the respondent's phone for the two events worth
+ * interrupting someone for: an admin's reply, and an evaluation status
+ * change. Routine login/logout/eval_submitted notices stay in-app only.
+ * ------------------------------------------------------------------------- */
+
+/** The FCM token CampusVoiceMessagingService/HomeActivity save at users/{uid}.fcmToken. */
+async function getUserPushToken(uid) {
+  if (!uid) return null;
+  const snap = await db.doc(`users/${uid}`).get();
+  return snap.exists ? (snap.data() || {}).fcmToken || null : null;
+}
+
+/**
+ * Sends one push. A missing/expired/uninstalled-app token is routine (the
+ * respondent may simply never have opened the app with this feature yet, or
+ * uninstalled it) — logged, not thrown, so it never fails the Firestore write
+ * that triggered this.
+ */
+async function sendPush(token, title, body, data = {}) {
+  if (!token) return;
+
+  try {
+    await messaging.send({
+      token,
+      notification: { title, body },
+      data,
+      android: { priority: "high" }
+    });
+  } catch (err) {
+    console.warn("Push notification could not be delivered:", err.code || err.message);
+  }
+}
+
+// title per notifications/{uid}/items type — only these two are worth a
+// phone pop-up; login/logout stay in-app only.
+const PUSHED_NOTIFICATION_TITLES = {
+  eval_status: "Evaluation Status Updated",
+  eval_submitted: "Evaluation Submitted"
+};
+
+exports.notifyOnEvalStatusChange = onDocumentCreated(
+  "notifications/{uid}/items/{itemId}",
+  async (event) => {
+    const data = event.data?.data();
+    const title = data && PUSHED_NOTIFICATION_TITLES[data.type];
+    if (!title) return;
+
+    const token = await getUserPushToken(event.params.uid);
+    await sendPush(
+      token,
+      title,
+      data.message || "One of your evaluations has an update.",
+      { type: data.type, evaluationId: data.evaluationId || "" }
+    );
+  }
+);
+
+exports.notifyOnAdminReply = onDocumentCreated(
+  "conversations/{evaluationId}/messages/{messageId}",
+  async (event) => {
+    const message = event.data?.data();
+    // The respondent's own messages (senderRole "user") never trigger this —
+    // there is nothing to push back to them for a message they just sent.
+    if (!message || message.senderRole !== "admin") return;
+
+    const convoSnap = await db.doc(`conversations/${event.params.evaluationId}`).get();
+    if (!convoSnap.exists) return;
+    const convo = convoSnap.data() || {};
+
+    const token = await getUserPushToken(convo.userId);
+    await sendPush(
+      token,
+      convo.officeName ? `New message about your ${convo.officeName} evaluation` : "New message",
+      message.text || "You have a new reply.",
+      { type: "new_message", evaluationId: event.params.evaluationId }
+    );
+  }
+);
