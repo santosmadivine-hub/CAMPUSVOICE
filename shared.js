@@ -28,6 +28,15 @@ const PAGE_SUBTITLES = {
     'multimedia':            'View and Manage Evaluation Evidence',
     'multimedia feedback':   'View and Manage Evaluation Evidence', // old title, kept so existing pages still work
     'analytics':             'Analyze Facility Evaluation Results and Trends'
+  },
+  adminfc: {
+    'dashboard':             'Overview of Campus Evaluation Results and Activities',
+    'office management':     'Manage Campus Offices and Evaluation Areas',
+    'evaluation management': 'Review and Manage Facility Evaluations',
+    'reports':               'Generate and Review Facility Reports',
+    'multimedia':            'View and Manage Evaluation Evidence',
+    'multimedia feedback':   'View and Manage Evaluation Evidence', // old title, kept so existing pages still work
+    'analytics':             'Analyze Facility Evaluation Results and Trends'
   }
 };
 
@@ -62,9 +71,20 @@ function buildSidebar(role, activePage) {
     { id: 'analytics', icon: '📈', label: 'Analytics', href: 'admin3-analytics.html' },
   ];
 
+  const navAdminFC = [
+    { id: 'dashboard', icon: '🏠', label: 'Dashboard', href: 'adminfc-dashboard.html' },
+    { id: 'office-mgmt', icon: '🏢', label: 'Office Management', href: 'adminfc-office-mgmt.html' },
+    { id: 'eval-mgmt', icon: '📋', label: 'Evaluation Management', href: 'adminfc-eval-mgmt.html' },
+    { id: 'reports', icon: '📊', label: 'Reports', href: 'adminfc-reports.html' },
+    { id: 'multimedia', icon: '📷', label: 'Multimedia', href: 'adminfc-multimedia.html' },
+    { id: 'analytics', icon: '📈', label: 'Analytics', href: 'adminfc-analytics.html' },
+  ];
+
   const nav =
     role === 'admin1'
       ? navAdmin1
+      : role === 'adminfc'
+      ? navAdminFC
       : role === 'admin2'
       ? navAdmin2
       : navAdmin3;
@@ -72,6 +92,8 @@ function buildSidebar(role, activePage) {
   const activeClass =
     role === 'admin1'
       ? 'active-a1'
+      : role === 'adminfc'
+      ? 'active-afc'
       : role === 'admin2'
       ? 'active-a2'
       : 'active-a3';
@@ -79,6 +101,8 @@ function buildSidebar(role, activePage) {
   const roleLabel =
     role === 'admin1'
       ? '⚙️ Admin 1 — Services'
+      : role === 'adminfc'
+      ? '🤝 Admin FC — Facilities &amp; Cleanliness'
       : role === 'admin2'
       ? '🏛️ Admin 2 — Cleanliness'
       : '🏢 Admin 3 — Facilities';
@@ -86,6 +110,8 @@ function buildSidebar(role, activePage) {
   const roleClass =
     role === 'admin1'
       ? 'role-admin1'
+      : role === 'adminfc'
+      ? 'role-adminfc'
       : role === 'admin2'
       ? 'role-admin2'
       : 'role-admin3';
@@ -93,6 +119,8 @@ function buildSidebar(role, activePage) {
   const userName =
     role === 'admin1'
       ? 'Admin 1'
+      : role === 'adminfc'
+      ? 'Admin FC'
       : role === 'admin2'
       ? 'Admin 2'
       : 'Admin 3';
@@ -143,6 +171,8 @@ function buildTopbar(pageTitle, role, subtitle) {
   const roleLabel =
     role === 'admin1'
       ? 'Admin 1 – Services'
+      : role === 'adminfc'
+      ? 'Admin FC – Facilities &amp; Cleanliness'
       : role === 'admin2'
       ? 'Admin 2 – Cleanliness'
       : 'Admin 3 – Facilities';

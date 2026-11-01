@@ -303,6 +303,283 @@ exports.backfillEvaluationOfficeIds = onCall(async (request) => {
 });
 
 /* ---------------------------------------------------------------------------
+ * migrateToFacilitiesCleanliness
+ *
+ * One-off migration for the Cleanliness+Facilities merge. Moves data from three
+ * legacy collections into new unified ones, maintaining half-populated records
+ * (not fabricated combined ones) for historical accuracy.
+ *
+ * Three-pass operation:
+ *   1. Office registry: union offices, office-names-comfort-room, office_names_surroundings
+ *   2. Evaluations: move cleanliness + facilities records into facilities_cleanliness_evaluations
+ *   3. Report settings: seed the new admin's settings from admin2's if not present
+ *
+ * Safe to run repeatedly; already-migrated records are skipped.
+ * Uses same batching pattern as backfillEvaluationOfficeIds (450 per batch).
+ * ------------------------------------------------------------------------- */
+exports.migrateToFacilitiesCleanliness = onCall(async (request) => {
+  await requireAdmin1(request);
+
+  let officesCreated = 0;
+  let officesSkipped = 0;
+  let evalsMigrated = 0;
+  let evalsSkipped = 0;
+  let reportSettingsSeeded = false;
+
+  // Pass 1: Office registry — collect distinct names and create fc_offices.
+  try {
+    const officeNames = new Set();
+
+    // Collect from all three legacy sources.
+    const facilitiesOfficeSn = await db.collection("offices").get();
+    facilitiesOfficeSn.forEach(doc => {
+      const name = (doc.data() || {}).name;
+      if (name) officeNames.add(name.trim());
+    });
+
+    const comfortSnap = await db.collection("office-names-comfort-room").get();
+    comfortSnap.forEach(doc => {
+      const name = (doc.data() || {}).name;
+      if (name) officeNames.add(name.trim());
+    });
+
+    const surroundingsSnap = await db.collection("office_names_surroundings").get();
+    surroundingsSnap.forEach(doc => {
+      const name = (doc.data() || {}).name;
+      if (name) officeNames.add(name.trim());
+    });
+
+    // Create fc_offices docs, idempotent on normalized name.
+    const batch = db.batch();
+    let pending = 0;
+
+    for (const name of officeNames) {
+      // Check if this office already exists in fc_offices (idempotency).
+      const existing = await db.collection("fc_offices")
+        .where("name", "==", name)
+        .limit(1)
+        .get();
+
+      if (existing.size > 0) {
+        officesSkipped++;
+        continue;
+      }
+
+      const docId = db.collection("fc_offices").doc().id;
+      batch.set(db.doc(`fc_offices/${docId}`), {
+        name,
+        status: "active",
+        createdAt: Date.now(),
+        createdBy: request.auth.uid,
+        legacySourceCollections: [], // Would be filled if we tracked source per office
+        legacyDocIds: {}
+      });
+
+      officesCreated++;
+      pending++;
+
+      if (pending >= 450) {
+        await batch.commit();
+        pending = 0;
+      }
+    }
+
+    if (pending > 0) {
+      await batch.commit();
+    }
+  } catch (err) {
+    console.error("Office migration failed:", err);
+    throw new HttpsError("internal", `Office migration failed: ${err.message}`);
+  }
+
+  // Pass 2: Evaluations — migrate from legacy nested/flat into unified collection.
+  try {
+    // Cleanliness is nested: cleanliness_evaluations/{category}/offices/{officeName}/evaluations/{id}
+    const cleanlinessRoot = await db.collection("cleanliness_evaluations").get();
+
+    for (const categoryDoc of cleanlinessRoot.docs) {
+      const categoryId = categoryDoc.id; // "Comfort Room" or "Surroundings"
+
+      const officesRef = categoryDoc.ref.collection("offices");
+      const officesSnap = await officesRef.get();
+
+      for (const officeDoc of officesSnap.docs) {
+        const evalsRef = officeDoc.ref.collection("evaluations");
+        const evalsSnap = await evalsRef.get();
+
+        let batch = db.batch();
+        let pending = 0;
+
+        for (const evalDoc of evalsSnap.docs) {
+          const data = evalDoc.data() || {};
+          const evaluationId = data.evaluationId || evalDoc.id;
+
+          // Check if already migrated (idempotency).
+          if (data.migratedFrom) {
+            evalsSkipped++;
+            continue;
+          }
+
+          // Check if already exists in new collection (second idempotency check).
+          const existing = await db.doc(`facilities_cleanliness_evaluations/${evaluationId}`).get();
+          if (existing.exists) {
+            evalsSkipped++;
+            continue;
+          }
+
+          // Build the half-populated new record: only the Cleanliness section.
+          const newRecord = {
+            evaluationId,
+            officeName: data.officeName || officeDoc.id,
+            userId: data.userId || "",
+            date: data.date || "",
+            timestamp: data.timestamp || 0,
+            sex: data.sex || "",
+            userCategory: data.userCategory || "",
+            course: data.course || "",
+            year: data.year || "",
+            category: "Facilities and Cleanliness",
+            cleanlinessCategory: categoryId,
+            cleanlinessRating1: data.rating1,
+            cleanlinessRating2: data.rating2,
+            cleanlinessRating3: data.rating3,
+            cleanlinessRating4: data.rating4,
+            cleanlinessRating5: data.rating5,
+            cleanlinessComments: data.comments || "",
+            evidenceUrls: data.evidenceUrls || [],
+            evidenceTypes: data.evidenceTypes || [],
+            status: data.status || "pending",
+            migratedFrom: `cleanliness_evaluations/${categoryId}/offices/${officeDoc.id}/evaluations/${evalDoc.id}`,
+            legacyCategory: "Cleanliness"
+          };
+
+          batch.set(db.doc(`facilities_cleanliness_evaluations/${evaluationId}`), newRecord);
+          evalsMigrated++;
+          pending++;
+
+          if (pending >= 450) {
+            await batch.commit();
+            batch = db.batch();
+            pending = 0;
+          }
+        }
+
+        if (pending > 0) {
+          await batch.commit();
+        }
+      }
+    }
+
+    // Facilities: flat collection facility_evaluations/{id}
+    const facilitiesSnap = await db.collection("facility_evaluations").get();
+
+    let batch = db.batch();
+    let pending = 0;
+
+    for (const evalDoc of facilitiesSnap.docs) {
+      const data = evalDoc.data() || {};
+      const evaluationId = data.evaluationId || evalDoc.id;
+
+      // Check if already migrated.
+      if (data.migratedFrom) {
+        evalsSkipped++;
+        continue;
+      }
+
+      // Check if already exists in new collection.
+      const existing = await db.doc(`facilities_cleanliness_evaluations/${evaluationId}`).get();
+      if (existing.exists) {
+        evalsSkipped++;
+        continue;
+      }
+
+      // Build the half-populated new record: only the Facilities section.
+      const newRecord = {
+        evaluationId,
+        officeName: data.officeName || "",
+        userId: data.userId || "",
+        date: data.date || "",
+        timestamp: data.timestamp || 0,
+        sex: data.sex || "",
+        userCategory: data.userCategory || "",
+        course: data.course || "",
+        year: data.year || "",
+        category: "Facilities and Cleanliness",
+        facilitiesRating1: data.rating1,
+        facilitiesRating2: data.rating2,
+        facilitiesRating3: data.rating3,
+        facilitiesRating4: data.rating4,
+        facilitiesRating5: data.rating5,
+        facilitiesRating6: data.rating6,
+        facilitiesRating7: data.rating7,
+        facilitiesRating8: data.rating8,
+        facilitiesComments: data.comments || "",
+        events: data.events || "",
+        evidenceUrls: data.evidenceUrls || [],
+        evidenceTypes: data.evidenceTypes || [],
+        status: data.status || "pending",
+        migratedFrom: `facility_evaluations/${evalDoc.id}`,
+        legacyCategory: "Facilities"
+      };
+
+      batch.set(db.doc(`facilities_cleanliness_evaluations/${evaluationId}`), newRecord);
+      evalsMigrated++;
+      pending++;
+
+      if (pending >= 450) {
+        await batch.commit();
+        batch = db.batch();
+        pending = 0;
+      }
+    }
+
+    if (pending > 0) {
+      await batch.commit();
+    }
+  } catch (err) {
+    console.error("Evaluation migration failed:", err);
+    throw new HttpsError("internal", `Evaluation migration failed: ${err.message}`);
+  }
+
+  // Pass 3: Report settings — seed adminfc from admin2 if not present.
+  try {
+    const adminFcSettings = await db.doc("reportSettingsAdminFC/current").get();
+
+    if (!adminFcSettings.exists) {
+      const admin2Settings = await db.doc("reportSettingsAdmin2/current").get();
+
+      if (admin2Settings.exists) {
+        const admin2Data = admin2Settings.data() || {};
+
+        await db.doc("reportSettingsAdminFC/current").set({
+          ...admin2Data,
+          reportTitle: "Facilities and Cleanliness Evaluation Report (FCER)"
+        });
+
+        reportSettingsSeeded = true;
+      }
+    }
+  } catch (err) {
+    console.error("Report settings seeding failed:", err);
+    // Non-fatal: continue even if report settings couldn't be seeded.
+  }
+
+  return {
+    ok: true,
+    officesCreated,
+    officesSkipped,
+    evalsMigrated,
+    evalsSkipped,
+    reportSettingsSeeded,
+    message:
+      `Migration complete. ` +
+      `Created ${officesCreated} offices (${officesSkipped} skipped). ` +
+      `Migrated ${evalsMigrated} evaluations (${evalsSkipped} skipped). ` +
+      `Report settings ${reportSettingsSeeded ? "seeded" : "not needed"}.`
+  };
+});
+
+/* ---------------------------------------------------------------------------
  * Push notifications — the Android app's in-app bell (NotificationsDialog)
  * only ever updates while the app is open. These two triggers pop a real
  * system notification on the respondent's phone for the two events worth
