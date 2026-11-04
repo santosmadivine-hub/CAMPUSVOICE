@@ -3,55 +3,631 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CampusVoice – Multimedia | Admin FC</title>
+<title>CampusVoice – Multimedia Evidence | Admin FC</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
-  .card { background:#fff; border:1px solid #bae6fd; border-radius:12px; box-shadow:0 4px 14px rgba(15,23,42,.05); padding:20px; margin-bottom:24px; }
-  .toolbar-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
-  .toolbar-note { font-size:13px; color:#64748b; font-family:'DM Sans',sans-serif; }
-  .toolbar-filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-  .filter-select, .filter-search {
-    height:40px; background:#f8fafc; border:1px solid #bae6fd; border-radius:10px; padding:0 12px;
-    font-family:'DM Sans',sans-serif; font-size:13px; color:#0f172a; -webkit-appearance:none; appearance:none;
+  .toolbar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
   }
-  .filter-select { cursor:pointer; min-width:140px; }
-  .filter-search { min-width:200px; }
-  .filter-select:focus, .filter-search:focus { outline:none; border-color:#2563eb; }
-  /* Stat pills */
-  .stat-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
-  .stat-pill { background:#f0f9ff; border:1px solid #bae6fd; border-radius:12px; padding:12px 18px; display:flex; flex-direction:column; gap:3px; min-width:120px; }
-  .stat-pill .sp-label { font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
-  .stat-pill .sp-value { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; color:#0f172a; }
-  /* Media grid */
-  .media-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; }
-  .media-card {
-    background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;
-    transition:transform .2s,box-shadow .2s,border-color .2s; cursor:pointer;
+
+  .toolbar-note {
+    font-size: 13px;
+    color: #64748b;
+    font-family: 'DM Sans', sans-serif;
   }
-  .media-card:hover { transform:translateY(-3px); border-color:#7dd3fc; box-shadow:0 8px 20px rgba(15,23,42,.12); }
-  .media-thumb { position:relative; width:100%; height:160px; background:#0f172a; }
-  .media-thumb img,.media-thumb video { width:100%; height:100%; object-fit:cover; display:block; }
-  .media-thumb .media-type-badge {
-    position:absolute; top:8px; right:8px; background:rgba(15,23,42,.75); color:#fff;
-    font-size:10px; font-weight:700; padding:3px 7px; border-radius:5px; text-transform:uppercase;
+
+  .toolbar-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
   }
-  .media-info { padding:12px; }
-  .media-info-office { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:#0f172a; margin-bottom:3px; }
-  .media-info-meta { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; }
-  .cat-badge { display:inline-block; padding:2px 7px; border-radius:999px; font-size:10px; font-weight:700; margin-right:5px; }
-  .cat-badge.comfort { background:#e0f2fe; color:#0369a1; }
-  .cat-badge.surroundings { background:#dcfce7; color:#15803d; }
-  .cat-badge.laboratories { background:#ede9fe; color:#6d28d9; }
-  .empty-note { text-align:center; color:#94a3b8; padding:50px 0; font-family:'DM Sans',sans-serif; font-size:14px; font-style:italic; }
-  /* Lightbox */
-  .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:9999; align-items:center; justify-content:center; padding:20px; }
-  .lightbox.open { display:flex; flex-direction:column; }
-  .lightbox-media { max-width:90vw; max-height:75vh; border-radius:8px; }
-  .lightbox-info { margin-top:14px; color:#fff; font-family:'DM Sans',sans-serif; font-size:13px; text-align:center; }
-  .lightbox-close { position:absolute; top:16px; right:20px; background:rgba(255,255,255,.15); border:none; color:#fff; font-size:22px; cursor:pointer; border-radius:8px; padding:4px 10px; }
-  .lightbox-close:hover { background:rgba(255,255,255,.25); }
-  @media(max-width:600px){.media-grid{grid-template-columns:1fr 1fr;} .toolbar-row{flex-direction:column;align-items:flex-start;}}
+
+  .filter-select,
+  .filter-date,
+  .filter-search {
+    height: 40px;
+    background: #f8fafc;
+    border: 1px solid #dbe4ee;
+    border-radius: 10px;
+    padding: 0 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: #0f172a;
+  }
+
+  .filter-search {
+    min-width: 200px;
+  }
+
+  .btn-sm {
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: none;
+    background: #e2e8f0;
+    color: #0f172a;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .btn-sm:hover {
+    background: #cbd5e1;
+  }
+
+  /* Bulk selection bar */
+  .bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 12px;
+  }
+
+  .bulk-count-text {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    margin-right: auto;
+  }
+
+  .btn-danger {
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: none;
+    background: #fee2e2;
+    color: #991b1b;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s ease, opacity 0.2s ease;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: #fecaca;
+  }
+
+  .btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Category tabs */
+  .category-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .category-tab {
+    border: 1px solid #bae6fd;
+    background: #ffffff;
+    color: #0369a1;
+    padding: 9px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    transition: background .2s, color .2s, transform .2s, border-color .2s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .category-tab:hover {
+    border-color: #0284c7;
+    transform: translateY(-1px);
+  }
+
+  .category-tab.active {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(2,132,199,.3);
+  }
+
+  .category-tab.active[data-category="Surroundings"] {
+    background: #16a34a;
+    border-color: #16a34a;
+    box-shadow: 0 4px 14px rgba(22,163,74,.3);
+  }
+
+  .category-tab.active[data-category="Laboratories"] {
+    background: #7c3aed;
+    border-color: #7c3aed;
+    box-shadow: 0 4px 14px rgba(124,58,237,.3);
+  }
+
+  .category-tab .tab-count {
+    background: rgba(255,255,255,0.35);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 11px;
+  }
+
+  .category-tab:not(.active) .tab-count {
+    background: #f1f5f9;
+    color: #64748b;
+  }
+
+  .category-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .category-pill.comfort-room { background: #e0f2fe; color: #0369a1; }
+  .category-pill.surroundings { background: #dcfce7; color: #15803d; }
+  .category-pill.laboratories { background: #ede9fe; color: #6d28d9; }
+
+  /* Stat cards */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid #bae6fd;
+    border-top: 4px solid #2563eb;
+    border-radius: 16px;
+    padding: 20px 20px 22px;
+    box-shadow: 0 4px 14px rgba(15,23,42,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .stat-icon {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .stat-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    color: #0f172a;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .stat-sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+  }
+
+  .media-thumb {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease, transform 0.15s ease, outline-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    outline: 3px solid transparent;
+    outline-offset: -3px;
+  }
+
+  .media-thumb:hover {
+    box-shadow: 0 8px 20px rgba(15, 27, 50, 0.10);
+    transform: translateY(-2px);
+  }
+
+  .media-thumb.selected {
+    outline-color: #2563eb;
+  }
+
+  .media-thumb-visual {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    background: #0f172a;
+  }
+
+  .media-thumb-visual img,
+  .media-thumb-visual video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .media-tag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(15, 23, 42, 0.75);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .media-select {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #2563eb;
+    z-index: 2;
+  }
+
+  .media-thumb-body {
+    padding: 10px 12px 12px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .media-office {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .media-office-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .media-date-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .media-date {
+    font-size: 11px;
+    color: #94a3b8;
+  }
+
+  .media-delete-btn {
+    flex-shrink: 0;
+    border: none;
+    background: #fee2e2;
+    color: #991b1b;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 9px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease, opacity 0.2s ease;
+  }
+
+  .media-delete-btn:hover {
+    background: #fecaca;
+  }
+
+  .empty-media {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    grid-column: 1 / -1;
+  }
+
+  .limits-note {
+    margin-top: 24px;
+    font-size: 12px;
+    color: #94a3b8;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* Media viewer modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 27, 50, 0.65);
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 20px;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .media-modal-content {
+    background: #fff;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 560px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(15, 27, 50, 0.2);
+    max-height: 88vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .media-modal-visual {
+    width: 100%;
+    max-height: 380px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0f172a;
+    margin-bottom: 16px;
+  }
+
+  .media-modal-visual img,
+  .media-modal-visual video {
+    width: 100%;
+    max-height: 380px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .modal-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: #334155;
+    gap: 12px;
+  }
+
+  .modal-row:last-of-type {
+    border-bottom: none;
+  }
+
+  .modal-row span:first-child {
+    color: #94a3b8;
+    font-weight: 600;
+    min-width: 100px;
+  }
+
+  .modal-row span:last-child {
+    word-break: break-word;
+    text-align: right;
+  }
+
+  .media-modal-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn-primary {
+    flex: 1;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover { background: #1d4ed8; }
+
+  .btn-secondary {
+    flex: 1;
+    background: #e2e8f0;
+    color: #0f172a;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-secondary:hover { background: #cbd5e1; }
+
+  @media (max-width: 1024px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 768px) {
+    .toolbar-row { flex-direction: column; align-items: flex-start; }
+    .toolbar-filters { width: 100%; }
+    .filter-search { flex: 1; min-width: 0; }
+    .bulk-bar { flex-direction: column; align-items: stretch; }
+    .bulk-count-text { margin-right: 0; }
+    .btn-danger, .bulk-bar .btn-sm { width: 100%; }
+    .stat-grid { gap: 14px; }
+  }
+  @media (max-width: 480px) { .stat-grid { grid-template-columns: 1fr; } }
+
+  /* ===== HOVER + DESIGN POLISH ===== */
+  @keyframes cvRise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes cvModalIn {
+    from { opacity: 0; transform: translateY(10px) scale(.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .stat-card, .category-tabs, .toolbar-row, .bulk-bar {
+    animation: cvRise .5s cubic-bezier(.2,.7,.2,1) backwards;
+  }
+  .stat-card:nth-child(2) { animation-delay: .06s; }
+  .stat-card:nth-child(3) { animation-delay: .12s; }
+  .stat-card:nth-child(4) { animation-delay: .18s; }
+  .category-tabs { animation-delay: .24s; }
+  .toolbar-row   { animation-delay: .30s; }
+  .bulk-bar      { animation-delay: .36s; }
+
+  .stat-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    overflow: hidden;
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  }
+  .stat-card::after {
+    content: "";
+    position: absolute;
+    right: -30px; bottom: -30px;
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(37,99,235,.10), transparent 70%);
+    transition: transform .35s ease;
+    pointer-events: none;
+  }
+  .stat-card:hover {
+    transform: translateY(-6px);
+    border-color: #7dd3fc;
+    box-shadow: 0 14px 30px rgba(37,99,235,.16);
+  }
+  .stat-card:hover::after { transform: scale(1.5); }
+  .stat-icon { transition: transform .3s ease, background .3s ease; }
+  .stat-card:hover .stat-icon { background: #dbeafe; transform: rotate(-8deg) scale(1.12); }
+  .stat-value { transition: color .25s ease; }
+  .stat-card:hover .stat-value { color: #2563eb; }
+
+  .category-tab { transition: background .2s ease, color .2s ease, transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+  .category-tab:not(.active):hover {
+    background: #f0f9ff; border-color: #0284c7;
+    box-shadow: 0 6px 14px rgba(2,132,199,.15); transform: translateY(-2px);
+  }
+  .category-tab[data-category="Surroundings"]:not(.active):hover {
+    background: #f0fdf4; border-color: #16a34a; color: #15803d;
+    box-shadow: 0 6px 14px rgba(22,163,74,.15);
+  }
+  .category-tab[data-category="Laboratories"]:not(.active):hover {
+    background: #f5f3ff; border-color: #7c3aed; color: #6d28d9;
+    box-shadow: 0 6px 14px rgba(124,58,237,.15);
+  }
+  .category-tab.active:hover { transform: translateY(-1px); }
+  .category-tab .tab-count { transition: background .2s ease, color .2s ease; }
+  .category-tab:not(.active):hover .tab-count { background: #e0f2fe; color: #0369a1; }
+
+  .filter-select, .filter-date, .filter-search {
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+  .filter-select:hover, .filter-date:hover, .filter-search:hover { border-color: #7dd3fc; }
+  .filter-select:focus, .filter-date:focus, .filter-search:focus {
+    background: #ffffff; border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12); outline: none;
+  }
+  .filter-select { cursor: pointer; }
+
+  .btn-sm, .btn-danger, .btn-primary, .btn-secondary, .media-delete-btn {
+    transition: background .2s ease, box-shadow .2s ease, transform .2s ease, opacity .2s ease;
+  }
+  .btn-sm:hover, .btn-primary:hover, .btn-secondary:hover { transform: translateY(-2px); }
+  .btn-sm:hover { background: #dbeafe; color: #1e40af; box-shadow: 0 6px 14px rgba(37,99,235,.15); }
+  .btn-danger:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(153,27,27,.2); }
+  .btn-primary { background: linear-gradient(160deg, #3b82f6 0%, #2563eb 55%, #1d4ed8 100%); box-shadow: 0 4px 12px rgba(37,99,235,.28); }
+  .btn-primary:hover { background: linear-gradient(160deg, #60a5fa 0%, #2563eb 55%, #1e40af 100%); box-shadow: 0 8px 18px rgba(37,99,235,.35); }
+  .btn-secondary:hover { background: #dbeafe; color: #1e40af; box-shadow: 0 6px 14px rgba(37,99,235,.15); }
+
+  .bulk-bar { transition: border-color .25s ease, box-shadow .25s ease; }
+  .bulk-bar:hover { border-color: #7dd3fc; box-shadow: 0 6px 16px rgba(15,23,42,.06); }
+  .bulk-count-text { transition: color .2s ease; }
+  .bulk-bar:hover .bulk-count-text { color: #1d4ed8; }
+
+  .media-thumb { transition: box-shadow .25s ease, transform .25s ease, outline-color .2s ease, border-color .25s ease; }
+  .media-thumb:hover { transform: translateY(-5px); border-color: #7dd3fc; box-shadow: 0 14px 28px rgba(15,23,42,.14); }
+  .media-thumb.selected:hover { box-shadow: 0 14px 28px rgba(37,99,235,.25); }
+  .media-thumb-visual { overflow: hidden; }
+  .media-thumb-visual img, .media-thumb-visual video { transition: transform .35s ease; }
+  .media-thumb:hover .media-thumb-visual img,
+  .media-thumb:hover .media-thumb-visual video { transform: scale(1.08); }
+  .media-tag { transition: background .2s ease; }
+  .media-thumb:hover .media-tag { background: rgba(37,99,235,.9); }
+  .media-select { transition: transform .15s ease; }
+  .media-select:hover { transform: scale(1.15); }
+  .media-office-name { transition: color .2s ease; }
+  .media-thumb:hover .media-office-name { color: #1d4ed8; }
+  .category-pill { transition: transform .2s ease, box-shadow .2s ease; }
+  .media-thumb:hover .category-pill { transform: scale(1.06); }
+  .media-thumb:hover .category-pill.comfort-room { box-shadow: 0 0 0 3px rgba(3,105,161,.12); }
+  .media-thumb:hover .category-pill.surroundings { box-shadow: 0 0 0 3px rgba(21,128,61,.12); }
+  .media-thumb:hover .category-pill.laboratories { box-shadow: 0 0 0 3px rgba(109,40,217,.12); }
+  .media-delete-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(153,27,27,.2); }
+
+  .modal-overlay { backdrop-filter: blur(2px); }
+  .media-modal-content {
+    border: 1px solid #e0f2fe;
+    box-shadow: 0 30px 70px rgba(15,23,42,.28);
+    animation: cvModalIn .2s ease;
+  }
+  .media-modal-visual { box-shadow: 0 6px 18px rgba(15,23,42,.18); }
+  .modal-row { border-radius: 8px; transition: background .2s ease, padding .2s ease; }
+  .modal-row:hover { background: #f0f9ff; padding-left: 10px; padding-right: 10px; }
+  .modal-row:hover > span:first-child { color: #0369a1; }
+
+  .empty-media { font-style: italic; }
+  .limits-note { transition: color .2s ease; }
+  .limits-note:hover { color: #64748b; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stat-card, .category-tabs, .toolbar-row, .bulk-bar, .media-modal-content { animation: none; }
+    * { transition: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -59,47 +635,90 @@
   <div id="sidebar-mount"></div>
   <main class="main fade-in">
     <div id="topbar-mount"></div>
-    <div style="margin-top:28px;">
+
+    <div style="margin-top: 28px;">
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🗂️</div>
+          <div class="stat-label">Total Files</div>
+          <div class="stat-value" id="stat-total-files">0</div>
+          <div class="stat-sub" id="stat-total-files-sub">All Evidence</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📷</div>
+          <div class="stat-label">Images</div>
+          <div class="stat-value" id="stat-total-images">0</div>
+          <div class="stat-sub">Photos Submitted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🎥</div>
+          <div class="stat-label">Videos</div>
+          <div class="stat-value" id="stat-total-videos">0</div>
+          <div class="stat-sub">Clips Submitted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-label">Offices</div>
+          <div class="stat-value" id="stat-total-offices">0</div>
+          <div class="stat-sub">With Evidence</div>
+        </div>
+      </div>
+
+      <div class="category-tabs" id="category-tabs">
+        <button class="category-tab active" data-category="all">All Categories <span class="tab-count" id="cat-count-all">0</span></button>
+        <button class="category-tab" data-category="Comfort Room">🚿 Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
+        <button class="category-tab" data-category="Surroundings">🌿 Surroundings <span class="tab-count" id="cat-count-surroundings">0</span></button>
+        <button class="category-tab" data-category="Laboratories">🔬 Laboratories <span class="tab-count" id="cat-count-labs">0</span></button>
+      </div>
+
       <div class="toolbar-row">
-        <div>
-          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#0f172a;margin-bottom:3px;">Multimedia Evidence</div>
-          <div class="toolbar-note">Images and videos attached to Facilities &amp; Cleanliness evaluations</div>
-        </div>
+        <div class="toolbar-note">User-submitted photos and videos as evaluation evidence</div>
         <div class="toolbar-filters">
-          <input type="text" class="filter-search" id="search-input" placeholder="Search office…">
-          <select class="filter-select" id="filter-category">
-            <option value="all">All Categories</option>
-            <option value="Comfort Room">🚿 Comfort Room</option>
-            <option value="Surroundings">🌿 Surroundings</option>
-            <option value="Laboratories">🔬 Laboratories</option>
+          <input type="text" id="media-search" class="filter-search" placeholder="Search by office…">
+          <select id="office-filter" class="filter-select">
+            <option value="">All Offices</option>
           </select>
-          <select class="filter-select" id="filter-type">
-            <option value="all">All Media</option>
-            <option value="image">📷 Images Only</option>
-            <option value="video">🎥 Videos Only</option>
+          <select id="type-filter" class="filter-select">
+            <option value="">All Types</option>
+            <option value="image">Images Only</option>
+            <option value="video">Videos Only</option>
           </select>
+          <input type="date" id="date-filter" class="filter-date">
+          <button class="btn-sm" id="btn-clear-filters">Clear</button>
         </div>
       </div>
 
-      <div class="stat-row">
-        <div class="stat-pill"><div class="sp-label">Total Media</div><div class="sp-value" id="stat-total">0</div></div>
-        <div class="stat-pill"><div class="sp-label">Images</div><div class="sp-value" id="stat-images">0</div></div>
-        <div class="stat-pill"><div class="sp-label">Videos</div><div class="sp-value" id="stat-videos">0</div></div>
-        <div class="stat-pill"><div class="sp-label">With Evidence</div><div class="sp-value" id="stat-evals">0</div></div>
+      <div class="bulk-bar">
+        <span class="bulk-count-text" id="bulk-count-text">0 selected</span>
+        <button class="btn-sm" id="btn-select-all">Select All Shown</button>
+        <button class="btn-sm" id="btn-clear-selection">Clear Selection</button>
+        <button class="btn-danger" id="btn-delete-selected" disabled>🗑️ Delete Selected</button>
       </div>
 
-      <div id="media-grid-container">
-        <div class="empty-note">Loading media…</div>
+      <div class="media-grid" id="media-grid">
+        <div class="empty-media">Loading evidence…</div>
       </div>
+
+      <div class="limits-note">
+        File limits: Images (.png, .jpg, .jpeg) max 10 MB &nbsp;·&nbsp; Videos max 60 MB &nbsp;·&nbsp; Comments: 1–300 words
+        &nbsp;·&nbsp; Tip: select and delete older files to keep storage from filling up.
+      </div>
+
     </div>
   </main>
 </div>
 
-<!-- Lightbox -->
-<div class="lightbox" id="lightbox">
-  <button class="lightbox-close" id="lightbox-close">✕</button>
-  <div id="lightbox-media-wrap"></div>
-  <div class="lightbox-info" id="lightbox-info"></div>
+<!-- MEDIA VIEWER MODAL -->
+<div class="modal-overlay" id="media-modal">
+  <div class="media-modal-content">
+    <div class="media-modal-visual" id="media-modal-visual"></div>
+    <div id="media-modal-body"></div>
+    <div class="media-modal-footer">
+      <button class="btn-secondary" id="media-modal-close">Close</button>
+      <a class="btn-primary" id="media-modal-open-new" href="#" target="_blank" rel="noopener" style="text-align:center; text-decoration:none;">Open Full Size</a>
+    </div>
+  </div>
 </div>
 
 <script src="shared.js"></script>
@@ -108,137 +727,346 @@ import { guard as cvGuard } from "./cv-core.js";
 await cvGuard(["adminfc"]);
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, deleteField
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey:"AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",authDomain:"kristal-adb78.firebaseapp.com",
-  databaseURL:"https://kristal-adb78-default-rtdb.firebaseio.com",projectId:"kristal-adb78",
-  storageBucket:"kristal-adb78.firebasestorage.app",messagingSenderId:"1016283938031",
-  appId:"1:1016283938031:web:54c4d13409d9784ad7af1a",measurementId:"G-LK8D1CBQ2J"
+  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId: "kristal-adb78",
+  storageBucket: "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId: "G-LK8D1CBQ2J"
 };
-const db = getFirestore(initializeApp(firebaseConfig));
 
-document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc","multimedia");
-document.getElementById("topbar-mount").innerHTML = buildTopbar("Multimedia","adminfc");
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-let allMedia = [];
-let filterCat = "all", filterType = "all", searchTerm = "";
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('adminfc', 'multimedia');
+document.getElementById('topbar-mount').innerHTML = buildTopbar('Multimedia Evidence', 'adminfc');
+
+const EVAL_COLLECTION = "facilities_cleanliness_evaluations";
+const FC_CATEGORIES = ["Comfort Room", "Surroundings", "Laboratories"];
+const DEFAULT_CATEGORY = "Comfort Room";
+
+let evaluations = [];
+let mediaItems = [];
+let evalRawData = {};
+let searchTerm = "";
+let officeFilter = "";
+let typeFilter = "";
+let dateFilter = "";
+let categoryFilter = "all";
+let currentFilteredMedia = [];
+let selectedKeys = new Set();
+
+function mediaKey(m) { return `${m.evalId}::${m.index}`; }
 
 function parseEvidence(data) {
   const items = [];
   if (Array.isArray(data.evidenceUrls) && data.evidenceUrls.length) {
+    const types = Array.isArray(data.evidenceTypes) ? data.evidenceTypes : [];
     data.evidenceUrls.forEach((url, i) => {
-      const types = data.evidenceTypes || [];
       if (url) items.push({ url, type: types[i] === "video" ? "video" : "image" });
     });
     return items;
   }
-  if (data.evidenceUrl) items.push({ url: data.evidenceUrl, type: data.evidenceType === "video" ? "video" : "image" });
+  if (data.evidenceUrl) {
+    items.push({ url: data.evidenceUrl, type: data.evidenceType === "video" ? "video" : "image" });
+    return items;
+  }
+  if (data.fileUrl) {
+    const isVideo = /\.(mp4|mov|webm|mkv|avi)(\?|$)/i.test(data.fileUrl);
+    items.push({ url: data.fileUrl, type: isVideo ? "video" : "image" });
+    return items;
+  }
   return items;
 }
 
-function parseDate(ev) {
-  const d = ev.date;
-  if (!d) return 0;
+function parseTimestamp(data) {
+  const d = data.date;
+  if (!d) return Number(data.timestamp) || 0;
   if (typeof d === "number") return d;
   if (typeof d === "object" && d.toMillis) return d.toMillis();
   if (typeof d === "string") { const p = Date.parse(d); return isNaN(p) ? 0 : p; }
   return 0;
 }
 
-onSnapshot(collection(db,"facilities_cleanliness_evaluations"), snap => {
-  allMedia = [];
-  snap.docs.forEach(d => {
-    const ev = d.data();
-    const evidence = parseEvidence(ev);
-    if (!evidence.length) return;
-    const date = parseDate(ev);
-    const dateStr = date ? new Date(date).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "-";
-    evidence.forEach(item => {
-      allMedia.push({
-        ...item,
-        officeName: ev.officeName || "Unknown",
-        cleanlinessCategory: ev.cleanlinessCategory || "",
-        date, dateStr,
-        evalId: d.id
-      });
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function categoryPillHtml(category) {
+  const cls = category === "Surroundings" ? "surroundings" : category === "Laboratories" ? "laboratories" : "comfort-room";
+  const icon = category === "Surroundings" ? "🌿" : category === "Laboratories" ? "🔬" : "🚿";
+  return `<span class="category-pill ${cls}">${icon} ${escapeHtml(category)}</span>`;
+}
+
+const evalQuery = query(collection(db, EVAL_COLLECTION), orderBy("timestamp", "desc"));
+onSnapshot(evalQuery, (snapshot) => {
+  evaluations = [];
+  mediaItems = [];
+  evalRawData = {};
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    evalRawData[docSnap.id] = data;
+
+    const officeName = data.officeName || "Unknown Office";
+    const timestamp = parseTimestamp(data);
+    const cleanlinessComments = data.cleanlinessComments || "";
+    const evidence = parseEvidence(data);
+    const rawCategory = data.cleanlinessCategory;
+    const category = FC_CATEGORIES.includes(rawCategory) ? rawCategory : DEFAULT_CATEGORY;
+
+    evaluations.push({ id: docSnap.id, officeName, timestamp, category });
+
+    evidence.forEach((item, index) => {
+      mediaItems.push({ evalId: docSnap.id, url: item.url, type: item.type, officeName, timestamp, cleanlinessComments, category, index });
     });
   });
-  allMedia.sort((a,b) => b.date - a.date);
-  renderMedia();
+
+  const validKeys = new Set(mediaItems.map(mediaKey));
+  selectedKeys.forEach(k => { if (!validKeys.has(k)) selectedKeys.delete(k); });
+
+  populateOfficeFilter();
+  renderMediaGrid();
 });
 
-function getFiltered() {
+document.getElementById("category-tabs").addEventListener("click", (ev) => {
+  const btn = ev.target.closest(".category-tab");
+  if (!btn) return;
+  categoryFilter = btn.getAttribute("data-category");
+  document.querySelectorAll(".category-tab").forEach(t => t.classList.toggle("active", t === btn));
+  officeFilter = "";
+  document.getElementById("office-filter").value = "";
+  populateOfficeFilter();
+  renderMediaGrid();
+});
+
+function mediaForCategory(category) {
+  return mediaItems.filter(m => category === "all" ? true : m.category === category);
+}
+
+function populateOfficeFilter() {
+  const select = document.getElementById("office-filter");
+  const currentValue = select.value;
+  const offices = [...new Set(mediaForCategory(categoryFilter).map(m => m.officeName))].sort();
+  select.innerHTML = ['<option value="">All Offices</option>']
+    .concat(offices.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`))
+    .join("");
+  select.value = currentValue;
+}
+
+function getFilteredMedia() {
   const term = searchTerm.trim().toLowerCase();
-  return allMedia.filter(m => {
-    if (filterCat !== "all" && m.cleanlinessCategory !== filterCat) return false;
-    if (filterType !== "all" && m.type !== filterType) return false;
+  return mediaForCategory(categoryFilter).filter(m => {
+    if (officeFilter && m.officeName !== officeFilter) return false;
+    if (typeFilter && m.type !== typeFilter) return false;
     if (term && !m.officeName.toLowerCase().includes(term)) return false;
+    if (dateFilter) {
+      const itemDate = m.timestamp ? new Date(m.timestamp).toISOString().slice(0, 10) : "";
+      if (itemDate !== dateFilter) return false;
+    }
     return true;
-  });
+  }).sort((a, b) => b.timestamp - a.timestamp);
 }
 
-function catBadge(cat) {
-  const cls = cat === "Surroundings" ? "surroundings" : cat === "Laboratories" ? "laboratories" : "comfort";
-  return `<span class="cat-badge ${cls}">${cat}</span>`;
-}
+function renderMediaGrid() {
+  document.getElementById("cat-count-all").textContent = evaluations.length;
+  document.getElementById("cat-count-comfort").textContent = evaluations.filter(e => e.category === "Comfort Room").length;
+  document.getElementById("cat-count-surroundings").textContent = evaluations.filter(e => e.category === "Surroundings").length;
+  document.getElementById("cat-count-labs").textContent = evaluations.filter(e => e.category === "Laboratories").length;
 
-function renderMedia() {
-  const filtered = getFiltered();
-  const images = filtered.filter(m => m.type === "image").length;
-  const videos = filtered.filter(m => m.type === "video").length;
-  const evalIds = new Set(filtered.map(m => m.evalId));
+  const categoryScoped = mediaForCategory(categoryFilter);
+  const totalImages = categoryScoped.filter(m => m.type === "image").length;
+  const totalVideos = categoryScoped.filter(m => m.type === "video").length;
+  const distinctOffices = new Set(categoryScoped.map(m => m.officeName));
 
-  document.getElementById("stat-total").textContent = filtered.length;
-  document.getElementById("stat-images").textContent = images;
-  document.getElementById("stat-videos").textContent = videos;
-  document.getElementById("stat-evals").textContent = evalIds.size;
+  document.getElementById("stat-total-files").textContent = categoryScoped.length;
+  document.getElementById("stat-total-files-sub").textContent = categoryFilter === "all" ? "All Evidence" : categoryFilter;
+  document.getElementById("stat-total-images").textContent = totalImages;
+  document.getElementById("stat-total-videos").textContent = totalVideos;
+  document.getElementById("stat-total-offices").textContent = distinctOffices.size;
 
-  const container = document.getElementById("media-grid-container");
-  if (!filtered.length) {
-    container.innerHTML = `<div class="empty-note">No media found for the selected filters.</div>`;
+  const grid = document.getElementById("media-grid");
+  const filtered = getFilteredMedia();
+  currentFilteredMedia = filtered;
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-media">No matching evidence found.</div>`;
+    updateBulkBar();
     return;
   }
-  container.innerHTML = `<div class="media-grid">${filtered.map((m, i) => `
-    <div class="media-card" data-idx="${i}">
-      <div class="media-thumb">
-        ${m.type === "video"
-          ? `<video src="${m.url}" muted preload="metadata"></video>`
-          : `<img src="${m.url}" alt="Evidence" loading="lazy">`}
-        <span class="media-type-badge">${m.type === "video" ? "🎥 Video" : "📷 Image"}</span>
-      </div>
-      <div class="media-info">
-        <div class="media-info-office">${m.officeName}</div>
-        <div class="media-info-meta">${catBadge(m.cleanlinessCategory)} ${m.dateStr}</div>
-      </div>
-    </div>`).join("")}</div>`;
 
-  container.querySelectorAll(".media-card").forEach(card => {
-    card.addEventListener("click", () => {
-      const idx = Number(card.dataset.idx);
-      openLightbox(filtered[idx]);
+  grid.innerHTML = filtered.map((m, i) => {
+    const date = m.timestamp
+      ? new Date(m.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : "-";
+    const visual = m.type === "video"
+      ? `<video src="${m.url}" muted></video>`
+      : `<img src="${m.url}" alt="Evidence" loading="lazy">`;
+    const key = mediaKey(m);
+    const isSelected = selectedKeys.has(key);
+    return `
+      <div class="media-thumb${isSelected ? " selected" : ""}" data-media-index="${i}">
+        <div class="media-thumb-visual">
+          <input type="checkbox" class="media-select" data-media-index="${i}" ${isSelected ? "checked" : ""} title="Select for bulk delete">
+          ${visual}
+          <span class="media-tag">${m.type === "video" ? "Video" : "Image"}</span>
+        </div>
+        <div class="media-thumb-body">
+          <div class="media-office">
+            <span class="media-office-name">${escapeHtml(m.officeName)}</span>
+            ${categoryPillHtml(m.category)}
+          </div>
+          <div class="media-date-row">
+            <span class="media-date">${date}</span>
+            <button class="media-delete-btn" data-media-index="${i}" title="Delete this file">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  grid.querySelectorAll(".media-thumb").forEach(el => {
+    el.addEventListener("click", () => openMediaModal(currentFilteredMedia[Number(el.getAttribute("data-media-index"))]));
+  });
+
+  grid.querySelectorAll(".media-select").forEach(cb => {
+    cb.addEventListener("click", (ev) => ev.stopPropagation());
+    cb.addEventListener("change", (ev) => {
+      ev.stopPropagation();
+      const idx = Number(cb.getAttribute("data-media-index"));
+      const item = currentFilteredMedia[idx];
+      const key = mediaKey(item);
+      if (cb.checked) { selectedKeys.add(key); } else { selectedKeys.delete(key); }
+      cb.closest(".media-thumb").classList.toggle("selected", cb.checked);
+      updateBulkBar();
     });
   });
+
+  grid.querySelectorAll(".media-delete-btn").forEach(btn => {
+    btn.addEventListener("click", async (ev) => {
+      ev.stopPropagation();
+      const idx = Number(btn.getAttribute("data-media-index"));
+      const item = currentFilteredMedia[idx];
+      if (!item) return;
+      if (!confirm(`Delete this ${item.type} from "${item.officeName}"? This cannot be undone.`)) return;
+      btn.disabled = true; btn.textContent = "…";
+      try {
+        await deleteMediaItems([item]);
+      } catch (err) {
+        console.error("Failed to delete media item:", err);
+        alert("Couldn't delete this file: " + err.message);
+        btn.disabled = false; btn.textContent = "🗑️";
+      }
+    });
+  });
+
+  updateBulkBar();
 }
 
-// Lightbox
-const lightbox = document.getElementById("lightbox");
-function openLightbox(m) {
-  const wrap = document.getElementById("lightbox-media-wrap");
-  if (m.type === "video") {
-    wrap.innerHTML = `<video src="${m.url}" class="lightbox-media" controls autoplay></video>`;
-  } else {
-    wrap.innerHTML = `<img src="${m.url}" class="lightbox-media" alt="Evidence">`;
+function updateBulkBar() {
+  const count = selectedKeys.size;
+  document.getElementById("bulk-count-text").textContent = count === 1 ? "1 selected" : `${count} selected`;
+  document.getElementById("btn-delete-selected").disabled = count === 0;
+}
+
+document.getElementById("btn-select-all").addEventListener("click", () => {
+  currentFilteredMedia.forEach(m => selectedKeys.add(mediaKey(m)));
+  renderMediaGrid();
+});
+
+document.getElementById("btn-clear-selection").addEventListener("click", () => {
+  selectedKeys.clear();
+  renderMediaGrid();
+});
+
+document.getElementById("btn-delete-selected").addEventListener("click", async () => {
+  const items = mediaItems.filter(m => selectedKeys.has(mediaKey(m)));
+  if (!items.length) return;
+  if (!confirm(`Delete ${items.length} selected file${items.length === 1 ? "" : "s"}? This cannot be undone.`)) return;
+  const btn = document.getElementById("btn-delete-selected");
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = "Deleting…";
+  try {
+    await deleteMediaItems(items);
+    selectedKeys.clear();
+  } catch (err) {
+    console.error("Failed to delete selected media:", err);
+    alert("Some files couldn't be deleted: " + err.message);
+  } finally {
+    btn.textContent = originalText;
+    updateBulkBar();
   }
-  document.getElementById("lightbox-info").textContent = `${m.officeName} · ${m.cleanlinessCategory} · ${m.dateStr}`;
-  lightbox.classList.add("open");
-}
-document.getElementById("lightbox-close").addEventListener("click", () => { lightbox.classList.remove("open"); document.getElementById("lightbox-media-wrap").innerHTML = ""; });
-lightbox.addEventListener("click", ev => { if (ev.target === lightbox) { lightbox.classList.remove("open"); document.getElementById("lightbox-media-wrap").innerHTML = ""; } });
+});
 
-document.getElementById("search-input").addEventListener("input", ev => { searchTerm = ev.target.value; renderMedia(); });
-document.getElementById("filter-category").addEventListener("change", ev => { filterCat = ev.target.value; renderMedia(); });
-document.getElementById("filter-type").addEventListener("change", ev => { filterType = ev.target.value; renderMedia(); });
+async function deleteMediaItems(items) {
+  const byEval = {};
+  items.forEach(it => { if (!byEval[it.evalId]) byEval[it.evalId] = []; byEval[it.evalId].push(it.index); });
+  const updates = Object.entries(byEval).map(async ([evalId, indices]) => {
+    const data = evalRawData[evalId];
+    if (!data) return;
+    const removeSet = new Set(indices);
+    const evalDocRef = doc(db, EVAL_COLLECTION, evalId);
+    if (Array.isArray(data.evidenceUrls) && data.evidenceUrls.length) {
+      const oldTypes = Array.isArray(data.evidenceTypes) ? data.evidenceTypes : [];
+      const newUrls = data.evidenceUrls.filter((_, i) => !removeSet.has(i));
+      const newTypes = oldTypes.filter((_, i) => !removeSet.has(i));
+      await updateDoc(evalDocRef, { evidenceUrls: newUrls, evidenceTypes: newTypes });
+    } else if (data.evidenceUrl) {
+      if (removeSet.has(0)) await updateDoc(evalDocRef, { evidenceUrl: deleteField(), evidenceType: deleteField() });
+    } else if (data.fileUrl) {
+      if (removeSet.has(0)) await updateDoc(evalDocRef, { fileUrl: deleteField() });
+    }
+  });
+  await Promise.all(updates);
+}
+
+document.getElementById("media-search").addEventListener("input", (ev) => { searchTerm = ev.target.value; renderMediaGrid(); });
+document.getElementById("office-filter").addEventListener("change", (ev) => { officeFilter = ev.target.value; renderMediaGrid(); });
+document.getElementById("type-filter").addEventListener("change", (ev) => { typeFilter = ev.target.value; renderMediaGrid(); });
+document.getElementById("date-filter").addEventListener("change", (ev) => { dateFilter = ev.target.value; renderMediaGrid(); });
+document.getElementById("btn-clear-filters").addEventListener("click", () => {
+  searchTerm = ""; officeFilter = ""; typeFilter = ""; dateFilter = "";
+  document.getElementById("media-search").value = "";
+  document.getElementById("office-filter").value = "";
+  document.getElementById("type-filter").value = "";
+  document.getElementById("date-filter").value = "";
+  renderMediaGrid();
+});
+
+const mediaModal = document.getElementById("media-modal");
+const mediaModalVisual = document.getElementById("media-modal-visual");
+const mediaModalBody = document.getElementById("media-modal-body");
+const mediaModalOpenNew = document.getElementById("media-modal-open-new");
+
+function openMediaModal(m) {
+  if (!m) return;
+  const date = m.timestamp ? new Date(m.timestamp).toLocaleString() : "-";
+  mediaModalVisual.innerHTML = m.type === "video"
+    ? `<video src="${m.url}" controls autoplay></video>`
+    : `<img src="${m.url}" alt="Evidence">`;
+  mediaModalBody.innerHTML = `
+    <div class="modal-row"><span>Office</span><span>${escapeHtml(m.officeName)}</span></div>
+    <div class="modal-row"><span>Category</span><span>${categoryPillHtml(m.category)}</span></div>
+    <div class="modal-row"><span>Type</span><span>${m.type === "video" ? "Video" : "Image"}</span></div>
+    <div class="modal-row"><span>Submitted</span><span>${date}</span></div>
+    <div class="modal-row"><span>Comments</span><span>${escapeHtml(m.cleanlinessComments) || "-"}</span></div>
+  `;
+  mediaModalOpenNew.href = m.url;
+  mediaModal.classList.add("open");
+}
+
+document.getElementById("media-modal-close").addEventListener("click", closeMediaModal);
+mediaModal.addEventListener("click", (ev) => { if (ev.target === mediaModal) closeMediaModal(); });
+function closeMediaModal() { mediaModal.classList.remove("open"); mediaModalVisual.innerHTML = ""; }
 </script>
 </body>
 </html>
