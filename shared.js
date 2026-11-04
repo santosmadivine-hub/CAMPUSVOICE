@@ -36,7 +36,8 @@ const PAGE_SUBTITLES = {
     'reports':               'Generate and Review Facility Reports',
     'multimedia':            'View and Manage Evaluation Evidence',
     'multimedia feedback':   'View and Manage Evaluation Evidence', // old title, kept so existing pages still work
-    'analytics':             'Analyze Facility Evaluation Results and Trends'
+    'analytics':             'Analyze Facility Evaluation Results and Trends',
+    'question management':   'Manage Evaluation Questions Shown to Users'
   }
 };
 
@@ -75,6 +76,7 @@ function buildSidebar(role, activePage) {
     { id: 'dashboard', icon: '🏠', label: 'Dashboard', href: 'adminfc-dashboard.html' },
     { id: 'office-mgmt', icon: '🏢', label: 'Office Management', href: 'adminfc-office-mgmt.html' },
     { id: 'eval-mgmt', icon: '📋', label: 'Evaluation Management', href: 'adminfc-eval-mgmt.html' },
+    { id: 'question-mgmt', icon: '❓', label: 'Question Management', href: 'adminfc-question-mgmt.html' },
     { id: 'reports', icon: '📊', label: 'Reports', href: 'adminfc-reports.html' },
     { id: 'multimedia', icon: '📷', label: 'Multimedia', href: 'adminfc-multimedia.html' },
     { id: 'analytics', icon: '📈', label: 'Analytics', href: 'adminfc-analytics.html' },
