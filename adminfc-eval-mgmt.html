@@ -218,6 +218,33 @@
   .chat-send-btn:hover:not(:disabled) { background:#1d4ed8; }
   .chat-send-btn:disabled { opacity:.55; cursor:default; }
 
+  /* Question Management */
+  .q-section-tabs { display:flex; gap:4px; margin-bottom:18px; padding:4px; background:#f1f5f9; border-radius:12px; flex-wrap:wrap; }
+  .q-section-tab {
+    background:none; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:700;
+    font-size:13px; color:#64748b; padding:9px 16px; border-radius:8px;
+    transition:background .2s,color .2s,box-shadow .2s; white-space:nowrap;
+  }
+  .q-section-tab:hover { color:#0f172a; background:#e2e8f0; }
+  .q-section-tab.active { color:#fff; background:#2563eb; box-shadow:0 4px 12px rgba(37,99,235,.28); }
+  .q-table { width:100%; border-collapse:collapse; }
+  .q-table th {
+    text-align:left; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; color:#475569; padding:12px 14px;
+    border-bottom:2px solid #bae6fd; background:#f0f9ff; white-space:nowrap;
+  }
+  .q-table td { padding:12px 14px; border-bottom:1px solid #f0f9ff; font-family:'DM Sans',sans-serif; font-size:13px; color:#334155; vertical-align:middle; }
+  .q-table tbody tr:hover td { background:#f0f9ff; }
+  .q-table tbody tr:hover td:first-child { box-shadow:inset 4px 0 0 #2563eb; }
+  .q-table tbody tr:last-child td { border-bottom:none; }
+  .q-order-badge { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px; background:#dbeafe; color:#1d4ed8; font-weight:700; font-size:12px; }
+  .q-active-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:700; }
+  .q-active-badge.active { background:#dcfce7; color:#166534; }
+  .q-active-badge.inactive { background:#f1f5f9; color:#64748b; }
+  .q-section-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+  .q-section-pill.cleanliness { background:#e0f2fe; color:#0369a1; }
+  .q-section-pill.facilities { background:#ede9fe; color:#6d28d9; }
+
   @media(max-width:1400px){.eval-stats{grid-template-columns:repeat(3,1fr);}}
   @media(max-width:900px){.eval-stats{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:600px){.eval-stats{grid-template-columns:1fr;} .ratings-grid{grid-template-columns:1fr;}}
@@ -326,6 +353,36 @@
           </table>
         </div>
       </div>
+
+      <!-- Question Management Card -->
+      <div class="card">
+        <div class="submissions-toolbar">
+          <div>
+            <div class="card-title">Evaluation Questions</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:#64748b;margin-top:4px;">Questions displayed to users in the evaluation form</div>
+          </div>
+          <button class="btn btn-add" id="btn-add-question">➕ Add Question</button>
+        </div>
+        <div class="q-section-tabs" id="q-section-tabs">
+          <button class="q-section-tab active" data-section="cleanliness">🧹 Cleanliness</button>
+          <button class="q-section-tab" data-section="facilities">🏢 Facilities</button>
+        </div>
+        <div class="table-wrap">
+          <table class="q-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Question</th>
+                <th>Section</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="q-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
@@ -431,6 +488,53 @@
   </div>
 </div>
 
+<!-- QUESTION ADD/EDIT MODAL -->
+<div class="modal-overlay" id="q-form-modal">
+  <div class="modal-content">
+    <h3 id="q-form-title">➕ Add Question</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="edit-field">
+        <label>Section</label>
+        <select id="q-form-section">
+          <option value="cleanliness">Cleanliness</option>
+          <option value="facilities">Facilities</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label>Order / Number</label>
+        <input type="number" id="q-form-order" min="1" max="50" value="1">
+      </div>
+    </div>
+    <div class="edit-field">
+      <label>Question Label</label>
+      <textarea id="q-form-label" rows="3" placeholder="e.g. The comfort room is clean and well-maintained."></textarea>
+    </div>
+    <div class="edit-field">
+      <label>Status</label>
+      <select id="q-form-active">
+        <option value="true">Active — shown to users</option>
+        <option value="false">Inactive — hidden from form</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="q-form-cancel">Cancel</button>
+      <button class="btn btn-primary" id="q-form-save">Add Question</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTION DELETE MODAL -->
+<div class="modal-overlay" id="q-delete-modal">
+  <div class="modal-content modal-danger">
+    <h3>🗑️ Delete Question</h3>
+    <div class="danger-text" id="q-delete-text">Are you sure you want to delete this question? This action cannot be undone.</div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="q-delete-cancel">Cancel</button>
+      <button class="btn btn-danger" id="q-delete-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+
 <script src="shared.js"></script>
 <script type="module">
 import { guard as cvGuard } from "./cv-core.js";
@@ -469,15 +573,15 @@ const NOTIFICATIONS_COLLECTION = "notifications";
 const ADMIN_SENDER_ID = "fc_admin";
 const LOW_RATING_THRESHOLD = 3;
 
-const CL_QUESTIONS = [
-  "1. The comfort room / surroundings is clean.",
-  "2. The area is free from foul odors.",
-  "3. The floors and surfaces are well-maintained.",
+let CL_QUESTIONS = [
+  "1. The area is clean and well-maintained.",
+  "2. Trashbins are available and regularly emptied.",
+  "3. The area is free from foul odors.",
   "4. Adequate supplies (tissue, soap, etc.) are available.",
   "5. The area is properly sanitized and disinfected."
 ];
-const FAC_QUESTIONS = [
-  "1. The needed equipment/resources are available.",
+let FAC_QUESTIONS = [
+  "1. The needed equipment/resources are working properly.",
   "2. The equipment/resources are working properly.",
   "3. The facility has enough resources to meet users' needs.",
   "4. The facility is clean and well-maintained.",
@@ -1082,6 +1186,170 @@ async function sendChatMessage() {
 document.getElementById("chat-send-btn").addEventListener("click", sendChatMessage);
 document.getElementById("chat-input").addEventListener("keydown", ev => {
   if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); sendChatMessage(); }
+});
+
+// ── Question Management ──
+const QUESTIONS_COLLECTION = "fc_evaluation_questions";
+let questions = [];
+let qSection = "cleanliness";
+let editingQId = null;
+let deletingQId = null;
+
+function updateRatingFieldLabels() {
+  const clActive = questions.filter(q => q.section === "cleanliness" && q.active !== false)
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+  const facActive = questions.filter(q => q.section === "facilities" && q.active !== false)
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  document.querySelectorAll("#cleanliness-ratings-fields .edit-field").forEach((field, i) => {
+    const lbl = field.querySelector("label");
+    if (lbl) lbl.textContent = clActive[i] ? clActive[i].label.slice(0, 55) + (clActive[i].label.length > 55 ? "…" : "") : `Q${i + 1}`;
+  });
+  document.querySelectorAll("#facilities-ratings-fields .edit-field").forEach((field, i) => {
+    const lbl = field.querySelector("label");
+    if (lbl) lbl.textContent = facActive[i] ? facActive[i].label.slice(0, 55) + (facActive[i].label.length > 55 ? "…" : "") : `Q${i + 1}`;
+  });
+}
+
+onSnapshot(collection(db, QUESTIONS_COLLECTION), snap => {
+  questions = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  const clActive = questions.filter(q => q.section === "cleanliness" && q.active !== false)
+    .sort((a, b) => (a.order || 0) - (b.order || 0)).map(q => q.label);
+  const facActive = questions.filter(q => q.section === "facilities" && q.active !== false)
+    .sort((a, b) => (a.order || 0) - (b.order || 0)).map(q => q.label);
+  if (clActive.length) CL_QUESTIONS = clActive;
+  if (facActive.length) FAC_QUESTIONS = facActive;
+
+  updateRatingFieldLabels();
+  renderQuestions();
+});
+
+function renderQuestions() {
+  const filtered = questions.filter(q => q.section === qSection);
+  const tbody = document.getElementById("q-tbody");
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">No questions yet. Click "Add Question" to add one.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(q => {
+    const sectionCls = q.section === "facilities" ? "facilities" : "cleanliness";
+    const sectionLabel = q.section === "facilities" ? "🏢 Facilities" : "🧹 Cleanliness";
+    return `
+      <tr>
+        <td><span class="q-order-badge">${q.order || "—"}</span></td>
+        <td style="max-width:480px;">${(q.label || "—")}</td>
+        <td><span class="q-section-pill ${sectionCls}">${sectionLabel}</span></td>
+        <td><span class="q-active-badge ${q.active !== false ? "active" : "inactive"}">${q.active !== false ? "✅ Active" : "⏸ Inactive"}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="btn-edit" data-q-id="${q.id}">Edit</button>
+          <button class="btn-delete" data-q-id="${q.id}">Delete</button>
+        </td>
+      </tr>`;
+  }).join("");
+
+  tbody.querySelectorAll(".btn-edit[data-q-id]").forEach(b => b.addEventListener("click", () => openQFormModal(b.dataset.qId)));
+  tbody.querySelectorAll(".btn-delete[data-q-id]").forEach(b => b.addEventListener("click", () => openQDeleteModal(b.dataset.qId)));
+}
+
+document.getElementById("q-section-tabs").addEventListener("click", ev => {
+  const btn = ev.target.closest(".q-section-tab");
+  if (!btn) return;
+  qSection = btn.dataset.section;
+  document.querySelectorAll(".q-section-tab").forEach(t => t.classList.toggle("active", t === btn));
+  renderQuestions();
+});
+
+document.getElementById("btn-add-question").addEventListener("click", () => openQFormModal(null));
+
+const qFormModal = document.getElementById("q-form-modal");
+
+function openQFormModal(qId) {
+  editingQId = qId;
+  const isEdit = !!qId;
+  document.getElementById("q-form-title").textContent = isEdit ? "✏️ Edit Question" : "➕ Add Question";
+  document.getElementById("q-form-save").textContent = isEdit ? "Save Changes" : "Add Question";
+
+  if (isEdit) {
+    const q = questions.find(x => x.id === qId);
+    if (!q) return;
+    document.getElementById("q-form-section").value = q.section || "cleanliness";
+    document.getElementById("q-form-order").value = q.order || 1;
+    document.getElementById("q-form-label").value = q.label || "";
+    document.getElementById("q-form-active").value = String(q.active !== false);
+  } else {
+    const nextOrder = questions.filter(q => q.section === qSection).length + 1;
+    document.getElementById("q-form-section").value = qSection;
+    document.getElementById("q-form-order").value = nextOrder;
+    document.getElementById("q-form-label").value = "";
+    document.getElementById("q-form-active").value = "true";
+  }
+  qFormModal.classList.add("open");
+}
+
+document.getElementById("q-form-cancel").addEventListener("click", () => { qFormModal.classList.remove("open"); editingQId = null; });
+qFormModal.addEventListener("click", ev => { if (ev.target === qFormModal) { qFormModal.classList.remove("open"); editingQId = null; } });
+
+document.getElementById("q-form-save").addEventListener("click", async () => {
+  const label = document.getElementById("q-form-label").value.trim();
+  if (!label) { alert("Please enter a question label."); return; }
+
+  const btn = document.getElementById("q-form-save");
+  btn.disabled = true; btn.textContent = "Saving...";
+
+  const payload = {
+    section: document.getElementById("q-form-section").value,
+    order: Number(document.getElementById("q-form-order").value) || 1,
+    label,
+    active: document.getElementById("q-form-active").value === "true"
+  };
+
+  try {
+    if (editingQId) {
+      await updateDoc(doc(db, QUESTIONS_COLLECTION, editingQId), payload);
+    } else {
+      await addDoc(collection(db, QUESTIONS_COLLECTION), payload);
+    }
+    qFormModal.classList.remove("open");
+    editingQId = null;
+  } catch (err) {
+    alert("Failed to save question. Please try again.");
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = editingQId ? "Save Changes" : "Add Question";
+  }
+});
+
+const qDeleteModal = document.getElementById("q-delete-modal");
+
+function openQDeleteModal(qId) {
+  const q = questions.find(x => x.id === qId);
+  if (!q) return;
+  deletingQId = qId;
+  const preview = (q.label || "").slice(0, 80) + ((q.label || "").length > 80 ? "…" : "");
+  document.getElementById("q-delete-text").textContent = `Delete "${preview}"? This cannot be undone.`;
+  qDeleteModal.classList.add("open");
+}
+
+document.getElementById("q-delete-cancel").addEventListener("click", () => { qDeleteModal.classList.remove("open"); deletingQId = null; });
+qDeleteModal.addEventListener("click", ev => { if (ev.target === qDeleteModal) { qDeleteModal.classList.remove("open"); deletingQId = null; } });
+
+document.getElementById("q-delete-confirm").addEventListener("click", async () => {
+  if (!deletingQId) return;
+  const btn = document.getElementById("q-delete-confirm");
+  btn.disabled = true; btn.textContent = "Deleting...";
+  try {
+    await deleteDoc(doc(db, QUESTIONS_COLLECTION, deletingQId));
+    qDeleteModal.classList.remove("open");
+    deletingQId = null;
+  } catch (err) {
+    alert("Failed to delete question. Please try again.");
+    console.error(err);
+  } finally {
+    btn.disabled = false; btn.textContent = "Delete";
+  }
 });
 </script>
 </body>
