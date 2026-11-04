@@ -225,8 +225,12 @@
       </div>
     </div>
     <div class="edit-field">
-      <label>Question Text</label>
+      <label>Question Text (English)</label>
       <textarea id="form-label" rows="3" placeholder="e.g. The area is clean and well-maintained."></textarea>
+    </div>
+    <div class="edit-field">
+      <label>Filipino Translation <span style="color:#94a3b8;font-weight:400;text-transform:none;">(optional)</span></label>
+      <textarea id="form-labelFilipino" rows="3" placeholder="e.g. Ang lugar ay malinis at maayos."></textarea>
     </div>
     <div class="edit-field">
       <label>Visibility</label>
@@ -333,7 +337,7 @@ function renderQuestions() {
     return `
       <tr>
         <td><span class="q-order-badge">${q.order || i + 1}</span></td>
-        <td class="q-label-cell">${q.label || "—"}</td>
+        <td class="q-label-cell">${q.label || "—"}${q.labelFilipino ? ' <span title="Filipino translation available" style="font-size:11px;opacity:.7;">🇵🇭</span>' : ''}</td>
         <td><span class="section-pill ${secCls}">${secLabel}</span></td>
         <td><span class="q-active-badge ${isActive ? "on" : "off"}">${isActive ? "✅ Active" : "⏸ Inactive"}</span></td>
         <td style="white-space:nowrap;">
@@ -377,6 +381,7 @@ function openForm(qId) {
     document.getElementById("form-section").value = q.section || "cleanliness";
     document.getElementById("form-order").value = q.order || 1;
     document.getElementById("form-label").value = q.label || "";
+    document.getElementById("form-labelFilipino").value = q.labelFilipino || "";
     document.getElementById("form-active").value = String(q.active !== false);
   } else {
     const curSec = secFilter !== "all" ? secFilter : "cleanliness";
@@ -384,6 +389,7 @@ function openForm(qId) {
     document.getElementById("form-section").value = curSec;
     document.getElementById("form-order").value = nextOrder;
     document.getElementById("form-label").value = "";
+    document.getElementById("form-labelFilipino").value = "";
     document.getElementById("form-active").value = "true";
   }
   formModal.classList.add("open");
@@ -404,6 +410,7 @@ document.getElementById("form-save").addEventListener("click", async () => {
     section: document.getElementById("form-section").value,
     order: Number(document.getElementById("form-order").value) || 1,
     label,
+    labelFilipino: document.getElementById("form-labelFilipino").value.trim(),
     active: document.getElementById("form-active").value === "true"
   };
 
