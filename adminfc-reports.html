@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Reports | Admin FC</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .card { background:#fff; border:1px solid #bae6fd; border-radius:12px; box-shadow:0 4px 14px rgba(15,23,42,.05); padding:20px; margin-bottom:24px; }
+  .card-title { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; margin:0 0 14px 0; color:#0f172a; }
+  .toolbar-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .toolbar-filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .btn { border:none; cursor:pointer; border-radius:10px; padding:10px 16px; font-weight:600; font-family:'DM Sans',sans-serif; font-size:13px; transition:background .2s,transform .2s; }
+  .btn:hover:not(:disabled) { transform:translateY(-2px); }
+  .btn-secondary { background:#e2e8f0; color:#0f172a; }
+  .btn-secondary:hover:not(:disabled) { background:#dbeafe; color:#1e40af; }
+  .btn-print { background:linear-gradient(160deg,#3b82f6,#2563eb); color:#fff; box-shadow:0 4px 12px rgba(37,99,235,.28); }
+  .filter-select { height:40px; background:#f8fafc; border:1px solid #bae6fd; border-radius:10px; padding:0 12px; font-family:'DM Sans',sans-serif; font-size:13px; color:#0f172a; cursor:pointer; -webkit-appearance:none; appearance:none; }
+  .filter-select:focus { outline:none; border-color:#2563eb; }
+  .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+  .summary-pill {
+    background:#f0f9ff; border:1px solid #bae6fd; border-radius:12px; padding:14px 16px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .summary-pill .sp-label { font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+  .summary-pill .sp-value { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; color:#0f172a; }
+  .summary-pill .sp-sub { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; }
+  .section-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:#0369a1; text-transform:uppercase; letter-spacing:.06em; margin:0 0 12px 0; padding-bottom:6px; border-bottom:2px solid #bae6fd; }
+  .report-table { width:100%; border-collapse:collapse; font-family:'DM Sans',sans-serif; }
+  .report-table th { font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#475569; padding:10px 12px; border-bottom:2px solid #bae6fd; background:#f8fafc; text-align:left; white-space:nowrap; }
+  .report-table td { font-size:13px; color:#334155; padding:10px 12px; border-bottom:1px solid #f0f9ff; vertical-align:middle; }
+  .report-table tbody tr:last-child td { border-bottom:none; }
+  .report-table tbody tr:hover td { background:#f0f9ff; }
+  .avg-cell { font-weight:700; text-align:center; }
+  .avg-high { color:#166534; }
+  .avg-mid { color:#b45309; }
+  .avg-low { color:#991b1b; }
+  .empty-note { font-size:13px; color:#94a3b8; text-align:center; padding:30px 0; font-style:italic; }
+  @media(max-width:1100px){.summary-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:600px){.summary-grid{grid-template-columns:1fr;}  .toolbar-row{flex-direction:column;align-items:flex-start;}}
+  @media print {
+    .main > div:first-child { display:none; }
+    .btn, .toolbar-filters { display:none !important; }
+    .card { box-shadow:none; border:1px solid #ccc; page-break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+    <div style="margin-top:28px;">
+      <div class="toolbar-row">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#0f172a;">Evaluation Reports</div>
+        <div class="toolbar-filters">
+          <select class="filter-select" id="filter-category">
+            <option value="all">All Categories</option>
+            <option value="Comfort Room">🚿 Comfort Room</option>
+            <option value="Surroundings">🌿 Surroundings</option>
+            <option value="Laboratories">🔬 Laboratories</option>
+          </select>
+          <select class="filter-select" id="filter-office">
+            <option value="">All Offices</option>
+          </select>
+          <select class="filter-select" id="filter-year">
+            <option value="">All Years</option>
+          </select>
+          <button class="btn btn-print" id="btn-print">🖨️ Print Report</button>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-grid">
+        <div class="summary-pill"><div class="sp-label">Total Evaluations</div><div class="sp-value" id="rpt-total">0</div><div class="sp-sub">Filtered</div></div>
+        <div class="summary-pill"><div class="sp-label">Overall Avg</div><div class="sp-value" id="rpt-overall-avg">—</div><div class="sp-sub">All Ratings / 5</div></div>
+        <div class="summary-pill"><div class="sp-label">Cleanliness Avg</div><div class="sp-value" id="rpt-cl-avg">—</div><div class="sp-sub">Q1–Q5 / 5</div></div>
+        <div class="summary-pill"><div class="sp-label">Facilities Avg</div><div class="sp-value" id="rpt-fac-avg">—</div><div class="sp-sub">Q1–Q8 / 5</div></div>
+      </div>
+
+      <!-- Cleanliness Report -->
+      <div class="card">
+        <div class="section-title">Cleanliness Ratings by Office</div>
+        <div style="overflow-x:auto;">
+          <table class="report-table" id="cl-table">
+            <thead>
+              <tr>
+                <th>Office</th><th>Category</th><th>Count</th>
+                <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Q5</th><th>Avg</th>
+              </tr>
+            </thead>
+            <tbody id="cl-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Facilities Report -->
+      <div class="card">
+        <div class="section-title">Facilities Ratings by Office</div>
+        <div style="overflow-x:auto;">
+          <table class="report-table" id="fac-table">
+            <thead>
+              <tr>
+                <th>Office</th><th>Count</th>
+                <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Q5</th><th>Q6</th><th>Q7</th><th>Q8</th><th>Avg</th>
+              </tr>
+            </thead>
+            <tbody id="fac-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Comments -->
+      <div class="card">
+        <div class="section-title">Recent Comments</div>
+        <div id="comments-list"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script type="module">
+import { guard as cvGuard } from "./cv-core.js";
+await cvGuard(["adminfc"]);
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",authDomain:"kristal-adb78.firebaseapp.com",
+  databaseURL:"https://kristal-adb78-default-rtdb.firebaseio.com",projectId:"kristal-adb78",
+  storageBucket:"kristal-adb78.firebasestorage.app",messagingSenderId:"1016283938031",
+  appId:"1:1016283938031:web:54c4d13409d9784ad7af1a",measurementId:"G-LK8D1CBQ2J"
+};
+const db = getFirestore(initializeApp(firebaseConfig));
+
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc","reports");
+document.getElementById("topbar-mount").innerHTML = buildTopbar("Reports","adminfc");
+
+let evaluations = [];
+let filterCat = "all", filterOffice = "", filterYear = "";
+
+function parseDate(ev) {
+  const d = ev.date;
+  if (!d) return 0;
+  if (typeof d === "number") return d;
+  if (typeof d === "object" && d.toMillis) return d.toMillis();
+  if (typeof d === "string") { const p = Date.parse(d); return isNaN(p) ? 0 : p; }
+  return 0;
+}
+
+onSnapshot(collection(db,"facilities_cleanliness_evaluations"), snap => {
+  evaluations = snap.docs.map(d => {
+    const ev = d.data();
+    return {
+      id: d.id,
+      officeName: ev.officeName || "Unknown",
+      cleanlinessCategory: ev.cleanlinessCategory || "",
+      date: parseDate(ev),
+      cl: [1,2,3,4,5].map(i => Number(ev[`cleanlinessRating${i}`]) || 0),
+      fac: [1,2,3,4,5,6,7,8].map(i => Number(ev[`facilitiesRating${i}`]) || 0),
+      cleanlinessComments: ev.cleanlinessComments || "",
+      facilitiesComments: ev.facilitiesComments || "",
+    };
+  });
+  buildFilters();
+  renderReport();
+});
+
+function buildFilters() {
+  const offices = [...new Set(evaluations.map(e => e.officeName))].sort();
+  const sel = document.getElementById("filter-office");
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">All Offices</option>` + offices.map(o => `<option value="${o}">${o}</option>`).join("");
+  if (cur) sel.value = cur;
+
+  const years = [...new Set(evaluations.map(e => e.date ? new Date(e.date).getFullYear() : null).filter(Boolean))].sort((a,b)=>b-a);
+  const ys = document.getElementById("filter-year");
+  const curY = ys.value;
+  ys.innerHTML = `<option value="">All Years</option>` + years.map(y => `<option value="${y}">${y}</option>`).join("");
+  if (curY) ys.value = curY;
+}
+
+function getFiltered() {
+  return evaluations.filter(e => {
+    if (filterCat !== "all" && e.cleanlinessCategory !== filterCat) return false;
+    if (filterOffice && e.officeName !== filterOffice) return false;
+    if (filterYear && e.date && new Date(e.date).getFullYear() !== Number(filterYear)) return false;
+    return true;
+  });
+}
+
+function avgColor(v) {
+  if (v >= 4) return "avg-high";
+  if (v >= 3) return "avg-mid";
+  return "avg-low";
+}
+
+function renderReport() {
+  const data = getFiltered();
+  if (!data.length) {
+    document.getElementById("rpt-total").textContent = "0";
+    document.getElementById("rpt-overall-avg").textContent = "—";
+    document.getElementById("rpt-cl-avg").textContent = "—";
+    document.getElementById("rpt-fac-avg").textContent = "—";
+    document.getElementById("cl-tbody").innerHTML = `<tr><td colspan="9" class="empty-note">No data</td></tr>`;
+    document.getElementById("fac-tbody").innerHTML = `<tr><td colspan="11" class="empty-note">No data</td></tr>`;
+    document.getElementById("comments-list").innerHTML = `<div class="empty-note">No comments</div>`;
+    return;
+  }
+
+  const clVals = data.flatMap(e => e.cl).filter(v => v > 0);
+  const facVals = data.flatMap(e => e.fac).filter(v => v > 0);
+  const allVals = [...clVals, ...facVals];
+  const avg = arr => arr.length ? (arr.reduce((a,v) => a+v, 0) / arr.length) : 0;
+
+  document.getElementById("rpt-total").textContent = data.length;
+  document.getElementById("rpt-overall-avg").textContent = avg(allVals).toFixed(2);
+  document.getElementById("rpt-cl-avg").textContent = avg(clVals).toFixed(2);
+  document.getElementById("rpt-fac-avg").textContent = avg(facVals).toFixed(2);
+
+  // Group by office + cleanlinessCategory for cleanliness table
+  const clGroups = {};
+  data.forEach(e => {
+    const key = `${e.officeName}||${e.cleanlinessCategory}`;
+    if (!clGroups[key]) clGroups[key] = { officeName: e.officeName, cat: e.cleanlinessCategory, items: [] };
+    clGroups[key].items.push(e);
+  });
+  document.getElementById("cl-tbody").innerHTML = Object.values(clGroups).sort((a,b) => a.officeName.localeCompare(b.officeName)).map(g => {
+    const qs = [1,2,3,4,5].map(i => avg(g.items.map(e => e.cl[i-1]).filter(v => v > 0)));
+    const a = avg(qs.filter(v=>v>0));
+    return `<tr>
+      <td><strong>${g.officeName}</strong></td>
+      <td><span style="font-size:12px;color:#0369a1;font-weight:600;">${g.cat}</span></td>
+      <td style="text-align:center;">${g.items.length}</td>
+      ${qs.map(q => `<td class="avg-cell ${avgColor(q)}">${q.toFixed(1)}</td>`).join("")}
+      <td class="avg-cell ${avgColor(a)}">${a.toFixed(2)}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="9" class="empty-note">No data</td></tr>`;
+
+  // Group by office for facilities table
+  const facGroups = {};
+  data.forEach(e => {
+    if (!facGroups[e.officeName]) facGroups[e.officeName] = [];
+    facGroups[e.officeName].push(e);
+  });
+  document.getElementById("fac-tbody").innerHTML = Object.entries(facGroups).sort((a,b) => a[0].localeCompare(b[0])).map(([office, items]) => {
+    const qs = [1,2,3,4,5,6,7,8].map(i => avg(items.map(e => e.fac[i-1]).filter(v => v > 0)));
+    const a = avg(qs.filter(v=>v>0));
+    return `<tr>
+      <td><strong>${office}</strong></td>
+      <td style="text-align:center;">${items.length}</td>
+      ${qs.map(q => `<td class="avg-cell ${avgColor(q)}">${q.toFixed(1)}</td>`).join("")}
+      <td class="avg-cell ${avgColor(a)}">${a.toFixed(2)}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="11" class="empty-note">No data</td></tr>`;
+
+  // Comments
+  const comments = data
+    .filter(e => e.cleanlinessComments || e.facilitiesComments)
+    .sort((a,b) => b.date - a.date)
+    .slice(0, 20);
+  document.getElementById("comments-list").innerHTML = comments.length ? comments.map(e => {
+    const date = e.date ? new Date(e.date).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "-";
+    return `<div style="padding:10px 0;border-bottom:1px solid #f0f9ff;">
+      <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:#94a3b8;margin-bottom:4px;">${e.officeName} · ${e.cleanlinessCategory} · ${date}</div>
+      ${e.cleanlinessComments ? `<div style="font-size:13px;color:#334155;margin-bottom:3px;"><span style="font-weight:600;color:#0369a1;">Cleanliness:</span> ${e.cleanlinessComments}</div>` : ""}
+      ${e.facilitiesComments ? `<div style="font-size:13px;color:#334155;"><span style="font-weight:600;color:#059669;">Facilities:</span> ${e.facilitiesComments}</div>` : ""}
+    </div>`;
+  }).join("") : `<div class="empty-note">No comments in selected range.</div>`;
+}
+
+document.getElementById("filter-category").addEventListener("change", ev => { filterCat = ev.target.value; renderReport(); });
+document.getElementById("filter-office").addEventListener("change", ev => { filterOffice = ev.target.value; renderReport(); });
+document.getElementById("filter-year").addEventListener("change", ev => { filterYear = ev.target.value; renderReport(); });
+document.getElementById("btn-print").addEventListener("click", () => window.print());
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Multimedia | Admin FC</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .card { background:#fff; border:1px solid #bae6fd; border-radius:12px; box-shadow:0 4px 14px rgba(15,23,42,.05); padding:20px; margin-bottom:24px; }
+  .toolbar-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .toolbar-note { font-size:13px; color:#64748b; font-family:'DM Sans',sans-serif; }
+  .toolbar-filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .filter-select, .filter-search {
+    height:40px; background:#f8fafc; border:1px solid #bae6fd; border-radius:10px; padding:0 12px;
+    font-family:'DM Sans',sans-serif; font-size:13px; color:#0f172a; -webkit-appearance:none; appearance:none;
+  }
+  .filter-select { cursor:pointer; min-width:140px; }
+  .filter-search { min-width:200px; }
+  .filter-select:focus, .filter-search:focus { outline:none; border-color:#2563eb; }
+  /* Stat pills */
+  .stat-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
+  .stat-pill { background:#f0f9ff; border:1px solid #bae6fd; border-radius:12px; padding:12px 18px; display:flex; flex-direction:column; gap:3px; min-width:120px; }
+  .stat-pill .sp-label { font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+  .stat-pill .sp-value { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; color:#0f172a; }
+  /* Media grid */
+  .media-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; }
+  .media-card {
+    background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;
+    transition:transform .2s,box-shadow .2s,border-color .2s; cursor:pointer;
+  }
+  .media-card:hover { transform:translateY(-3px); border-color:#7dd3fc; box-shadow:0 8px 20px rgba(15,23,42,.12); }
+  .media-thumb { position:relative; width:100%; height:160px; background:#0f172a; }
+  .media-thumb img,.media-thumb video { width:100%; height:100%; object-fit:cover; display:block; }
+  .media-thumb .media-type-badge {
+    position:absolute; top:8px; right:8px; background:rgba(15,23,42,.75); color:#fff;
+    font-size:10px; font-weight:700; padding:3px 7px; border-radius:5px; text-transform:uppercase;
+  }
+  .media-info { padding:12px; }
+  .media-info-office { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:#0f172a; margin-bottom:3px; }
+  .media-info-meta { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; }
+  .cat-badge { display:inline-block; padding:2px 7px; border-radius:999px; font-size:10px; font-weight:700; margin-right:5px; }
+  .cat-badge.comfort { background:#e0f2fe; color:#0369a1; }
+  .cat-badge.surroundings { background:#dcfce7; color:#15803d; }
+  .cat-badge.laboratories { background:#ede9fe; color:#6d28d9; }
+  .empty-note { text-align:center; color:#94a3b8; padding:50px 0; font-family:'DM Sans',sans-serif; font-size:14px; font-style:italic; }
+  /* Lightbox */
+  .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:9999; align-items:center; justify-content:center; padding:20px; }
+  .lightbox.open { display:flex; flex-direction:column; }
+  .lightbox-media { max-width:90vw; max-height:75vh; border-radius:8px; }
+  .lightbox-info { margin-top:14px; color:#fff; font-family:'DM Sans',sans-serif; font-size:13px; text-align:center; }
+  .lightbox-close { position:absolute; top:16px; right:20px; background:rgba(255,255,255,.15); border:none; color:#fff; font-size:22px; cursor:pointer; border-radius:8px; padding:4px 10px; }
+  .lightbox-close:hover { background:rgba(255,255,255,.25); }
+  @media(max-width:600px){.media-grid{grid-template-columns:1fr 1fr;} .toolbar-row{flex-direction:column;align-items:flex-start;}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+    <div style="margin-top:28px;">
+      <div class="toolbar-row">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#0f172a;margin-bottom:3px;">Multimedia Evidence</div>
+          <div class="toolbar-note">Images and videos attached to Facilities &amp; Cleanliness evaluations</div>
+        </div>
+        <div class="toolbar-filters">
+          <input type="text" class="filter-search" id="search-input" placeholder="Search office…">
+          <select class="filter-select" id="filter-category">
+            <option value="all">All Categories</option>
+            <option value="Comfort Room">🚿 Comfort Room</option>
+            <option value="Surroundings">🌿 Surroundings</option>
+            <option value="Laboratories">🔬 Laboratories</option>
+          </select>
+          <select class="filter-select" id="filter-type">
+            <option value="all">All Media</option>
+            <option value="image">📷 Images Only</option>
+            <option value="video">🎥 Videos Only</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-pill"><div class="sp-label">Total Media</div><div class="sp-value" id="stat-total">0</div></div>
+        <div class="stat-pill"><div class="sp-label">Images</div><div class="sp-value" id="stat-images">0</div></div>
+        <div class="stat-pill"><div class="sp-label">Videos</div><div class="sp-value" id="stat-videos">0</div></div>
+        <div class="stat-pill"><div class="sp-label">With Evidence</div><div class="sp-value" id="stat-evals">0</div></div>
+      </div>
+
+      <div id="media-grid-container">
+        <div class="empty-note">Loading media…</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close">✕</button>
+  <div id="lightbox-media-wrap"></div>
+  <div class="lightbox-info" id="lightbox-info"></div>
+</div>
+
+<script src="shared.js"></script>
+<script type="module">
+import { guard as cvGuard } from "./cv-core.js";
+await cvGuard(["adminfc"]);
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",authDomain:"kristal-adb78.firebaseapp.com",
+  databaseURL:"https://kristal-adb78-default-rtdb.firebaseio.com",projectId:"kristal-adb78",
+  storageBucket:"kristal-adb78.firebasestorage.app",messagingSenderId:"1016283938031",
+  appId:"1:1016283938031:web:54c4d13409d9784ad7af1a",measurementId:"G-LK8D1CBQ2J"
+};
+const db = getFirestore(initializeApp(firebaseConfig));
+
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc","multimedia");
+document.getElementById("topbar-mount").innerHTML = buildTopbar("Multimedia","adminfc");
+
+let allMedia = [];
+let filterCat = "all", filterType = "all", searchTerm = "";
+
+function parseEvidence(data) {
+  const items = [];
+  if (Array.isArray(data.evidenceUrls) && data.evidenceUrls.length) {
+    data.evidenceUrls.forEach((url, i) => {
+      const types = data.evidenceTypes || [];
+      if (url) items.push({ url, type: types[i] === "video" ? "video" : "image" });
+    });
+    return items;
+  }
+  if (data.evidenceUrl) items.push({ url: data.evidenceUrl, type: data.evidenceType === "video" ? "video" : "image" });
+  return items;
+}
+
+function parseDate(ev) {
+  const d = ev.date;
+  if (!d) return 0;
+  if (typeof d === "number") return d;
+  if (typeof d === "object" && d.toMillis) return d.toMillis();
+  if (typeof d === "string") { const p = Date.parse(d); return isNaN(p) ? 0 : p; }
+  return 0;
+}
+
+onSnapshot(collection(db,"facilities_cleanliness_evaluations"), snap => {
+  allMedia = [];
+  snap.docs.forEach(d => {
+    const ev = d.data();
+    const evidence = parseEvidence(ev);
+    if (!evidence.length) return;
+    const date = parseDate(ev);
+    const dateStr = date ? new Date(date).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "-";
+    evidence.forEach(item => {
+      allMedia.push({
+        ...item,
+        officeName: ev.officeName || "Unknown",
+        cleanlinessCategory: ev.cleanlinessCategory || "",
+        date, dateStr,
+        evalId: d.id
+      });
+    });
+  });
+  allMedia.sort((a,b) => b.date - a.date);
+  renderMedia();
+});
+
+function getFiltered() {
+  const term = searchTerm.trim().toLowerCase();
+  return allMedia.filter(m => {
+    if (filterCat !== "all" && m.cleanlinessCategory !== filterCat) return false;
+    if (filterType !== "all" && m.type !== filterType) return false;
+    if (term && !m.officeName.toLowerCase().includes(term)) return false;
+    return true;
+  });
+}
+
+function catBadge(cat) {
+  const cls = cat === "Surroundings" ? "surroundings" : cat === "Laboratories" ? "laboratories" : "comfort";
+  return `<span class="cat-badge ${cls}">${cat}</span>`;
+}
+
+function renderMedia() {
+  const filtered = getFiltered();
+  const images = filtered.filter(m => m.type === "image").length;
+  const videos = filtered.filter(m => m.type === "video").length;
+  const evalIds = new Set(filtered.map(m => m.evalId));
+
+  document.getElementById("stat-total").textContent = filtered.length;
+  document.getElementById("stat-images").textContent = images;
+  document.getElementById("stat-videos").textContent = videos;
+  document.getElementById("stat-evals").textContent = evalIds.size;
+
+  const container = document.getElementById("media-grid-container");
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-note">No media found for the selected filters.</div>`;
+    return;
+  }
+  container.innerHTML = `<div class="media-grid">${filtered.map((m, i) => `
+    <div class="media-card" data-idx="${i}">
+      <div class="media-thumb">
+        ${m.type === "video"
+          ? `<video src="${m.url}" muted preload="metadata"></video>`
+          : `<img src="${m.url}" alt="Evidence" loading="lazy">`}
+        <span class="media-type-badge">${m.type === "video" ? "🎥 Video" : "📷 Image"}</span>
+      </div>
+      <div class="media-info">
+        <div class="media-info-office">${m.officeName}</div>
+        <div class="media-info-meta">${catBadge(m.cleanlinessCategory)} ${m.dateStr}</div>
+      </div>
+    </div>`).join("")}</div>`;
+
+  container.querySelectorAll(".media-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const idx = Number(card.dataset.idx);
+      openLightbox(filtered[idx]);
+    });
+  });
+}
+
+// Lightbox
+const lightbox = document.getElementById("lightbox");
+function openLightbox(m) {
+  const wrap = document.getElementById("lightbox-media-wrap");
+  if (m.type === "video") {
+    wrap.innerHTML = `<video src="${m.url}" class="lightbox-media" controls autoplay></video>`;
+  } else {
+    wrap.innerHTML = `<img src="${m.url}" class="lightbox-media" alt="Evidence">`;
+  }
+  document.getElementById("lightbox-info").textContent = `${m.officeName} · ${m.cleanlinessCategory} · ${m.dateStr}`;
+  lightbox.classList.add("open");
+}
+document.getElementById("lightbox-close").addEventListener("click", () => { lightbox.classList.remove("open"); document.getElementById("lightbox-media-wrap").innerHTML = ""; });
+lightbox.addEventListener("click", ev => { if (ev.target === lightbox) { lightbox.classList.remove("open"); document.getElementById("lightbox-media-wrap").innerHTML = ""; } });
+
+document.getElementById("search-input").addEventListener("input", ev => { searchTerm = ev.target.value; renderMedia(); });
+document.getElementById("filter-category").addEventListener("change", ev => { filterCat = ev.target.value; renderMedia(); });
+document.getElementById("filter-type").addEventListener("change", ev => { filterType = ev.target.value; renderMedia(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Evaluation Mgmt | Admin FC</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .card { background:#fff; border:1px solid #bae6fd; border-radius:12px; box-shadow:0 4px 14px rgba(15,23,42,.05); padding:20px; margin-bottom:28px; }
+  .card-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin:0; color:#0f172a; }
+
+  /* Stats */
+  .eval-stats { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; margin-bottom:24px; }
+  .eval-stat-pill {
+    position:relative; background:#fff; border:1px solid #bae6fd; border-top:4px solid #2563eb;
+    border-radius:16px; padding:18px 48px 18px 18px; box-shadow:0 4px 14px rgba(15,23,42,.05);
+    display:flex; flex-direction:column; gap:5px; overflow:hidden; transition:transform .25s,box-shadow .25s,border-color .25s;
+  }
+  .eval-stat-pill:hover { transform:translateY(-5px); border-color:#7dd3fc; box-shadow:0 12px 28px rgba(37,99,235,.16); }
+  .eval-stat-pill::before {
+    content:attr(data-icon); position:absolute; top:14px; right:14px; width:34px; height:34px;
+    border-radius:9px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:15px;
+  }
+  .eval-stat-pill span { font-family:'Syne',sans-serif; font-size:26px; font-weight:700; color:#0f172a; }
+  .eval-stat-pill-label { font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+  .eval-stat-pill-sub { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; }
+
+  /* Toolbar */
+  .submissions-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .toolbar-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .btn { border:none; cursor:pointer; border-radius:10px; padding:10px 16px; font-weight:600; font-family:'DM Sans',sans-serif; font-size:13px; transition:background .2s,transform .2s,box-shadow .2s; }
+  .btn:hover:not(:disabled) { transform:translateY(-2px); }
+  .btn:active:not(:disabled) { transform:translateY(0); }
+  .btn-secondary { background:#e2e8f0; color:#0f172a; }
+  .btn-secondary:hover:not(:disabled) { background:#dbeafe; color:#1e40af; box-shadow:0 4px 12px rgba(37,99,235,.12); }
+  .btn-primary { background:linear-gradient(160deg,#3b82f6 0%,#2563eb 55%,#1d4ed8 100%); color:#fff; box-shadow:0 4px 12px rgba(37,99,235,.28); }
+  .btn-primary:hover:not(:disabled) { background:linear-gradient(160deg,#60a5fa 0%,#2563eb 55%,#1e40af 100%); box-shadow:0 8px 18px rgba(37,99,235,.35); }
+  .btn-primary:disabled { opacity:.6; cursor:default; }
+  .btn-add { background:linear-gradient(160deg,#10b981 0%,#059669 100%); color:#fff; box-shadow:0 4px 12px rgba(5,150,105,.28); }
+  .btn-add:hover:not(:disabled) { background:linear-gradient(160deg,#34d399 0%,#059669 100%); box-shadow:0 8px 18px rgba(5,150,105,.35); }
+
+  /* Category filter chips */
+  .category-tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .category-tab {
+    border:1px solid #bae6fd; background:#fff; color:#0369a1; padding:7px 14px; border-radius:999px;
+    cursor:pointer; font-weight:700; font-size:12px; font-family:'DM Sans',sans-serif;
+    transition:background .2s,color .2s,transform .2s,border-color .2s; white-space:nowrap;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .category-tab:hover { border-color:#0284c7; transform:translateY(-1px); }
+  .category-tab.active { background:#0284c7; border-color:#0284c7; color:#fff; box-shadow:0 4px 12px rgba(2,132,199,.3); }
+  .category-tab.cat-surroundings.active { background:#16a34a; border-color:#16a34a; box-shadow:0 4px 12px rgba(22,163,74,.3); }
+  .category-tab.cat-labs.active { background:#7c3aed; border-color:#7c3aed; box-shadow:0 4px 12px rgba(124,58,237,.3); }
+  .tab-count { background:rgba(255,255,255,.35); border-radius:4px; padding:1px 6px; font-size:11px; }
+  .category-tab:not(.active) .tab-count { background:#f1f5f9; color:#64748b; }
+
+  /* Status tabs */
+  .eval-tabs { display:flex; gap:4px; margin-bottom:18px; padding:4px; background:#f1f5f9; border-radius:12px; flex-wrap:wrap; }
+  .eval-tab {
+    background:none; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:700;
+    font-size:13px; color:#64748b; padding:9px 14px; border-radius:8px; display:flex; align-items:center;
+    gap:7px; transition:background .2s,color .2s,box-shadow .2s; white-space:nowrap;
+  }
+  .eval-tab:hover { color:#0f172a; background:#e2e8f0; }
+  .eval-tab.active { color:#fff; background:#2563eb; box-shadow:0 4px 12px rgba(37,99,235,.28); }
+  .eval-tab.active .tab-count { background:rgba(255,255,255,.28); color:#fff; }
+
+  /* Filters */
+  .submissions-filter-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .search-input-wrap {
+    flex:1; min-width:220px; display:flex; align-items:center; gap:8px; height:44px;
+    background:#f8fafc; border:1px solid #bae6fd; border-radius:12px; padding:0 14px;
+    transition:border-color .2s,box-shadow .2s;
+  }
+  .search-input-wrap:focus-within { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12); background:#fff; }
+  .search-input-wrap input { flex:1; border:none; outline:none; background:transparent; font-family:'DM Sans',sans-serif; font-size:14px; color:#0f172a; }
+  .search-input-wrap input::placeholder { color:#94a3b8; }
+  .office-filter-select {
+    height:44px; background:#f8fafc; border:1px solid #bae6fd; border-radius:12px; padding:0 14px;
+    font-family:'DM Sans',sans-serif; font-size:13px; color:#0f172a; min-width:160px; cursor:pointer;
+    -webkit-appearance:none; appearance:none; transition:border-color .2s;
+  }
+  .office-filter-select:focus { outline:none; border-color:#0284c7; }
+
+  /* Table */
+  .table-wrap { overflow-x:auto; border-radius:12px; border:1px solid #bae6fd; }
+  .table-wrap::-webkit-scrollbar { width:6px; height:6px; }
+  .table-wrap::-webkit-scrollbar-thumb { background:#7dd3fc; border-radius:999px; }
+  .submissions-table { width:100%; border-collapse:collapse; background:#fff; }
+  .submissions-table th {
+    text-align:left; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; color:#475569; padding:12px 14px;
+    border-bottom:2px solid #bae6fd; background:#f0f9ff; white-space:nowrap; position:sticky; top:0;
+  }
+  .submissions-table td {
+    padding:12px 14px; border-bottom:1px solid #f0f9ff; font-family:'DM Sans',sans-serif;
+    font-size:13px; color:#334155; vertical-align:middle;
+  }
+  .submissions-table tbody tr:hover td { background:#f0f9ff; }
+  .submissions-table tbody tr:hover td:first-child { box-shadow:inset 4px 0 0 #2563eb; }
+  .submissions-table tbody tr:last-child td { border-bottom:none; }
+  .row-index { color:#94a3b8; font-size:12px; }
+  .rating-cell { text-align:center; font-weight:700; color:#0f172a; }
+  .empty-row td { text-align:center; color:#94a3b8; padding:40px 0 !important; }
+
+  /* Category pills */
+  .cat-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; }
+  .cat-pill.comfort { background:#e0f2fe; color:#0369a1; }
+  .cat-pill.surroundings { background:#dcfce7; color:#15803d; }
+  .cat-pill.laboratories { background:#ede9fe; color:#6d28d9; }
+
+  /* Status Badge */
+  .status-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:6px; font-family:'DM Sans',sans-serif; font-weight:600; font-size:12px; white-space:nowrap; }
+  .status-badge.pending { background:#fef3c7; color:#b45309; }
+  .status-badge.no_action { background:#e0e7ff; color:#4338ca; }
+  .status-badge.resolved { background:#dcfce7; color:#166534; }
+
+  /* Action buttons */
+  .btn-view, .btn-edit, .btn-delete {
+    background:none; border:none; font-family:'DM Sans',sans-serif; font-weight:600;
+    font-size:12px; cursor:pointer; padding:4px 8px; border-radius:7px; transition:background .2s,transform .2s;
+  }
+  .btn-view { color:#2563eb; }
+  .btn-view:hover { background:#dbeafe; }
+  .btn-edit { color:#c2410c; }
+  .btn-edit:hover { background:#ffedd5; }
+  .btn-delete { color:#dc2626; }
+  .btn-delete:hover { background:#fee2e2; }
+
+  /* Message button */
+  .btn-message {
+    position:relative; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8;
+    font-family:'DM Sans',sans-serif; font-weight:600; font-size:12px; cursor:pointer;
+    padding:5px 10px; border-radius:8px; white-space:nowrap; transition:background .2s,transform .2s;
+  }
+  .btn-message:hover { background:#dbeafe; transform:translateY(-1px); }
+  .btn-message .unread-dot {
+    position:absolute; top:-5px; right:-5px; min-width:16px; height:16px; padding:0 3px;
+    border-radius:999px; background:#ef4444; color:#fff; font-size:10px; font-weight:700; line-height:16px; text-align:center;
+  }
+
+  /* Evidence */
+  .evidence-badge { display:inline-flex; align-items:center; gap:5px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:3px 9px; font-size:12px; font-weight:600; color:#334155; white-space:nowrap; cursor:pointer; transition:background .2s; }
+  .evidence-badge:hover:not(.empty) { background:#dbeafe; }
+  .evidence-badge.empty { color:#94a3b8; cursor:default; }
+  .evidence-gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; margin-top:4px; }
+  .evidence-gallery-item { position:relative; border-radius:9px; overflow:hidden; border:1px solid #e2e8f0; background:#0f172a; display:block; text-decoration:none; }
+  .evidence-gallery-item img,.evidence-gallery-item video { width:100%; height:84px; object-fit:cover; display:block; }
+  .evidence-gallery-item .evidence-type-tag { position:absolute; bottom:4px; right:4px; background:rgba(15,23,42,.75); color:#fff; font-size:10px; font-weight:700; padding:2px 5px; border-radius:4px; text-transform:uppercase; }
+  .evidence-empty-note { font-size:13px; color:#94a3b8; }
+
+  /* Modals */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,27,50,.55); align-items:center; justify-content:center; z-index:999; padding:20px; backdrop-filter:blur(2px); }
+  .modal-overlay.open { display:flex; }
+  .modal-content {
+    background:#fff; border-radius:18px; width:100%; max-width:520px; padding:28px;
+    box-shadow:0 30px 70px rgba(15,27,50,.28); border:1px solid #e0f2fe;
+    max-height:88vh; overflow-y:auto; animation:cvModalIn .2s ease;
+  }
+  .modal-content.modal-wide { max-width:680px; }
+  @keyframes cvModalIn { from{opacity:0;transform:translateY(10px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
+  .modal-content h3 { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; color:#0f172a; margin:0 0 20px 0; }
+  .modal-row { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f1f5f9; font-family:'DM Sans',sans-serif; font-size:13px; color:#334155; gap:12px; }
+  .modal-row:last-of-type { border-bottom:none; }
+  .modal-row span:first-child { color:#94a3b8; font-weight:600; min-width:110px; }
+  .modal-row span:last-child { word-break:break-word; text-align:right; }
+  .modal-footer { display:flex; gap:10px; margin-top:22px; }
+
+  /* Section divider inside wide modal */
+  .modal-section-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:#0369a1; text-transform:uppercase; letter-spacing:.06em; margin:18px 0 10px; padding-bottom:6px; border-bottom:2px solid #bae6fd; }
+
+  /* Edit/Add Form Fields */
+  .edit-field { margin-bottom:14px; }
+  .edit-field label { display:block; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+  .edit-field select, .edit-field input, .edit-field textarea {
+    width:100%; box-sizing:border-box; border:1px solid #bae6fd; border-radius:10px;
+    padding:9px 12px; font-family:'DM Sans',sans-serif; font-size:13px; color:#0f172a;
+    background:#f8fafc; transition:border-color .2s,box-shadow .2s; -webkit-appearance:none; appearance:none;
+  }
+  .edit-field select { height:42px; cursor:pointer; }
+  .edit-field textarea { resize:vertical; min-height:70px; }
+  .edit-field select:focus, .edit-field input:focus, .edit-field textarea:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12); background:#fff; }
+  .ratings-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .ratings-grid .edit-field { margin-bottom:8px; }
+
+  /* Delete confirm modal */
+  .modal-content.modal-danger h3 { color:#dc2626; }
+  .danger-text { font-family:'DM Sans',sans-serif; font-size:14px; color:#334155; line-height:1.5; margin-bottom:16px; }
+  .btn-danger { flex:1; background:#dc2626; color:#fff; border:none; padding:10px 16px; border-radius:10px; font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; transition:background .2s,transform .2s; }
+  .btn-danger:hover:not(:disabled) { background:#b91c1c; transform:translateY(-1px); }
+  .btn-danger:disabled { opacity:.6; cursor:default; }
+
+  /* Chat Modal */
+  .chat-modal-content {
+    background:#fff; border-radius:18px; width:100%; max-width:460px;
+    box-shadow:0 30px 70px rgba(15,27,50,.28); border:1px solid #e0f2fe;
+    display:flex; flex-direction:column; height:600px; max-height:85vh; overflow:hidden;
+  }
+  .chat-header { padding:16px 18px; border-bottom:1px solid #f0f9ff; flex-shrink:0; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .chat-header h3 { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#0f172a; margin:0 0 2px 0; }
+  .chat-header p { font-family:'DM Sans',sans-serif; font-size:12px; color:#64748b; margin:0; }
+  .chat-header-close { background:#f1f5f9; border:none; color:#64748b; width:28px; height:28px; border-radius:8px; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .2s,transform .25s; }
+  .chat-header-close:hover { background:#e2e8f0; color:#0f172a; transform:rotate(90deg); }
+  .chat-messages { flex:1; overflow-y:auto; padding:14px 18px; display:flex; flex-direction:column; gap:9px; background:#f8fafc; }
+  .chat-bubble-row { display:flex; flex-direction:column; max-width:76%; }
+  .chat-bubble-row.admin { align-self:flex-end; align-items:flex-end; }
+  .chat-bubble-row.user { align-self:flex-start; align-items:flex-start; }
+  .chat-bubble { font-family:'DM Sans',sans-serif; font-size:13px; line-height:1.4; padding:8px 12px; border-radius:14px; word-break:break-word; white-space:pre-wrap; }
+  .chat-bubble-row.admin .chat-bubble { background:#2563eb; color:#fff; border-bottom-right-radius:4px; }
+  .chat-bubble-row.user .chat-bubble { background:#e2e8f0; color:#0f172a; border-bottom-left-radius:4px; }
+  .chat-meta { font-family:'DM Sans',sans-serif; font-size:10px; color:#94a3b8; margin-top:2px; padding:0 3px; }
+  .chat-empty-note { margin:auto; font-family:'DM Sans',sans-serif; font-size:13px; color:#94a3b8; text-align:center; font-style:italic; }
+  .chat-input-row { display:flex; gap:8px; padding:12px 14px; border-top:1px solid #f0f9ff; flex-shrink:0; background:#fff; }
+  .chat-input-row textarea { flex:1; resize:none; border:1px solid #bae6fd; border-radius:11px; padding:9px 12px; font-family:'DM Sans',sans-serif; font-size:13px; color:#0f172a; max-height:80px; background:#f8fafc; }
+  .chat-input-row textarea:focus { outline:none; border-color:#0284c7; }
+  .chat-send-btn { background:#2563eb; color:#fff; border:none; border-radius:11px; padding:0 16px; font-family:'DM Sans',sans-serif; font-weight:600; font-size:13px; cursor:pointer; flex-shrink:0; }
+  .chat-send-btn:hover:not(:disabled) { background:#1d4ed8; }
+  .chat-send-btn:disabled { opacity:.55; cursor:default; }
+
+  @media(max-width:1400px){.eval-stats{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:900px){.eval-stats{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:600px){.eval-stats{grid-template-columns:1fr;} .ratings-grid{grid-template-columns:1fr;}}
+  @media(max-width:768px){.submissions-filter-row{flex-direction:column;} .modal-content{padding:20px;} .chat-modal-content{height:100%;max-height:100%;border-radius:0;}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+    <div style="margin-top:28px;">
+
+      <!-- Stats -->
+      <div class="eval-stats">
+        <div class="eval-stat-pill" data-icon="📋">
+          <div class="eval-stat-pill-label">Total</div>
+          <span id="stat-total">0</span>
+          <div class="eval-stat-pill-sub">All Submissions</div>
+        </div>
+        <div class="eval-stat-pill" data-icon="🚿">
+          <div class="eval-stat-pill-label">Comfort Room</div>
+          <span id="stat-comfort">0</span>
+          <div class="eval-stat-pill-sub">Submissions</div>
+        </div>
+        <div class="eval-stat-pill" data-icon="🌿">
+          <div class="eval-stat-pill-label">Surroundings</div>
+          <span id="stat-surroundings">0</span>
+          <div class="eval-stat-pill-sub">Submissions</div>
+        </div>
+        <div class="eval-stat-pill" data-icon="🔬">
+          <div class="eval-stat-pill-label">Laboratories</div>
+          <span id="stat-labs">0</span>
+          <div class="eval-stat-pill-sub">Submissions</div>
+        </div>
+        <div class="eval-stat-pill" data-icon="⏳">
+          <div class="eval-stat-pill-label">Pending</div>
+          <span id="stat-pending">0</span>
+          <div class="eval-stat-pill-sub">Awaiting Action</div>
+        </div>
+        <div class="eval-stat-pill" data-icon="✅">
+          <div class="eval-stat-pill-label">Resolved</div>
+          <span id="stat-resolved">0</span>
+          <div class="eval-stat-pill-sub">Complete</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <!-- Header & Actions -->
+        <div class="submissions-toolbar">
+          <div class="card-title">Evaluation Submissions</div>
+          <div class="toolbar-actions">
+            <button class="btn btn-add" id="btn-add">➕ Add Evaluation</button>
+            <button class="btn btn-secondary" id="btn-refresh">🔄 Refresh</button>
+            <button class="btn btn-secondary" id="btn-export">⬇️ Export CSV</button>
+          </div>
+        </div>
+
+        <!-- Category Filter Chips -->
+        <div class="category-tabs" id="category-tabs">
+          <button class="category-tab active" data-cat="all">All <span class="tab-count" id="cat-count-all">0</span></button>
+          <button class="category-tab" data-cat="Comfort Room">🚿 Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
+          <button class="category-tab cat-surroundings" data-cat="Surroundings">🌿 Surroundings <span class="tab-count" id="cat-count-surroundings">0</span></button>
+          <button class="category-tab cat-labs" data-cat="Laboratories">🔬 Laboratories <span class="tab-count" id="cat-count-labs">0</span></button>
+        </div>
+
+        <!-- Status Tabs -->
+        <div class="eval-tabs" id="eval-tabs">
+          <button class="eval-tab active" data-tab="recent">Recent <span class="tab-count" id="tab-count-recent">0</span></button>
+          <button class="eval-tab" data-tab="pending">Pending <span class="tab-count" id="tab-count-pending">0</span></button>
+          <button class="eval-tab" data-tab="no_action">No Action Required <span class="tab-count" id="tab-count-no_action">0</span></button>
+          <button class="eval-tab" data-tab="resolved">Resolved <span class="tab-count" id="tab-count-resolved">0</span></button>
+        </div>
+
+        <!-- Filters -->
+        <div class="submissions-filter-row">
+          <div class="search-input-wrap">
+            <span>🔍</span>
+            <input type="text" id="search-input" placeholder="Search by office, evaluator, or comments…">
+          </div>
+          <select class="office-filter-select" id="office-filter">
+            <option value="">All Offices</option>
+          </select>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+          <table class="submissions-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Office</th>
+                <th>Category</th>
+                <th>Evaluator</th>
+                <th>Cl. Avg</th>
+                <th>Fac. Avg</th>
+                <th>Comments</th>
+                <th>Evidence</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Message</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="submissions-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- VIEW DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal-content modal-wide">
+    <h3>📋 Submission Details</h3>
+    <div id="detail-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="detail-modal-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="form-modal">
+  <div class="modal-content modal-wide">
+    <h3 id="form-modal-title">➕ Add Evaluation</h3>
+
+    <div class="modal-section-title">Basic Info</div>
+    <div class="edit-field">
+      <label>Office</label>
+      <select id="form-office"></select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="edit-field">
+        <label>Cleanliness Category</label>
+        <select id="form-cleanliness-cat">
+          <option value="Comfort Room">Comfort Room</option>
+          <option value="Surroundings">Surroundings</option>
+          <option value="Laboratories">Laboratories</option>
+        </select>
+      </div>
+      <div class="edit-field">
+        <label>Status</label>
+        <select id="form-status">
+          <option value="pending">Pending</option>
+          <option value="no_action">No Action Required</option>
+          <option value="resolved">Resolved</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="edit-field">
+        <label>Date</label>
+        <input type="text" id="form-date" placeholder="e.g. November 04, 2026 02:00 PM">
+      </div>
+      <div class="edit-field">
+        <label>Events / Purpose</label>
+        <input type="text" id="form-events" placeholder="e.g. Acquaintance Party">
+      </div>
+    </div>
+
+    <div class="modal-section-title">Cleanliness Ratings (Q1–Q5)</div>
+    <div class="ratings-grid" id="cleanliness-ratings-fields"></div>
+    <div class="edit-field">
+      <label>Cleanliness Comments</label>
+      <textarea id="form-cleanliness-comments" placeholder="Cleanliness comments…"></textarea>
+    </div>
+
+    <div class="modal-section-title">Facilities Ratings (Q1–Q8)</div>
+    <div class="ratings-grid" id="facilities-ratings-fields"></div>
+    <div class="edit-field">
+      <label>Facilities Comments</label>
+      <textarea id="form-facilities-comments" placeholder="Facilities comments…"></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="form-modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="form-modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal-content modal-danger">
+    <h3>🗑️ Delete Evaluation</h3>
+    <div class="danger-text" id="delete-modal-text">Are you sure you want to delete this evaluation? This action cannot be undone.</div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="delete-modal-cancel">Cancel</button>
+      <button class="btn btn-danger" id="delete-modal-confirm">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT MODAL -->
+<div class="modal-overlay" id="chat-modal">
+  <div class="chat-modal-content">
+    <div class="chat-header">
+      <div>
+        <h3 id="chat-header-title">💬 Message User</h3>
+        <p id="chat-header-sub"></p>
+      </div>
+      <button class="chat-header-close" id="chat-header-close">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" rows="1" placeholder="Type a message…"></textarea>
+      <button class="chat-send-btn" id="chat-send-btn">Send</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script type="module">
+import { guard as cvGuard } from "./cv-core.js";
+await cvGuard(["adminfc"]);
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc,
+  setDoc, query, orderBy, increment, writeBatch
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
+  authDomain: "kristal-adb78.firebaseapp.com",
+  databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com",
+  projectId: "kristal-adb78",
+  storageBucket: "kristal-adb78.firebasestorage.app",
+  messagingSenderId: "1016283938031",
+  appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
+  measurementId: "G-LK8D1CBQ2J"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "eval-mgmt");
+document.getElementById("topbar-mount").innerHTML = buildTopbar("Evaluation Management", "adminfc");
+
+// ── Constants ──
+const EVAL_COLLECTION = "facilities_cleanliness_evaluations";
+const HISTORY_COLLECTION = "evaluation_history";
+const OFFICES_COLLECTION = "fc_offices";
+const USERS_COLLECTION = "users";
+const CONVERSATIONS_COLLECTION = "conversations";
+const NOTIFICATIONS_COLLECTION = "notifications";
+const ADMIN_SENDER_ID = "fc_admin";
+const LOW_RATING_THRESHOLD = 3;
+
+const CL_QUESTIONS = [
+  "1. The comfort room / surroundings is clean.",
+  "2. The area is free from foul odors.",
+  "3. The floors and surfaces are well-maintained.",
+  "4. Adequate supplies (tissue, soap, etc.) are available.",
+  "5. The area is properly sanitized and disinfected."
+];
+const FAC_QUESTIONS = [
+  "1. The needed equipment/resources are available.",
+  "2. The equipment/resources are working properly.",
+  "3. The facility has enough resources to meet users' needs.",
+  "4. The facility is clean and well-maintained.",
+  "5. The furniture is in good condition.",
+  "6. The facility is well-lit and properly ventilated.",
+  "7. The facility layout allows comfortable movement.",
+  "8. The facility is free from safety hazards."
+];
+
+const STATUS_META = {
+  pending:   { label: "Pending",             icon: "⏳" },
+  no_action: { label: "No Action Required",  icon: "🙅" },
+  resolved:  { label: "Resolved",            icon: "✅" }
+};
+
+// ── State ──
+let evaluations = [];
+let offices = {};      // id -> name
+let usersMap = {};
+let conversationsMap = {};
+let searchTerm = "";
+let officeFilter = "";
+let categoryFilter = "all";
+let currentTab = "recent";
+let editingId = null;
+let deletingId = null;
+let activeChatEvalId = null;
+let chatMessagesUnsub = null;
+
+// ── Build rating fields in the form ──
+function buildRatingFields(containerId, count, prefix) {
+  const container = document.getElementById(containerId);
+  for (let i = 1; i <= count; i++) {
+    const div = document.createElement("div");
+    div.className = "edit-field";
+    div.innerHTML = `
+      <label>Q${i}</label>
+      <select id="${prefix}-q${i}">
+        <option value="1">1 – Poor</option>
+        <option value="2">2 – Fair</option>
+        <option value="3">3 – Good</option>
+        <option value="4">4 – Very Good</option>
+        <option value="5" selected>5 – Excellent</option>
+      </select>`;
+    container.appendChild(div);
+  }
+}
+buildRatingFields("cleanliness-ratings-fields", 5, "cl");
+buildRatingFields("facilities-ratings-fields", 8, "fac");
+
+// ── Helpers ──
+function parseEvalDate(ev) {
+  const d = ev.date;
+  if (!d) return 0;
+  if (typeof d === "number") return d;
+  if (typeof d === "object" && typeof d.toMillis === "function") return d.toMillis();
+  if (typeof d === "string") {
+    const n = Number(d);
+    if (!Number.isNaN(n) && d.trim() !== "") return n;
+    const p = Date.parse(d);
+    return Number.isNaN(p) ? 0 : p;
+  }
+  return 0;
+}
+
+function parseEvidence(data) {
+  const items = [];
+  if (Array.isArray(data.evidenceUrls) && data.evidenceUrls.length) {
+    data.evidenceUrls.forEach((url, i) => {
+      const types = data.evidenceTypes || [];
+      if (url) items.push({ url, type: types[i] === "video" ? "video" : "image" });
+    });
+    return items;
+  }
+  if (data.evidenceUrl) items.push({ url: data.evidenceUrl, type: data.evidenceType === "video" ? "video" : "image" });
+  return items;
+}
+
+function parseStatus(ev, clAvg, facAvg) {
+  const s = (ev.rawStatus || "").toLowerCase();
+  if (s === "resolved" || s === "pending" || s === "no_action") return s;
+  const overall = (clAvg + facAvg) / 2;
+  return overall < LOW_RATING_THRESHOLD ? "pending" : "no_action";
+}
+
+function clAvg(ev) {
+  const vals = [ev.cl1, ev.cl2, ev.cl3, ev.cl4, ev.cl5];
+  return vals.reduce((a, v) => a + v, 0) / 5;
+}
+
+function facAvg(ev) {
+  const vals = [ev.f1, ev.f2, ev.f3, ev.f4, ev.f5, ev.f6, ev.f7, ev.f8];
+  return vals.reduce((a, v) => a + v, 0) / 8;
+}
+
+function getEvaluatorName(e) {
+  if (e.userId && e.userId !== "-" && usersMap[e.userId]) return usersMap[e.userId];
+  return e.evaluatorName || "-";
+}
+
+function catPillHtml(cat) {
+  const cls = cat === "Surroundings" ? "surroundings" : cat === "Laboratories" ? "laboratories" : "comfort";
+  return `<span class="cat-pill ${cls}">${cat || "—"}</span>`;
+}
+
+function evidenceCellHtml(e) {
+  const imgs = e.evidence.filter(i => i.type === "image").length;
+  const vids = e.evidence.filter(i => i.type === "video").length;
+  if (!imgs && !vids) return `<span class="evidence-badge empty">No evidence</span>`;
+  const parts = [];
+  if (imgs) parts.push(`📷 ${imgs}`);
+  if (vids) parts.push(`🎥 ${vids}`);
+  return `<span class="evidence-badge" data-eval-id="${e.id}">${parts.join("  ")}</span>`;
+}
+
+function messageCellHtml(e) {
+  const convo = conversationsMap[e.id];
+  const unread = convo ? (Number(convo.unreadForAdmin) || 0) : 0;
+  const dot = unread > 0 ? `<span class="unread-dot">${unread > 9 ? "9+" : unread}</span>` : "";
+  return `<button class="btn-message" data-eval-id="${e.id}">💬 Message${dot}</button>`;
+}
+
+// ── Firestore: load offices ──
+onSnapshot(collection(db, OFFICES_COLLECTION), snap => {
+  offices = {};
+  snap.forEach(d => {
+    const name = d.data().name;
+    if (name) offices[d.id] = name;
+  });
+  populateOfficeFilter();
+  populateFormOffices();
+});
+
+// ── Firestore: load users ──
+onSnapshot(collection(db, USERS_COLLECTION), snap => {
+  usersMap = {};
+  snap.forEach(d => {
+    const data = d.data();
+    usersMap[d.id] = data.name || data.fullName || data.email || d.id;
+  });
+  renderSubmissions();
+});
+
+// ── Firestore: load conversations ──
+onSnapshot(collection(db, CONVERSATIONS_COLLECTION), snap => {
+  conversationsMap = {};
+  snap.forEach(d => { conversationsMap[d.id] = d.data(); });
+  renderSubmissions();
+});
+
+// ── Firestore: load evaluations ──
+onSnapshot(collection(db, EVAL_COLLECTION), snap => {
+  evaluations = snap.docs.map(d => {
+    const ev = d.data();
+    const id = d.id;
+    const rec = {
+      id,
+      evaluationId: ev.evaluationId || id,
+      officeName: ev.officeName || "Unknown",
+      cleanlinessCategory: ev.cleanlinessCategory || "",
+      comments: ev.cleanlinessComments || ev.comments || "",
+      cleanlinessComments: ev.cleanlinessComments || "",
+      facilitiesComments: ev.facilitiesComments || "",
+      events: ev.events || "",
+      sex: ev.sex || "",
+      userCategory: ev.userCategory || "",
+      userId: ev.userId || "-",
+      evaluatorName: ev.evaluatorName || ev.userName || ev.name || ev.fullName || "",
+      evidence: parseEvidence(ev),
+      rawStatus: ev.status || "",
+      date: parseEvalDate(ev),
+      cl1: Number(ev.cleanlinessRating1) || 0,
+      cl2: Number(ev.cleanlinessRating2) || 0,
+      cl3: Number(ev.cleanlinessRating3) || 0,
+      cl4: Number(ev.cleanlinessRating4) || 0,
+      cl5: Number(ev.cleanlinessRating5) || 0,
+      f1: Number(ev.facilitiesRating1) || 0,
+      f2: Number(ev.facilitiesRating2) || 0,
+      f3: Number(ev.facilitiesRating3) || 0,
+      f4: Number(ev.facilitiesRating4) || 0,
+      f5: Number(ev.facilitiesRating5) || 0,
+      f6: Number(ev.facilitiesRating6) || 0,
+      f7: Number(ev.facilitiesRating7) || 0,
+      f8: Number(ev.facilitiesRating8) || 0,
+    };
+    rec.clAvg = clAvg(rec);
+    rec.facAvg = facAvg(rec);
+    rec.status = parseStatus(ev, rec.clAvg, rec.facAvg);
+    return rec;
+  });
+  renderSubmissions();
+});
+
+// ── Render ──
+function populateOfficeFilter() {
+  const sel = document.getElementById("office-filter");
+  const cur = sel.value;
+  const names = [...new Set(Object.values(offices))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  sel.innerHTML = `<option value="">All Offices</option>` + names.map(n => `<option value="${n}">${n}</option>`).join("");
+  sel.value = cur;
+}
+
+function populateFormOffices() {
+  const sel = document.getElementById("form-office");
+  const cur = sel.value;
+  const names = [...new Set(Object.values(offices))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  sel.innerHTML = `<option value="">— Select Office —</option>` + names.map(n => `<option value="${n}">${n}</option>`).join("");
+  if (cur) sel.value = cur;
+}
+
+function getScopedEvals() {
+  return evaluations.filter(e => categoryFilter === "all" || e.cleanlinessCategory === categoryFilter);
+}
+
+function getFilteredSubmissions() {
+  const term = searchTerm.trim().toLowerCase();
+  return getScopedEvals()
+    .filter(e => currentTab === "recent" ? true : e.status === currentTab)
+    .filter(e => !officeFilter || e.officeName === officeFilter)
+    .filter(e => {
+      if (!term) return true;
+      return e.officeName.toLowerCase().includes(term) ||
+             e.comments.toLowerCase().includes(term) ||
+             (getEvaluatorName(e) || "").toLowerCase().includes(term);
+    })
+    .sort((a, b) => b.date - a.date);
+}
+
+function renderSubmissions() {
+  const scoped = getScopedEvals();
+  const filtered = getFilteredSubmissions();
+  const all = evaluations;
+
+  document.getElementById("stat-total").textContent = all.length;
+  document.getElementById("stat-comfort").textContent = all.filter(e => e.cleanlinessCategory === "Comfort Room").length;
+  document.getElementById("stat-surroundings").textContent = all.filter(e => e.cleanlinessCategory === "Surroundings").length;
+  document.getElementById("stat-labs").textContent = all.filter(e => e.cleanlinessCategory === "Laboratories").length;
+  document.getElementById("stat-pending").textContent = all.filter(e => e.status === "pending").length;
+  document.getElementById("stat-resolved").textContent = all.filter(e => e.status === "resolved").length;
+
+  document.getElementById("cat-count-all").textContent = all.length;
+  document.getElementById("cat-count-comfort").textContent = all.filter(e => e.cleanlinessCategory === "Comfort Room").length;
+  document.getElementById("cat-count-surroundings").textContent = all.filter(e => e.cleanlinessCategory === "Surroundings").length;
+  document.getElementById("cat-count-labs").textContent = all.filter(e => e.cleanlinessCategory === "Laboratories").length;
+
+  const pendingCount = scoped.filter(e => e.status === "pending").length;
+  const noActionCount = scoped.filter(e => e.status === "no_action").length;
+  const resolvedCount = scoped.filter(e => e.status === "resolved").length;
+  document.getElementById("tab-count-recent").textContent = scoped.length;
+  document.getElementById("tab-count-pending").textContent = pendingCount;
+  document.getElementById("tab-count-no_action").textContent = noActionCount;
+  document.getElementById("tab-count-resolved").textContent = resolvedCount;
+
+  const tbody = document.getElementById("submissions-tbody");
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="12">No submissions found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((e, i) => {
+    const date = e.date ? new Date(e.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-";
+    const meta = STATUS_META[e.status] || STATUS_META.pending;
+    return `
+      <tr>
+        <td class="row-index">${i + 1}</td>
+        <td>${e.officeName}</td>
+        <td>${catPillHtml(e.cleanlinessCategory)}</td>
+        <td>${getEvaluatorName(e)}</td>
+        <td class="rating-cell">${e.clAvg.toFixed(1)}</td>
+        <td class="rating-cell">${e.facAvg.toFixed(1)}</td>
+        <td>${(e.cleanlinessComments || e.facilitiesComments || "-").slice(0, 60)}${(e.cleanlinessComments || e.facilitiesComments || "").length > 60 ? "…" : ""}</td>
+        <td>${evidenceCellHtml(e)}</td>
+        <td><span class="status-badge ${e.status}">${meta.icon} ${meta.label}</span></td>
+        <td>${date}</td>
+        <td>${messageCellHtml(e)}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn-view" data-eval-id="${e.id}">View</button>
+          <button class="btn-edit" data-eval-id="${e.id}">Edit</button>
+          <button class="btn-delete" data-eval-id="${e.id}">Delete</button>
+        </td>
+      </tr>`;
+  }).join("");
+
+  tbody.querySelectorAll(".btn-view").forEach(b => b.addEventListener("click", () => openDetailModal(b.dataset.evalId)));
+  tbody.querySelectorAll(".btn-edit").forEach(b => b.addEventListener("click", () => openFormModal(b.dataset.evalId)));
+  tbody.querySelectorAll(".btn-delete").forEach(b => b.addEventListener("click", () => openDeleteModal(b.dataset.evalId)));
+  tbody.querySelectorAll(".evidence-badge:not(.empty)").forEach(b => b.addEventListener("click", () => openDetailModal(b.dataset.evalId)));
+  tbody.querySelectorAll(".btn-message").forEach(b => b.addEventListener("click", () => openChatModal(b.dataset.evalId)));
+}
+
+// ── Filter wiring ──
+document.getElementById("category-tabs").addEventListener("click", ev => {
+  const btn = ev.target.closest(".category-tab");
+  if (!btn) return;
+  categoryFilter = btn.dataset.cat;
+  document.querySelectorAll(".category-tab").forEach(t => t.classList.toggle("active", t === btn));
+  officeFilter = "";
+  document.getElementById("office-filter").value = "";
+  renderSubmissions();
+});
+
+document.getElementById("eval-tabs").addEventListener("click", ev => {
+  const btn = ev.target.closest(".eval-tab");
+  if (!btn) return;
+  currentTab = btn.dataset.tab;
+  document.querySelectorAll(".eval-tab").forEach(t => t.classList.toggle("active", t === btn));
+  renderSubmissions();
+});
+
+document.getElementById("search-input").addEventListener("input", ev => { searchTerm = ev.target.value; renderSubmissions(); });
+document.getElementById("office-filter").addEventListener("change", ev => { officeFilter = ev.target.value; renderSubmissions(); });
+
+document.getElementById("btn-refresh").addEventListener("click", () => {
+  const btn = document.getElementById("btn-refresh");
+  btn.textContent = "🔄 Refreshing..."; btn.disabled = true;
+  renderSubmissions();
+  setTimeout(() => { btn.textContent = "🔄 Refresh"; btn.disabled = false; }, 500);
+});
+
+// ── Export CSV ──
+document.getElementById("btn-export").addEventListener("click", () => {
+  const filtered = getFilteredSubmissions();
+  if (!filtered.length) { alert("No submissions to export."); return; }
+  const header = ["#","Office","Category","Evaluator","Cl.Avg","Fac.Avg","Cl.Q1","Cl.Q2","Cl.Q3","Cl.Q4","Cl.Q5","Fac.Q1","Fac.Q2","Fac.Q3","Fac.Q4","Fac.Q5","Fac.Q6","Fac.Q7","Fac.Q8","CleanlinessComments","FacilitiesComments","Events","Status","Date"].join(",");
+  const rows = filtered.map((e, i) => {
+    const date = e.date ? new Date(e.date).toLocaleDateString() : "-";
+    const status = (STATUS_META[e.status] || STATUS_META.pending).label;
+    return [i+1, e.officeName, e.cleanlinessCategory, getEvaluatorName(e),
+      e.clAvg.toFixed(1), e.facAvg.toFixed(1),
+      e.cl1,e.cl2,e.cl3,e.cl4,e.cl5,
+      e.f1,e.f2,e.f3,e.f4,e.f5,e.f6,e.f7,e.f8,
+      `"${(e.cleanlinessComments||"").replace(/"/g,'""')}"`,
+      `"${(e.facilitiesComments||"").replace(/"/g,'""')}"`,
+      `"${(e.events||"").replace(/"/g,'""')}"`,
+      status, date].join(",");
+  });
+  const blob = new Blob([[header, ...rows].join("\n")], { type:"text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `fc-evaluations-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+// ── Detail Modal ──
+const detailModal = document.getElementById("detail-modal");
+function evidenceGalleryHtml(e) {
+  if (!e.evidence.length) return `<div class="evidence-empty-note">No evidence attached.</div>`;
+  return `<div class="evidence-gallery">${e.evidence.map(item =>
+    item.type === "video"
+      ? `<a class="evidence-gallery-item" href="${item.url}" target="_blank"><video src="${item.url}" muted></video><span class="evidence-type-tag">Video</span></a>`
+      : `<a class="evidence-gallery-item" href="${item.url}" target="_blank"><img src="${item.url}" alt="Evidence" loading="lazy"><span class="evidence-type-tag">Image</span></a>`
+  ).join("")}</div>`;
+}
+
+function openDetailModal(evalId) {
+  const e = evaluations.find(x => x.id === evalId);
+  if (!e) return;
+  const date = e.date ? new Date(e.date).toLocaleString() : "-";
+  const statusLabel = (STATUS_META[e.status] || STATUS_META.pending).label;
+  const clRows = CL_QUESTIONS.map((q, i) => `<div class="modal-row"><span>${q}</span><span>${[e.cl1,e.cl2,e.cl3,e.cl4,e.cl5][i]}</span></div>`).join("");
+  const facRows = FAC_QUESTIONS.map((q, i) => `<div class="modal-row"><span>${q}</span><span>${[e.f1,e.f2,e.f3,e.f4,e.f5,e.f6,e.f7,e.f8][i]}</span></div>`).join("");
+  document.getElementById("detail-modal-body").innerHTML = `
+    <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
+    <div class="modal-row"><span>Category</span><span>${catPillHtml(e.cleanlinessCategory)}</span></div>
+    ${e.events ? `<div class="modal-row"><span>Events</span><span>${e.events}</span></div>` : ""}
+    ${e.userCategory ? `<div class="modal-row"><span>Respondent</span><span>${e.userCategory}</span></div>` : ""}
+    ${e.sex ? `<div class="modal-row"><span>Sex</span><span>${e.sex}</span></div>` : ""}
+    <div class="modal-row"><span>Evaluator</span><span>${getEvaluatorName(e)}</span></div>
+    <div class="modal-row"><span>Date</span><span>${date}</span></div>
+    <div class="modal-row"><span>Status</span><span>${statusLabel}</span></div>
+    <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px;padding-bottom:5px;border-bottom:2px solid #bae6fd;">Cleanliness (Avg: ${e.clAvg.toFixed(1)})</div>
+    ${clRows}
+    <div class="modal-row"><span>Comments</span><span>${e.cleanlinessComments || "-"}</span></div>
+    <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px;padding-bottom:5px;border-bottom:2px solid #bae6fd;">Facilities (Avg: ${e.facAvg.toFixed(1)})</div>
+    ${facRows}
+    <div class="modal-row"><span>Comments</span><span>${e.facilitiesComments || "-"}</span></div>
+    <div class="modal-row" style="display:block;"><span style="display:block;margin-bottom:8px;">Evidence</span>${evidenceGalleryHtml(e)}</div>
+  `;
+  detailModal.classList.add("open");
+}
+
+document.getElementById("detail-modal-close").addEventListener("click", () => detailModal.classList.remove("open"));
+detailModal.addEventListener("click", ev => { if (ev.target === detailModal) detailModal.classList.remove("open"); });
+
+// ── Add / Edit Form Modal ──
+const formModal = document.getElementById("form-modal");
+
+function setFormRating(prefix, num, val) {
+  const sel = document.getElementById(`${prefix}-q${num}`);
+  if (sel) sel.value = String(val || 5);
+}
+
+function getFormRating(prefix, num) {
+  const sel = document.getElementById(`${prefix}-q${num}`);
+  return sel ? Number(sel.value) : 5;
+}
+
+document.getElementById("btn-add").addEventListener("click", () => openFormModal(null));
+
+function openFormModal(evalId) {
+  editingId = evalId;
+  const isEdit = !!evalId;
+  document.getElementById("form-modal-title").textContent = isEdit ? "✏️ Edit Evaluation" : "➕ Add Evaluation";
+  document.getElementById("form-modal-save").textContent = isEdit ? "Save Changes" : "Add Evaluation";
+
+  if (isEdit) {
+    const e = evaluations.find(x => x.id === evalId);
+    if (!e) return;
+    document.getElementById("form-office").value = e.officeName || "";
+    document.getElementById("form-cleanliness-cat").value = e.cleanlinessCategory || "Comfort Room";
+    document.getElementById("form-status").value = e.status || "pending";
+    document.getElementById("form-date").value = e.date ? new Date(e.date).toLocaleString("en-US", { month:"long", day:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" }) : "";
+    document.getElementById("form-events").value = e.events || "";
+    for (let i = 1; i <= 5; i++) setFormRating("cl", i, [e.cl1,e.cl2,e.cl3,e.cl4,e.cl5][i-1]);
+    for (let i = 1; i <= 8; i++) setFormRating("fac", i, [e.f1,e.f2,e.f3,e.f4,e.f5,e.f6,e.f7,e.f8][i-1]);
+    document.getElementById("form-cleanliness-comments").value = e.cleanlinessComments || "";
+    document.getElementById("form-facilities-comments").value = e.facilitiesComments || "";
+  } else {
+    document.getElementById("form-office").value = "";
+    document.getElementById("form-cleanliness-cat").value = "Comfort Room";
+    document.getElementById("form-status").value = "pending";
+    document.getElementById("form-date").value = "";
+    document.getElementById("form-events").value = "";
+    for (let i = 1; i <= 5; i++) setFormRating("cl", i, 5);
+    for (let i = 1; i <= 8; i++) setFormRating("fac", i, 5);
+    document.getElementById("form-cleanliness-comments").value = "";
+    document.getElementById("form-facilities-comments").value = "";
+  }
+  formModal.classList.add("open");
+}
+
+document.getElementById("form-modal-cancel").addEventListener("click", () => { formModal.classList.remove("open"); editingId = null; });
+formModal.addEventListener("click", ev => { if (ev.target === formModal) { formModal.classList.remove("open"); editingId = null; } });
+
+document.getElementById("form-modal-save").addEventListener("click", async () => {
+  const officeName = document.getElementById("form-office").value.trim();
+  if (!officeName) { alert("Please select an office."); return; }
+
+  const saveBtn = document.getElementById("form-modal-save");
+  saveBtn.disabled = true; saveBtn.textContent = "Saving...";
+
+  const dateStr = document.getElementById("form-date").value.trim();
+
+  const payload = {
+    officeName,
+    cleanlinessCategory: document.getElementById("form-cleanliness-cat").value,
+    status: document.getElementById("form-status").value,
+    date: dateStr,
+    timestamp: dateStr ? new Date(dateStr).getTime() || Date.now() : Date.now(),
+    events: document.getElementById("form-events").value.trim(),
+    category: "Facilities and Cleanliness",
+    cleanlinessRating1: getFormRating("cl", 1),
+    cleanlinessRating2: getFormRating("cl", 2),
+    cleanlinessRating3: getFormRating("cl", 3),
+    cleanlinessRating4: getFormRating("cl", 4),
+    cleanlinessRating5: getFormRating("cl", 5),
+    facilitiesRating1: getFormRating("fac", 1),
+    facilitiesRating2: getFormRating("fac", 2),
+    facilitiesRating3: getFormRating("fac", 3),
+    facilitiesRating4: getFormRating("fac", 4),
+    facilitiesRating5: getFormRating("fac", 5),
+    facilitiesRating6: getFormRating("fac", 6),
+    facilitiesRating7: getFormRating("fac", 7),
+    facilitiesRating8: getFormRating("fac", 8),
+    cleanlinessComments: document.getElementById("form-cleanliness-comments").value.trim(),
+    facilitiesComments: document.getElementById("form-facilities-comments").value.trim(),
+  };
+
+  try {
+    if (editingId) {
+      await updateDoc(doc(db, EVAL_COLLECTION, editingId), payload);
+      try { await updateDoc(doc(db, HISTORY_COLLECTION, editingId), { status: payload.status }); } catch {}
+    } else {
+      const newRef = await addDoc(collection(db, EVAL_COLLECTION), payload);
+      await setDoc(doc(db, HISTORY_COLLECTION, newRef.id), { ...payload, evaluationId: newRef.id });
+    }
+    formModal.classList.remove("open");
+    editingId = null;
+  } catch (err) {
+    alert("Failed to save. Please try again.");
+    console.error(err);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = editingId ? "Save Changes" : "Add Evaluation";
+  }
+});
+
+// ── Delete Modal ──
+const deleteModal = document.getElementById("delete-modal");
+
+function openDeleteModal(evalId) {
+  const e = evaluations.find(x => x.id === evalId);
+  if (!e) return;
+  deletingId = evalId;
+  document.getElementById("delete-modal-text").textContent =
+    `Delete evaluation for "${e.officeName}" (${e.cleanlinessCategory}, ${e.date ? new Date(e.date).toLocaleDateString() : "unknown date"})? This cannot be undone.`;
+  deleteModal.classList.add("open");
+}
+
+document.getElementById("delete-modal-cancel").addEventListener("click", () => { deleteModal.classList.remove("open"); deletingId = null; });
+deleteModal.addEventListener("click", ev => { if (ev.target === deleteModal) { deleteModal.classList.remove("open"); deletingId = null; } });
+
+document.getElementById("delete-modal-confirm").addEventListener("click", async () => {
+  if (!deletingId) return;
+  const btn = document.getElementById("delete-modal-confirm");
+  btn.disabled = true; btn.textContent = "Deleting...";
+  try {
+    await deleteDoc(doc(db, EVAL_COLLECTION, deletingId));
+    try { await deleteDoc(doc(db, HISTORY_COLLECTION, deletingId)); } catch {}
+    deleteModal.classList.remove("open");
+    deletingId = null;
+  } catch (err) {
+    alert("Failed to delete. Please try again.");
+    console.error(err);
+  } finally {
+    btn.disabled = false; btn.textContent = "Delete";
+  }
+});
+
+// ── Chat Modal ──
+const chatModal = document.getElementById("chat-modal");
+
+function formatChatTs(ms) {
+  if (!ms) return "";
+  const d = new Date(ms), now = new Date();
+  const t = d.toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" });
+  return d.toDateString() === now.toDateString() ? t : `${d.toLocaleDateString("en-US", { month:"short", day:"numeric" })}, ${t}`;
+}
+
+function renderChatMessages(msgs) {
+  const el = document.getElementById("chat-messages");
+  if (!msgs.length) { el.innerHTML = `<div class="chat-empty-note">No messages yet. Say hello 👋</div>`; return; }
+  el.innerHTML = msgs.map(m => {
+    const role = m.senderRole === "admin" ? "admin" : "user";
+    const text = (m.text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return `<div class="chat-bubble-row ${role}"><div class="chat-bubble">${text}</div><div class="chat-meta">${role === "admin" ? "You" : "User"} · ${formatChatTs(m.timestamp)}</div></div>`;
+  }).join("");
+  el.scrollTop = el.scrollHeight;
+}
+
+async function markRead(evalId, msgs) {
+  const unread = msgs.filter(m => m.senderRole === "user" && m.read === false);
+  if (!unread.length) return;
+  try {
+    const batch = writeBatch(db);
+    unread.forEach(m => batch.update(doc(db, CONVERSATIONS_COLLECTION, evalId, "messages", m.id), { read: true }));
+    batch.update(doc(db, CONVERSATIONS_COLLECTION, evalId), { unreadForAdmin: 0 });
+    await batch.commit();
+  } catch {}
+}
+
+function openChatModal(evalId) {
+  const e = evaluations.find(x => x.id === evalId);
+  if (!e) return;
+  activeChatEvalId = evalId;
+  document.getElementById("chat-header-title").textContent = `💬 ${getEvaluatorName(e)}`;
+  document.getElementById("chat-header-sub").textContent = `${e.officeName} · ${e.cleanlinessCategory || "F&C"} Evaluation`;
+  document.getElementById("chat-messages").innerHTML = `<div class="chat-empty-note">Loading…</div>`;
+  document.getElementById("chat-input").value = "";
+  chatModal.classList.add("open");
+  document.getElementById("chat-input").focus();
+
+  if (chatMessagesUnsub) { chatMessagesUnsub(); chatMessagesUnsub = null; }
+  chatMessagesUnsub = onSnapshot(
+    query(collection(db, CONVERSATIONS_COLLECTION, evalId, "messages"), orderBy("timestamp", "asc")),
+    snap => { const msgs = snap.docs.map(d => ({id:d.id,...d.data()})); renderChatMessages(msgs); markRead(evalId, msgs); },
+    err => { console.error(err); document.getElementById("chat-messages").innerHTML = `<div class="chat-empty-note">Couldn't load messages.</div>`; }
+  );
+}
+
+function closeChatModal() {
+  chatModal.classList.remove("open");
+  if (chatMessagesUnsub) { chatMessagesUnsub(); chatMessagesUnsub = null; }
+  activeChatEvalId = null;
+}
+
+document.getElementById("chat-header-close").addEventListener("click", closeChatModal);
+chatModal.addEventListener("click", ev => { if (ev.target === chatModal) closeChatModal(); });
+
+async function sendChatMessage() {
+  const text = document.getElementById("chat-input").value.trim();
+  if (!text || !activeChatEvalId) return;
+  const e = evaluations.find(x => x.id === activeChatEvalId);
+  if (!e) return;
+  const btn = document.getElementById("chat-send-btn");
+  btn.disabled = true;
+  try {
+    await setDoc(doc(db, CONVERSATIONS_COLLECTION, activeChatEvalId), {
+      evaluationId: activeChatEvalId, userId: e.userId || "", officeName: e.officeName || "",
+      category: "Facilities and Cleanliness", lastMessage: text, lastMessageAt: Date.now(),
+      lastSenderRole: "admin", unreadForAdmin: 0, unreadForUser: increment(1)
+    }, { merge: true });
+    await addDoc(collection(db, CONVERSATIONS_COLLECTION, activeChatEvalId, "messages"), {
+      senderRole: "admin", senderId: ADMIN_SENDER_ID, text, timestamp: Date.now(), read: false
+    });
+    document.getElementById("chat-input").value = "";
+  } catch (err) { console.error(err); alert("Failed to send message."); }
+  finally { btn.disabled = false; document.getElementById("chat-input").focus(); }
+}
+
+document.getElementById("chat-send-btn").addEventListener("click", sendChatMessage);
+document.getElementById("chat-input").addEventListener("keydown", ev => {
+  if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); sendChatMessage(); }
+});
+</script>
+</body>
+</html>
