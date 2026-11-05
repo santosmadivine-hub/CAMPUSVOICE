@@ -583,14 +583,16 @@ function parseStatus(ev, clAvg, facAvg) {
 function clAvg(ev) {
   const count = CL_QUESTIONS.length;
   if (!count) return 0;
-  const sum = CL_QUESTIONS.reduce((a, q) => a + (Number(ev[q.field]) || 0), 0);
+  let sum = 0;
+  for (let i = 0; i < count; i++) sum += Number(ev[`cl${i + 1}`]) || 0;
   return sum / count;
 }
 
 function facAvg(ev) {
   const count = FAC_QUESTIONS.length;
   if (!count) return 0;
-  const sum = FAC_QUESTIONS.reduce((a, q) => a + (Number(ev[q.field]) || 0), 0);
+  let sum = 0;
+  for (let i = 0; i < count; i++) sum += Number(ev[`f${i + 1}`]) || 0;
   return sum / count;
 }
 
