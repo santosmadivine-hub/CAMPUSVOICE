@@ -6,7 +6,7 @@
      - adminfc-report-settings.html   -> imports the exports below to edit the settings
    The Firebase app must be initialized (initializeApp) BEFORE this module runs. */
 import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot }
+import { getFirestore, doc, getDoc, setDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const db     = getFirestore(getApp());
@@ -98,8 +98,16 @@ export function loadReportSettings() {
   if (!ready) ready = new Promise(resolve => {
     onSnapshot(curRef, snap => {
       settings = snap.exists() ? { ...DEFAULTS, ...snap.data() } : { ...DEFAULTS };
-      if (!snap.exists()) setDoc(curRef, { ...DEFAULTS, updatedAt: new Date().toISOString() }).catch(() => {});
-      // Tell the page to repaint any report that is currently open
+      if (!snap.exists()) {
+        // Seed from admin2 settings (same letterhead) when no adminfc settings exist yet
+        getDoc(doc(db, "reportSettingsAdmin2", "current")).then(a2snap => {
+          const seed = a2snap.exists()
+            ? { ...DEFAULTS, ...a2snap.data(), reportTitle: DEFAULTS.reportTitle, commentsTitle: DEFAULTS.commentsTitle }
+            : { ...DEFAULTS };
+          settings = seed;
+          return setDoc(curRef, { ...seed, updatedAt: new Date().toISOString() });
+        }).catch(() => setDoc(curRef, { ...DEFAULTS, updatedAt: new Date().toISOString() }).catch(() => {}));
+      }
       window.dispatchEvent(new Event("reportsettingschange"));
       resolve(settings);
     }, err => { console.error(err); alert("Could not load report settings: " + err.message); resolve(settings); });
