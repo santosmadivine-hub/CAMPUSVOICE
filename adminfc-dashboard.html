@@ -154,14 +154,16 @@
       <div class="charts-grid">
         <div class="card">
           <div class="card-header-row">
-            <div class="card-title">Weekly Reports Trend</div>
+            <div>
+              <div class="card-title" style="display:flex;align-items:center;gap:10px;">
+                Submission Trend
+                <span style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:400;color:#94a3b8;">— Last 7 days</span>
+              </div>
+              <div style="margin-top:5px;width:36px;height:3px;background:#2563eb;border-radius:2px;"></div>
+            </div>
             <div class="badge-pill" id="office-count-badge">Total Offices: 0</div>
           </div>
-          <div class="chart-legend" style="gap:16px;flex-wrap:wrap;margin-top:2px">
-            <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Cleanliness</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Facilities</div>
-          </div>
-          <div class="line-chart-wrap"><svg id="line-chart-svg" viewBox="0 0 600 220" preserveAspectRatio="none"></svg><div class="pie-tooltip" id="line-tooltip"></div></div>
+          <div class="line-chart-wrap" style="margin-top:14px;"><svg id="line-chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none" style="width:100%;height:200px;display:block;overflow:visible;"></svg></div>
         </div>
         <div class="card">
           <div class="card-title">Average Ratings</div>
@@ -254,10 +256,14 @@ function getTimestampMillis(value) {
   return null;
 }
 
-function parseEvalStatus(data, avgRating) {
-  const stored = (data.status || "").toString().toLowerCase();
-  if (["resolved", "pending", "no_action"].includes(stored)) return stored;
-  return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
+// Status is always derived from the combined cleanliness + facilities average:
+//   avg >= 4.0  → resolved       (≥ 80% of 5)
+//   avg >= 3.0  → no_action      (≥ 60% of 5)
+//   avg <  3.0  → pending        (< 60% of 5)
+function parseEvalStatus(avgRating) {
+  if (avgRating >= 4.0) return "resolved";
+  if (avgRating >= 3.0) return "no_action";
+  return "pending";
 }
 
 // Load offices from fc_offices
@@ -280,7 +286,7 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
     };
     for (let i = 1; i <= 5; i++) record[`cleanlinessRating${i}`] = Number(data[`cleanlinessRating${i}`]) || 0;
     for (let i = 1; i <= 8; i++) record[`facilitiesRating${i}`]  = Number(data[`facilitiesRating${i}`])  || 0;
-    record.status = parseEvalStatus(data, avgOf(record));
+    record.status = parseEvalStatus(avgOf(record));
     evaluations.push(record);
   });
   renderStatCards();
@@ -288,43 +294,68 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
   renderStatusBreakdown();
 }, err => console.error("Failed to load evaluations:", err));
 
-// Weekly trend: past 7 days, two lines — Cleanliness (has cl ratings) vs Facilities (has fac ratings)
+// Submission Trend: single area chart, past 7 days, FC data only
 function renderLineTrend() {
   const svg = document.getElementById("line-chart-svg");
   if (!svg) return;
   svg.innerHTML = "";
-  const W = 600, H = 220, PAD = { t: 16, r: 20, b: 36, l: 36 };
+  const W = 600, H = 200, PAD = { t: 20, r: 24, b: 40, l: 48 };
   const days = 7;
   const now = new Date(); now.setHours(23, 59, 59, 999);
-  const labels = [], clCounts = [], facCounts = [];
+  const labels = [], counts = [];
   for (let d = days - 1; d >= 0; d--) {
     const dayStart = new Date(now); dayStart.setDate(now.getDate() - d); dayStart.setHours(0, 0, 0, 0);
     const dayEnd   = new Date(dayStart); dayEnd.setHours(23, 59, 59, 999);
-    labels.push(dayStart.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
-    const inDay = evaluations.filter(e => e.timestamp >= dayStart.getTime() && e.timestamp <= dayEnd.getTime());
-    clCounts.push(inDay.filter(e => e.cleanlinessRating1 > 0).length);
-    facCounts.push(inDay.filter(e => e.facilitiesRating1 > 0).length);
+    labels.push(dayStart.toLocaleDateString("en-US", { weekday: "short" }));
+    counts.push(evaluations.filter(e => e.timestamp >= dayStart.getTime() && e.timestamp <= dayEnd.getTime()).length);
   }
-  const maxVal = Math.max(...clCounts, ...facCounts, 1);
-  const xStep = (W - PAD.l - PAD.r) / (days - 1);
-  const yScale = v => PAD.t + (H - PAD.t - PAD.b) * (1 - v / maxVal);
-  const pts = arr => arr.map((v, i) => `${PAD.l + i * xStep},${yScale(v)}`).join(" ");
-  // Grid lines
-  [0, 0.25, 0.5, 0.75, 1].forEach(f => {
-    const y = PAD.t + (H - PAD.t - PAD.b) * (1 - f);
-    svg.innerHTML += `<line x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
-    if (f > 0) svg.innerHTML += `<text x="${PAD.l - 4}" y="${y + 4}" font-size="9" fill="#94a3b8" text-anchor="end">${Math.round(maxVal * f)}</text>`;
+
+  const maxVal = Math.max(...counts, 1);
+  // Round up maxVal to a nice number for y-axis
+  const niceMax = maxVal <= 10 ? 10 : maxVal <= 25 ? 25 : maxVal <= 50 ? 50 : maxVal <= 75 ? 75 : maxVal <= 100 ? 100 : Math.ceil(maxVal / 25) * 25;
+  const xStep  = (W - PAD.l - PAD.r) / (days - 1);
+  const yScale = v => PAD.t + (H - PAD.t - PAD.b) * (1 - v / niceMax);
+  const cx = i => PAD.l + i * xStep;
+
+  // Gradient definition
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#2563eb" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#2563eb" stop-opacity="0.01"/>
+      </linearGradient>
+    </defs>`;
+
+  // Horizontal grid lines + y-axis labels
+  const yTicks = [0, 25, 50, 75, 100].map(t => Math.round((t / 100) * niceMax));
+  yTicks.forEach(val => {
+    const y = yScale(val);
+    svg.innerHTML += `<line x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}" stroke="#e8eef6" stroke-width="1"/>`;
+    svg.innerHTML += `<text x="${PAD.l - 8}" y="${y + 4}" font-size="11" fill="#94a3b8" text-anchor="end" font-family="DM Sans,sans-serif">${val}</text>`;
   });
-  // X labels
+
+  // Area fill path (closed polygon)
+  const linePoints = counts.map((v, i) => `${cx(i)},${yScale(v)}`).join(" L ");
+  const areaPath = `M ${cx(0)},${yScale(counts[0])} L ${linePoints} L ${cx(days-1)},${yScale(0)} L ${cx(0)},${yScale(0)} Z`;
+  svg.innerHTML += `<path d="${areaPath}" fill="url(#areaGrad)"/>`;
+
+  // Smooth line using cubic bezier
+  let linePath = `M ${cx(0)},${yScale(counts[0])}`;
+  for (let i = 1; i < counts.length; i++) {
+    const cpX = (cx(i - 1) + cx(i)) / 2;
+    linePath += ` C ${cpX},${yScale(counts[i-1])} ${cpX},${yScale(counts[i])} ${cx(i)},${yScale(counts[i])}`;
+  }
+  svg.innerHTML += `<path d="${linePath}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+  // Data point circles (open with white fill)
+  counts.forEach((v, i) => {
+    svg.innerHTML += `<circle cx="${cx(i)}" cy="${yScale(v)}" r="5" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>`;
+  });
+
+  // X-axis day labels
   labels.forEach((l, i) => {
-    svg.innerHTML += `<text x="${PAD.l + i * xStep}" y="${H - 4}" font-size="9" fill="#94a3b8" text-anchor="middle">${l}</text>`;
+    svg.innerHTML += `<text x="${cx(i)}" y="${H - 6}" font-size="12" fill="#94a3b8" text-anchor="middle" font-family="DM Sans,sans-serif">${l}</text>`;
   });
-  // Lines
-  svg.innerHTML += `<polyline points="${pts(clCounts)}"  fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-  svg.innerHTML += `<polyline points="${pts(facCounts)}" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-  // Dots
-  clCounts.forEach((v, i)  => { svg.innerHTML += `<circle cx="${PAD.l + i * xStep}" cy="${yScale(v)}" r="4" fill="#2563eb"/>`; });
-  facCounts.forEach((v, i) => { svg.innerHTML += `<circle cx="${PAD.l + i * xStep}" cy="${yScale(v)}" r="4" fill="#10b981"/>`; });
 }
 
 function renderAvgRatingPie() {
