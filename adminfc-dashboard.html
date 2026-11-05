@@ -204,33 +204,46 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "dashboard");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Dashboard", "adminfc");
-const EVAL_HISTORY_COLLECTION = "evaluation_history";
-const TOTAL_RATING_QUESTIONS = 5;
+// FC-only collections
+const EVAL_COLLECTION   = "facilities_cleanliness_evaluations";
+const OFFICE_COLLECTION = "fc_offices";
 const LOW_RATING_THRESHOLD = 3;
 const STATUS_META = {pending: {label: "Pending", color: "#f59e0b"}, no_action: {label: "No Action Required", color: "#6366f1"}, resolved: {label: "Resolved", color: "#10b981"}};
-const STATUS_CATEGORY_META = {"Cleanliness": {label: "Cleanliness", color: "#2563eb"}, "Facilities": {label: "Facilities", color: "#10b981"}};
+const CL_CATS = ["Comfort Room", "Surroundings", "Laboratories"];
+const CL_CAT_COLORS = {"Comfort Room": "#2563eb", "Surroundings": "#10b981", "Laboratories": "#f59e0b"};
 const STATUS_VBAR_MAX_H = 200;
 let evaluations = [], officeCount = 0;
-function avgOf(ev) {
+
+// Average of cleanliness ratings (cleanlinessRating1..5)
+function clAvgOf(ev) {
   let sum = 0, count = 0;
-  for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) {
-    const val = ev["rating" + i];
-    if (typeof val === "number" && !isNaN(val)) { sum += val; count++; }
-  }
+  for (let i = 1; i <= 5; i++) { const v = Number(ev[`cleanlinessRating${i}`]); if (v > 0) { sum += v; count++; } }
   return count > 0 ? sum / count : 0;
 }
+// Average of facilities ratings (facilitiesRating1..8)
+function facAvgOf(ev) {
+  let sum = 0, count = 0;
+  for (let i = 1; i <= 8; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
+  return count > 0 ? sum / count : 0;
+}
+// Combined average across both sections
+function avgOf(ev) {
+  let sum = 0, count = 0;
+  for (let i = 1; i <= 5; i++) { const v = Number(ev[`cleanlinessRating${i}`]); if (v > 0) { sum += v; count++; } }
+  for (let i = 1; i <= 8; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
+  return count > 0 ? sum / count : 0;
+}
+
 function renderStatCards() {
   const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
   const startOfWeek = new Date(startOfDay); startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
   const startOfMonth = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), 1);
-  const daily = evaluations.filter(e => e.timestamp >= startOfDay.getTime()).length;
-  const weekly = evaluations.filter(e => e.timestamp >= startOfWeek.getTime()).length;
-  const monthly = evaluations.filter(e => e.timestamp >= startOfMonth.getTime()).length;
-  document.querySelector('[data-stat="daily"]').textContent = daily;
-  document.querySelector('[data-stat="weekly"]').textContent = weekly;
-  document.querySelector('[data-stat="monthly"]').textContent = monthly;
+  document.querySelector('[data-stat="daily"]').textContent   = evaluations.filter(e => e.timestamp >= startOfDay.getTime()).length;
+  document.querySelector('[data-stat="weekly"]').textContent  = evaluations.filter(e => e.timestamp >= startOfWeek.getTime()).length;
+  document.querySelector('[data-stat="monthly"]').textContent = evaluations.filter(e => e.timestamp >= startOfMonth.getTime()).length;
   document.querySelector('[data-stat="totalOffice"]').textContent = officeCount;
 }
+
 function getTimestampMillis(value) {
   if (value === undefined || value === null || value === "") return null;
   if (typeof value === "number") return value;
@@ -240,53 +253,140 @@ function getTimestampMillis(value) {
   if (value instanceof Date) return value.getTime();
   return null;
 }
+
 function parseEvalStatus(data, avgRating) {
   const stored = (data.status || "").toString().toLowerCase();
   if (["resolved", "pending", "no_action"].includes(stored)) return stored;
   return avgRating < LOW_RATING_THRESHOLD ? "pending" : "no_action";
 }
-onSnapshot(collection(db, EVAL_HISTORY_COLLECTION), (snapshot) => {
+
+// Load offices from fc_offices
+onSnapshot(collection(db, OFFICE_COLLECTION), snap => {
+  officeCount = snap.size;
+  document.getElementById("office-count-badge").textContent = `Total Offices: ${officeCount}`;
+  document.querySelector('[data-stat="totalOffice"]').textContent = officeCount;
+}, err => console.error("Failed to load offices:", err));
+
+// Load evaluations from facilities_cleanliness_evaluations only
+onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
   evaluations = [];
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    const category = data.category ? data.category.toUpperCase() : "";
-    if (!["CLEANLINESS", "FACILITIES", "FACILITIES AND CLEANLINESS"].includes(category)) return;
-    const record = {id: doc.id, officeName: data.officeName || "Unknown", category: category, timestamp: getTimestampMillis(data.timestamp ?? data.date ?? data.submittedAt) ?? 0};
-    for (let i = 1; i <= TOTAL_RATING_QUESTIONS; i++) record["rating" + i] = Number(data["rating" + i]) || 0;
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const record = {
+      id: docSnap.id,
+      officeName: data.officeName || "Unknown",
+      cleanlinessCategory: data.cleanlinessCategory || "Comfort Room",
+      timestamp: getTimestampMillis(data.timestamp ?? data.date ?? data.submittedAt) ?? 0
+    };
+    for (let i = 1; i <= 5; i++) record[`cleanlinessRating${i}`] = Number(data[`cleanlinessRating${i}`]) || 0;
+    for (let i = 1; i <= 8; i++) record[`facilitiesRating${i}`]  = Number(data[`facilitiesRating${i}`])  || 0;
     record.status = parseEvalStatus(data, avgOf(record));
     evaluations.push(record);
   });
   renderStatCards();
+  renderLineTrend();
   renderStatusBreakdown();
-}, (err) => console.error("Failed to load evaluations:", err));
-function renderAvgRatingPie() {
-  const svg = document.getElementById("donut-svg"), legend = document.getElementById("donut-legend"), tooltip = document.getElementById("donut-tooltip");
-  if (!svg || !legend || !tooltip) return;
-  svg.querySelectorAll(".donut-segment").forEach(el => el.remove());
-  if (evaluations.length === 0) {
-    legend.innerHTML = `<div class="legend-item">No evaluations yet</div>`;
-    return;
+}, err => console.error("Failed to load evaluations:", err));
+
+// Weekly trend: past 7 days, two lines — Cleanliness (has cl ratings) vs Facilities (has fac ratings)
+function renderLineTrend() {
+  const svg = document.getElementById("line-chart-svg");
+  if (!svg) return;
+  svg.innerHTML = "";
+  const W = 600, H = 220, PAD = { t: 16, r: 20, b: 36, l: 36 };
+  const days = 7;
+  const now = new Date(); now.setHours(23, 59, 59, 999);
+  const labels = [], clCounts = [], facCounts = [];
+  for (let d = days - 1; d >= 0; d--) {
+    const dayStart = new Date(now); dayStart.setDate(now.getDate() - d); dayStart.setHours(0, 0, 0, 0);
+    const dayEnd   = new Date(dayStart); dayEnd.setHours(23, 59, 59, 999);
+    labels.push(dayStart.toLocaleDateString("en-US", { month: "short", day: "numeric" }));
+    const inDay = evaluations.filter(e => e.timestamp >= dayStart.getTime() && e.timestamp <= dayEnd.getTime());
+    clCounts.push(inDay.filter(e => e.cleanlinessRating1 > 0).length);
+    facCounts.push(inDay.filter(e => e.facilitiesRating1 > 0).length);
   }
-  const cleanAvg = evaluations.filter(e => e.category.includes("CLEANLINESS")).reduce((a,e) => a + avgOf(e), 0) / Math.max(1, evaluations.filter(e => e.category.includes("CLEANLINESS")).length);
-  const facilAvg = evaluations.filter(e => e.category.includes("FACILITIES")).reduce((a,e) => a + avgOf(e), 0) / Math.max(1, evaluations.filter(e => e.category.includes("FACILITIES")).length);
-  const segments = [{key: "Cleanliness", label: "Cleanliness", color: "#2563eb", avg: cleanAvg}, {key: "Facilities", label: "Facilities", color: "#10b981", avg: facilAvg}];
-  let rows = segments.map(s => `<div class="category-row"><div class="cat-name"><div class="category-dot" style="background:${s.color}"></div>${s.label}</div><div class="category-count">${s.avg.toFixed(2)}/5</div></div>`).join("");
-  legend.innerHTML = `<div class="category-table"><div class="category-table-head"><span>Category</span><span>Avg</span></div>${rows}</div>`;
+  const maxVal = Math.max(...clCounts, ...facCounts, 1);
+  const xStep = (W - PAD.l - PAD.r) / (days - 1);
+  const yScale = v => PAD.t + (H - PAD.t - PAD.b) * (1 - v / maxVal);
+  const pts = arr => arr.map((v, i) => `${PAD.l + i * xStep},${yScale(v)}`).join(" ");
+  // Grid lines
+  [0, 0.25, 0.5, 0.75, 1].forEach(f => {
+    const y = PAD.t + (H - PAD.t - PAD.b) * (1 - f);
+    svg.innerHTML += `<line x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
+    if (f > 0) svg.innerHTML += `<text x="${PAD.l - 4}" y="${y + 4}" font-size="9" fill="#94a3b8" text-anchor="end">${Math.round(maxVal * f)}</text>`;
+  });
+  // X labels
+  labels.forEach((l, i) => {
+    svg.innerHTML += `<text x="${PAD.l + i * xStep}" y="${H - 4}" font-size="9" fill="#94a3b8" text-anchor="middle">${l}</text>`;
+  });
+  // Lines
+  svg.innerHTML += `<polyline points="${pts(clCounts)}"  fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  svg.innerHTML += `<polyline points="${pts(facCounts)}" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  // Dots
+  clCounts.forEach((v, i)  => { svg.innerHTML += `<circle cx="${PAD.l + i * xStep}" cy="${yScale(v)}" r="4" fill="#2563eb"/>`; });
+  facCounts.forEach((v, i) => { svg.innerHTML += `<circle cx="${PAD.l + i * xStep}" cy="${yScale(v)}" r="4" fill="#10b981"/>`; });
 }
+
+function renderAvgRatingPie() {
+  const svg = document.getElementById("donut-svg"), legend = document.getElementById("donut-legend");
+  if (!svg || !legend) return;
+  svg.querySelectorAll(".donut-segment").forEach(el => el.remove());
+  const clEvals  = evaluations.filter(e => e.cleanlinessRating1 > 0);
+  const facEvals = evaluations.filter(e => e.facilitiesRating1 > 0);
+  const cleanAvg = clEvals.length  ? clEvals.reduce((a, e) => a + clAvgOf(e), 0) / clEvals.length  : 0;
+  const facilAvg = facEvals.length ? facEvals.reduce((a, e) => a + facAvgOf(e), 0) / facEvals.length : 0;
+  if (evaluations.length === 0) {
+    legend.innerHTML = `<div class="legend-item">No evaluations yet</div>`; return;
+  }
+  const segments = [
+    {label: "Cleanliness", color: "#2563eb", avg: cleanAvg},
+    {label: "Facilities",  color: "#10b981", avg: facilAvg}
+  ];
+  const rows = segments.map(s => `<div class="category-row"><div class="cat-name"><div class="category-dot" style="background:${s.color}"></div>${s.label}</div><div class="category-count">${s.avg.toFixed(2)}/5</div></div>`).join("");
+  legend.innerHTML = `<div class="category-table"><div class="category-table-head"><span>Section</span><span>Avg</span></div>${rows}</div>`;
+  // Simple donut arcs
+  const total = cleanAvg + facilAvg || 1;
+  let startAngle = -Math.PI / 2;
+  segments.forEach(seg => {
+    const sweep = (seg.avg / total) * 2 * Math.PI;
+    const endAngle = startAngle + sweep;
+    const cx = 100, cy = 100, r = 78, sw = 24;
+    const x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle),   y2 = cy + r * Math.sin(endAngle);
+    const large = sweep > Math.PI ? 1 : 0;
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", seg.color);
+    path.setAttribute("stroke-width", sw);
+    path.setAttribute("class", "donut-segment");
+    svg.appendChild(path);
+    startAngle = endAngle;
+  });
+}
+
 function renderStatusBreakdown() {
   const el = document.getElementById("status-breakdown-chart");
-  if (!el || evaluations.length === 0) { el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`; renderAvgRatingPie(); return; }
+  if (!el || evaluations.length === 0) { el && (el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`); renderAvgRatingPie(); return; }
   const statusOrder = ["pending", "no_action", "resolved"];
-  const cats = ["Cleanliness", "Facilities"];
-  const totals = {}; cats.forEach(c => { totals[c] = evaluations.filter(e => e.category.includes(c.toUpperCase())).length; });
+  // Show breakdown by cleanlinessCategory
+  const activeCats = CL_CATS.filter(c => evaluations.some(e => e.cleanlinessCategory === c));
+  const cats = activeCats.length ? activeCats : CL_CATS;
+  const totals = {}; cats.forEach(c => { totals[c] = evaluations.filter(e => e.cleanlinessCategory === c).length; });
   const groupsHtml = statusOrder.map(statusKey => {
-    const cols = cats.map(c => { const count = evaluations.filter(e => e.category.includes(c.toUpperCase()) && e.status === statusKey).length; const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0; const h = Math.max(1, Math.round((pct / 100) * STATUS_VBAR_MAX_H)); return `<div class="status-vbar-col" title="${c} — ${STATUS_META[statusKey].label}: ${count}/${totals[c]}"><div class="status-vbar-value">${pct}%</div><div class="status-vbar-fill" style="height:${h}px;background:${STATUS_CATEGORY_META[c].color};"></div></div>`; }).join("");
+    const cols = cats.map(c => {
+      const count = evaluations.filter(e => e.cleanlinessCategory === c && e.status === statusKey).length;
+      const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
+      const h = Math.max(1, Math.round((pct / 100) * STATUS_VBAR_MAX_H));
+      const color = CL_CAT_COLORS[c] || "#64748b";
+      return `<div class="status-vbar-col" title="${c} — ${STATUS_META[statusKey].label}: ${count}/${totals[c]}"><div class="status-vbar-value">${pct}%</div><div class="status-vbar-fill" style="height:${h}px;background:${color};"></div></div>`;
+    }).join("");
     return `<div class="status-vbar-group">${cols}</div>`;
   }).join("");
   const yAxis = [100, 75, 50, 25, 0].map(pct => `<span style="top:${STATUS_VBAR_MAX_H - (pct / 100) * STATUS_VBAR_MAX_H}px;">${pct}%</span>`).join("");
   const xLabels = statusOrder.map(s => `<div class="status-vbar-label">${STATUS_META[s].label}</div>`).join("");
-  const legend = cats.map(c => `<div class="status-vbar-legend-item"><span class="status-vbar-legend-swatch" style="background:${STATUS_CATEGORY_META[c].color};"></span><span>${STATUS_CATEGORY_META[c].label}</span></div>`).join("");
-  el.innerHTML = `<div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;"><div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div><div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div></div><div class="status-vbar-labels">${xLabels}</div><div class="status-vbar-legend">${legend}</div>`;
+  const legendHtml = cats.map(c => `<div class="status-vbar-legend-item"><span class="status-vbar-legend-swatch" style="background:${CL_CAT_COLORS[c] || '#64748b'};"></span><span>${c}</span></div>`).join("");
+  el.innerHTML = `<div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;"><div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div><div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div></div><div class="status-vbar-labels">${xLabels}</div><div class="status-vbar-legend">${legendHtml}</div>`;
   renderAvgRatingPie();
 }
 </script>
