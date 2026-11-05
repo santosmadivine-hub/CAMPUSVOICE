@@ -200,8 +200,8 @@
 import { guard as cvGuard } from "./cv-core.js";
 await cvGuard(["adminfc"]);
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-initializeApp({
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+getApps().length || initializeApp({
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
   projectId: "kristal-adb78",
@@ -216,11 +216,9 @@ initializeApp({
 <script type="module">
 import { GROUPS, ALL, DEFAULTS, curRef, defRef, headerHtml, footerHtml, signaturesHtml }
   from "./adminfc-report-settings.js";
-import { getFirestore, getDoc, setDoc, onSnapshot }
+import { getDoc, setDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-getFirestore(getApp());
 const $ = id => document.getElementById(id);
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "reports");
