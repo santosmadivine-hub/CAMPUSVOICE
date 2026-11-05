@@ -367,6 +367,8 @@ document.getElementById("search-input").addEventListener("input", ev => {
 
 // ── Add / Edit Modal ──
 const formModal = document.getElementById("form-modal");
+const MAX_QUESTIONS_PER_SECTION = 5;
+
 document.getElementById("btn-add").addEventListener("click", () => openForm(null));
 
 function openForm(qId) {
@@ -385,7 +387,12 @@ function openForm(qId) {
     document.getElementById("form-active").value = String(q.active !== false);
   } else {
     const curSec = secFilter !== "all" ? secFilter : "cleanliness";
-    const nextOrder = questions.filter(q => q.section === curSec).length + 1;
+    const secCount = questions.filter(q => q.section === curSec).length;
+    if (secCount >= MAX_QUESTIONS_PER_SECTION) {
+      alert(`Maximum of ${MAX_QUESTIONS_PER_SECTION} questions per section reached for ${curSec === "cleanliness" ? "Cleanliness" : "Facilities"}. Delete an existing question to add a new one.`);
+      return;
+    }
+    const nextOrder = secCount + 1;
     document.getElementById("form-section").value = curSec;
     document.getElementById("form-order").value = nextOrder;
     document.getElementById("form-label").value = "";
@@ -403,11 +410,20 @@ document.getElementById("form-save").addEventListener("click", async () => {
   const label = document.getElementById("form-label").value.trim();
   if (!label) { alert("Please enter the question text."); return; }
 
+  const section = document.getElementById("form-section").value;
+  if (!editingId) {
+    const secCount = questions.filter(q => q.section === section).length;
+    if (secCount >= MAX_QUESTIONS_PER_SECTION) {
+      alert(`Maximum of ${MAX_QUESTIONS_PER_SECTION} questions per section reached for ${section === "cleanliness" ? "Cleanliness" : "Facilities"}.`);
+      return;
+    }
+  }
+
   const btn = document.getElementById("form-save");
   btn.disabled = true; btn.textContent = "Saving...";
 
   const payload = {
-    section: document.getElementById("form-section").value,
+    section,
     order: Number(document.getElementById("form-order").value) || 1,
     label,
     labelFilipino: document.getElementById("form-labelFilipino").value.trim(),
