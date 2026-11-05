@@ -581,13 +581,17 @@ function parseStatus(ev, clAvg, facAvg) {
 }
 
 function clAvg(ev) {
-  const vals = [ev.cl1, ev.cl2, ev.cl3, ev.cl4, ev.cl5];
-  return vals.reduce((a, v) => a + v, 0) / 5;
+  const count = CL_QUESTIONS.length;
+  if (!count) return 0;
+  const sum = CL_QUESTIONS.reduce((a, q) => a + (Number(ev[q.field]) || 0), 0);
+  return sum / count;
 }
 
 function facAvg(ev) {
-  const vals = [ev.f1, ev.f2, ev.f3, ev.f4, ev.f5, ev.f6, ev.f7, ev.f8];
-  return vals.reduce((a, v) => a + v, 0) / 8;
+  const count = FAC_QUESTIONS.length;
+  if (!count) return 0;
+  const sum = FAC_QUESTIONS.reduce((a, q) => a + (Number(ev[q.field]) || 0), 0);
+  return sum / count;
 }
 
 function getEvaluatorName(e) {
@@ -628,6 +632,7 @@ onSnapshot(collection(db, "fc_evaluation_questions"), snap => {
     .filter(q => q.section === "facilities" && q.active !== false)
     .sort((a, b) => (a.order || 0) - (b.order || 0))
     .map((q, i) => ({ label: q.label || `Q${i + 1}`, field: `facilitiesRating${i + 1}` }));
+  renderSubmissions();
 }, err => console.error("Failed to load questions:", err));
 
 // ── Firestore: load offices ──
@@ -693,9 +698,6 @@ onSnapshot(collection(db, EVAL_COLLECTION), snap => {
       f7: Number(ev.facilitiesRating7) || 0,
       f8: Number(ev.facilitiesRating8) || 0,
     };
-    rec.clAvg = clAvg(rec);
-    rec.facAvg = facAvg(rec);
-    rec.status = parseStatus(ev, rec.clAvg, rec.facAvg);
     return rec;
   });
   renderSubmissions();
@@ -737,6 +739,13 @@ function getFilteredSubmissions() {
 }
 
 function renderSubmissions() {
+  // Recompute averages and status now that questions may be loaded
+  evaluations.forEach(rec => {
+    rec.clAvg  = clAvg(rec);
+    rec.facAvg = facAvg(rec);
+    rec.status = parseStatus(rec, rec.clAvg, rec.facAvg);
+  });
+
   const scoped = getScopedEvals();
   const filtered = getFilteredSubmissions();
   const all = evaluations;
