@@ -56,7 +56,8 @@ service cloud.firestore {
     function isAdmin2() { return role() == 'admin2'; }
     function isAdmin3() { return role() == 'admin3'; }
     function isAdminFC() { return role() == 'adminfc'; }
-    function isAnyAdmin() { return role() in ['admin1', 'admin2', 'admin3', 'adminfc']; }
+    function isSuperAdmin() { return role() == 'superadmin'; }
+    function isAnyAdmin() { return role() in ['superadmin', 'admin1', 'admin2', 'admin3', 'adminfc']; }
 
     function isOffice() { return role() == 'office'; }
 
@@ -87,26 +88,23 @@ service cloud.firestore {
     match /accounts/{uid} {
 
       // Everyone may read their own record — the page guard needs it to know
-      // which office to show. Admin 1 reads them all to manage accounts.
-      allow get: if signedIn() && (request.auth.uid == uid || isAdmin1());
-      allow list: if isAdmin1();
+      // which office to show. Admin 1 and Super Admin read them all.
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin1() || isSuperAdmin());
+      allow list: if isAdmin1() || isSuperAdmin();
 
       // First sign-in after the upgrade: an administrator bootstraps their own
       // record. It may only claim an admin role for themselves, never 'office',
       // and never another user's document.
-      allow create: if isAdmin1()
+      allow create: if isAdmin1() || isSuperAdmin()
                     || (signedIn()
                         && request.auth.uid == uid
-                        && request.resource.data.role in ['admin1', 'admin2', 'admin3', 'adminfc']
+                        && request.resource.data.role in ['admin1', 'admin2', 'admin3', 'adminfc', 'superadmin']
                         && request.resource.data.status == 'active'
                         && request.resource.data.officeId == '');
 
-      // Admin 1 manages every account. Anyone else may only stamp their own
-      // last-login time, profile photo, username, email or display name —
-      // they cannot grant themselves a role, change which office they
-      // belong to, or reactivate themselves. Each self-editable field must
-      // still hold a sane type, never some other value smuggled in.
-      allow update: if isAdmin1()
+      // Admin 1 and Super Admin manage every account. Anyone else may only stamp
+      // their own last-login time, profile photo, username, email or display name.
+      allow update: if isAdmin1() || isSuperAdmin()
                     || (signedIn()
                         && request.auth.uid == uid
                         && onlyChanges(['lastLoginAt', 'photoURL', 'username', 'email', 'displayName', 'updatedAt'])
@@ -120,7 +118,7 @@ service cloud.firestore {
                         && (!('displayName' in request.resource.data)
                             || request.resource.data.displayName is string));
 
-      allow delete: if isAdmin1();
+      allow delete: if isAdmin1() || isSuperAdmin();
     }
 
     /* ---------------------------------------------------------------- *
@@ -133,32 +131,22 @@ service cloud.firestore {
      * ---------------------------------------------------------------- */
     match /account_index/{username} {
       allow get: if true;
-      allow list: if isAdmin1();
+      allow list: if isAdmin1() || isSuperAdmin();
 
-      // Admin 1 may write any entry. Anyone else may only write an entry for
-      // THEMSELVES (request.resource.data.uid must be their own uid), and
-      // only onto a username that is free or already theirs — `resource` is
-      // the document as it stands before this write, so a username already
-      // claimed by a different uid is refused outright, which is what stops
-      // a rename from hijacking someone else's login.
-      //
-      // The role written must match the caller's own role: admin bootstrap
-      // (admins/{uid} does not exist yet) is allowed on the admin roles
-      // alone, since accountDoc() can't be read before that first write;
-      // an office account's self-service rename additionally has to match
-      // the role already on its (already-existing) account record.
-      allow create, update: if isAdmin1()
+      // Admin 1 / Super Admin may write any entry. Anyone else may only write
+      // an entry for THEMSELVES (request.resource.data.uid must be their own uid).
+      allow create, update: if isAdmin1() || isSuperAdmin()
                             || (signedIn()
                                 && request.resource.data.uid == request.auth.uid
                                 && (resource == null || resource.data.uid == request.auth.uid)
                                 && (
-                                  request.resource.data.role in ['admin1', 'admin2', 'admin3', 'adminfc']
+                                  request.resource.data.role in ['admin1', 'admin2', 'admin3', 'adminfc', 'superadmin']
                                   || (request.resource.data.role == 'office' && accountDoc().role == 'office')
                                 ));
 
       // Delete only your own entry (freeing a username you're renaming away
-      // from), or Admin 1 cleaning up after any account.
-      allow delete: if isAdmin1()
+      // from), or Admin 1 / Super Admin cleaning up after any account.
+      allow delete: if isAdmin1() || isSuperAdmin()
                     || (signedIn() && resource.data.uid == request.auth.uid);
     }
 
@@ -412,7 +400,7 @@ service cloud.firestore {
      * ---------------------------------------------------------------- */
     match /fc_offices/{docId} {
       allow read: if signedIn();
-      allow write: if isAdminFC() || isAdmin1();
+      allow write: if isAdminFC() || isAdmin1() || isSuperAdmin();
     }
 
     match /facilities_cleanliness_evaluations/{docId} {

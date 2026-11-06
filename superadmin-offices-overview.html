@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Offices Overview | Super Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── Layout ── */
+.page-container { flex:1; padding:28px 32px 32px; overflow-y:auto; display:flex; flex-direction:column; gap:22px; }
+
+/* ── Top stat strip ── */
+.stat-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+@media(max-width:860px){ .stat-strip{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:480px){ .stat-strip{grid-template-columns:1fr;} }
+.stat-card {
+  position:relative; background:#fff; border:1px solid #ede9fe;
+  border-top:4px solid #7c3aed; border-radius:14px; padding:18px 50px 18px 18px;
+  box-shadow:0 4px 14px rgba(124,58,237,.07); display:flex; flex-direction:column;
+  gap:4px; transition:transform .25s,box-shadow .25s;
+}
+.stat-card:hover { transform:translateY(-3px); box-shadow:0 10px 24px rgba(124,58,237,.14); }
+.stat-icon { position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:9px; background:#f5f3ff; display:flex; align-items:center; justify-content:center; font-size:15px; }
+.stat-label { font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+.stat-value { font-family:'Syne',sans-serif; font-weight:700; font-size:28px; color:#0f172a; }
+.stat-sub   { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; }
+
+/* ── Toolbar ── */
+.toolbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.search-wrap { display:flex; align-items:center; gap:8px; height:40px; background:#f8fafc; border:1px solid #ede9fe; border-radius:10px; padding:0 12px; flex:1; min-width:180px; transition:border-color .2s; }
+.search-wrap:focus-within { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.12); background:#fff; }
+.search-wrap input { flex:1; border:none; outline:none; background:transparent; font-family:'DM Sans',sans-serif; font-size:13px; color:#0f172a; }
+.search-wrap input::placeholder { color:#94a3b8; }
+.filter-pill { display:flex; gap:6px; }
+.pill-btn { border:1.5px solid #ede9fe; background:#fff; color:#475569; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; padding:6px 14px; border-radius:999px; cursor:pointer; transition:all .18s; }
+.pill-btn:hover { border-color:#a78bfa; color:#5b21b6; }
+.pill-btn.active { background:#7c3aed; border-color:#7c3aed; color:#fff; }
+.sort-btn { background:#f1f5f9; border:none; color:#475569; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; padding:6px 14px; border-radius:10px; cursor:pointer; transition:background .18s; white-space:nowrap; }
+.sort-btn:hover { background:#ede9fe; color:#5b21b6; }
+
+/* ── Office Cards Grid ── */
+.offices-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; }
+@media(max-width:420px){ .offices-grid{grid-template-columns:1fr;} }
+
+.office-card {
+  background:#fff; border:1px solid #ede9fe; border-radius:16px;
+  box-shadow:0 4px 14px rgba(124,58,237,.06); display:flex; flex-direction:column;
+  overflow:hidden; transition:transform .25s,box-shadow .25s,border-color .25s;
+  cursor:pointer;
+}
+.office-card:hover { transform:translateY(-4px); box-shadow:0 14px 32px rgba(124,58,237,.14); border-color:#a78bfa; }
+.office-card.inactive-card { opacity:.7; }
+
+.card-header {
+  padding:18px 20px 14px; display:flex; align-items:flex-start; gap:12px;
+  border-bottom:1px solid #f5f3ff;
+}
+.card-avatar {
+  width:44px; height:44px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+  background:linear-gradient(135deg,#ede9fe,#ddd6fe);
+}
+.card-avatar.inactive-av { background:#f1f5f9; }
+.card-title-wrap { flex:1; min-width:0; }
+.card-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:#0f172a; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.card-id { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; margin-top:2px; }
+.badge { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; border-radius:5px; font-size:11px; font-weight:700; white-space:nowrap; }
+.badge-active   { background:#dcfce7; color:#15803d; }
+.badge-inactive { background:#fee2e2; color:#991b1b; }
+
+.card-metrics { padding:14px 20px; display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.metric { display:flex; flex-direction:column; gap:2px; }
+.metric-val { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; color:#0f172a; }
+.metric-lbl { font-family:'DM Sans',sans-serif; font-size:11px; color:#64748b; text-transform:uppercase; letter-spacing:.03em; }
+
+.card-rating-bar { padding:0 20px 14px; }
+.bar-label { display:flex; justify-content:space-between; margin-bottom:4px; }
+.bar-label span { font-family:'DM Sans',sans-serif; font-size:11px; color:#64748b; }
+.bar-label strong { font-family:'Syne',sans-serif; font-size:12px; color:#0f172a; }
+.bar-track { height:7px; background:#f1f5f9; border-radius:999px; overflow:hidden; }
+.bar-fill  { height:100%; border-radius:999px; background:linear-gradient(90deg,#7c3aed,#a78bfa); transition:width .6s ease; }
+
+.card-footer { padding:10px 20px 14px; border-top:1px solid #f5f3ff; display:flex; align-items:center; justify-content:space-between; }
+.last-eval { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; }
+.pending-chip { display:inline-flex; align-items:center; gap:5px; background:#fef9c3; color:#854d0e; border-radius:6px; font-size:11px; font-weight:700; padding:2px 8px; }
+
+/* Empty state */
+.empty-state { text-align:center; padding:60px 20px; font-family:'DM Sans',sans-serif; color:#94a3b8; font-size:14px; }
+.empty-icon { font-size:36px; margin-bottom:10px; }
+
+/* ── Detail Modal ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,27,50,.5); align-items:center; justify-content:center; z-index:999; padding:20px; backdrop-filter:blur(4px); }
+.modal-overlay.open { display:flex; }
+@keyframes cvModalIn { from{opacity:0;transform:translateY(10px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+.modal-box {
+  background:#fff; border-radius:20px; width:100%; max-width:580px;
+  max-height:90vh; overflow-y:auto; box-shadow:0 32px 80px rgba(15,27,50,.26);
+  border:1px solid #ede9fe; animation:cvModalIn .22s cubic-bezier(.2,.9,.3,1.1);
+}
+.modal-top { padding:22px 24px 18px; border-bottom:1px solid #f5f3ff; display:flex; align-items:center; gap:14px; }
+.modal-avi { width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg,#ede9fe,#ddd6fe); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.modal-avi.inactive-av { background:#f1f5f9; }
+.modal-name { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; color:#0f172a; }
+.modal-meta { font-family:'DM Sans',sans-serif; font-size:12px; color:#94a3b8; margin-top:2px; }
+.modal-close { margin-left:auto; background:none; border:none; font-size:20px; cursor:pointer; color:#94a3b8; padding:4px 8px; border-radius:6px; transition:background .2s; }
+.modal-close:hover { background:#f1f5f9; }
+.modal-body { padding:20px 24px; display:flex; flex-direction:column; gap:18px; }
+.modal-section-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:#5b21b6; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
+.modal-stat-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.modal-stat { background:#faf5ff; border-radius:10px; padding:12px 14px; }
+.modal-stat-val { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; color:#0f172a; }
+.modal-stat-lbl { font-family:'DM Sans',sans-serif; font-size:11px; color:#64748b; text-transform:uppercase; letter-spacing:.03em; margin-top:2px; }
+.modal-row { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid #f5f3ff; font-family:'DM Sans',sans-serif; font-size:13px; }
+.modal-row:last-child { border-bottom:none; }
+.modal-row-label { color:#64748b; font-size:12px; text-transform:uppercase; letter-spacing:.04em; font-weight:600; }
+.modal-row-value { color:#0f172a; font-weight:600; }
+.recent-list { display:flex; flex-direction:column; gap:7px; }
+.recent-item { background:#faf5ff; border-radius:9px; padding:9px 12px; font-family:'DM Sans',sans-serif; font-size:12px; color:#334155; display:flex; justify-content:space-between; gap:10px; }
+.recent-item-date { color:#94a3b8; white-space:nowrap; }
+.btn-row { display:flex; gap:10px; justify-content:flex-end; padding-top:4px; }
+.btn { border:none; cursor:pointer; border-radius:10px; padding:10px 18px; font-weight:600; font-family:'DM Sans',sans-serif; font-size:13px; transition:background .2s,transform .2s; }
+.btn:hover { transform:translateY(-2px); }
+.btn-purple { background:linear-gradient(160deg,#8b5cf6,#7c3aed); color:#fff; box-shadow:0 4px 12px rgba(124,58,237,.25); }
+.btn-ghost  { background:#f1f5f9; color:#0f172a; }
+.btn-ghost:hover { background:#ede9fe; color:#5b21b6; }
+
+.loading-state { text-align:center; padding:40px; color:#94a3b8; font-family:'DM Sans',sans-serif; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar-overlay"></div>
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+    <div id="topbar-mount"></div>
+    <div class="page-container">
+
+      <!-- Top stats -->
+      <div class="stat-strip">
+        <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-label">Total Offices</div><div class="stat-value" id="sTotal">—</div><div class="stat-sub">In fc_offices</div></div>
+        <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-label">Total Evaluations</div><div class="stat-value" id="sEvals">—</div><div class="stat-sub">Across all offices</div></div>
+        <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-label">System Avg Rating</div><div class="stat-value" id="sAvg">—</div><div class="stat-sub">Out of 5.0</div></div>
+        <div class="stat-card"><div class="stat-icon">🕐</div><div class="stat-label">Pending Review</div><div class="stat-value" id="sPending">—</div><div class="stat-sub">Need admin action</div></div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span style="color:#94a3b8;font-size:14px;">🔍</span>
+          <input type="text" id="searchInput" placeholder="Search offices…">
+        </div>
+        <div class="filter-pill">
+          <button class="pill-btn active" data-filter="all">All</button>
+          <button class="pill-btn" data-filter="active">Active</button>
+          <button class="pill-btn" data-filter="inactive">Inactive</button>
+        </div>
+        <button class="sort-btn" id="sortBtn">Sort: Most Evaluations ▾</button>
+      </div>
+
+      <!-- Office cards -->
+      <div class="offices-grid" id="officesGrid">
+        <div class="loading-state">Loading offices…</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="modal-avi" id="mdAvi">🏢</div>
+      <div>
+        <div class="modal-name" id="mdName">Office Name</div>
+        <div class="modal-meta" id="mdMeta">—</div>
+      </div>
+      <button class="modal-close" id="mdClose">✕</button>
+    </div>
+    <div class="modal-body" id="mdBody">
+      <div class="loading-state">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import {
+  guard, db,
+  collection, query, where, orderBy, limit,
+  getDocs, onSnapshot
+} from './cv-core.js';
+import { buildSidebar, buildTopbar } from './shared.js';
+
+await guard(['superadmin']);
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'offices-overview');
+document.getElementById('topbar-mount').innerHTML  = buildTopbar('Offices Overview', 'superadmin');
+
+/* ─── State ─────────────────────────────────────────── */
+let allOffices   = [];   // from fc_offices
+let evalsByOffice = {};  // officeName → { total, avgCleanliness, avgFacilities, pending, recent }
+let searchTerm   = '';
+let activeFilter = 'all';
+let sortMode     = 'evals';  // 'evals' | 'alpha' | 'rating'
+
+const SORT_LABELS = {
+  evals:  'Sort: Most Evaluations ▾',
+  alpha:  'Sort: A → Z ▾',
+  rating: 'Sort: Highest Rating ▾'
+};
+const SORT_CYCLE = ['evals', 'alpha', 'rating'];
+
+/* ─── Helpers ───────────────────────────────────────── */
+function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+function fmt(n, dp=1) { return n > 0 ? n.toFixed(dp) : '—'; }
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function ratingColor(r) {
+  if (r >= 4.5) return '#16a34a';
+  if (r >= 3.5) return '#0284c7';
+  if (r >= 2.5) return '#d97706';
+  if (r >  0  ) return '#dc2626';
+  return '#94a3b8';
+}
+
+function ratingEmoji(r) {
+  if (!r) return '—';
+  if (r >= 4.5) return '😄';
+  if (r >= 3.5) return '😊';
+  if (r >= 2.5) return '😐';
+  return '😟';
+}
+
+function formatDate(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
+}
+
+/* ─── Compute office stats ───────────────────────────── */
+async function loadEvalData(offices) {
+  evalsByOffice = {};
+  if (!offices.length) return;
+
+  // Pull all evaluations once (paginated if huge — for now one pass is fine for most deployments)
+  const snap = await getDocs(collection(db, 'facilities_cleanliness_evaluations'));
+  const rows  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  for (const o of offices) {
+    const mine = rows.filter(r => (r.officeName || '').trim().toLowerCase() === (o.name||'').trim().toLowerCase());
+
+    // Cleanliness avg (cleanlinessRating1..5)
+    const clRatings = [];
+    mine.forEach(r => {
+      for (let i=1;i<=5;i++) { const v=Number(r[`cleanlinessRating${i}`]); if(v>0) clRatings.push(v); }
+    });
+
+    // Facilities avg (facilitiesRating1..8)
+    const facRatings = [];
+    mine.forEach(r => {
+      for (let i=1;i<=8;i++) { const v=Number(r[`facilitiesRating${i}`]); if(v>0) facRatings.push(v); }
+    });
+
+    const allRatings = [...clRatings, ...facRatings];
+    const pending    = mine.filter(r => !r.status || r.status === 'pending').length;
+
+    // Recent 3
+    const recent = mine
+      .filter(r => r.timestamp)
+      .sort((a,b) => (b.timestamp||0) - (a.timestamp||0))
+      .slice(0,3);
+
+    evalsByOffice[o.id] = {
+      total:          mine.length,
+      avgCleanliness: avg(clRatings),
+      avgFacilities:  avg(facRatings),
+      avgOverall:     avg(allRatings),
+      pending,
+      recent,
+      rows: mine
+    };
+  }
+}
+
+/* ─── Top stats ─────────────────────────────────────── */
+function updateTopStats() {
+  const stats = Object.values(evalsByOffice);
+  const totalEvals   = stats.reduce((a,s)=>a+s.total,0);
+  const totalPending = stats.reduce((a,s)=>a+s.pending,0);
+  const allRatings   = stats.filter(s=>s.avgOverall>0).map(s=>s.avgOverall);
+  const sysAvg       = allRatings.length ? avg(allRatings) : 0;
+
+  document.getElementById('sTotal').textContent  = allOffices.length;
+  document.getElementById('sEvals').textContent  = totalEvals;
+  document.getElementById('sAvg').textContent    = sysAvg ? sysAvg.toFixed(2) : '—';
+  document.getElementById('sPending').textContent= totalPending;
+}
+
+/* ─── Render cards ──────────────────────────────────── */
+function getFiltered() {
+  let list = allOffices;
+  const term = searchTerm.trim().toLowerCase();
+  if (term) list = list.filter(o => (o.name||'').toLowerCase().includes(term));
+  if (activeFilter !== 'all') list = list.filter(o => (o.status||'active') === activeFilter);
+
+  list = [...list].sort((a,b) => {
+    const sa = evalsByOffice[a.id] || {};
+    const sb = evalsByOffice[b.id] || {};
+    if (sortMode === 'alpha')  return (a.name||'').localeCompare(b.name||'');
+    if (sortMode === 'rating') return (sb.avgOverall||0) - (sa.avgOverall||0);
+    return (sb.total||0) - (sa.total||0); // 'evals'
+  });
+
+  return list;
+}
+
+function renderCards() {
+  const grid = document.getElementById('officesGrid');
+  const list = getFiltered();
+
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">🏢</div>${
+      searchTerm ? 'No offices match your search.' : activeFilter === 'inactive' ? 'No inactive offices.' : 'No offices yet.'
+    }</div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(o => {
+    const s       = evalsByOffice[o.id] || { total:0, avgCleanliness:0, avgFacilities:0, avgOverall:0, pending:0 };
+    const status  = (o.status||'active');
+    const pct     = s.avgOverall ? Math.round((s.avgOverall/5)*100) : 0;
+    const emojiCl = ratingEmoji(s.avgCleanliness);
+    const emojiFc = ratingEmoji(s.avgFacilities);
+
+    return `
+    <div class="office-card${status==='inactive'?' inactive-card':''}" onclick="openDetail('${escH(o.id)}')">
+      <div class="card-header">
+        <div class="card-avatar${status==='inactive'?' inactive-av':''}">🏢</div>
+        <div class="card-title-wrap">
+          <div class="card-name" title="${escH(o.name||'')}">${escH(o.name||'(unnamed)')}</div>
+          <div class="card-id">ID: ${escH(o.id)}</div>
+        </div>
+        <span class="badge badge-${status}">${status.charAt(0).toUpperCase()+status.slice(1)}</span>
+      </div>
+
+      <div class="card-metrics">
+        <div class="metric"><div class="metric-val">${s.total}</div><div class="metric-lbl">Evaluations</div></div>
+        <div class="metric"><div class="metric-val" style="color:${ratingColor(s.avgOverall)}">${s.avgOverall?s.avgOverall.toFixed(2):'—'}</div><div class="metric-lbl">Avg Rating</div></div>
+        <div class="metric"><div class="metric-val">${emojiCl} ${s.avgCleanliness?s.avgCleanliness.toFixed(1):'—'}</div><div class="metric-lbl">Cleanliness</div></div>
+        <div class="metric"><div class="metric-val">${emojiFc} ${s.avgFacilities?s.avgFacilities.toFixed(1):'—'}</div><div class="metric-lbl">Facilities</div></div>
+      </div>
+
+      ${s.avgOverall ? `
+      <div class="card-rating-bar">
+        <div class="bar-label"><span>Overall satisfaction</span><strong>${pct}%</strong></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      </div>` : ''}
+
+      <div class="card-footer">
+        <span class="last-eval">
+          ${s.recent && s.recent[0]
+            ? `Last eval: ${formatDate(s.recent[0].timestamp)}`
+            : 'No evaluations yet'}
+        </span>
+        ${s.pending > 0 ? `<span class="pending-chip">🕐 ${s.pending} pending</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── Detail modal ──────────────────────────────────── */
+window.openDetail = (officeId) => {
+  const o = allOffices.find(x => x.id === officeId);
+  if (!o) return;
+  const s = evalsByOffice[officeId] || { total:0, avgCleanliness:0, avgFacilities:0, avgOverall:0, pending:0, recent:[], rows:[] };
+  const status = (o.status||'active');
+
+  document.getElementById('mdAvi').className = 'modal-avi' + (status==='inactive'?' inactive-av':'');
+  document.getElementById('mdName').textContent = o.name || '(unnamed)';
+  document.getElementById('mdMeta').textContent = `ID: ${o.id} · ${status.charAt(0).toUpperCase()+status.slice(1)} · Created: ${formatDate(o.createdAt)}`;
+
+  const userCategories = {};
+  (s.rows||[]).forEach(r => {
+    const cat = r.userCategory || 'Unknown';
+    userCategories[cat] = (userCategories[cat]||0)+1;
+  });
+  const topCats = Object.entries(userCategories).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  const clSnapRows = [1,2,3,4,5].map(i => {
+    const ratings = (s.rows||[]).map(r=>Number(r[`cleanlinessRating${i}`])).filter(v=>v>0);
+    return ratings.length ? avg(ratings).toFixed(2) : '—';
+  });
+  const facSnapRows = [1,2,3,4,5,6,7,8].map(i => {
+    const ratings = (s.rows||[]).map(r=>Number(r[`facilitiesRating${i}`])).filter(v=>v>0);
+    return ratings.length ? avg(ratings).toFixed(2) : '—';
+  });
+
+  document.getElementById('mdBody').innerHTML = `
+    <div>
+      <div class="modal-section-title">Summary</div>
+      <div class="modal-stat-row">
+        <div class="modal-stat"><div class="modal-stat-val">${s.total}</div><div class="modal-stat-lbl">Total Evals</div></div>
+        <div class="modal-stat"><div class="modal-stat-val" style="color:${ratingColor(s.avgOverall)}">${s.avgOverall?s.avgOverall.toFixed(2):'—'}</div><div class="modal-stat-lbl">Avg Overall</div></div>
+        <div class="modal-stat"><div class="modal-stat-val ${s.pending?'':''}">🕐 ${s.pending}</div><div class="modal-stat-lbl">Pending</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="modal-section-title">Section Ratings</div>
+      <div class="modal-row"><span class="modal-row-label">🧹 Cleanliness avg</span><span class="modal-row-value" style="color:${ratingColor(s.avgCleanliness)}">${s.avgCleanliness?s.avgCleanliness.toFixed(2)+' / 5':'—'}</span></div>
+      <div class="modal-row"><span class="modal-row-label">🏗️ Facilities avg</span><span class="modal-row-value" style="color:${ratingColor(s.avgFacilities)}">${s.avgFacilities?s.avgFacilities.toFixed(2)+' / 5':'—'}</span></div>
+      <div class="modal-row"><span class="modal-row-label">📊 Overall satisfaction</span><span class="modal-row-value">${s.avgOverall?Math.round((s.avgOverall/5)*100)+'%':'—'}</span></div>
+    </div>
+
+    ${topCats.length ? `
+    <div>
+      <div class="modal-section-title">Respondent Types</div>
+      ${topCats.map(([cat,cnt]) => `
+        <div class="modal-row"><span class="modal-row-label">${escH(cat)}</span><span class="modal-row-value">${cnt} respondent${cnt>1?'s':''}</span></div>
+      `).join('')}
+    </div>` : ''}
+
+    ${s.recent && s.recent.length ? `
+    <div>
+      <div class="modal-section-title">Recent Evaluations</div>
+      <div class="recent-list">
+        ${s.recent.map(r => {
+          const cl = [1,2,3,4,5].map(i=>Number(r[`cleanlinessRating${i}`])).filter(v=>v>0);
+          const fc = [1,2,3,4,5,6,7,8].map(i=>Number(r[`facilitiesRating${i}`])).filter(v=>v>0);
+          const ra = [...cl,...fc];
+          const ov = ra.length ? avg(ra).toFixed(2) : '—';
+          return `<div class="recent-item"><span>${r.userCategory||'Respondent'} · ${r.sex||''}</span><span style="font-weight:700;color:#0f172a">${ov}/5</span><span class="recent-item-date">${formatDate(r.timestamp)}</span></div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+
+    <div class="btn-row">
+      <a href="superadmin-office-mgmt.html" class="btn btn-ghost">✏️ Manage Offices</a>
+      <a href="adminfc-eval-mgmt.html" class="btn btn-purple">📋 View Evaluations</a>
+    </div>
+  `;
+
+  document.getElementById('detailModal').classList.add('open');
+};
+
+document.getElementById('mdClose').addEventListener('click', () => {
+  document.getElementById('detailModal').classList.remove('open');
+});
+document.getElementById('detailModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('detailModal'))
+    document.getElementById('detailModal').classList.remove('open');
+});
+
+/* ─── Filters / Sort wiring ─────────────────────────── */
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchTerm = e.target.value;
+  renderCards();
+});
+
+document.querySelectorAll('.pill-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    renderCards();
+  });
+});
+
+const sortBtn = document.getElementById('sortBtn');
+sortBtn.addEventListener('click', () => {
+  const idx = SORT_CYCLE.indexOf(sortMode);
+  sortMode = SORT_CYCLE[(idx+1) % SORT_CYCLE.length];
+  sortBtn.textContent = SORT_LABELS[sortMode];
+  renderCards();
+});
+
+/* ─── Bootstrap ─────────────────────────────────────── */
+// Live-listen to fc_offices; reload eval data whenever offices change
+onSnapshot(collection(db, 'fc_offices'), async snap => {
+  allOffices = snap.docs.map(d => ({ id:d.id, ...d.data() }))
+    .sort((a,b) => (a.name||'').localeCompare(b.name||''));
+
+  document.getElementById('officesGrid').innerHTML = '<div class="loading-state">Computing stats…</div>';
+
+  await loadEvalData(allOffices);
+  updateTopStats();
+  renderCards();
+});
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

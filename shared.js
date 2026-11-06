@@ -1,5 +1,12 @@
 // Subtitles per role. Keys are the lowercase page titles.
 const PAGE_SUBTITLES = {
+  superadmin: {
+    'dashboard':         'System Overview — Offices and Administrator Accounts',
+    'offices overview':  'Per-Office Evaluation Performance Across All Registered Offices',
+    'office management': 'Add, Edit, and Remove Campus Offices',
+    'accounts':          'Create and Manage Administrator FC Accounts',
+    'settings':          'Your Profile and System Information'
+  },
   admin1: {
     'dashboard':             'Overview of Campus Evaluation Results and Activities',
     'office management':     'Manage Campus Offices and Evaluation Areas',
@@ -82,8 +89,17 @@ function buildSidebar(role, activePage) {
     { id: 'analytics', icon: '📈', label: 'Analytics', href: 'adminfc-analytics.html' },
   ];
 
+  const navSuperAdmin = [
+    { id: 'dashboard',       icon: '📊', label: 'Dashboard',           href: 'superadmin-dashboard.html' },
+    { id: 'offices-overview', icon: '🗂️', label: 'Offices Overview',    href: 'superadmin-offices-overview.html' },
+    { id: 'office-mgmt',     icon: '🏢', label: 'Office Management',   href: 'superadmin-office-mgmt.html' },
+    { id: 'accounts',        icon: '🔑', label: 'Accounts',            href: 'superadmin-accounts.html' },
+  ];
+
   const nav =
-    role === 'admin1'
+    role === 'superadmin'
+      ? navSuperAdmin
+      : role === 'admin1'
       ? navAdmin1
       : role === 'adminfc'
       ? navAdminFC
@@ -92,7 +108,9 @@ function buildSidebar(role, activePage) {
       : navAdmin3;
 
   const activeClass =
-    role === 'admin1'
+    role === 'superadmin'
+      ? 'active-sa'
+      : role === 'admin1'
       ? 'active-a1'
       : role === 'adminfc'
       ? 'active-afc'
@@ -101,7 +119,9 @@ function buildSidebar(role, activePage) {
       : 'active-a3';
 
   const roleLabel =
-    role === 'admin1'
+    role === 'superadmin'
+      ? '👑 Super Administrator'
+      : role === 'admin1'
       ? '⚙️ Admin 1 — Services'
       : role === 'adminfc'
       ? '🤝 Admin FC — Facilities &amp; Cleanliness'
@@ -110,7 +130,9 @@ function buildSidebar(role, activePage) {
       : '🏢 Admin 3 — Facilities';
 
   const roleClass =
-    role === 'admin1'
+    role === 'superadmin'
+      ? 'role-superadmin'
+      : role === 'admin1'
       ? 'role-admin1'
       : role === 'adminfc'
       ? 'role-adminfc'
@@ -119,7 +141,9 @@ function buildSidebar(role, activePage) {
       : 'role-admin3';
 
   const userName =
-    role === 'admin1'
+    role === 'superadmin'
+      ? 'Super Admin'
+      : role === 'admin1'
       ? 'Admin 1'
       : role === 'adminfc'
       ? 'Admin FC'
@@ -171,7 +195,9 @@ function buildTopbar(pageTitle, role, subtitle) {
   const badgeCls = 'badge-blue';
 
   const roleLabel =
-    role === 'admin1'
+    role === 'superadmin'
+      ? 'Super Administrator'
+      : role === 'admin1'
       ? 'Admin 1 – Services'
       : role === 'adminfc'
       ? 'Admin FC – Facilities &amp; Cleanliness'
