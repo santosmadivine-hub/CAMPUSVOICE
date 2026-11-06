@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Office Dashboard | Admin FC</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+.pie-tooltip{position:fixed;pointer-events:none;background:#0f172a;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.4;padding:9px 13px;border-radius:10px;box-shadow:0 10px 24px rgba(15,23,42,0.28);opacity:0;transform:translate(0,0);transition:opacity .12s ease;z-index:9999;white-space:nowrap}
+.pie-tooltip.show{opacity:1}
+.pie-tooltip .tt-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:3px}
+.pie-tooltip .tt-sub{color:#cbd5e1;font-size:11px}
+.dashboard-container {
+  flex: 1;
+  padding: 25px 30px 12px;
+  max-width: none;
+  margin: 0;
+  width: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+/* Office identity banner */
+.office-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1.5px solid #bfdbfe;
+  border-left: 5px solid #2563eb;
+  border-radius: 14px;
+  padding: 14px 20px;
+}
+.office-banner-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.office-banner-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 2px;
+}
+.office-banner-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e40af;
+  line-height: 1.1;
+}
+.office-banner-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 3px;
+}
+.office-banner.no-office {
+  background: #fffbeb;
+  border-color: #fde68a;
+  border-left-color: #f59e0b;
+}
+.office-banner.no-office .office-banner-label { color: #d97706; }
+.office-banner.no-office .office-banner-name  { color: #92400e; }
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.stat-card{position:relative;background:#ffffff;border:1px solid #bae6fd;border-top:4px solid var(--accent3,#0284c7);border-radius:16px;padding:20px 20px 22px;box-shadow:0 4px 14px rgba(2,132,199,0.08);display:flex;flex-direction:column;gap:6px}
+.stat-icon{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:16px}
+.stat-label{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+.stat-value{font-family:'Syne',sans-serif;font-weight:700;font-size:30px;color:#0f172a;line-height:1.1}
+.stat-sub{font-family:'DM Sans',sans-serif;font-size:12px;color:#94a3b8}
+.charts-grid{display:grid;grid-template-columns:minmax(0,2.15fr) minmax(260px,1fr);gap:16px;align-items:stretch}
+.card{background:#ffffff;border:1px solid #bae6fd;border-radius:12px;box-shadow:0 2px 8px rgba(2,132,199,0.08);padding:20px;display:flex;flex-direction:column;gap:6px}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:#0f172a}
+.card-sub{font-family:'DM Sans',sans-serif;font-weight:400;font-size:13px;color:#94a3b8}
+.card-header-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.badge-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,0.12);color:#3b82f6;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:6px 14px;border-radius:999px}
+.line-chart-wrap{margin-top:12px}
+#line-chart-svg{width:100%;height:220px;display:block}
+.donut-wrap{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap;padding:12px 0;flex:1}
+.donut-wrap svg{flex-shrink:1;width:230px;height:230px}
+.donut-legend{display:flex;flex-direction:column;gap:12px}
+.legend-item{display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1e293b}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.category-table{display:flex;flex-direction:column;font-family:'DM Sans',sans-serif;font-size:13px;color:#1e293b;min-width:200px}
+.category-table-head{display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;padding-bottom:8px;border-bottom:1px solid #e2e8f0;margin-bottom:4px}
+.category-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:5px 0}
+.category-row .cat-name{display:flex;align-items:center;gap:8px;font-weight:600}
+.category-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.category-count{font-weight:700;color:#0f172a}
+.eval-status-card{background:#ffffff;border:1px solid #bae6fd;border-radius:12px;box-shadow:0 2px 8px rgba(2,132,199,0.08);padding:20px;flex:1.7 1 500px}
+.quick-access-card{flex:1 1 300px}
+.quick-access-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:12px}
+.quick-access-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px 16px;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border:1.5px solid #bae6fd;border-radius:14px;text-decoration:none;color:#0f172a;transition:all 0.25s ease;cursor:pointer;font-family:'Syne',sans-serif}
+.quick-access-btn:hover{border-color:#7dd3fc;box-shadow:0 4px 12px rgba(2,132,199,0.12);transform:translateY(-2px)}
+.qa-icon{font-size:28px;line-height:1}
+.qa-label{font-family:'Syne',sans-serif;font-weight:600;font-size:13px;color:#0f172a;text-align:center}
+.status-vbar-wrap{display:flex;gap:8px}
+.status-vbar-yaxis{flex:0 0 32px;width:32px;position:relative;font-family:'DM Sans',sans-serif;font-size:10px;color:#94a3b8}
+.status-vbar-yaxis span{position:absolute;right:6px;transform:translateY(-50%)}
+.status-vbar-chart{flex:1;display:flex;align-items:flex-end;justify-content:space-around;border-left:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;padding:0 12px}
+.status-vbar-group{display:flex;align-items:flex-end;gap:8px}
+.status-vbar-col{width:34px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:help}
+.status-vbar-fill{width:100%;border-radius:4px 4px 0 0;transition:height 0.3s ease;min-height:1px}
+.status-vbar-value{font-family:'DM Sans',sans-serif;font-size:10.5px;font-weight:700;color:#334155;margin-bottom:4px}
+.status-vbar-labels{display:flex;justify-content:space-around;margin:8px 0 0;padding:0 12px;margin-left:32px}
+.status-vbar-label{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:#334155;text-align:center}
+.status-vbar-legend{display:flex;gap:16px;margin-top:14px;font-family:'DM Sans',sans-serif;font-size:12px;color:#475569}
+.status-vbar-legend-item{display:flex;align-items:center;gap:6px}
+.status-vbar-legend-swatch{width:10px;height:10px;border-radius:3px}
+.lb-empty{text-align:center;color:#94a3b8;padding:20px 0;font-family:'DM Sans',sans-serif;font-size:14px}
+/* Recent submissions mini-table */
+.recent-table { width:100%; border-collapse:collapse; margin-top:10px; }
+.recent-table th {
+  font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.05em; color:#94a3b8; padding:8px 10px; border-bottom:1px solid #e2e8f0;
+  text-align:left;
+}
+.recent-table td {
+  font-family:'DM Sans',sans-serif; font-size:13px; color:#334155;
+  padding:9px 10px; border-bottom:1px solid #f1f5f9; vertical-align:middle;
+}
+.recent-table tbody tr:last-child td { border-bottom:none; }
+.cat-pill { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; }
+.cat-pill.comfort { background:#e0f2fe; color:#0369a1; }
+.cat-pill.surroundings { background:#dcfce7; color:#15803d; }
+.cat-pill.laboratories { background:#ede9fe; color:#6d28d9; }
+.status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; }
+@keyframes cvRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stat-card, .charts-grid > .card {
+  animation: cvRise .5s cubic-bezier(.2,.7,.2,1) backwards;
+}
+.stat-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  overflow: hidden;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.stat-card:hover { transform:translateY(-6px); border-color:#7dd3fc; box-shadow:0 14px 30px rgba(37,99,235,.16); }
+.card, .eval-status-card { transition:box-shadow .25s ease,border-color .25s ease; }
+.card:hover, .eval-status-card:hover { border-color:#7dd3fc; box-shadow:0 12px 28px rgba(15,23,42,.10); }
+.card-title { transition:color .2s ease; }
+.card:hover > .card-title { color:#1d4ed8; }
+.quick-access-btn { transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease; }
+.donut-segment { transition:filter .2s ease; }
+.donut-segment:hover { filter:brightness(1.1); }
+@media (max-width:1200px){.stat-value{font-size:30px}}
+@media (max-width:1024px){.stat-grid{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}}
+@media (max-width:768px){
+  .dashboard-container{padding:20px 16px 28px;gap:18px}
+  .stat-grid{grid-template-columns:1fr 1fr;gap:14px}
+  .card{padding:18px}
+  .quick-access-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+}
+@media (max-width:600px){
+  .stat-card{padding:16px 16px 18px}
+  .stat-value{font-size:26px}
+  .stat-grid{grid-template-columns:1fr}
+  .quick-access-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+    <div class="dashboard-container">
+
+      <!-- Office identity banner -->
+      <div class="office-banner" id="office-banner">
+        <div class="office-banner-icon">🏢</div>
+        <div>
+          <div class="office-banner-label">Your Assigned Office</div>
+          <div class="office-banner-name" id="banner-office-name">Loading…</div>
+          <div class="office-banner-sub" id="banner-office-sub">Loading your office data…</div>
+        </div>
+      </div>
+
+      <!-- Stat tiles -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-label">Daily Submissions</div>
+          <div class="stat-value" data-stat="daily">0</div>
+          <div class="stat-sub">Evaluations today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🗓️</div>
+          <div class="stat-label">Weekly Submissions</div>
+          <div class="stat-value" data-stat="weekly">0</div>
+          <div class="stat-sub">Evaluations this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📆</div>
+          <div class="stat-label">Monthly Submissions</div>
+          <div class="stat-value" data-stat="monthly">0</div>
+          <div class="stat-sub">Evaluations this month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-label">Avg Rating</div>
+          <div class="stat-value" data-stat="avgRating">—</div>
+          <div class="stat-sub">Overall office score</div>
+        </div>
+      </div>
+
+      <!-- Trend + donut -->
+      <div class="charts-grid">
+        <div class="card">
+          <div class="card-header-row">
+            <div>
+              <div class="card-title" style="display:flex;align-items:center;gap:10px;">
+                Submission Trend
+                <span style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:400;color:#94a3b8;">— Last 7 days</span>
+              </div>
+              <div style="margin-top:5px;width:36px;height:3px;background:#2563eb;border-radius:2px;"></div>
+            </div>
+            <div class="badge-pill" id="total-badge">Total: 0</div>
+          </div>
+          <div class="line-chart-wrap" style="margin-top:14px;">
+            <svg id="line-chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none" style="width:100%;height:200px;display:block;overflow:visible;"></svg>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Average Ratings</div>
+          <div class="card-sub" style="margin-top:-2px;">Cleanliness vs Facilities</div>
+          <div class="donut-wrap" id="donutWrap">
+            <svg id="donut-svg" viewBox="0 0 200 200" width="240" height="240">
+              <circle cx="100" cy="100" r="78" fill="none" stroke="#eef2f7" stroke-width="24"/>
+            </svg>
+            <div class="pie-tooltip" id="donut-tooltip"></div>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status breakdown + Quick tools -->
+      <div class="charts-grid">
+        <div class="card eval-status-card">
+          <div class="card-title">Submission Status — by category</div>
+          <div id="status-breakdown-chart" style="margin-top:14px;"></div>
+        </div>
+        <div class="card quick-access-card">
+          <div class="card-title">Quick Tools</div>
+          <div class="quick-access-grid">
+            <a href="adminfc-analytics.html"   class="quick-access-btn"><div class="qa-icon">📈</div><div class="qa-label">Analytics</div></a>
+            <a href="adminfc-office-mgmt.html" class="quick-access-btn"><div class="qa-icon">📑</div><div class="qa-label">Office Mgmt</div></a>
+            <a href="adminfc-eval-mgmt.html"   class="quick-access-btn"><div class="qa-icon">📋</div><div class="qa-label">Eval Mgmt</div></a>
+            <a href="adminfc-multimedia.html"  class="quick-access-btn"><div class="qa-icon">🎞️</div><div class="qa-label">Multimedia</div></a>
+            <a href="adminfc-reports.html"     class="quick-access-btn"><div class="qa-icon">📁</div><div class="qa-label">Reports</div></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent submissions for this office -->
+      <div class="card">
+        <div class="card-header-row">
+          <div class="card-title">Recent Submissions</div>
+          <span class="badge-pill" id="recent-count-badge">0 evaluations</span>
+        </div>
+        <div id="recent-table-wrap">
+          <table class="recent-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Category</th>
+                <th>Evaluator</th>
+                <th>Cl. Avg</th>
+                <th>Fac. Avg</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="recent-tbody">
+              <tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:24px 0;font-family:'DM Sans',sans-serif;">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+<script type="module">
+import { guard as cvGuard, db } from "./cv-core.js";
+const session = await cvGuard(["adminfc"]);
+
+import { collection, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ── Load this account's linked office ──────────────────────────────────────
+const accountSnap = await getDoc(doc(db, "accounts", session.uid));
+const accountData = accountSnap.exists() ? accountSnap.data() : {};
+const linkedOfficeId   = accountData.linkedOfficeId   || null;
+const linkedOfficeName = accountData.linkedOfficeName || null;
+
+// Build topbar/sidebar with office name as subtitle
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "dashboard");  // 'dashboard' nav id matches
+document.getElementById("topbar-mount").innerHTML  = buildTopbar(
+  "Office Dashboard", "adminfc",
+  linkedOfficeName ? `Office: ${linkedOfficeName}` : "Overview"
+);
+
+// Update the office identity banner
+const banner = document.getElementById("office-banner");
+if (linkedOfficeName) {
+  document.getElementById("banner-office-name").textContent = linkedOfficeName;
+  document.getElementById("banner-office-sub").textContent  = "All data on this dashboard is scoped to your assigned office.";
+} else {
+  banner.classList.add("no-office");
+  document.getElementById("banner-office-name").textContent = "No office assigned";
+  document.getElementById("banner-office-sub").textContent  =
+    "Ask the Super Admin to link an office to your account. Showing all office data for now.";
+}
+
+// ── Constants ──────────────────────────────────────────────────────────────
+const EVAL_COLLECTION = "facilities_cleanliness_evaluations";
+const LOW_RATING_THRESHOLD = 3;
+const STATUS_META = {
+  pending:   { label: "Pending",            color: "#f59e0b" },
+  no_action: { label: "No Action",          color: "#6366f1" },
+  resolved:  { label: "Resolved",           color: "#10b981" }
+};
+const CL_CATS = ["Comfort Room", "Surroundings", "Laboratories"];
+const CL_CAT_COLORS = { "Comfort Room": "#2563eb", "Surroundings": "#10b981", "Laboratories": "#f59e0b" };
+const STATUS_VBAR_MAX_H = 200;
+
+let evaluations = [];  // scoped to this office
+
+// ── Rating helpers ─────────────────────────────────────────────────────────
+function clAvgOf(ev) {
+  let sum = 0, count = 0;
+  for (let i = 1; i <= 5; i++) { const v = Number(ev[`cleanlinessRating${i}`]); if (v > 0) { sum += v; count++; } }
+  return count > 0 ? sum / count : 0;
+}
+function facAvgOf(ev) {
+  let sum = 0, count = 0;
+  for (let i = 1; i <= 5; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
+  return count > 0 ? sum / count : 0;
+}
+function overallAvgOf(ev) {
+  let sum = 0, count = 0;
+  for (let i = 1; i <= 5; i++) { const v = Number(ev[`cleanlinessRating${i}`]); if (v > 0) { sum += v; count++; } }
+  for (let i = 1; i <= 5; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
+  return count > 0 ? sum / count : 0;
+}
+function parseEvalStatus(avg) {
+  if (avg >= 4.0) return "resolved";
+  if (avg >= 3.0) return "no_action";
+  return "pending";
+}
+
+function getTimestampMillis(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value === "number") return value;
+  if (typeof value === "string") { const n = Number(value); if (!Number.isNaN(n)) return n; const p = Date.parse(value); return Number.isNaN(p) ? null : p; }
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (typeof value.seconds === "number") return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1e6);
+  if (value instanceof Date) return value.getTime();
+  return null;
+}
+
+function catPillHtml(cat) {
+  const cls = cat === "Surroundings" ? "surroundings" : cat === "Laboratories" ? "laboratories" : "comfort";
+  return `<span class="cat-pill ${cls}">${cat || "—"}</span>`;
+}
+
+// ── Load evaluations — filtered to linked office ───────────────────────────
+onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
+  evaluations = [];
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    // If this admin has a linked office, only include that office's evaluations
+    if (linkedOfficeName && data.officeName !== linkedOfficeName) return;
+    const record = {
+      id: docSnap.id,
+      officeName: data.officeName || "Unknown",
+      cleanlinessCategory: data.cleanlinessCategory || "Comfort Room",
+      evaluatorName: data.evaluatorName || data.userName || data.name || "",
+      userId: data.userId || "",
+      timestamp: getTimestampMillis(data.timestamp ?? data.date ?? data.submittedAt) ?? 0
+    };
+    for (let i = 1; i <= 5; i++) record[`cleanlinessRating${i}`] = Number(data[`cleanlinessRating${i}`]) || 0;
+    for (let i = 1; i <= 8; i++) record[`facilitiesRating${i}`]  = Number(data[`facilitiesRating${i}`])  || 0;
+    record.clAvg  = clAvgOf(record);
+    record.facAvg = facAvgOf(record);
+    record.overall = overallAvgOf(record);
+    record.status = data.status || parseEvalStatus(record.overall);
+    evaluations.push(record);
+  });
+
+  // Sort newest first
+  evaluations.sort((a, b) => b.timestamp - a.timestamp);
+
+  renderAll();
+}, err => console.error("Failed to load evaluations:", err));
+
+// ── Render all ─────────────────────────────────────────────────────────────
+function renderAll() {
+  renderStatCards();
+  renderLineTrend();
+  renderStatusBreakdown();
+  renderRecentTable();
+}
+
+function renderStatCards() {
+  const now = new Date();
+  const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+  const startOfWeek = new Date(startOfDay); startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  document.querySelector('[data-stat="daily"]').textContent   = evaluations.filter(e => e.timestamp >= startOfDay.getTime()).length;
+  document.querySelector('[data-stat="weekly"]').textContent  = evaluations.filter(e => e.timestamp >= startOfWeek.getTime()).length;
+  document.querySelector('[data-stat="monthly"]').textContent = evaluations.filter(e => e.timestamp >= startOfMonth.getTime()).length;
+
+  const withRatings = evaluations.filter(e => e.overall > 0);
+  const avg = withRatings.length
+    ? (withRatings.reduce((s, e) => s + e.overall, 0) / withRatings.length).toFixed(2)
+    : "—";
+  document.querySelector('[data-stat="avgRating"]').textContent = avg === "—" ? "—" : `${avg}/5`;
+
+  document.getElementById("total-badge").textContent = `Total: ${evaluations.length}`;
+}
+
+// ── Line trend (last 7 days) ───────────────────────────────────────────────
+function renderLineTrend() {
+  const svg = document.getElementById("line-chart-svg");
+  if (!svg) return;
+  svg.innerHTML = "";
+  const W = 600, H = 200, PAD = { t: 20, r: 24, b: 40, l: 48 };
+  const days = 7;
+  const now = new Date(); now.setHours(23, 59, 59, 999);
+  const labels = [], counts = [];
+  for (let d = days - 1; d >= 0; d--) {
+    const dayStart = new Date(now); dayStart.setDate(now.getDate() - d); dayStart.setHours(0, 0, 0, 0);
+    const dayEnd   = new Date(dayStart); dayEnd.setHours(23, 59, 59, 999);
+    labels.push(dayStart.toLocaleDateString("en-US", { weekday: "short" }));
+    counts.push(evaluations.filter(e => e.timestamp >= dayStart.getTime() && e.timestamp <= dayEnd.getTime()).length);
+  }
+
+  const maxVal = Math.max(...counts, 1);
+  const niceMax = maxVal <= 10 ? 10 : maxVal <= 25 ? 25 : maxVal <= 50 ? 50 : maxVal <= 100 ? 100 : Math.ceil(maxVal / 25) * 25;
+  const xStep  = (W - PAD.l - PAD.r) / (days - 1);
+  const yScale = v => PAD.t + (H - PAD.t - PAD.b) * (1 - v / niceMax);
+  const cx = i => PAD.l + i * xStep;
+
+  svg.innerHTML = `<defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb" stop-opacity="0.18"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0.01"/></linearGradient></defs>`;
+
+  const yTicks = [0, 25, 50, 75, 100].map(t => Math.round((t / 100) * niceMax));
+  yTicks.forEach(val => {
+    const y = yScale(val);
+    svg.innerHTML += `<line x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}" stroke="#e8eef6" stroke-width="1"/>`;
+    svg.innerHTML += `<text x="${PAD.l - 8}" y="${y + 4}" font-size="11" fill="#94a3b8" text-anchor="end" font-family="DM Sans,sans-serif">${val}</text>`;
+  });
+
+  const linePoints = counts.map((v, i) => `${cx(i)},${yScale(v)}`).join(" L ");
+  const areaPath = `M ${cx(0)},${yScale(counts[0])} L ${linePoints} L ${cx(days-1)},${yScale(0)} L ${cx(0)},${yScale(0)} Z`;
+  svg.innerHTML += `<path d="${areaPath}" fill="url(#areaGrad)"/>`;
+
+  let linePath = `M ${cx(0)},${yScale(counts[0])}`;
+  for (let i = 1; i < counts.length; i++) {
+    const cpX = (cx(i - 1) + cx(i)) / 2;
+    linePath += ` C ${cpX},${yScale(counts[i-1])} ${cpX},${yScale(counts[i])} ${cx(i)},${yScale(counts[i])}`;
+  }
+  svg.innerHTML += `<path d="${linePath}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>`;
+
+  counts.forEach((v, i) => {
+    svg.innerHTML += `<circle cx="${cx(i)}" cy="${yScale(v)}" r="5" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>`;
+  });
+
+  labels.forEach((l, i) => {
+    svg.innerHTML += `<text x="${cx(i)}" y="${H - 6}" font-size="12" fill="#94a3b8" text-anchor="middle" font-family="DM Sans,sans-serif">${l}</text>`;
+  });
+}
+
+// ── Avg rating donut ───────────────────────────────────────────────────────
+function renderAvgRatingPie() {
+  const svg = document.getElementById("donut-svg"), legend = document.getElementById("donut-legend");
+  if (!svg || !legend) return;
+  svg.querySelectorAll(".donut-segment").forEach(el => el.remove());
+  const clEvals  = evaluations.filter(e => e.clAvg  > 0);
+  const facEvals = evaluations.filter(e => e.facAvg > 0);
+  const cleanAvg = clEvals.length  ? clEvals.reduce((a, e)  => a + e.clAvg,  0) / clEvals.length  : 0;
+  const facilAvg = facEvals.length ? facEvals.reduce((a, e) => a + e.facAvg, 0) / facEvals.length : 0;
+  if (!evaluations.length) {
+    legend.innerHTML = `<div class="legend-item">No evaluations yet</div>`; return;
+  }
+  const segments = [
+    { label: "Cleanliness", color: "#2563eb", avg: cleanAvg },
+    { label: "Facilities",  color: "#10b981", avg: facilAvg }
+  ];
+  legend.innerHTML = `<div class="category-table"><div class="category-table-head"><span>Section</span><span>Avg</span></div>${
+    segments.map(s => `<div class="category-row"><div class="cat-name"><div class="category-dot" style="background:${s.color}"></div>${s.label}</div><div class="category-count">${s.avg.toFixed(2)}/5</div></div>`).join("")
+  }</div>`;
+  const total = cleanAvg + facilAvg || 1;
+  let startAngle = -Math.PI / 2;
+  segments.forEach(seg => {
+    const sweep = (seg.avg / total) * 2 * Math.PI;
+    const endAngle = startAngle + sweep;
+    const cx = 100, cy = 100, r = 78, sw = 24;
+    const x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle),   y2 = cy + r * Math.sin(endAngle);
+    const large = sweep > Math.PI ? 1 : 0;
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", seg.color);
+    path.setAttribute("stroke-width", sw);
+    path.setAttribute("class", "donut-segment");
+    svg.appendChild(path);
+    startAngle = endAngle;
+  });
+}
+
+// ── Status breakdown by category ───────────────────────────────────────────
+function renderStatusBreakdown() {
+  const el = document.getElementById("status-breakdown-chart");
+  if (!el) return;
+  renderAvgRatingPie();
+  if (!evaluations.length) { el.innerHTML = `<div class="lb-empty">No evaluations for this office yet.</div>`; return; }
+
+  const activeCats = CL_CATS.filter(c => evaluations.some(e => e.cleanlinessCategory === c));
+  const cats = activeCats.length ? activeCats : CL_CATS;
+  const totals = {}; cats.forEach(c => { totals[c] = evaluations.filter(e => e.cleanlinessCategory === c).length; });
+  const statusOrder = ["pending", "no_action", "resolved"];
+
+  const groupsHtml = statusOrder.map(statusKey => {
+    const cols = cats.map(c => {
+      const count = evaluations.filter(e => e.cleanlinessCategory === c && e.status === statusKey).length;
+      const pct   = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
+      const h     = Math.max(1, Math.round((pct / 100) * STATUS_VBAR_MAX_H));
+      const color = CL_CAT_COLORS[c] || "#64748b";
+      return `<div class="status-vbar-col" title="${c} — ${STATUS_META[statusKey].label}: ${count}/${totals[c]}"><div class="status-vbar-value">${pct}%</div><div class="status-vbar-fill" style="height:${h}px;background:${color};"></div></div>`;
+    }).join("");
+    return `<div class="status-vbar-group">${cols}</div>`;
+  }).join("");
+
+  const yAxis = [100, 75, 50, 25, 0].map(pct =>
+    `<span style="top:${STATUS_VBAR_MAX_H - (pct / 100) * STATUS_VBAR_MAX_H}px;">${pct}%</span>`
+  ).join("");
+  const xLabels = statusOrder.map(s => `<div class="status-vbar-label">${STATUS_META[s].label}</div>`).join("");
+  const legendHtml = cats.map(c =>
+    `<div class="status-vbar-legend-item"><span class="status-vbar-legend-swatch" style="background:${CL_CAT_COLORS[c] || '#64748b'};"></span><span>${c}</span></div>`
+  ).join("");
+
+  el.innerHTML = `
+    <div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;">
+      <div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div>
+      <div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div>
+    </div>
+    <div class="status-vbar-labels">${xLabels}</div>
+    <div class="status-vbar-legend">${legendHtml}</div>`;
+}
+
+// ── Recent submissions table ────────────────────────────────────────────────
+function renderRecentTable() {
+  const tbody = document.getElementById("recent-tbody");
+  const badge = document.getElementById("recent-count-badge");
+  badge.textContent = `${evaluations.length} evaluation${evaluations.length !== 1 ? "s" : ""}`;
+
+  if (!evaluations.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:24px 0;font-family:'DM Sans',sans-serif;">No evaluations for this office yet.</td></tr>`;
+    return;
+  }
+
+  const recent = evaluations.slice(0, 10);
+  tbody.innerHTML = recent.map((e, i) => {
+    const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString() : "—";
+    const statusColor = STATUS_META[e.status]?.color || "#94a3b8";
+    const statusLabel = STATUS_META[e.status]?.label || e.status;
+    const evaluator = e.evaluatorName || e.userId || "—";
+    return `<tr>
+      <td style="color:#94a3b8;font-size:12px;">${i + 1}</td>
+      <td>${catPillHtml(e.cleanlinessCategory)}</td>
+      <td style="font-family:'DM Sans',sans-serif;color:#334155;">${evaluator}</td>
+      <td style="font-weight:700;text-align:center;">${e.clAvg > 0 ? e.clAvg.toFixed(1) : "—"}</td>
+      <td style="font-weight:700;text-align:center;">${e.facAvg > 0 ? e.facAvg.toFixed(1) : "—"}</td>
+      <td><span class="status-dot" style="background:${statusColor};"></span><span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:#334155;">${statusLabel}</span></td>
+      <td style="font-family:'DM Sans',sans-serif;font-size:12px;color:#94a3b8;">${date}</td>
+    </tr>`;
+  }).join("");
+}
+</script>
+</body>
+</html>

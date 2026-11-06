@@ -39,7 +39,8 @@ const PAGE_SUBTITLES = {
     'analytics':             'Analyze Facility Evaluation Results and Trends'
   },
   adminfc: {
-    'dashboard':             'Overview of Campus Evaluation Results and Activities',
+    'dashboard':             'Overview of All Facilities and Cleanliness Evaluation Results',
+    'office dashboard':      'Evaluation Data for Your Assigned Office',
     'office management':     'Manage Campus Offices and Evaluation Areas',
     'evaluation management': 'Review and Manage Facility Evaluations',
     'reports':               'Generate and Review Facility Reports',
@@ -82,7 +83,7 @@ function buildSidebar(role, activePage) {
   ];
 
   const navAdminFC = [
-    { id: 'dashboard', icon: '🏠', label: 'Dashboard', href: 'adminfc-dashboard.html' },
+    { id: 'dashboard', icon: '🏠', label: 'Dashboard', href: 'adminfc-office-dashboard.html' },
     { id: 'office-mgmt', icon: '🏢', label: 'Office Management', href: 'adminfc-office-mgmt.html' },
     { id: 'eval-mgmt', icon: '📋', label: 'Evaluation Management', href: 'adminfc-eval-mgmt.html' },
     { id: 'question-mgmt', icon: '❓', label: 'Question Management', href: 'adminfc-question-mgmt.html' },

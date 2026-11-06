@@ -415,7 +415,7 @@
       <textarea id="form-cleanliness-comments" placeholder="Cleanliness comments…"></textarea>
     </div>
 
-    <div class="modal-section-title">Facilities Ratings (Q1–Q8)</div>
+    <div class="modal-section-title">Facilities Ratings (Q1–Q5)</div>
     <div class="ratings-grid" id="facilities-ratings-fields"></div>
     <div class="edit-field">
       <label>Facilities Comments</label>
@@ -539,7 +539,7 @@ function buildRatingFields(containerId, count, prefix) {
   }
 }
 buildRatingFields("cleanliness-ratings-fields", 5, "cl");
-buildRatingFields("facilities-ratings-fields", 8, "fac");
+buildRatingFields("facilities-ratings-fields", 5, "fac");
 
 // ── Helpers ──
 function parseEvalDate(ev) {
@@ -692,11 +692,8 @@ onSnapshot(collection(db, EVAL_COLLECTION), snap => {
       f3: Number(ev.facilitiesRating3) || 0,
       f4: Number(ev.facilitiesRating4) || 0,
       f5: Number(ev.facilitiesRating5) || 0,
-      f6: Number(ev.facilitiesRating6) || 0,
-      f7: Number(ev.facilitiesRating7) || 0,
-      f8: Number(ev.facilitiesRating8) || 0,
       clSnapshots: Array.from({length: 5}, (_, i) => ev[`cleanlinessQuestion${i + 1}`] || ""),
-      facSnapshots: Array.from({length: 8}, (_, i) => ev[`facilitiesQuestion${i + 1}`] || ""),
+      facSnapshots: Array.from({length: 5}, (_, i) => ev[`facilitiesQuestion${i + 1}`] || ""),
     };
     return rec;
   });
@@ -1039,7 +1036,7 @@ function openFormModal(evalId) {
   document.getElementById("form-date").value = e.date ? new Date(e.date).toLocaleString("en-US", { month:"long", day:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" }) : "";
   document.getElementById("form-events").value = e.events || "";
   for (let i = 1; i <= 5; i++) setFormRating("cl", i, [e.cl1,e.cl2,e.cl3,e.cl4,e.cl5][i-1]);
-  for (let i = 1; i <= 8; i++) setFormRating("fac", i, [e.f1,e.f2,e.f3,e.f4,e.f5,e.f6,e.f7,e.f8][i-1]);
+  for (let i = 1; i <= 5; i++) setFormRating("fac", i, [e.f1,e.f2,e.f3,e.f4,e.f5][i-1]);
   document.getElementById("form-cleanliness-comments").value = e.cleanlinessComments || "";
   document.getElementById("form-facilities-comments").value = e.facilitiesComments || "";
   formModal.classList.add("open");
@@ -1075,9 +1072,6 @@ document.getElementById("form-modal-save").addEventListener("click", async () =>
     facilitiesRating3: getFormRating("fac", 3),
     facilitiesRating4: getFormRating("fac", 4),
     facilitiesRating5: getFormRating("fac", 5),
-    facilitiesRating6: getFormRating("fac", 6),
-    facilitiesRating7: getFormRating("fac", 7),
-    facilitiesRating8: getFormRating("fac", 8),
     cleanlinessComments: document.getElementById("form-cleanliness-comments").value.trim(),
     facilitiesComments: document.getElementById("form-facilities-comments").value.trim(),
   };

@@ -55,7 +55,7 @@
           <div class="stat-icon">🏢</div>
           <div class="stat-label">Linked Offices</div>
           <div class="stat-value" id="s-offices">0</div>
-          <div class="stat-sub">offices in fc_offices</div>
+          <div class="stat-sub">accounts with an office</div>
         </div>
       </section>
 
@@ -93,12 +93,13 @@
                 <th>Display Name</th>
                 <th>Username</th>
                 <th>Gmail Address</th>
+                <th>Linked Office</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="account-rows">
-              <tr><td colspan="6" class="loading-row">Loading accounts…</td></tr>
+              <tr><td colspan="7" class="loading-row">Loading accounts…</td></tr>
             </tbody>
           </table>
         </div>
@@ -139,6 +140,14 @@
           <input type="email" id="c-email" class="input" autocomplete="off"
                  placeholder="admin@gmail.com">
           <span class="field-hint">Must be a valid @gmail.com address — used for sign-in.</span>
+        </label>
+
+        <label class="field full">
+          <span class="field-label">Linked Office *</span>
+          <select id="c-office" class="input">
+            <option value="">— Select an office —</option>
+          </select>
+          <span class="field-hint">The office this Admin FC account manages. Creates a dedicated office dashboard.</span>
         </label>
 
         <label class="field full">
@@ -196,6 +205,10 @@
           <span class="credential-key">Password</span>
           <span class="credential-val" id="done-password"></span>
         </div>
+        <div class="credential-row">
+          <span class="credential-key">Office</span>
+          <span class="credential-val" id="done-office"></span>
+        </div>
       </div>
     </div>
     <div class="modal-actions">
@@ -229,6 +242,14 @@
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+        </label>
+
+        <label class="field full">
+          <span class="field-label">Linked Office</span>
+          <select id="e-office" class="input">
+            <option value="">— No office linked —</option>
+          </select>
+          <span class="field-hint">Change the office this Admin FC account manages.</span>
         </label>
 
         <div class="field full">
@@ -290,21 +311,32 @@ const accCol = query(collection(db, 'accounts'), where('role', '==', 'adminfc'))
 const offCol = collection(db, 'fc_offices');
 
 let allAccounts  = [];
-let officeCount  = 0;
+let allOffices   = [];   // [{ id, name }] from fc_offices
 let filterSearch = '';
 let filterStatus = '';
 let editId       = null;
 let confirmResolve = null;
 let lastCreated  = null;
 
+function populateOfficeSelects() {
+  const opts = allOffices
+    .map(o => `<option value="${escAttr(o.id)}" data-name="${escAttr(o.name)}">${escHtml(o.name)}</option>`)
+    .join('');
+  document.getElementById('c-office').innerHTML =
+    `<option value="">— Select an office —</option>` + opts;
+  document.getElementById('e-office').innerHTML =
+    `<option value="">— No office linked —</option>` + opts;
+}
+
 // ── Stats ──────────────────────────────────────────────────────────────────
 function updateStats() {
   const active   = allAccounts.filter(a => (a.status || 'active') === 'active').length;
   const inactive = allAccounts.filter(a => (a.status || 'active') === 'inactive').length;
+  const linked   = allAccounts.filter(a => a.linkedOfficeId).length;
   document.getElementById('s-total').textContent    = allAccounts.length;
   document.getElementById('s-active').textContent   = active;
   document.getElementById('s-inactive').textContent = inactive;
-  document.getElementById('s-offices').textContent  = officeCount;
+  document.getElementById('s-offices').textContent  = linked;
   document.getElementById('list-summary').textContent =
     `${allAccounts.length} account${allAccounts.length !== 1 ? 's' : ''} — ${active} active, ${inactive} inactive`;
 }
@@ -330,18 +362,20 @@ function renderTable() {
     const msg = (filterSearch || filterStatus)
       ? 'No accounts match the filter.'
       : 'No Admin FC accounts yet. Click "➕ Create Account" to add one.';
-    tbody.innerHTML = `<tr><td colspan="6" class="loading-row">${msg}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="loading-row">${msg}</td></tr>`;
     return;
   }
 
   tbody.innerHTML = list.map((a, i) => {
     const status   = a.status || 'active';
     const isActive = status === 'active';
+    const officeName = a.linkedOfficeName || '—';
     return `<tr>
       <td class="row-num">${i + 1}</td>
       <td style="font-weight:600;">${escHtml(a.displayName || '—')}</td>
       <td><span class="username-pill">@${escHtml(a.username || '—')}</span></td>
       <td class="cell-muted cell-wrap">${escHtml(a.email || '—')}</td>
+      <td class="cell-muted">${escHtml(officeName)}</td>
       <td><span class="badge-pill ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? 'Active' : 'Inactive'}</span></td>
       <td class="cell-actions row-actions">
         <button class="btn btn-sm" onclick="openEdit('${escAttr(a.id)}')">✏️ Edit</button>
@@ -362,7 +396,11 @@ onSnapshot(accCol, snap => {
 });
 
 onSnapshot(offCol, snap => {
-  officeCount = snap.size;
+  allOffices = snap.docs
+    .map(d => ({ id: d.id, name: d.data().name || d.id, status: d.data().status || 'active' }))
+    .filter(o => o.status === 'active')
+    .sort((a, b) => a.name.localeCompare(b.name));
+  populateOfficeSelects();
   updateStats();
 });
 
@@ -394,6 +432,7 @@ document.getElementById('create-btn').addEventListener('click', () => {
   ['c-displayname','c-username','c-email','c-password'].forEach(id => {
     document.getElementById(id).value = '';
   });
+  document.getElementById('c-office').value = '';
   document.getElementById('c-error').textContent = '';
   document.getElementById('create-modal').classList.add('open');
   document.getElementById('c-displayname').focus();
@@ -411,14 +450,20 @@ document.getElementById('c-save').addEventListener('click', async () => {
   const errEl = document.getElementById('c-error');
   errEl.textContent = '';
 
-  const displayName = document.getElementById('c-displayname').value.trim();
-  const username    = slugUsername(document.getElementById('c-username').value);
-  const email       = document.getElementById('c-email').value.trim().toLowerCase();
-  const password    = document.getElementById('c-password').value;
+  const displayName    = document.getElementById('c-displayname').value.trim();
+  const username       = slugUsername(document.getElementById('c-username').value);
+  const email          = document.getElementById('c-email').value.trim().toLowerCase();
+  const password       = document.getElementById('c-password').value;
+  const officeSelEl    = document.getElementById('c-office');
+  const linkedOfficeId = officeSelEl.value;
+  const linkedOfficeName = linkedOfficeId
+    ? (officeSelEl.options[officeSelEl.selectedIndex]?.dataset?.name || '')
+    : '';
 
   if (!displayName) { errEl.textContent = 'Display name is required.'; return; }
   const unErr = validateUsername(username);
   if (unErr) { errEl.textContent = unErr; return; }
+  if (!linkedOfficeId) { errEl.textContent = 'Please select a linked office.'; return; }
   const emailErr = validateGmailAddress(email);
   if (emailErr) { errEl.textContent = emailErr; return; }
   const pwdErr = validatePassword(password);
@@ -451,6 +496,7 @@ document.getElementById('c-save').addEventListener('click', async () => {
     await setDoc(doc(db, 'accounts', newUid), {
       uid: newUid, email, username, displayName,
       role: 'adminfc', status: 'active',
+      linkedOfficeId, linkedOfficeName,
       createdAt: serverTimestamp(), createdBy: session.uid,
       updatedAt: serverTimestamp(), updatedBy: session.uid
     });
@@ -458,7 +504,7 @@ document.getElementById('c-save').addEventListener('click', async () => {
     // Write account_index for username login lookup
     await setDoc(doc(db, 'account_index', username), { uid: newUid, email });
 
-    lastCreated = { name: displayName, username, email, password };
+    lastCreated = { name: displayName, username, email, password, office: linkedOfficeName };
     document.getElementById('create-modal').classList.remove('open');
 
     // Show credential done-modal
@@ -466,6 +512,7 @@ document.getElementById('c-save').addEventListener('click', async () => {
     document.getElementById('done-username').textContent = username;
     document.getElementById('done-email').textContent    = email;
     document.getElementById('done-password').textContent = password;
+    document.getElementById('done-office').textContent   = linkedOfficeName || '—';
     document.getElementById('done-subtitle').textContent = `Account for ${displayName} created successfully.`;
     document.getElementById('done-modal').classList.add('open');
 
@@ -487,7 +534,8 @@ document.getElementById('done-copy').addEventListener('click', () => {
     `Name: ${lastCreated.name}`,
     `Username: ${lastCreated.username}`,
     `Gmail: ${lastCreated.email}`,
-    `Password: ${lastCreated.password}`
+    `Password: ${lastCreated.password}`,
+    `Office: ${lastCreated.office || '—'}`
   ].join('\n');
   navigator.clipboard.writeText(text).catch(() => {});
 });
@@ -502,8 +550,9 @@ window.openEdit = (id) => {
   const a = allAccounts.find(x => x.id === id);
   if (!a) return;
   editId = id;
-  document.getElementById('e-displayname').value      = a.displayName || '';
-  document.getElementById('e-status').value           = a.status || 'active';
+  document.getElementById('e-displayname').value       = a.displayName || '';
+  document.getElementById('e-status').value            = a.status || 'active';
+  document.getElementById('e-office').value            = a.linkedOfficeId || '';
   document.getElementById('e-username-ro').textContent = a.username || '—';
   document.getElementById('e-email-ro').textContent    = a.email || '—';
   document.getElementById('edit-subtitle').textContent =
@@ -521,8 +570,13 @@ document.getElementById('e-cancel').addEventListener('click', () => {
 document.getElementById('e-save').addEventListener('click', async () => {
   const errEl = document.getElementById('e-error');
   errEl.textContent = '';
-  const displayName = document.getElementById('e-displayname').value.trim();
-  const status      = document.getElementById('e-status').value || 'active';
+  const displayName    = document.getElementById('e-displayname').value.trim();
+  const status         = document.getElementById('e-status').value || 'active';
+  const eOfficeEl      = document.getElementById('e-office');
+  const linkedOfficeId = eOfficeEl.value;
+  const linkedOfficeName = linkedOfficeId
+    ? (eOfficeEl.options[eOfficeEl.selectedIndex]?.dataset?.name || '')
+    : '';
 
   if (!displayName) { errEl.textContent = 'Display name is required.'; return; }
 
@@ -532,7 +586,7 @@ document.getElementById('e-save').addEventListener('click', async () => {
 
   try {
     await updateDoc(doc(db, 'accounts', editId), {
-      displayName, status,
+      displayName, status, linkedOfficeId, linkedOfficeName,
       updatedAt: serverTimestamp(),
       updatedBy: session.uid
     });

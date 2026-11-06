@@ -11,26 +11,19 @@
 .pie-tooltip.show{opacity:1}
 .pie-tooltip .tt-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:3px}
 .pie-tooltip .tt-sub{color:#cbd5e1;font-size:11px}
-.dashboard-container {
-  flex: 1;
-  padding: 25px 30px 12px;
-  max-width: none;
-  margin: 0;
-  width: 100%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
+.dashboard-container{flex:1;padding:25px 30px 12px;max-width:none;margin:0;width:100%;overflow-y:auto;display:flex;flex-direction:column;gap:24px}
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-.stat-card{position:relative;background:#ffffff;border:1px solid #bae6fd;border-top:4px solid var(--accent3,#0284c7);border-radius:16px;padding:20px 20px 22px;box-shadow:0 4px 14px rgba(2,132,199,0.08);display:flex;flex-direction:column;gap:6px}
+.stat-card{position:relative;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);border:1px solid #bae6fd;border-top:4px solid var(--accent3,#0284c7);border-radius:16px;padding:20px 20px 22px;box-shadow:0 4px 14px rgba(2,132,199,0.08);display:flex;flex-direction:column;gap:6px;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+.stat-card:hover{transform:translateY(-6px);border-color:#7dd3fc;box-shadow:0 14px 30px rgba(37,99,235,.16)}
 .stat-icon{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:10px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:16px}
-.stat-label{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+.stat-label{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
 .stat-value{font-family:'Syne',sans-serif;font-weight:700;font-size:30px;color:#0f172a;line-height:1.1}
 .stat-sub{font-family:'DM Sans',sans-serif;font-size:12px;color:#94a3b8}
 .charts-grid{display:grid;grid-template-columns:minmax(0,2.15fr) minmax(260px,1fr);gap:16px;align-items:stretch}
-.card{background:#ffffff;border:1px solid #bae6fd;border-radius:12px;box-shadow:0 2px 8px rgba(2,132,199,0.08);padding:20px;display:flex;flex-direction:column;gap:6px}
-.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:#0f172a}
+.card{background:#ffffff;border:1px solid #bae6fd;border-radius:12px;box-shadow:0 2px 8px rgba(2,132,199,0.08);padding:20px;display:flex;flex-direction:column;gap:6px;transition:box-shadow .25s ease,border-color .25s ease}
+.card:hover{border-color:#7dd3fc;box-shadow:0 12px 28px rgba(15,23,42,.10)}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:#0f172a;transition:color .2s ease}
+.card:hover>.card-title{color:#1d4ed8}
 .card-sub{font-family:'DM Sans',sans-serif;font-weight:400;font-size:13px;color:#94a3b8}
 .card-header-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .badge-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,0.12);color:#3b82f6;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:6px 14px;border-radius:999px}
@@ -47,8 +40,6 @@
 .category-row .cat-name{display:flex;align-items:center;gap:8px;font-weight:600}
 .category-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .category-count{font-weight:700;color:#0f172a}
-.eval-status-card{background:#ffffff;border:1px solid #bae6fd;border-radius:12px;box-shadow:0 2px 8px rgba(2,132,199,0.08);padding:20px;flex:1.7 1 500px}
-.quick-access-card{flex:1 1 300px}
 .quick-access-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:12px}
 .quick-access-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px 16px;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border:1.5px solid #bae6fd;border-radius:14px;text-decoration:none;color:#0f172a;transition:all 0.25s ease;cursor:pointer;font-family:'Syne',sans-serif}
 .quick-access-btn:hover{border-color:#7dd3fc;box-shadow:0 4px 12px rgba(2,132,199,0.12);transform:translateY(-2px)}
@@ -68,55 +59,10 @@
 .status-vbar-legend-item{display:flex;align-items:center;gap:6px}
 .status-vbar-legend-swatch{width:10px;height:10px;border-radius:3px}
 .lb-empty{text-align:center;color:#94a3b8;padding:20px 0;font-family:'DM Sans',sans-serif;font-size:14px}
-@keyframes cvRise {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.stat-card, .charts-grid > .card {
-  animation: cvRise .5s cubic-bezier(.2,.7,.2,1) backwards;
-}
-.stat-card {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  overflow: hidden;
-  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
-}
-.stat-card:hover {
-  transform: translateY(-6px);
-  border-color: #7dd3fc;
-  box-shadow: 0 14px 30px rgba(37,99,235,.16);
-}
-.card, .eval-status-card {
-  transition: box-shadow .25s ease, border-color .25s ease;
-}
-.card:hover, .eval-status-card:hover {
-  border-color: #7dd3fc;
-  box-shadow: 0 12px 28px rgba(15,23,42,.10);
-}
-.card-title { transition: color .2s ease; }
-.card:hover > .card-title { color: #1d4ed8; }
-.quick-access-btn {
-  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
-}
-.donut-segment {
-  transition: filter .2s ease;
-}
-.donut-segment:hover {
-  filter: brightness(1.1);
-}
-@media (max-width:1200px){.stat-value{font-size:30px}}
-@media (max-width:1024px){.stat-grid{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}}
-@media (max-width:768px){
-  .dashboard-container{padding:20px 16px 28px;gap:18px}
-  .stat-grid{grid-template-columns:1fr 1fr;gap:14px}
-  .card{padding:18px}
-  .quick-access-grid{grid-template-columns:repeat(2,1fr);gap:12px}
-}
-@media (max-width:600px){
-  .stat-card{padding:16px 16px 18px}
-  .stat-value{font-size:26px}
-  .stat-grid{grid-template-columns:1fr}
-  .quick-access-grid{grid-template-columns:repeat(2,1fr);gap:12px}
-}
+@keyframes cvRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.stat-card,.charts-grid>.card{animation:cvRise .5s cubic-bezier(.2,.7,.2,1) backwards}
+@media(max-width:1024px){.stat-grid{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.stat-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -125,32 +71,36 @@
   <main class="main fade-in">
     <div id="topbar-mount"></div>
     <div class="dashboard-container">
+
+      <!-- Stat tiles -->
       <div class="stat-grid">
-        <div class="stat-card purple">
+        <div class="stat-card">
           <div class="stat-icon">📅</div>
           <div class="stat-label">Daily Submissions</div>
           <div class="stat-value" data-stat="daily">0</div>
           <div class="stat-sub">Evaluations today</div>
         </div>
-        <div class="stat-card cyan">
+        <div class="stat-card">
           <div class="stat-icon">🗓️</div>
           <div class="stat-label">Weekly Submissions</div>
           <div class="stat-value" data-stat="weekly">0</div>
           <div class="stat-sub">Evaluations this week</div>
         </div>
-        <div class="stat-card blue">
+        <div class="stat-card">
           <div class="stat-icon">📆</div>
           <div class="stat-label">Monthly Submissions</div>
           <div class="stat-value" data-stat="monthly">0</div>
           <div class="stat-sub">Evaluations this month</div>
         </div>
-        <div class="stat-card blue">
+        <div class="stat-card">
           <div class="stat-icon">🏢</div>
           <div class="stat-label">Total Offices</div>
-          <div class="stat-value" data-stat="totalOffice">0</div>
-          <div class="stat-sub">Offices tracked</div>
+          <div class="stat-value" data-stat="offices">0</div>
+          <div class="stat-sub">Registered active offices</div>
         </div>
       </div>
+
+      <!-- Trend + donut -->
       <div class="charts-grid">
         <div class="card">
           <div class="card-header-row">
@@ -161,122 +111,111 @@
               </div>
               <div style="margin-top:5px;width:36px;height:3px;background:#2563eb;border-radius:2px;"></div>
             </div>
-            <div class="badge-pill" id="office-count-badge">Total Offices: 0</div>
+            <div class="badge-pill" id="total-badge">Total: 0</div>
           </div>
-          <div class="line-chart-wrap" style="margin-top:14px;"><svg id="line-chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none" style="width:100%;height:200px;display:block;overflow:visible;"></svg></div>
+          <div class="line-chart-wrap" style="margin-top:14px;">
+            <svg id="line-chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none" style="width:100%;height:200px;display:block;overflow:visible;"></svg>
+          </div>
         </div>
         <div class="card">
           <div class="card-title">Average Ratings</div>
           <div class="card-sub" style="margin-top:-2px;">Cleanliness vs Facilities</div>
           <div class="donut-wrap" id="donutWrap">
-            <svg id="donut-svg" viewBox="0 0 200 200" width="240" height="240"><circle cx="100" cy="100" r="78" fill="none" stroke="#eef2f7" stroke-width="24"/></svg>
-            <div class="pie-tooltip" id="donut-tooltip"></div>
+            <svg id="donut-svg" viewBox="0 0 200 200" width="240" height="240">
+              <circle cx="100" cy="100" r="78" fill="none" stroke="#eef2f7" stroke-width="24"/>
+            </svg>
             <div class="donut-legend" id="donut-legend"></div>
           </div>
         </div>
       </div>
+
+      <!-- Status breakdown + Quick tools -->
       <div class="charts-grid">
-        <div class="card eval-status-card">
+        <div class="card">
           <div class="card-title">Submission Status — by category</div>
-          <div id="status-breakdown-chart" style="margin-top: 14px;"></div>
+          <div id="status-breakdown-chart" style="margin-top:14px;"></div>
         </div>
-        <div class="card quick-access-card">
+        <div class="card">
           <div class="card-title">Quick Tools</div>
           <div class="quick-access-grid">
-            <a href="adminfc-analytics.html" class="quick-access-btn"><div class="qa-icon">📈</div><div class="qa-label">Analytics</div></a>
-            <a href="adminfc-office-mgmt.html" class="quick-access-btn"><div class="qa-icon">📑</div><div class="qa-label">Office Mgmt</div></a>
-            <a href="adminfc-eval-mgmt.html" class="quick-access-btn"><div class="qa-icon">📋</div><div class="qa-label">Eval Mgmt</div></a>
-            <a href="adminfc-multimedia.html" class="quick-access-btn"><div class="qa-icon">🎞️</div><div class="qa-label">Multimedia</div></a>
-            <a href="adminfc-reports.html" class="quick-access-btn"><div class="qa-icon">📁</div><div class="qa-label">Reports</div></a>
+            <a href="adminfc-analytics.html"         class="quick-access-btn"><div class="qa-icon">📈</div><div class="qa-label">Analytics</div></a>
+            <a href="adminfc-office-mgmt.html"        class="quick-access-btn"><div class="qa-icon">📑</div><div class="qa-label">Office Mgmt</div></a>
+            <a href="adminfc-eval-mgmt.html"          class="quick-access-btn"><div class="qa-icon">📋</div><div class="qa-label">Eval Mgmt</div></a>
+            <a href="adminfc-multimedia.html"         class="quick-access-btn"><div class="qa-icon">🎞️</div><div class="qa-label">Multimedia</div></a>
+            <a href="adminfc-reports.html"            class="quick-access-btn"><div class="qa-icon">📁</div><div class="qa-label">Reports</div></a>
           </div>
         </div>
       </div>
+
     </div>
   </main>
 </div>
 
 <script src="shared.js"></script>
 <script type="module">
-import { guard as cvGuard } from "./cv-core.js";
-await cvGuard(["adminfc"]);
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-const firebaseConfig = {apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E", authDomain: "kristal-adb78.firebaseapp.com", databaseURL: "https://kristal-adb78-default-rtdb.firebaseio.com", projectId: "kristal-adb78", storageBucket: "kristal-adb78.firebasestorage.app", messagingSenderId: "1016283938031", appId: "1:1016283938031:web:54c4d13409d9784ad7af1a", measurementId: "G-LK8D1CBQ2J"};
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "dashboard");
-document.getElementById("topbar-mount").innerHTML = buildTopbar("Dashboard", "adminfc");
-// FC-only collections
-const EVAL_COLLECTION   = "facilities_cleanliness_evaluations";
-const OFFICE_COLLECTION = "fc_offices";
-const LOW_RATING_THRESHOLD = 3;
-const STATUS_META = {pending: {label: "Pending", color: "#f59e0b"}, no_action: {label: "No Action Required", color: "#6366f1"}, resolved: {label: "Resolved", color: "#10b981"}};
-const CL_CATS = ["Comfort Room", "Surroundings", "Laboratories"];
-const CL_CAT_COLORS = {"Comfort Room": "#2563eb", "Surroundings": "#10b981", "Laboratories": "#f59e0b"};
-const STATUS_VBAR_MAX_H = 200;
-let evaluations = [], officeCount = 0;
+import { guard as cvGuard, db } from "./cv-core.js";
+const session = await cvGuard(["adminfc"]);
 
-// Average of cleanliness ratings (cleanlinessRating1..5)
+import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "dashboard");
+document.getElementById("topbar-mount").innerHTML  = buildTopbar("Dashboard", "adminfc");
+
+const EVAL_COLLECTION = "fc_offices_evaluations_does_not_exist";  // replaced below
+const STATUS_VBAR_MAX_H = 200;
+const CL_CATS = ["Comfort Room", "Surroundings", "Laboratories"];
+const CL_CAT_COLORS = { "Comfort Room": "#2563eb", "Surroundings": "#10b981", "Laboratories": "#f59e0b" };
+const STATUS_META = {
+  pending:   { label: "Pending",   color: "#f59e0b" },
+  no_action: { label: "No Action", color: "#6366f1" },
+  resolved:  { label: "Resolved",  color: "#10b981" }
+};
+
+let evaluations = [];
+let offices = [];
+
 function clAvgOf(ev) {
   let sum = 0, count = 0;
   for (let i = 1; i <= 5; i++) { const v = Number(ev[`cleanlinessRating${i}`]); if (v > 0) { sum += v; count++; } }
   return count > 0 ? sum / count : 0;
 }
-// Average of facilities ratings (facilitiesRating1..8)
 function facAvgOf(ev) {
   let sum = 0, count = 0;
-  for (let i = 1; i <= 8; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
+  for (let i = 1; i <= 5; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
   return count > 0 ? sum / count : 0;
 }
-// Combined average across both sections
-function avgOf(ev) {
+function overallAvgOf(ev) {
   let sum = 0, count = 0;
   for (let i = 1; i <= 5; i++) { const v = Number(ev[`cleanlinessRating${i}`]); if (v > 0) { sum += v; count++; } }
-  for (let i = 1; i <= 8; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
+  for (let i = 1; i <= 5; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
   return count > 0 ? sum / count : 0;
 }
-
-function renderStatCards() {
-  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-  const startOfWeek = new Date(startOfDay); startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
-  const startOfMonth = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), 1);
-  document.querySelector('[data-stat="daily"]').textContent   = evaluations.filter(e => e.timestamp >= startOfDay.getTime()).length;
-  document.querySelector('[data-stat="weekly"]').textContent  = evaluations.filter(e => e.timestamp >= startOfWeek.getTime()).length;
-  document.querySelector('[data-stat="monthly"]').textContent = evaluations.filter(e => e.timestamp >= startOfMonth.getTime()).length;
-  document.querySelector('[data-stat="totalOffice"]').textContent = officeCount;
+function parseEvalStatus(avg) {
+  if (avg >= 4.0) return "resolved";
+  if (avg >= 3.0) return "no_action";
+  return "pending";
 }
-
 function getTimestampMillis(value) {
   if (value === undefined || value === null || value === "") return null;
   if (typeof value === "number") return value;
-  if (typeof value === "string") { const n = Number(value); if (!Number.isNaN(n)) return n; const parsed = Date.parse(value); return Number.isNaN(parsed) ? null : parsed; }
+  if (typeof value === "string") { const n = Number(value); if (!Number.isNaN(n)) return n; const p = Date.parse(value); return Number.isNaN(p) ? null : p; }
   if (typeof value.toMillis === "function") return value.toMillis();
   if (typeof value.seconds === "number") return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1e6);
   if (value instanceof Date) return value.getTime();
   return null;
 }
 
-// Status is always derived from the combined cleanliness + facilities average:
-//   avg >= 4.0  → resolved       (≥ 80% of 5)
-//   avg >= 3.0  → no_action      (≥ 60% of 5)
-//   avg <  3.0  → pending        (< 60% of 5)
-function parseEvalStatus(avgRating) {
-  if (avgRating >= 4.0) return "resolved";
-  if (avgRating >= 3.0) return "no_action";
-  return "pending";
-}
+// Load offices
+onSnapshot(collection(db, "fc_offices"), snap => {
+  offices = [];
+  snap.forEach(d => { const o = d.data(); if ((o.status || "active") === "active") offices.push({ id: d.id, ...o }); });
+  document.querySelector('[data-stat="offices"]').textContent = offices.length;
+});
 
-// Load offices from fc_offices
-onSnapshot(collection(db, OFFICE_COLLECTION), snap => {
-  officeCount = snap.size;
-  document.getElementById("office-count-badge").textContent = `Total Offices: ${officeCount}`;
-  document.querySelector('[data-stat="totalOffice"]').textContent = officeCount;
-}, err => console.error("Failed to load offices:", err));
-
-// Load evaluations from facilities_cleanliness_evaluations only
-onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
+// Load evaluations (all, no filter)
+onSnapshot(collection(db, "facilities_cleanliness_evaluations"), snap => {
   evaluations = [];
-  snapshot.forEach(docSnap => {
+  snap.forEach(docSnap => {
     const data = docSnap.data();
     const record = {
       id: docSnap.id,
@@ -286,15 +225,29 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snapshot) => {
     };
     for (let i = 1; i <= 5; i++) record[`cleanlinessRating${i}`] = Number(data[`cleanlinessRating${i}`]) || 0;
     for (let i = 1; i <= 8; i++) record[`facilitiesRating${i}`]  = Number(data[`facilitiesRating${i}`])  || 0;
-    record.status = parseEvalStatus(avgOf(record));
+    record.clAvg    = clAvgOf(record);
+    record.facAvg   = facAvgOf(record);
+    record.overall  = overallAvgOf(record);
+    record.status   = data.status || parseEvalStatus(record.overall);
     evaluations.push(record);
   });
+  document.getElementById("total-badge").textContent = `Total: ${evaluations.length}`;
   renderStatCards();
   renderLineTrend();
+  renderAvgRatingPie();
   renderStatusBreakdown();
 }, err => console.error("Failed to load evaluations:", err));
 
-// Submission Trend: single area chart, past 7 days, FC data only
+function renderStatCards() {
+  const now = new Date();
+  const startOfDay  = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+  const startOfWeek = new Date(startOfDay); startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  document.querySelector('[data-stat="daily"]').textContent   = evaluations.filter(e => e.timestamp >= startOfDay.getTime()).length;
+  document.querySelector('[data-stat="weekly"]').textContent  = evaluations.filter(e => e.timestamp >= startOfWeek.getTime()).length;
+  document.querySelector('[data-stat="monthly"]').textContent = evaluations.filter(e => e.timestamp >= startOfMonth.getTime()).length;
+}
+
 function renderLineTrend() {
   const svg = document.getElementById("line-chart-svg");
   if (!svg) return;
@@ -309,79 +262,52 @@ function renderLineTrend() {
     labels.push(dayStart.toLocaleDateString("en-US", { weekday: "short" }));
     counts.push(evaluations.filter(e => e.timestamp >= dayStart.getTime() && e.timestamp <= dayEnd.getTime()).length);
   }
-
   const maxVal = Math.max(...counts, 1);
-  // Round up maxVal to a nice number for y-axis
-  const niceMax = maxVal <= 10 ? 10 : maxVal <= 25 ? 25 : maxVal <= 50 ? 50 : maxVal <= 75 ? 75 : maxVal <= 100 ? 100 : Math.ceil(maxVal / 25) * 25;
+  const niceMax = maxVal <= 10 ? 10 : maxVal <= 25 ? 25 : maxVal <= 50 ? 50 : maxVal <= 100 ? 100 : Math.ceil(maxVal / 25) * 25;
   const xStep  = (W - PAD.l - PAD.r) / (days - 1);
   const yScale = v => PAD.t + (H - PAD.t - PAD.b) * (1 - v / niceMax);
   const cx = i => PAD.l + i * xStep;
-
-  // Gradient definition
-  svg.innerHTML = `
-    <defs>
-      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%"   stop-color="#2563eb" stop-opacity="0.18"/>
-        <stop offset="100%" stop-color="#2563eb" stop-opacity="0.01"/>
-      </linearGradient>
-    </defs>`;
-
-  // Horizontal grid lines + y-axis labels
+  svg.innerHTML = `<defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb" stop-opacity="0.18"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0.01"/></linearGradient></defs>`;
   const yTicks = [0, 25, 50, 75, 100].map(t => Math.round((t / 100) * niceMax));
   yTicks.forEach(val => {
     const y = yScale(val);
     svg.innerHTML += `<line x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}" stroke="#e8eef6" stroke-width="1"/>`;
     svg.innerHTML += `<text x="${PAD.l - 8}" y="${y + 4}" font-size="11" fill="#94a3b8" text-anchor="end" font-family="DM Sans,sans-serif">${val}</text>`;
   });
-
-  // Area fill path (closed polygon)
-  const linePoints = counts.map((v, i) => `${cx(i)},${yScale(v)}`).join(" L ");
-  const areaPath = `M ${cx(0)},${yScale(counts[0])} L ${linePoints} L ${cx(days-1)},${yScale(0)} L ${cx(0)},${yScale(0)} Z`;
+  const areaPath = `M ${cx(0)},${yScale(counts[0])} L ${counts.map((v,i)=>`${cx(i)},${yScale(v)}`).join(" L ")} L ${cx(days-1)},${yScale(0)} L ${cx(0)},${yScale(0)} Z`;
   svg.innerHTML += `<path d="${areaPath}" fill="url(#areaGrad)"/>`;
-
-  // Smooth line using cubic bezier
   let linePath = `M ${cx(0)},${yScale(counts[0])}`;
   for (let i = 1; i < counts.length; i++) {
-    const cpX = (cx(i - 1) + cx(i)) / 2;
+    const cpX = (cx(i-1) + cx(i)) / 2;
     linePath += ` C ${cpX},${yScale(counts[i-1])} ${cpX},${yScale(counts[i])} ${cx(i)},${yScale(counts[i])}`;
   }
-  svg.innerHTML += `<path d="${linePath}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
-
-  // Data point circles (open with white fill)
-  counts.forEach((v, i) => {
-    svg.innerHTML += `<circle cx="${cx(i)}" cy="${yScale(v)}" r="5" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>`;
-  });
-
-  // X-axis day labels
-  labels.forEach((l, i) => {
-    svg.innerHTML += `<text x="${cx(i)}" y="${H - 6}" font-size="12" fill="#94a3b8" text-anchor="middle" font-family="DM Sans,sans-serif">${l}</text>`;
-  });
+  svg.innerHTML += `<path d="${linePath}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>`;
+  counts.forEach((v, i) => { svg.innerHTML += `<circle cx="${cx(i)}" cy="${yScale(v)}" r="5" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>`; });
+  labels.forEach((l, i) => { svg.innerHTML += `<text x="${cx(i)}" y="${H - 6}" font-size="12" fill="#94a3b8" text-anchor="middle" font-family="DM Sans,sans-serif">${l}</text>`; });
 }
 
 function renderAvgRatingPie() {
   const svg = document.getElementById("donut-svg"), legend = document.getElementById("donut-legend");
   if (!svg || !legend) return;
   svg.querySelectorAll(".donut-segment").forEach(el => el.remove());
-  const clEvals  = evaluations.filter(e => e.cleanlinessRating1 > 0);
-  const facEvals = evaluations.filter(e => e.facilitiesRating1 > 0);
-  const cleanAvg = clEvals.length  ? clEvals.reduce((a, e) => a + clAvgOf(e), 0) / clEvals.length  : 0;
-  const facilAvg = facEvals.length ? facEvals.reduce((a, e) => a + facAvgOf(e), 0) / facEvals.length : 0;
-  if (evaluations.length === 0) {
-    legend.innerHTML = `<div class="legend-item">No evaluations yet</div>`; return;
-  }
+  const clEvals  = evaluations.filter(e => e.clAvg  > 0);
+  const facEvals = evaluations.filter(e => e.facAvg > 0);
+  const cleanAvg = clEvals.length  ? clEvals.reduce((a, e)  => a + e.clAvg,  0) / clEvals.length  : 0;
+  const facilAvg = facEvals.length ? facEvals.reduce((a, e) => a + e.facAvg, 0) / facEvals.length : 0;
+  if (!evaluations.length) { legend.innerHTML = `<div class="legend-item">No evaluations yet</div>`; return; }
   const segments = [
-    {label: "Cleanliness", color: "#2563eb", avg: cleanAvg},
-    {label: "Facilities",  color: "#10b981", avg: facilAvg}
+    { label: "Cleanliness", color: "#2563eb", avg: cleanAvg },
+    { label: "Facilities",  color: "#10b981", avg: facilAvg }
   ];
-  const rows = segments.map(s => `<div class="category-row"><div class="cat-name"><div class="category-dot" style="background:${s.color}"></div>${s.label}</div><div class="category-count">${s.avg.toFixed(2)}/5</div></div>`).join("");
-  legend.innerHTML = `<div class="category-table"><div class="category-table-head"><span>Section</span><span>Avg</span></div>${rows}</div>`;
-  // Simple donut arcs
+  legend.innerHTML = `<div class="category-table"><div class="category-table-head"><span>Section</span><span>Avg</span></div>${
+    segments.map(s => `<div class="category-row"><div class="cat-name"><div class="category-dot" style="background:${s.color}"></div>${s.label}</div><div class="category-count">${s.avg.toFixed(2)}/5</div></div>`).join("")
+  }</div>`;
   const total = cleanAvg + facilAvg || 1;
   let startAngle = -Math.PI / 2;
   segments.forEach(seg => {
     const sweep = (seg.avg / total) * 2 * Math.PI;
     const endAngle = startAngle + sweep;
-    const cx = 100, cy = 100, r = 78, sw = 24;
+    const r = 78, sw = 24, cx = 100, cy = 100;
     const x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
     const x2 = cx + r * Math.cos(endAngle),   y2 = cy + r * Math.sin(endAngle);
     const large = sweep > Math.PI ? 1 : 0;
@@ -398,27 +324,36 @@ function renderAvgRatingPie() {
 
 function renderStatusBreakdown() {
   const el = document.getElementById("status-breakdown-chart");
-  if (!el || evaluations.length === 0) { el && (el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`); renderAvgRatingPie(); return; }
-  const statusOrder = ["pending", "no_action", "resolved"];
-  // Show breakdown by cleanlinessCategory
+  if (!el) return;
+  if (!evaluations.length) { el.innerHTML = `<div class="lb-empty">No evaluations yet.</div>`; return; }
   const activeCats = CL_CATS.filter(c => evaluations.some(e => e.cleanlinessCategory === c));
   const cats = activeCats.length ? activeCats : CL_CATS;
   const totals = {}; cats.forEach(c => { totals[c] = evaluations.filter(e => e.cleanlinessCategory === c).length; });
+  const statusOrder = ["pending", "no_action", "resolved"];
   const groupsHtml = statusOrder.map(statusKey => {
     const cols = cats.map(c => {
       const count = evaluations.filter(e => e.cleanlinessCategory === c && e.status === statusKey).length;
-      const pct = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
-      const h = Math.max(1, Math.round((pct / 100) * STATUS_VBAR_MAX_H));
+      const pct   = totals[c] ? Math.round((count / totals[c]) * 100) : 0;
+      const h     = Math.max(1, Math.round((pct / 100) * STATUS_VBAR_MAX_H));
       const color = CL_CAT_COLORS[c] || "#64748b";
       return `<div class="status-vbar-col" title="${c} — ${STATUS_META[statusKey].label}: ${count}/${totals[c]}"><div class="status-vbar-value">${pct}%</div><div class="status-vbar-fill" style="height:${h}px;background:${color};"></div></div>`;
     }).join("");
     return `<div class="status-vbar-group">${cols}</div>`;
   }).join("");
-  const yAxis = [100, 75, 50, 25, 0].map(pct => `<span style="top:${STATUS_VBAR_MAX_H - (pct / 100) * STATUS_VBAR_MAX_H}px;">${pct}%</span>`).join("");
+  const yAxis = [100, 75, 50, 25, 0].map(pct =>
+    `<span style="top:${STATUS_VBAR_MAX_H - (pct / 100) * STATUS_VBAR_MAX_H}px;">${pct}%</span>`
+  ).join("");
   const xLabels = statusOrder.map(s => `<div class="status-vbar-label">${STATUS_META[s].label}</div>`).join("");
-  const legendHtml = cats.map(c => `<div class="status-vbar-legend-item"><span class="status-vbar-legend-swatch" style="background:${CL_CAT_COLORS[c] || '#64748b'};"></span><span>${c}</span></div>`).join("");
-  el.innerHTML = `<div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;"><div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div><div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div></div><div class="status-vbar-labels">${xLabels}</div><div class="status-vbar-legend">${legendHtml}</div>`;
-  renderAvgRatingPie();
+  const legendHtml = cats.map(c =>
+    `<div class="status-vbar-legend-item"><span class="status-vbar-legend-swatch" style="background:${CL_CAT_COLORS[c]||'#64748b'};"></span><span>${c}</span></div>`
+  ).join("");
+  el.innerHTML = `
+    <div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;">
+      <div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div>
+      <div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div>
+    </div>
+    <div class="status-vbar-labels">${xLabels}</div>
+    <div class="status-vbar-legend">${legendHtml}</div>`;
 }
 </script>
 </body>
