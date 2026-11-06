@@ -712,6 +712,12 @@
         return false;
       }
 
+      if (role === 'fc_office') {
+        await signOut(auth).catch(() => {});
+        showError('FC Office accounts must sign in at the FC Office portal below.');
+        return false;
+      }
+
       recordLogin(uid);
       window.location.href = ROLE_INFO[role]?.home || 'admin1-dashboard.html';
       return true;
