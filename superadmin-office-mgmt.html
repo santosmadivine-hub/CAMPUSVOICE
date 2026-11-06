@@ -345,7 +345,7 @@ function renderOffices() {
   tbody.innerHTML = filtered.map((o, i) => {
     const status  = o.status || 'active';
     const created = o.createdAt?.toDate
-      ? o.createdAt.toDate().toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })
+      ? o.createdAt.toDate().toLocaleDateString()
       : o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—';
     return `<tr>
       <td class="row-idx">${i + 1}</td>

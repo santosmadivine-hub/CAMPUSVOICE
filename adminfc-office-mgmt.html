@@ -281,7 +281,9 @@ function renderOffices() {
   }
   tbody.innerHTML = filtered.map((o, i) => {
     const status = o.status || "active";
-    const created = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "-";
+    const created = o.createdAt?.toDate
+      ? o.createdAt.toDate().toLocaleDateString()
+      : o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "-";
     return `<tr>
       <td class="row-index">${i+1}</td>
       <td><strong>${o.name||"-"}</strong></td>
