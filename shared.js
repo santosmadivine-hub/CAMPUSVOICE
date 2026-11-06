@@ -83,7 +83,7 @@ function buildSidebar(role, activePage) {
   ];
 
   const navAdminFC = [
-    { id: 'dashboard', icon: '🏠', label: 'Dashboard', href: 'adminfc-office-dashboard.html' },
+    { id: 'dashboard', icon: '🏠', label: 'Dashboard', href: 'adminfc-dashboard.html' },
     { id: 'office-mgmt', icon: '🏢', label: 'Office Management', href: 'adminfc-office-mgmt.html' },
     { id: 'eval-mgmt', icon: '📋', label: 'Evaluation Management', href: 'adminfc-eval-mgmt.html' },
     { id: 'question-mgmt', icon: '❓', label: 'Question Management', href: 'adminfc-question-mgmt.html' },
