@@ -183,9 +183,6 @@
       <div class="card">
         <div class="toolbar-row">
           <div class="card-title">Office Registry</div>
-          <div class="toolbar-actions">
-            <button class="btn btn-add" id="btn-add">➕ Add Office</button>
-          </div>
         </div>
         <div class="toolbar-row" style="margin-bottom:12px;">
           <div class="search-input-wrap">
@@ -201,7 +198,7 @@
         </div>
         <div class="table-wrap">
           <table class="offices-table">
-            <thead><tr><th>#</th><th>Office Name</th><th>Categories</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+            <thead><tr><th>#</th><th>Office Name</th><th>Categories</th><th>Status</th><th>Created</th></tr></thead>
             <tbody id="offices-tbody"></tbody>
           </table>
         </div>
@@ -210,82 +207,13 @@
   </main>
 </div>
 
-<!-- ADD / EDIT MODAL -->
-<div class="modal-overlay" id="form-modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-header-icon" id="modal-header-icon">➕</div>
-      <div class="modal-header-text">
-        <h3 id="form-modal-title">Add Office</h3>
-        <p id="form-modal-sub">Fill in the details below to register a new office.</p>
-      </div>
-      <button class="modal-close-btn" id="form-modal-close">✕</button>
-    </div>
-
-    <div class="modal-body">
-      <div class="edit-field">
-        <label>Office Name</label>
-        <input type="text" id="form-name" placeholder="e.g. General Services Office">
-      </div>
-
-      <div class="edit-field">
-        <label>Visible in Categories</label>
-        <div class="cat-check-group">
-          <div class="cat-check-pill comfort"      data-cat="Comfort Room" id="pill-comfort">🚿 Comfort Room</div>
-          <div class="cat-check-pill surroundings" data-cat="Surroundings" id="pill-surroundings">🌿 Surroundings</div>
-          <div class="cat-check-pill laboratories" data-cat="Laboratories" id="pill-labs">🔬 Laboratories</div>
-        </div>
-        <div class="field-hint">Select which evaluation types this office appears in on the app.</div>
-      </div>
-
-      <div class="edit-field">
-        <label>Status</label>
-        <div class="status-toggle-row">
-          <button type="button" class="status-toggle-btn" id="toggle-active"   data-val="active">✅ Active</button>
-          <button type="button" class="status-toggle-btn" id="toggle-inactive" data-val="inactive">⛔ Inactive</button>
-        </div>
-        <select id="form-status" style="display:none;">
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-secondary" id="form-cancel">Cancel</button>
-      <button class="btn btn-primary"   id="form-save">Add Office</button>
-    </div>
-  </div>
-</div>
-
-<!-- DELETE MODAL -->
-<div class="modal-overlay" id="delete-modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-header-icon" style="background:linear-gradient(135deg,#fee2e2,#fecaca);">🗑️</div>
-      <div class="modal-header-text">
-        <h3 style="color:#dc2626;">Delete Office</h3>
-        <p>This action cannot be undone.</p>
-      </div>
-      <button class="modal-close-btn" id="delete-modal-close">✕</button>
-    </div>
-    <div class="modal-body">
-      <p style="font-family:'DM Sans',sans-serif;font-size:14px;color:#334155;margin:0;" id="delete-modal-text"></p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" id="delete-cancel">Cancel</button>
-      <button class="btn btn-danger"    id="delete-confirm">Delete</button>
-    </div>
-  </div>
-</div>
-
 <script src="shared.js"></script>
 <script type="module">
 import { guard as cvGuard } from "./cv-core.js";
 await cvGuard(["adminfc"]);
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",authDomain:"kristal-adb78.firebaseapp.com",
@@ -301,10 +229,6 @@ document.getElementById("topbar-mount").innerHTML = buildTopbar("Office Manageme
 let offices = [];
 let searchTerm = "";
 let catFilter = "all";
-let editingId = null;
-let deletingId = null;
-
-const ALL_CATS = ["Comfort Room", "Surroundings", "Laboratories"];
 
 function officeCategories(o) {
   if (Array.isArray(o.categories) && o.categories.length) return o.categories;
@@ -352,7 +276,7 @@ function renderOffices() {
 
   const tbody = document.getElementById("offices-tbody");
   if (!filtered.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No offices found.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">No offices found.</td></tr>`;
     return;
   }
   tbody.innerHTML = filtered.map((o, i) => {
@@ -364,14 +288,8 @@ function renderOffices() {
       <td>${catPillsHtml(officeCategories(o))}</td>
       <td><span class="status-badge ${status}">${status === "active" ? "✅ Active" : "⛔ Inactive"}</span></td>
       <td>${created}</td>
-      <td style="white-space:nowrap;">
-        <button class="btn-edit" data-id="${o.id}">Edit</button>
-        <button class="btn-delete" data-id="${o.id}">Delete</button>
-      </td>
     </tr>`;
   }).join("");
-  tbody.querySelectorAll(".btn-edit").forEach(b => b.addEventListener("click", () => openForm(b.dataset.id)));
-  tbody.querySelectorAll(".btn-delete").forEach(b => b.addEventListener("click", () => openDelete(b.dataset.id)));
 }
 
 document.getElementById("cat-filter-tabs").addEventListener("click", ev => {
@@ -383,112 +301,6 @@ document.getElementById("cat-filter-tabs").addEventListener("click", ev => {
 });
 
 document.getElementById("search-input").addEventListener("input", ev => { searchTerm = ev.target.value; renderOffices(); });
-
-// Category pill toggle logic
-function setPillChecked(catValue, checked) {
-  const map = { "Comfort Room":"pill-comfort", "Surroundings":"pill-surroundings", "Laboratories":"pill-labs" };
-  const pill = document.getElementById(map[catValue]);
-  if (pill) pill.classList.toggle("checked", checked);
-}
-
-function getCheckedCategories() {
-  return ALL_CATS.filter(cat => {
-    const map = { "Comfort Room":"pill-comfort", "Surroundings":"pill-surroundings", "Laboratories":"pill-labs" };
-    const pill = document.getElementById(map[cat]);
-    return pill && pill.classList.contains("checked");
-  });
-}
-
-document.querySelectorAll(".cat-check-pill").forEach(pill => {
-  pill.addEventListener("click", () => pill.classList.toggle("checked"));
-});
-
-// Status toggle wiring
-function setStatusToggle(value) {
-  document.getElementById("form-status").value = value;
-  document.getElementById("toggle-active").className   = "status-toggle-btn" + (value === "active"   ? " selected-active"   : "");
-  document.getElementById("toggle-inactive").className = "status-toggle-btn" + (value === "inactive" ? " selected-inactive" : "");
-}
-document.getElementById("toggle-active").addEventListener("click",   () => setStatusToggle("active"));
-document.getElementById("toggle-inactive").addEventListener("click", () => setStatusToggle("inactive"));
-
-// Form modal
-const formModal = document.getElementById("form-modal");
-document.getElementById("btn-add").addEventListener("click", () => openForm(null));
-
-function openForm(officeId) {
-  editingId = officeId;
-  const isEdit = !!officeId;
-  const icon = document.getElementById("modal-header-icon");
-  icon.textContent = isEdit ? "✏️" : "➕";
-  icon.className = "modal-header-icon" + (isEdit ? " edit-mode" : "");
-  document.getElementById("form-modal-title").textContent = isEdit ? "Edit Office" : "Add Office";
-  document.getElementById("form-modal-sub").textContent   = isEdit ? "Update the office details below." : "Fill in the details below to register a new office.";
-  document.getElementById("form-save").textContent = isEdit ? "Save Changes" : "Add Office";
-
-  ALL_CATS.forEach(c => setPillChecked(c, false));
-
-  if (isEdit) {
-    const o = offices.find(x => x.id === officeId);
-    if (!o) return;
-    document.getElementById("form-name").value = o.name || "";
-    setStatusToggle(o.status || "active");
-    officeCategories(o).forEach(c => setPillChecked(c, true));
-  } else {
-    document.getElementById("form-name").value = "";
-    setStatusToggle("active");
-  }
-  formModal.classList.add("open");
-  setTimeout(() => document.getElementById("form-name").focus(), 50);
-}
-
-function closeFormModal() { formModal.classList.remove("open"); editingId = null; }
-document.getElementById("form-cancel").addEventListener("click", closeFormModal);
-document.getElementById("form-modal-close").addEventListener("click", closeFormModal);
-formModal.addEventListener("click", ev => { if (ev.target === formModal) closeFormModal(); });
-
-document.getElementById("form-save").addEventListener("click", async () => {
-  const name = document.getElementById("form-name").value.trim();
-  if (!name) { alert("Office name is required."); return; }
-  const categories = getCheckedCategories();
-  if (!categories.length) { alert("Please select at least one category."); return; }
-  const btn = document.getElementById("form-save");
-  btn.disabled = true; btn.textContent = "Saving…";
-  try {
-    const payload = { name, status: document.getElementById("form-status").value, categories };
-    if (editingId) {
-      await updateDoc(doc(db,"fc_offices",editingId), { ...payload, updatedAt: Date.now() });
-    } else {
-      await addDoc(collection(db,"fc_offices"), { ...payload, createdAt: Date.now() });
-    }
-    formModal.classList.remove("open"); editingId = null;
-  } catch(err) { alert("Failed to save."); console.error(err); }
-  finally { btn.disabled = false; }
-});
-
-// Delete modal
-const deleteModal = document.getElementById("delete-modal");
-function openDelete(officeId) {
-  const o = offices.find(x => x.id === officeId);
-  if (!o) return;
-  deletingId = officeId;
-  document.getElementById("delete-modal-text").textContent = `Delete "${o.name}"? This cannot be undone.`;
-  deleteModal.classList.add("open");
-}
-function closeDeleteModal() { deleteModal.classList.remove("open"); deletingId = null; }
-document.getElementById("delete-cancel").addEventListener("click", closeDeleteModal);
-document.getElementById("delete-modal-close").addEventListener("click", closeDeleteModal);
-deleteModal.addEventListener("click", ev => { if (ev.target === deleteModal) closeDeleteModal(); });
-document.getElementById("delete-confirm").addEventListener("click", async () => {
-  if (!deletingId) return;
-  const btn = document.getElementById("delete-confirm");
-  btn.disabled = true; btn.textContent = "Deleting…";
-  try {
-    await deleteDoc(doc(db,"fc_offices",deletingId));
-    deleteModal.classList.remove("open"); deletingId = null;
-  } catch(err) { alert("Failed to delete."); console.error(err); }
-  finally { btn.disabled = false; btn.textContent = "Delete"; }
-});
 </script>
 </body>
 </html>

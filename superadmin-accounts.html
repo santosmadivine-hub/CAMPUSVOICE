@@ -6,76 +6,18 @@
 <title>CampusVoice – Accounts | Super Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="cv-office.css">
 <style>
-  .page-container { flex:1; padding:28px 32px 24px; overflow-y:auto; display:flex; flex-direction:column; gap:22px; }
-  .card { background:#fff; border:1px solid #ede9fe; border-radius:14px; box-shadow:0 4px 14px rgba(124,58,237,.06); padding:22px; }
-  .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-  @media(max-width:640px){ .stat-grid{grid-template-columns:1fr;} }
-  .stat-card { position:relative; background:#fff; border:1px solid #ede9fe; border-top:4px solid #7c3aed; border-radius:14px; padding:18px 50px 18px 18px; box-shadow:0 4px 14px rgba(124,58,237,.07); display:flex; flex-direction:column; gap:4px; transition:transform .25s,box-shadow .25s; }
-  .stat-card:hover { transform:translateY(-3px); box-shadow:0 10px 24px rgba(124,58,237,.14); }
-  .stat-icon { position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:9px; background:#f5f3ff; display:flex; align-items:center; justify-content:center; font-size:15px; }
-  .stat-label { font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
-  .stat-value { font-family:'Syne',sans-serif; font-weight:700; font-size:28px; color:#0f172a; }
-  .stat-sub { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; }
-  .toolbar-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
-  .btn { border:none; cursor:pointer; border-radius:10px; padding:10px 16px; font-weight:600; font-family:'DM Sans',sans-serif; font-size:13px; transition:background .2s,transform .2s; }
-  .btn:hover:not(:disabled) { transform:translateY(-2px); }
-  .btn-add { background:linear-gradient(160deg,#8b5cf6,#7c3aed); color:#fff; box-shadow:0 4px 12px rgba(124,58,237,.28); }
-  .btn-add:disabled { opacity:.6; cursor:default; }
-  .btn-secondary { background:#e2e8f0; color:#0f172a; }
-  .btn-secondary:hover:not(:disabled) { background:#ede9fe; color:#5b21b6; }
-  .search-wrap { display:flex; align-items:center; gap:8px; height:40px; background:#f8fafc; border:1px solid #ede9fe; border-radius:10px; padding:0 12px; flex:1; min-width:200px; transition:border-color .2s; }
-  .search-wrap:focus-within { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.12); background:#fff; }
-  .search-wrap input { flex:1; border:none; outline:none; background:transparent; font-family:'DM Sans',sans-serif; font-size:13px; color:#0f172a; }
-  .search-wrap input::placeholder { color:#94a3b8; }
-  .table-wrap { overflow-x:auto; border-radius:12px; border:1px solid #ede9fe; }
-  .acc-table { width:100%; border-collapse:collapse; background:#fff; }
-  .acc-table th { text-align:left; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#475569; padding:12px 16px; border-bottom:2px solid #ede9fe; background:#faf5ff; white-space:nowrap; position:sticky; top:0; }
-  .acc-table td { padding:12px 16px; border-bottom:1px solid #faf5ff; font-family:'DM Sans',sans-serif; font-size:13px; color:#334155; vertical-align:middle; }
-  .acc-table tbody tr:hover td { background:#faf5ff; }
-  .acc-table tbody tr:hover td:first-child { box-shadow:inset 4px 0 0 #7c3aed; }
-  .acc-table tbody tr:last-child td { border-bottom:none; }
-  .row-idx { color:#94a3b8; font-size:12px; }
-  .empty-row td { text-align:center; color:#94a3b8; padding:36px 0 !important; }
-  .avatar-cell { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#7c3aed,#a78bfa); display:flex; align-items:center; justify-content:center; font-size:14px; color:#fff; font-weight:700; flex-shrink:0; }
-  .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:6px; font-weight:600; font-size:12px; white-space:nowrap; }
-  .badge-active { background:#dcfce7; color:#166534; }
-  .badge-inactive { background:#fee2e2; color:#991b1b; }
-  .btn-edit, .btn-toggle, .btn-pwd { background:none; border:none; font-family:'DM Sans',sans-serif; font-weight:600; font-size:12px; cursor:pointer; padding:4px 8px; border-radius:7px; transition:background .2s; }
-  .btn-edit { color:#5b21b6; }
-  .btn-edit:hover { background:#ede9fe; }
-  .btn-toggle { color:#0369a1; }
-  .btn-toggle:hover { background:#e0f2fe; }
-  .btn-toggle.deactivate { color:#dc2626; }
-  .btn-toggle.deactivate:hover { background:#fee2e2; }
-  .btn-pwd { color:#059669; }
-  .btn-pwd:hover { background:#dcfce7; }
-  /* Modal */
-  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,27,50,.5); align-items:center; justify-content:center; z-index:999; padding:20px; backdrop-filter:blur(4px); }
-  .modal-overlay.open { display:flex; }
-  @keyframes cvModalIn { from{opacity:0;transform:translateY(10px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
-  .modal-content { background:#fff; border-radius:20px; width:100%; max-width:460px; box-shadow:0 32px 80px rgba(15,27,50,.26); border:1px solid #ede9fe; max-height:90vh; overflow-y:auto; animation:cvModalIn .22s cubic-bezier(.2,.9,.3,1.1); display:flex; flex-direction:column; }
-  .modal-header { display:flex; align-items:center; gap:14px; padding:22px 24px 18px; border-bottom:1px solid #faf5ff; }
-  .modal-header-icon { width:44px; height:44px; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:19px; background:linear-gradient(135deg,#ede9fe,#ddd6fe); }
-  .modal-header-icon.edit-mode { background:linear-gradient(135deg,#fef3c7,#fde68a); }
-  .modal-header-icon.pwd-mode { background:linear-gradient(135deg,#dcfce7,#bbf7d0); }
-  .modal-header-text h3 { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; margin:0; color:#0f172a; }
-  .modal-header-text p { font-family:'DM Sans',sans-serif; font-size:12px; color:#94a3b8; margin:3px 0 0; }
-  .modal-close { margin-left:auto; background:none; border:none; font-size:20px; cursor:pointer; color:#94a3b8; padding:4px; border-radius:6px; transition:background .2s; }
-  .modal-close:hover { background:#f1f5f9; }
-  .modal-body { padding:22px 24px; display:flex; flex-direction:column; gap:16px; }
-  .form-group label { display:block; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
-  .form-group input, .form-group select { width:100%; box-sizing:border-box; padding:11px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px; color:#0f172a; background:#f8fafc; transition:border-color .2s,box-shadow .2s; outline:none; }
-  .form-group input:focus, .form-group select:focus { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.12); background:#fff; }
-  .form-group .hint { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; margin-top:4px; }
-  .modal-footer { padding:16px 24px 22px; display:flex; gap:10px; justify-content:flex-end; border-top:1px solid #faf5ff; }
-  .btn-save { background:linear-gradient(160deg,#8b5cf6,#7c3aed); color:#fff; box-shadow:0 4px 12px rgba(124,58,237,.25); }
-  .btn-save:disabled { opacity:.6; cursor:default; transform:none !important; }
-  .btn-cancel { background:#e2e8f0; color:#0f172a; }
-  .btn-cancel:hover:not(:disabled) { background:#ede9fe; color:#5b21b6; }
-  .info-banner { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:12px 16px; font-family:'DM Sans',sans-serif; font-size:12px; color:#5b21b6; }
-  .msg-error { color:#dc2626; font-family:'DM Sans',sans-serif; font-size:13px; padding:8px 12px; background:#fee2e2; border-radius:8px; display:none; }
-  .msg-error.show { display:block; }
+  .username-pill {
+    font-family:'Courier New',monospace; font-size:12.5px; font-weight:700;
+    background:#f5f3ff; color:#5b21b6; padding:3px 10px; border-radius:8px; white-space:nowrap;
+  }
+  .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
+  .readonly-field {
+    padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px;
+    font-family:'DM Sans',sans-serif; font-size:14px; color:#64748b;
+    background:#f8fafc; min-height:42px;
+  }
 </style>
 </head>
 <body>
@@ -84,41 +26,79 @@
   <div class="sidebar-overlay"></div>
   <main class="main fade-in">
     <div id="topbar-mount"></div>
-    <div class="page-container">
+    <div class="page">
 
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-icon">🔑</div><div class="stat-label">Total Accounts</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">Admin FC role</div></div>
-        <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-label">Active</div><div class="stat-value" id="statActive">—</div><div class="stat-sub">Currently enabled</div></div>
-        <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-label">Inactive</div><div class="stat-value" id="statInactive">—</div><div class="stat-sub">Currently disabled</div></div>
+      <div class="banner banner-info">
+        🔑 <strong>Admin FC Accounts:</strong> These accounts sign in to the Admin FC dashboard to manage Facilities &amp; Cleanliness evaluations. They share the <code>accounts</code> collection with all other roles — changes take effect immediately.
       </div>
 
-      <div class="info-banner">
-        🔑 <strong>Admin FC Accounts:</strong> These accounts can log in to the Admin FC dashboard to manage Facilities &amp; Cleanliness evaluations. They share the same <code>accounts</code> collection. Changes take effect immediately.
-      </div>
+      <section class="stat-grid">
+        <div class="stat-card stat-primary">
+          <div class="stat-icon">🔑</div>
+          <div class="stat-label">Total Accounts</div>
+          <div class="stat-value" id="s-total">0</div>
+          <div class="stat-sub">Admin FC role</div>
+        </div>
+        <div class="stat-card stat-success">
+          <div class="stat-icon">🟢</div>
+          <div class="stat-label">Active</div>
+          <div class="stat-value" id="s-active">0</div>
+          <div class="stat-sub">can sign in right now</div>
+        </div>
+        <div class="stat-card stat-warning">
+          <div class="stat-icon">⏸</div>
+          <div class="stat-label">Deactivated</div>
+          <div class="stat-value" id="s-inactive">0</div>
+          <div class="stat-sub">access blocked</div>
+        </div>
+        <div class="stat-card stat-danger">
+          <div class="stat-icon">🏢</div>
+          <div class="stat-label">Linked Offices</div>
+          <div class="stat-value" id="s-offices">0</div>
+          <div class="stat-sub">offices in fc_offices</div>
+        </div>
+      </section>
 
       <div class="card">
-        <div class="toolbar-row">
-          <div class="search-wrap">
-            <span style="color:#94a3b8;font-size:14px;">🔍</span>
-            <input type="text" id="searchInput" placeholder="Search accounts…">
+        <div class="toolbar">
+          <div>
+            <h2 class="card-title">Admin FC Accounts</h2>
+            <div class="card-sub" id="list-summary">—</div>
           </div>
-          <button class="btn btn-add" id="addBtn">＋ Create Account</button>
+          <div class="toolbar-actions">
+            <button class="btn btn-sm btn-primary" id="create-btn">➕ Create Account</button>
+          </div>
         </div>
 
-        <div class="table-wrap">
-          <table class="acc-table">
+        <div class="filter-bar">
+          <label class="field">
+            <span class="field-label">Search</span>
+            <input type="search" id="f-search" class="input" placeholder="Name or username…">
+          </label>
+          <label class="field">
+            <span class="field-label">Status</span>
+            <select id="f-status" class="input">
+              <option value="">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="table-wrap table-scroll">
+          <table class="data-table">
             <thead>
               <tr>
                 <th>#</th>
-                <th></th>
                 <th>Display Name</th>
                 <th>Username</th>
+                <th>Gmail Address</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
-            <tbody id="accBody">
-              <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+            <tbody id="account-rows">
+              <tr><td colspan="6" class="loading-row">Loading accounts…</td></tr>
             </tbody>
           </table>
         </div>
@@ -128,68 +108,163 @@
   </main>
 </div>
 
-<!-- CREATE / EDIT MODAL -->
-<div class="modal-overlay" id="accModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-header-icon" id="modalIcon">🔑</div>
-      <div class="modal-header-text">
-        <h3 id="modalTitle">Create Account</h3>
-        <p id="modalSub">The new account can sign in to Admin FC immediately.</p>
+<!-- ===================== Create Account modal ===================== -->
+<div class="modal-overlay" id="create-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="create-title">
+    <div class="modal-head">
+      <div class="modal-icon">🔑</div>
+      <div>
+        <h3 class="modal-title" id="create-title">Create Admin FC Account</h3>
+        <div class="modal-subtitle">The new account can sign in to Admin FC immediately.</div>
       </div>
-      <button class="modal-close" id="modalClose">✕</button>
     </div>
+
     <div class="modal-body">
-      <div class="form-group">
-        <label for="inpDisplayName">Display Name</label>
-        <input type="text" id="inpDisplayName" placeholder="e.g. Admin FC Staff" maxlength="80">
+      <div class="form-grid">
+        <label class="field full">
+          <span class="field-label">Display Name *</span>
+          <input type="text" id="c-displayname" class="input" autocomplete="off"
+                 placeholder="e.g. Facilities &amp; Cleanliness Admin" maxlength="80">
+        </label>
+
+        <label class="field">
+          <span class="field-label">Username *</span>
+          <input type="text" id="c-username" class="input input-mono" autocomplete="off"
+                 placeholder="e.g. adminfc2" maxlength="48">
+          <span class="field-hint">Lowercase letters, numbers, dots and dashes.</span>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Gmail Address *</span>
+          <input type="email" id="c-email" class="input" autocomplete="off"
+                 placeholder="admin@gmail.com">
+          <span class="field-hint">Must be a valid @gmail.com address — used for sign-in.</span>
+        </label>
+
+        <label class="field full">
+          <span class="field-label">Password *</span>
+          <input type="text" id="c-password" class="input input-mono" autocomplete="new-password">
+          <span class="field-hint">At least 6 characters, with a letter and a number.</span>
+        </label>
+
+        <div class="field full">
+          <button class="btn btn-sm" type="button" id="c-suggest">🎲 Suggest a strong password</button>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="inpUsername">Username</label>
-        <input type="text" id="inpUsername" placeholder="e.g. adminfc2" maxlength="40">
-        <div class="hint" id="emailPreview">Email will be: <strong id="emailPreviewVal">—</strong></div>
+
+      <div class="field-error" id="c-error"></div>
+
+      <div class="banner banner-warn" style="margin:14px 0 0;">
+        Write the password down before saving — Firebase Authentication stores it in a form
+        nobody can read back, so it cannot be shown again after this modal closes.
       </div>
-      <div class="form-group" id="pwdGroup">
-        <label for="inpPassword">Password</label>
-        <input type="password" id="inpPassword" placeholder="Min. 6 characters" maxlength="80">
-      </div>
-      <div class="form-group" id="statusGroup" style="display:none;">
-        <label for="inpStatus">Status</label>
-        <select id="inpStatus">
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-      </div>
-      <div class="msg-error" id="modalError"></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-cancel" id="cancelBtn">Cancel</button>
-      <button class="btn btn-save" id="saveBtn">Create Account</button>
+
+    <div class="modal-actions">
+      <button class="btn" id="c-cancel">Cancel</button>
+      <button class="btn btn-primary" id="c-save">Save Account</button>
     </div>
   </div>
 </div>
 
-<!-- CHANGE PASSWORD MODAL -->
-<div class="modal-overlay" id="pwdModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div class="modal-header-icon pwd-mode">🔒</div>
-      <div class="modal-header-text">
-        <h3>Change Password</h3>
-        <p id="pwdModalSub">Set a new password for this account.</p>
+<!-- ===================== Credentials hand-off ===================== -->
+<div class="modal-overlay" id="done-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="done-title">
+    <div class="modal-head">
+      <div class="modal-icon">✅</div>
+      <div>
+        <h3 class="modal-title" id="done-title">Account Created</h3>
+        <div class="modal-subtitle" id="done-subtitle"></div>
       </div>
-      <button class="modal-close" id="pwdModalClose">✕</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label for="inpNewPwd">New Password</label>
-        <input type="password" id="inpNewPwd" placeholder="Min. 6 characters" maxlength="80">
+      <p>Give these credentials to the Admin FC staff member. They sign in at the admin login page using their Gmail address or username.</p>
+      <div class="credential-box">
+        <div class="credential-row">
+          <span class="credential-key">Name</span>
+          <span class="credential-val" id="done-name"></span>
+        </div>
+        <div class="credential-row">
+          <span class="credential-key">Username</span>
+          <span class="credential-val" id="done-username"></span>
+        </div>
+        <div class="credential-row">
+          <span class="credential-key">Gmail</span>
+          <span class="credential-val" id="done-email"></span>
+        </div>
+        <div class="credential-row">
+          <span class="credential-key">Password</span>
+          <span class="credential-val" id="done-password"></span>
+        </div>
       </div>
-      <div class="msg-error" id="pwdError"></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-cancel" id="pwdCancelBtn">Cancel</button>
-      <button class="btn btn-save" id="pwdSaveBtn">Change Password</button>
+    <div class="modal-actions">
+      <button class="btn" id="done-copy">📋 Copy credentials</button>
+      <button class="btn btn-primary" id="done-close">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Edit Account modal ===================== -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+    <div class="modal-head">
+      <div class="modal-icon">✏️</div>
+      <div>
+        <h3 class="modal-title" id="edit-title">Edit Account</h3>
+        <div class="modal-subtitle" id="edit-subtitle"></div>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <label class="field full">
+          <span class="field-label">Display Name *</span>
+          <input type="text" id="e-displayname" class="input" autocomplete="off" maxlength="80">
+        </label>
+
+        <label class="field full">
+          <span class="field-label">Status</span>
+          <select id="e-status" class="input">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </label>
+
+        <div class="field full">
+          <span class="field-label">Username</span>
+          <div class="readonly-field input-mono" id="e-username-ro"></div>
+          <span class="field-hint">Username cannot be changed after account creation.</span>
+        </div>
+
+        <div class="field full">
+          <span class="field-label">Gmail Address</span>
+          <div class="readonly-field" id="e-email-ro"></div>
+          <span class="field-hint">Gmail address cannot be changed after account creation.</span>
+        </div>
+      </div>
+
+      <div class="field-error" id="e-error"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" id="e-cancel">Cancel</button>
+      <button class="btn btn-primary" id="e-save">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Generic confirm ===================== -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal-head">
+      <div class="modal-icon warn" id="confirm-icon">❓</div>
+      <h3 class="modal-title" id="confirm-title">Confirm</h3>
+    </div>
+    <div class="modal-body" id="confirm-body"></div>
+    <div class="modal-actions">
+      <button class="btn" id="confirm-cancel">Cancel</button>
+      <button class="btn btn-primary" id="confirm-ok">Confirm</button>
     </div>
   </div>
 </div>
@@ -197,232 +272,297 @@
 <script src="shared.js"></script>
 <script type="module">
 import {
-  guard, db, auth, collection, doc, getDoc, setDoc, updateDoc, onSnapshot,
-  query, where, signOut, createUserWithEmailAndPassword, updatePassword,
-  serverTimestamp, firebaseConfig
+  guard, db, collection, doc, getDoc, setDoc, updateDoc, onSnapshot,
+  query, where, serverTimestamp, firebaseConfig,
+  validatePassword, validateGmailAddress
 } from './cv-core.js';
 import {
-  initializeApp, getApps, deleteApp
-} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import {
-  getAuth, signOut as fbSignOut, updatePassword as fbUpdatePassword
-} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  suggestPassword, slugUsername, validateUsername
+} from './cv-accounts.js';
+import { initializeApp, deleteApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signOut as fbSignOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
 const session = await guard(['superadmin']);
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'accounts');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Accounts', 'superadmin');
 
-const accCol  = query(collection(db, 'accounts'), where('role', '==', 'adminfc'));
-let allAccounts = [];
-let searchTerm  = '';
-let editId      = null;    // null = create, string = edit existing account
-let pwdTargetUid = null;
+const accCol = query(collection(db, 'accounts'), where('role', '==', 'adminfc'));
+const offCol = collection(db, 'fc_offices');
 
-function slugify(s) { return String(s).trim().toLowerCase().replace(/[^a-z0-9_.-]/g, ''); }
+let allAccounts  = [];
+let officeCount  = 0;
+let filterSearch = '';
+let filterStatus = '';
+let editId       = null;
+let confirmResolve = null;
+let lastCreated  = null;
 
-// Stats
+// ── Stats ──────────────────────────────────────────────────────────────────
 function updateStats() {
-  document.getElementById('statTotal').textContent   = allAccounts.length;
-  document.getElementById('statActive').textContent  = allAccounts.filter(a => (a.status||'active')==='active').length;
-  document.getElementById('statInactive').textContent= allAccounts.filter(a => (a.status||'active')==='inactive').length;
+  const active   = allAccounts.filter(a => (a.status || 'active') === 'active').length;
+  const inactive = allAccounts.filter(a => (a.status || 'active') === 'inactive').length;
+  document.getElementById('s-total').textContent    = allAccounts.length;
+  document.getElementById('s-active').textContent   = active;
+  document.getElementById('s-inactive').textContent = inactive;
+  document.getElementById('s-offices').textContent  = officeCount;
+  document.getElementById('list-summary').textContent =
+    `${allAccounts.length} account${allAccounts.length !== 1 ? 's' : ''} — ${active} active, ${inactive} inactive`;
 }
 
-// Table
+// ── Table ──────────────────────────────────────────────────────────────────
 function renderTable() {
-  const tbody = document.getElementById('accBody');
-  const term  = searchTerm.trim().toLowerCase();
-  const list  = term
-    ? allAccounts.filter(a => (a.displayName||'').toLowerCase().includes(term) || (a.username||'').toLowerCase().includes(term))
-    : allAccounts;
+  const tbody = document.getElementById('account-rows');
+  let list = allAccounts.slice();
+
+  if (filterSearch) {
+    const t = filterSearch.toLowerCase();
+    list = list.filter(a =>
+      (a.displayName || '').toLowerCase().includes(t) ||
+      (a.username    || '').toLowerCase().includes(t) ||
+      (a.email       || '').toLowerCase().includes(t)
+    );
+  }
+  if (filterStatus) {
+    list = list.filter(a => (a.status || 'active') === filterStatus);
+  }
 
   if (!list.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">${term ? 'No accounts match your search.' : 'No Admin FC accounts yet. Click "＋ Create Account" to add one.'}</td></tr>`;
+    const msg = (filterSearch || filterStatus)
+      ? 'No accounts match the filter.'
+      : 'No Admin FC accounts yet. Click "➕ Create Account" to add one.';
+    tbody.innerHTML = `<tr><td colspan="6" class="loading-row">${msg}</td></tr>`;
     return;
   }
 
   tbody.innerHTML = list.map((a, i) => {
-    const initials = (a.displayName || a.username || '?').charAt(0).toUpperCase();
-    const status   = (a.status || 'active');
-    const toggleLabel = status === 'active' ? '🔴 Deactivate' : '🟢 Activate';
-    const toggleClass = status === 'active' ? 'deactivate' : '';
-    return `
-      <tr>
-        <td class="row-idx">${i + 1}</td>
-        <td><div class="avatar-cell">${initials}</div></td>
-        <td style="font-weight:600;">${escHtml(a.displayName || '—')}</td>
-        <td style="color:#64748b;">@${escHtml(a.username || '—')}</td>
-        <td><span class="badge badge-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
-        <td style="white-space:nowrap;">
-          <button class="btn-edit"   onclick="openEdit('${a.id}')">✏️ Edit</button>
-          <button class="btn-toggle ${toggleClass}" onclick="toggleStatus('${a.id}', '${status}')">${toggleLabel}</button>
-          <button class="btn-pwd"    onclick="openPwd('${a.id}', '${escAttr(a.displayName || a.username || '')}')">🔒 Password</button>
-        </td>
-      </tr>`;
+    const status   = a.status || 'active';
+    const isActive = status === 'active';
+    return `<tr>
+      <td class="row-num">${i + 1}</td>
+      <td style="font-weight:600;">${escHtml(a.displayName || '—')}</td>
+      <td><span class="username-pill">@${escHtml(a.username || '—')}</span></td>
+      <td class="cell-muted cell-wrap">${escHtml(a.email || '—')}</td>
+      <td><span class="badge-pill ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? 'Active' : 'Inactive'}</span></td>
+      <td class="cell-actions row-actions">
+        <button class="btn btn-sm" onclick="openEdit('${escAttr(a.id)}')">✏️ Edit</button>
+        <button class="btn btn-sm ${isActive ? 'btn-danger' : 'btn-success'}"
+                onclick="toggleStatus('${escAttr(a.id)}','${status}','${escAttr(a.displayName || a.username || '')}')">
+          ${isActive ? '⏸ Deactivate' : '▶ Activate'}
+        </button>
+      </td>
+    </tr>`;
   }).join('');
 }
 
 onSnapshot(accCol, snap => {
   allAccounts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => (a.displayName||'').localeCompare(b.displayName||''));
+    .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
   updateStats();
   renderTable();
 });
 
-document.getElementById('searchInput').addEventListener('input', e => {
-  searchTerm = e.target.value;
-  renderTable();
+onSnapshot(offCol, snap => {
+  officeCount = snap.size;
+  updateStats();
 });
 
-// Username → email preview
-document.getElementById('inpUsername').addEventListener('input', e => {
-  const slug = slugify(e.target.value);
-  document.getElementById('emailPreviewVal').textContent = slug ? `${slug}@campusvoice.isufst` : '—';
+document.getElementById('f-search').addEventListener('input', e => { filterSearch = e.target.value; renderTable(); });
+document.getElementById('f-status').addEventListener('change', e => { filterStatus = e.target.value; renderTable(); });
+
+// ── Confirm modal helper ───────────────────────────────────────────────────
+function showConfirm(icon, title, bodyHtml, okLabel, okClass) {
+  document.getElementById('confirm-icon').textContent = icon;
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-body').innerHTML = bodyHtml;
+  const okBtn = document.getElementById('confirm-ok');
+  okBtn.textContent = okLabel || 'Confirm';
+  okBtn.className = `btn ${okClass || 'btn-primary'}`;
+  document.getElementById('confirm-modal').classList.add('open');
+  return new Promise(resolve => { confirmResolve = resolve; });
+}
+document.getElementById('confirm-ok').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.remove('open');
+  if (confirmResolve) { confirmResolve(true); confirmResolve = null; }
+});
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.remove('open');
+  if (confirmResolve) { confirmResolve(false); confirmResolve = null; }
 });
 
-// Modal helpers
-function showModal(modal) { modal.classList.add('open'); }
-function hideModal(modal) { modal.classList.remove('open'); }
-function showError(elId, msg) {
-  const el = document.getElementById(elId);
-  el.textContent = msg;
-  el.classList.add('show');
-}
-function clearError(elId) {
-  const el = document.getElementById(elId);
-  el.textContent = '';
-  el.classList.remove('show');
-}
+// ── Create modal ───────────────────────────────────────────────────────────
+document.getElementById('create-btn').addEventListener('click', () => {
+  ['c-displayname','c-username','c-email','c-password'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('c-error').textContent = '';
+  document.getElementById('create-modal').classList.add('open');
+  document.getElementById('c-displayname').focus();
+});
 
-function openCreate() {
-  editId = null;
-  document.getElementById('modalTitle').textContent  = 'Create Account';
-  document.getElementById('modalSub').textContent    = 'The new account can sign in to Admin FC immediately.';
-  document.getElementById('modalIcon').className     = 'modal-header-icon';
-  document.getElementById('saveBtn').textContent     = 'Create Account';
-  document.getElementById('inpDisplayName').value   = '';
-  document.getElementById('inpUsername').value      = '';
-  document.getElementById('inpPassword').value      = '';
-  document.getElementById('emailPreviewVal').textContent = '—';
-  document.getElementById('inpUsername').disabled   = false;
-  document.getElementById('pwdGroup').style.display = '';
-  document.getElementById('statusGroup').style.display = 'none';
-  clearError('modalError');
-  showModal(document.getElementById('accModal'));
-}
+document.getElementById('c-cancel').addEventListener('click', () => {
+  document.getElementById('create-modal').classList.remove('open');
+});
 
+document.getElementById('c-suggest').addEventListener('click', () => {
+  document.getElementById('c-password').value = suggestPassword();
+});
+
+document.getElementById('c-save').addEventListener('click', async () => {
+  const errEl = document.getElementById('c-error');
+  errEl.textContent = '';
+
+  const displayName = document.getElementById('c-displayname').value.trim();
+  const username    = slugUsername(document.getElementById('c-username').value);
+  const email       = document.getElementById('c-email').value.trim().toLowerCase();
+  const password    = document.getElementById('c-password').value;
+
+  if (!displayName) { errEl.textContent = 'Display name is required.'; return; }
+  const unErr = validateUsername(username);
+  if (unErr) { errEl.textContent = unErr; return; }
+  const emailErr = validateGmailAddress(email);
+  if (emailErr) { errEl.textContent = emailErr; return; }
+  const pwdErr = validatePassword(password);
+  if (pwdErr) { errEl.textContent = pwdErr; return; }
+
+  const btn = document.getElementById('c-save');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    // Check username uniqueness
+    const idxSnap = await getDoc(doc(db, 'account_index', username));
+    if (idxSnap.exists()) { errEl.textContent = 'Username is already taken.'; return; }
+
+    // Create Auth user via secondary app so Super Admin stays signed in
+    const secondaryApp = initializeApp(firebaseConfig, 'sa-create-' + Date.now());
+    const secondaryAuth = getAuth(secondaryApp);
+    let newUid;
+    try {
+      const { createUserWithEmailAndPassword } =
+        await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
+      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      newUid = cred.user.uid;
+      await fbSignOut(secondaryAuth);
+    } finally {
+      await deleteApp(secondaryApp).catch(() => {});
+    }
+
+    // Write Firestore account doc
+    await setDoc(doc(db, 'accounts', newUid), {
+      uid: newUid, email, username, displayName,
+      role: 'adminfc', status: 'active',
+      createdAt: serverTimestamp(), createdBy: session.uid,
+      updatedAt: serverTimestamp(), updatedBy: session.uid
+    });
+
+    // Write account_index for username login lookup
+    await setDoc(doc(db, 'account_index', username), { uid: newUid, email });
+
+    lastCreated = { name: displayName, username, email, password };
+    document.getElementById('create-modal').classList.remove('open');
+
+    // Show credential done-modal
+    document.getElementById('done-name').textContent     = displayName;
+    document.getElementById('done-username').textContent = username;
+    document.getElementById('done-email').textContent    = email;
+    document.getElementById('done-password').textContent = password;
+    document.getElementById('done-subtitle').textContent = `Account for ${displayName} created successfully.`;
+    document.getElementById('done-modal').classList.add('open');
+
+  } catch (err) {
+    let msg = err.message || 'An error occurred.';
+    if (err.code === 'auth/email-already-in-use') msg = 'That Gmail address is already registered.';
+    if (err.code === 'auth/weak-password')        msg = 'Password is too weak. Use at least 6 characters.';
+    errEl.textContent = msg;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Account';
+  }
+});
+
+// ── Done modal ─────────────────────────────────────────────────────────────
+document.getElementById('done-copy').addEventListener('click', () => {
+  if (!lastCreated) return;
+  const text = [
+    `Name: ${lastCreated.name}`,
+    `Username: ${lastCreated.username}`,
+    `Gmail: ${lastCreated.email}`,
+    `Password: ${lastCreated.password}`
+  ].join('\n');
+  navigator.clipboard.writeText(text).catch(() => {});
+});
+
+document.getElementById('done-close').addEventListener('click', () => {
+  document.getElementById('done-modal').classList.remove('open');
+  lastCreated = null;
+});
+
+// ── Edit modal ─────────────────────────────────────────────────────────────
 window.openEdit = (id) => {
   const a = allAccounts.find(x => x.id === id);
   if (!a) return;
   editId = id;
-  document.getElementById('modalTitle').textContent  = 'Edit Account';
-  document.getElementById('modalSub').textContent    = 'Password is unchanged — use "Change Password" if needed.';
-  document.getElementById('modalIcon').className     = 'modal-header-icon edit-mode';
-  document.getElementById('saveBtn').textContent     = 'Save Changes';
-  document.getElementById('inpDisplayName').value   = a.displayName || '';
-  document.getElementById('inpUsername').value      = a.username || '';
-  document.getElementById('emailPreviewVal').textContent = a.email || `${a.username}@campusvoice.isufst`;
-  document.getElementById('inpUsername').disabled   = true;  // username/email must not change
-  document.getElementById('pwdGroup').style.display = 'none';
-  document.getElementById('statusGroup').style.display = '';
-  document.getElementById('inpStatus').value        = a.status || 'active';
-  clearError('modalError');
-  showModal(document.getElementById('accModal'));
+  document.getElementById('e-displayname').value      = a.displayName || '';
+  document.getElementById('e-status').value           = a.status || 'active';
+  document.getElementById('e-username-ro').textContent = a.username || '—';
+  document.getElementById('e-email-ro').textContent    = a.email || '—';
+  document.getElementById('edit-subtitle').textContent =
+    `Editing account for ${a.displayName || a.username || 'this account'}`;
+  document.getElementById('e-error').textContent = '';
+  document.getElementById('edit-modal').classList.add('open');
+  document.getElementById('e-displayname').focus();
 };
 
-function closeAccModal() {
-  hideModal(document.getElementById('accModal'));
+document.getElementById('e-cancel').addEventListener('click', () => {
+  document.getElementById('edit-modal').classList.remove('open');
   editId = null;
-}
-
-document.getElementById('addBtn').addEventListener('click', openCreate);
-document.getElementById('modalClose').addEventListener('click', closeAccModal);
-document.getElementById('cancelBtn').addEventListener('click', closeAccModal);
-document.getElementById('accModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('accModal')) closeAccModal();
 });
 
-// Save (create or edit)
-document.getElementById('saveBtn').addEventListener('click', async () => {
-  clearError('modalError');
-  const displayName = document.getElementById('inpDisplayName').value.trim();
-  const username    = slugify(document.getElementById('inpUsername').value);
-  const password    = document.getElementById('inpPassword').value;
-  const status      = document.getElementById('inpStatus').value || 'active';
+document.getElementById('e-save').addEventListener('click', async () => {
+  const errEl = document.getElementById('e-error');
+  errEl.textContent = '';
+  const displayName = document.getElementById('e-displayname').value.trim();
+  const status      = document.getElementById('e-status').value || 'active';
 
-  if (!displayName) { showError('modalError', 'Display name is required.'); return; }
-  if (!username)    { showError('modalError', 'Username is required.'); return; }
+  if (!displayName) { errEl.textContent = 'Display name is required.'; return; }
 
-  const saveBtn = document.getElementById('saveBtn');
-  saveBtn.disabled = true;
-  saveBtn.textContent = 'Saving…';
+  const btn = document.getElementById('e-save');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
 
   try {
-    if (editId) {
-      // Edit — only displayName and status can change (username/email immutable)
-      await updateDoc(doc(db, 'accounts', editId), {
-        displayName, status,
-        updatedAt: serverTimestamp(),
-        updatedBy: session.uid
-      });
-      closeAccModal();
-    } else {
-      // Create — need new Firebase Auth user via secondary app
-      if (!password || password.length < 6) { showError('modalError', 'Password must be at least 6 characters.'); return; }
-
-      const email = `${username}@campusvoice.isufst`;
-
-      // Check username uniqueness
-      const idxSnap = await getDoc(doc(db, 'account_index', username));
-      if (idxSnap.exists()) { showError('modalError', 'Username is already taken.'); return; }
-
-      // Create Auth user via secondary app so Super Admin stays signed in
-      const secondaryApp = initializeApp(firebaseConfig, 'sa-create-' + Date.now());
-      const secondaryAuth = getAuth(secondaryApp);
-      let newUid;
-      try {
-        const cred = await (await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'))
-          .createUserWithEmailAndPassword(secondaryAuth, email, password);
-        newUid = cred.user.uid;
-        await fbSignOut(secondaryAuth);
-      } finally {
-        await deleteApp(secondaryApp).catch(() => {});
-      }
-
-      // Write Firestore account doc
-      await setDoc(doc(db, 'accounts', newUid), {
-        uid: newUid, email, username, displayName,
-        role: 'adminfc', status: 'active',
-        createdAt: serverTimestamp(),
-        createdBy: session.uid,
-        updatedAt: serverTimestamp(),
-        updatedBy: session.uid
-      });
-
-      // Write account_index for username lookup
-      await setDoc(doc(db, 'account_index', username), { uid: newUid, email });
-
-      closeAccModal();
-    }
+    await updateDoc(doc(db, 'accounts', editId), {
+      displayName, status,
+      updatedAt: serverTimestamp(),
+      updatedBy: session.uid
+    });
+    document.getElementById('edit-modal').classList.remove('open');
+    editId = null;
   } catch (err) {
-    let msg = err.message || 'An error occurred.';
-    if (err.code === 'auth/email-already-in-use') msg = 'That username is already registered as an account.';
-    if (err.code === 'auth/weak-password') msg = 'Password is too weak. Please use at least 6 characters.';
-    showError('modalError', msg);
+    errEl.textContent = err.message || 'Failed to save changes.';
   } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = editId ? 'Save Changes' : 'Create Account';
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
   }
 });
 
-// Toggle active / inactive
-window.toggleStatus = async (id, currentStatus) => {
-  const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-  const acc = allAccounts.find(a => a.id === id);
-  const name = acc?.displayName || acc?.username || 'this account';
-  if (!confirm(`${newStatus === 'inactive' ? 'Deactivate' : 'Activate'} "${name}"?`)) return;
+// ── Activate / Deactivate ──────────────────────────────────────────────────
+window.toggleStatus = async (id, currentStatus, name) => {
+  const toActive = currentStatus === 'inactive';
+  const verb = toActive ? 'Activate' : 'Deactivate';
+  const confirmed = await showConfirm(
+    toActive ? '✅' : '⚠️',
+    `${verb} Account`,
+    `<p>${verb} the account for <strong>${escHtml(name)}</strong>?${
+      !toActive ? ' They will not be able to sign in until reactivated.' : ''
+    }</p>`,
+    `${toActive ? '▶' : '⏸'} ${verb}`,
+    toActive ? 'btn-success' : 'btn-danger'
+  );
+  if (!confirmed) return;
   try {
     await updateDoc(doc(db, 'accounts', id), {
-      status: newStatus,
+      status: toActive ? 'active' : 'inactive',
       updatedAt: serverTimestamp(),
       updatedBy: session.uid
     });
@@ -431,74 +571,15 @@ window.toggleStatus = async (id, currentStatus) => {
   }
 };
 
-// Change password modal
-window.openPwd = (id, name) => {
-  pwdTargetUid = id;
-  document.getElementById('pwdModalSub').textContent = `Set a new password for "${name}".`;
-  document.getElementById('inpNewPwd').value = '';
-  clearError('pwdError');
-  showModal(document.getElementById('pwdModal'));
-};
-
-function closePwdModal() {
-  hideModal(document.getElementById('pwdModal'));
-  pwdTargetUid = null;
+// ── Utils ──────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-document.getElementById('pwdModalClose').addEventListener('click', closePwdModal);
-document.getElementById('pwdCancelBtn').addEventListener('click', closePwdModal);
-document.getElementById('pwdModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('pwdModal')) closePwdModal();
-});
-
-document.getElementById('pwdSaveBtn').addEventListener('click', async () => {
-  clearError('pwdError');
-  const newPwd = document.getElementById('inpNewPwd').value;
-  if (!newPwd || newPwd.length < 6) { showError('pwdError', 'Password must be at least 6 characters.'); return; }
-  if (!pwdTargetUid) return;
-
-  const btn = document.getElementById('pwdSaveBtn');
-  btn.disabled = true; btn.textContent = 'Saving…';
-
-  try {
-    // Look up the account to get email
-    const accSnap = await getDoc(doc(db, 'accounts', pwdTargetUid));
-    if (!accSnap.exists()) throw new Error('Account not found.');
-    const accData = accSnap.data();
-    const email   = accData.email || `${accData.username}@campusvoice.isufst`;
-
-    // Sign in via secondary app then update password
-    const secondaryApp = initializeApp(firebaseConfig, 'sa-pwd-' + Date.now());
-    const secondaryAuth = getAuth(secondaryApp);
-    try {
-      const { signInWithEmailAndPassword: saSignIn } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
-      // We can't sign in without the current password — use Admin SDK approach.
-      // Since we don't have Admin SDK here, we use sendPasswordResetEmail as a
-      // fallback to let the account holder reset it themselves, OR we store a
-      // flag that forces a reset on next login (simplest client-only approach).
-      // For now we update the account doc with a pendingPwdReset flag and the
-      // new hashed password is managed by Firebase directly.
-      //
-      // Real-time password change without Admin SDK: not possible from client SDK
-      // without the user being signed in. We inform the Super Admin.
-      await fbSignOut(secondaryAuth);
-      throw { code: 'client-only', message: 'Direct password reset requires Firebase Admin SDK. Please use the Firebase Console to reset this account\'s password, or ask the account holder to use "Forgot Password" on the login page.' };
-    } finally {
-      await deleteApp(secondaryApp).catch(() => {});
-    }
-  } catch (err) {
-    if (err.code === 'client-only') {
-      showError('pwdError', err.message);
-    } else {
-      showError('pwdError', err.message || 'Failed to change password.');
-    }
-  } finally {
-    btn.disabled = false; btn.textContent = 'Change Password';
-  }
-});
-
-// Utils
-function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escAttr(str) { return String(str).replace(/'/g,"&#39;").replace(/"/g,'&quot;'); }
+function escAttr(s) {
+  return String(s).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+}
 </script>
 </body>
 </html>
