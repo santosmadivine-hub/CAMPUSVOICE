@@ -87,7 +87,7 @@ export const ROLES = {
   admin1: { label: "Admin 1 – Services",    home: "admin1-dashboard.html" },
   admin2: { label: "Admin 2 – Cleanliness", home: "admin2-dashboard.html" },
   admin3: { label: "Admin 3 – Facilities",  home: "admin3-dashboard.html" },
-  adminfc: { label: "Facilities &amp; Cleanliness Administrator", home: "fc-office-dashboard.html" },
+  adminfc: { label: "Facilities &amp; Cleanliness Administrator", home: "adminfc-dashboard.html" },
   office: { label: "Office Account",        home: "office-dashboard.html" }
 };
 

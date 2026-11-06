@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Analytics | FC Office</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  /* Office banner */
+  .office-banner {
+    display:flex; align-items:center; gap:14px;
+    background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);
+    border:1.5px solid #bfdbfe; border-left:5px solid #2563eb;
+    border-radius:14px; padding:14px 20px; margin-bottom:24px;
+  }
+  .office-banner-icon { font-size:28px; flex-shrink:0; }
+  .office-banner-label { font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; color:#3b82f6; text-transform:uppercase; letter-spacing:.06em; margin-bottom:2px; }
+  .office-banner-name  { font-family:'Syne',sans-serif; font-size:19px; font-weight:800; color:#1e40af; line-height:1.1; }
+  .office-banner-sub   { font-family:'DM Sans',sans-serif; font-size:12px; color:#64748b; margin-top:2px; }
+
+  .card { background:#fff; border-radius:18px; padding:18px; border:1px solid #bae6fd; box-shadow:0 4px 14px rgba(15,23,42,.05); margin-bottom:28px; transition:transform .25s,box-shadow .25s,border-color .25s; }
+  .card:hover { transform:translateY(-3px); border-color:#7dd3fc; box-shadow:0 12px 28px rgba(15,23,42,.10); }
+  .card-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin:0; transition:color .2s; }
+  .card:hover > .card-title { color:#1d4ed8; }
+  .card-sub { font-size:14px; font-weight:400; color:#94a3b8; }
+
+  .stat-grid-alt { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:24px; }
+  .stat-card-alt { position:relative; background:linear-gradient(180deg,#fff 0%,#f8fbff 100%); border:1px solid #bae6fd; border-top:4px solid #2563eb; border-radius:16px; padding:20px 20px 22px; box-shadow:0 4px 14px rgba(15,23,42,.05); display:flex; flex-direction:column; gap:6px; overflow:hidden; transition:transform .25s,box-shadow .25s,border-color .25s; }
+  .stat-card-alt::before { content:attr(data-icon); position:absolute; top:18px; right:18px; width:38px; height:38px; border-radius:10px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:16px; transition:transform .3s,background .3s; }
+  .stat-card-alt::after { content:""; position:absolute; right:-30px; bottom:-30px; width:110px; height:110px; border-radius:50%; background:radial-gradient(circle,rgba(37,99,235,.10),transparent 70%); transition:transform .35s; pointer-events:none; }
+  .stat-card-alt:hover { transform:translateY(-6px); border-color:#7dd3fc; box-shadow:0 14px 30px rgba(37,99,235,.16); }
+  .stat-card-alt:hover::after { transform:scale(1.5); }
+  .stat-card-alt:hover::before { background:#dbeafe; transform:rotate(-8deg) scale(1.12); }
+  .stat-card-alt.accent-green  { border-top-color:#10b981; }
+  .stat-card-alt.accent-purple { border-top-color:#8b5cf6; }
+  .stat-card-alt.accent-orange { border-top-color:#f97316; }
+  .stat-card-alt .sca-label { font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+  .stat-card-alt .sca-value { font-family:'Syne',sans-serif; font-size:30px; font-weight:700; color:#0f172a; line-height:1.1; transition:color .25s; }
+  .stat-card-alt:hover .sca-value { color:#2563eb; }
+  .stat-card-alt.accent-green .sca-value  { color:#10b981; }
+  .stat-card-alt.accent-purple .sca-value { color:#8b5cf6; }
+  .stat-card-alt.accent-orange .sca-value { color:#f97316; }
+  .stat-card-alt.accent-green:hover .sca-value  { color:#059669; }
+  .stat-card-alt.accent-purple:hover .sca-value { color:#7c3aed; }
+  .stat-card-alt.accent-orange:hover .sca-value { color:#ea580c; }
+  .stat-card-alt .sca-sub { font-family:'DM Sans',sans-serif; font-size:12px; color:#94a3b8; margin-top:4px; }
+
+  .analytics-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .pie-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+
+  .bar-chart { display:flex; flex-direction:column; gap:12px; }
+  .bar-row { display:flex; align-items:center; gap:12px; }
+  .bar-label { font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; color:#334155; min-width:70px; }
+  .bar-track { flex:1; height:24px; background:#f1f5f9; border-radius:6px; overflow:hidden; }
+  .bar-fill { height:100%; background:#2563eb; border-radius:6px; transition:width .3s; }
+  .bar-value { font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600; color:#334155; min-width:50px; text-align:right; }
+  .lb-empty { text-align:center; color:#94a3b8; padding:20px 0; font-family:'DM Sans',sans-serif; font-size:14px; font-style:italic; }
+
+  .chart-wrap { position:relative; height:260px; background:#f2f4f9; border-radius:10px; padding:16px; margin-top:8px; transition:box-shadow .25s,background .25s; }
+  .chart-wrap:hover { background:#eef4fb; box-shadow:inset 0 0 0 1px #bae6fd; }
+  .chart-wrap canvas { display:block; width:100%!important; height:100%!important; }
+  .chart-error { padding:32px 16px; text-align:center; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; font-size:14px; }
+
+  /* Status bar chart */
+  .status-vbar-wrap { display:flex; gap:8px; }
+  .status-vbar-yaxis { flex:0 0 32px; width:32px; position:relative; font-family:'DM Sans',sans-serif; font-size:10px; color:#94a3b8; }
+  .status-vbar-yaxis span { position:absolute; right:6px; transform:translateY(-50%); }
+  .status-vbar-chart { flex:1; display:flex; align-items:flex-end; justify-content:space-around; border-left:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; padding:0 12px; }
+  .status-vbar-group { display:flex; align-items:flex-end; gap:8px; height:100%; }
+  .status-vbar-col { width:34px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; cursor:help; }
+  .status-vbar-col:hover .status-vbar-fill { filter:brightness(1.1); box-shadow:0 -4px 12px rgba(15,23,42,.18); }
+  .status-vbar-col:hover .status-vbar-value { color:#2563eb; transform:translateY(-2px); }
+  .status-vbar-fill { width:100%; border-radius:4px 4px 0 0; min-height:1px; transition:height .3s,filter .2s,box-shadow .2s; }
+  .status-vbar-value { font-family:'DM Sans',sans-serif; font-size:10.5px; font-weight:700; color:#334155; margin-bottom:4px; transition:color .2s,transform .2s; }
+  .status-vbar-labels { display:flex; justify-content:space-around; margin:8px 0 0; padding:0 12px; margin-left:32px; }
+  .status-vbar-label { font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; color:#334155; text-align:center; transition:color .2s; }
+  .status-vbar-label:hover { color:#1d4ed8; }
+  .status-vbar-legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:14px; font-family:'DM Sans',sans-serif; font-size:12px; color:#475569; }
+  .status-vbar-legend-item { display:flex; align-items:center; gap:6px; padding:4px 8px; border-radius:8px; transition:background .2s,transform .2s; }
+  .status-vbar-legend-item:hover { background:#eff6ff; transform:translateY(-1px); }
+  .status-vbar-legend-swatch { width:10px; height:10px; border-radius:3px; transition:transform .2s; }
+  .status-vbar-legend-item:hover .status-vbar-legend-swatch { transform:scale(1.35); }
+
+  /* Sex donut */
+  .evidence-donut-wrap { display:flex; align-items:center; gap:16px; margin-top:12px; flex-wrap:wrap; }
+  .evidence-donut-visual { position:relative; flex-shrink:0; }
+  .evidence-donut-svg { display:block; filter:drop-shadow(0 2px 6px rgba(15,23,42,.08)); }
+  .evidence-donut-svg path { transition:filter .2s,opacity .2s; cursor:pointer; }
+  .evidence-donut-svg path:hover { filter:brightness(1.1) drop-shadow(0 3px 6px rgba(15,23,42,.30)); }
+  .evidence-donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+  .evidence-donut-center strong { font-family:'Syne',sans-serif; font-weight:800; font-size:22px; color:#0f172a; line-height:1; transition:color .25s; }
+  .evidence-donut-visual:hover .evidence-donut-center strong { color:#2563eb; }
+  .evidence-donut-center span { font-family:'DM Sans',sans-serif; font-size:10px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:.03em; margin-top:2px; }
+  .evidence-bar-legend { flex:1; display:flex; flex-direction:column; justify-content:center; gap:10px; min-width:160px; }
+  .evidence-bar-row { display:flex; flex-direction:column; gap:4px; cursor:help; padding:6px 8px; margin:0 -8px; border-radius:10px; transition:background .2s,transform .2s; }
+  .evidence-bar-row:hover { background:#f0f9ff; transform:translateX(4px); }
+  .evidence-bar-row-top { display:flex; align-items:center; justify-content:space-between; font-family:'DM Sans',sans-serif; font-size:12.5px; }
+  .evidence-bar-row-label { display:flex; align-items:center; gap:6px; color:#475569; font-weight:600; }
+  .evidence-bar-row-label .dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; transition:transform .2s; }
+  .evidence-bar-row:hover .dot { transform:scale(1.4); }
+  .evidence-bar-row-value { font-family:'Syne',sans-serif; font-weight:700; color:#0f172a; font-size:12.5px; }
+  .evidence-bar-row:hover .evidence-bar-row-value { color:#2563eb; }
+  .evidence-bar-track { height:6px; background:#eef2f7; border-radius:4px; overflow:hidden; transition:height .2s; }
+  .evidence-bar-row:hover .evidence-bar-track { height:8px; }
+  .evidence-bar-fill { height:100%; border-radius:4px; transition:width .3s,filter .2s; }
+  .evidence-bar-row:hover .evidence-bar-fill { filter:brightness(1.08); }
+
+  /* Monthly trend (single office) */
+  .trend-wrap { margin-top:12px; overflow-x:auto; }
+  .trend-chart { display:flex; align-items:flex-end; gap:12px; min-height:160px; padding:0 8px 8px; border-bottom:1px solid #e2e8f0; }
+  .trend-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; min-width:40px; }
+  .trend-bar { width:100%; max-width:48px; border-radius:6px 6px 0 0; min-height:2px; transition:height .3s,filter .2s; }
+  .trend-col:hover .trend-bar { filter:brightness(1.08); }
+  .trend-label { font-family:'DM Sans',sans-serif; font-size:11px; color:#64748b; white-space:nowrap; }
+  .trend-val { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:#334155; }
+  .trend-col:hover .trend-val { color:#2563eb; }
+  .trend-empty { color:#94a3b8; padding:30px 0; font-family:'DM Sans',sans-serif; font-size:14px; text-align:center; font-style:italic; }
+
+  @media(max-width:1200px){.stat-grid-alt{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:900px){.analytics-grid,.pie-row{grid-template-columns:1fr;}}
+  @media(max-width:768px){.stat-grid-alt{grid-template-columns:repeat(2,1fr);gap:14px;}}
+  @media(max-width:600px){.stat-grid-alt{grid-template-columns:1fr;gap:12px;}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="sidebar-mount"></div>
+  <main class="main fade-in">
+    <div id="topbar-mount"></div>
+    <div style="margin-top:28px;">
+
+      <!-- Office banner -->
+      <div class="office-banner">
+        <div class="office-banner-icon">🏢</div>
+        <div>
+          <div class="office-banner-label">Your Office</div>
+          <div class="office-banner-name" id="banner-office-name">Loading…</div>
+          <div class="office-banner-sub">Analytics scoped to this office only.</div>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stat-grid-alt">
+        <div class="stat-card-alt" data-icon="📝">
+          <div class="sca-label">Total Evaluations</div>
+          <div class="sca-value" id="stat-total">0</div>
+          <div class="sca-sub">All time</div>
+        </div>
+        <div class="stat-card-alt accent-green" data-icon="😊">
+          <div class="sca-label">Avg Satisfaction</div>
+          <div class="sca-value" id="stat-avg-satisfaction">0%</div>
+          <div class="sca-sub">Across all ratings</div>
+        </div>
+        <div class="stat-card-alt accent-purple" data-icon="⏳">
+          <div class="sca-label">Pending</div>
+          <div class="sca-value" id="stat-pending">0</div>
+          <div class="sca-sub" id="stat-pending-sub">Awaiting Action</div>
+        </div>
+        <div class="stat-card-alt accent-orange" data-icon="🖼️">
+          <div class="sca-label">Total Evidence</div>
+          <div class="sca-value" id="stat-total-evidence">0</div>
+          <div class="sca-sub" id="stat-total-evidence-sub">0 images · 0 videos</div>
+        </div>
+      </div>
+
+      <!-- Status + Rating distribution -->
+      <div class="analytics-grid">
+        <div class="card">
+          <div class="card-title">Submission Status <span class="card-sub">— by category</span></div>
+          <div id="status-breakdown-chart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Rating Distribution <span class="card-sub">— overall average</span></div>
+          <div class="bar-chart" id="rating-distribution-chart" style="margin-top:12px;"></div>
+        </div>
+      </div>
+
+      <!-- Respondent pies -->
+      <div class="pie-row">
+        <div class="card">
+          <div class="card-title">Respondents by Sex</div>
+          <div id="sex-distribution-chart" style="margin-top:12px;"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Respondents by Category <span class="card-sub">— user type per cleanlinessCategory</span></div>
+          <div class="chart-wrap" id="chart-user-category-wrap">
+            <canvas id="chart-user-category"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dimension performance -->
+      <div class="card">
+        <div class="card-title">Cleanliness Dimension Performance <span class="card-sub">— Q1–Q5</span></div>
+        <div class="chart-wrap" id="chart-cl-dimensions-wrap">
+          <canvas id="chart-cl-dimensions"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Facilities Dimension Performance <span class="card-sub">— Q1–Q5</span></div>
+        <div class="chart-wrap" id="chart-fac-dimensions-wrap">
+          <canvas id="chart-fac-dimensions"></canvas>
+        </div>
+      </div>
+
+      <!-- Monthly trend (single office) -->
+      <div class="card">
+        <div class="card-title">Monthly Trend <span class="card-sub">— avg overall score (last 6 months)</span></div>
+        <div class="trend-wrap" id="monthly-trend-wrap"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="shared.js"></script>
+<script type="module">
+import { guard as cvGuard, db } from "./cv-core.js";
+const session = await cvGuard(["adminfc"]);
+
+import {
+  collection, onSnapshot, doc, getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ── Load linked office ──────────────────────────────────────────────────────
+const acctSnap = await getDoc(doc(db, "accounts", session.uid));
+const acct = acctSnap.exists() ? acctSnap.data() : {};
+const linkedOfficeName = acct.linkedOfficeName || null;
+
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("fc_office", "analytics");
+document.getElementById("topbar-mount").innerHTML  = buildTopbar("Analytics", "fc_office",
+  linkedOfficeName ? `Office: ${linkedOfficeName}` : "Office Performance");
+document.getElementById("banner-office-name").textContent = linkedOfficeName || "No Office Linked";
+
+const EVAL_COLLECTION = "facilities_cleanliness_evaluations";
+const CL_RATINGS  = [1,2,3,4,5];
+const FAC_RATINGS = [1,2,3,4,5];
+const CL_LABELS  = { 1:"The area is clean and tidy.", 2:"There are no unpleasant odors.", 3:"The area is well-maintained.", 4:"Cleaning supplies are available.", 5:"The area is properly sanitized." };
+const FAC_LABELS = { 1:"Equipment/resources are available.", 2:"Equipment/resources are working properly.", 3:"The facility has enough resources.", 4:"The facility is clean and well-maintained.", 5:"Furniture is in good condition." };
+const SEX_COLORS = { Male:"#2563eb", Female:"#ec4899", Other:"#94a3b8" };
+const USER_CATEGORY_BUCKETS = ["Student","Faculty/Staff","Visitor","Guest"];
+const CAT_COLORS = { "Comfort Room":"#0284c7", "Surroundings":"#16a34a", "Laboratories":"#7c3aed" };
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+let evaluations = [];
+let clDimChart = null, facDimChart = null, userCategoryChart = null;
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function parseTimestamp(ev) {
+  const d = ev.date;
+  if (!d) return Number(ev.timestamp) || 0;
+  if (typeof d === "number") return d;
+  if (typeof d === "object" && d.toMillis) return d.toMillis();
+  if (typeof d === "string") { const p = new Date(d).getTime(); return isNaN(p) ? 0 : p; }
+  return 0;
+}
+
+function parseEvidence(data) {
+  const items = [];
+  if (Array.isArray(data.evidenceUrls) && data.evidenceUrls.length) {
+    const types = Array.isArray(data.evidenceTypes) ? data.evidenceTypes : [];
+    data.evidenceUrls.forEach((url, i) => { if (url) items.push({ type: types[i] === "video" ? "video" : "image" }); });
+    return items;
+  }
+  if (data.evidenceUrl) { items.push({ type: data.evidenceType === "video" ? "video" : "image" }); return items; }
+  if (data.fileUrl) { items.push({ type: "image" }); return items; }
+  return items;
+}
+
+function normalizeUserCategory(value) {
+  const raw = (value ?? "").toString().trim();
+  if (!raw) return "Other";
+  const n = raw.toLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ").trim();
+  if (n === "student" || n === "students") return "Student";
+  if (["faculty","staff","faculty staff","faculty/staff","employee","personnel"].includes(n)) return "Faculty/Staff";
+  if (n === "visitor" || n === "visitors") return "Visitor";
+  if (n === "guest" || n === "guests") return "Guest";
+  return "Other";
+}
+
+function bucketSex(value) {
+  const n = (value ?? "").toString().trim().toLowerCase();
+  if (n === "male" || n === "m") return "Male";
+  if (n === "female" || n === "f") return "Female";
+  return "Other";
+}
+
+function clAvg(e) {
+  const vals = CL_RATINGS.map(i => e[`cleanlinessRating${i}`]||0).filter(v=>v>0);
+  return vals.length ? vals.reduce((a,v)=>a+v,0)/vals.length : 0;
+}
+function facAvg(e) {
+  const vals = FAC_RATINGS.map(i => e[`facilitiesRating${i}`]||0).filter(v=>v>0);
+  return vals.length ? vals.reduce((a,v)=>a+v,0)/vals.length : 0;
+}
+function overallAvg(e) {
+  const all = [...CL_RATINGS.map(i=>e[`cleanlinessRating${i}`]||0),...FAC_RATINGS.map(i=>e[`facilitiesRating${i}`]||0)].filter(v=>v>0);
+  return all.length ? all.reduce((a,v)=>a+v,0)/all.length : 0;
+}
+
+// ── Load evaluations — FILTERED TO LINKED OFFICE ──────────────────────────
+onSnapshot(collection(db, EVAL_COLLECTION), snap => {
+  evaluations = [];
+  snap.forEach(docSnap => {
+    const ev = docSnap.data();
+    // Only include evaluations for this office
+    if (linkedOfficeName && ev.officeName !== linkedOfficeName) return;
+
+    const record = {
+      id: docSnap.id,
+      officeName:          ev.officeName || "Unknown",
+      cleanlinessCategory: ev.cleanlinessCategory || "Comfort Room",
+      sex:          ev.sex || "",
+      userCategory: normalizeUserCategory(ev.userCategory),
+      timestamp:    parseTimestamp(ev),
+      rawStatus:    ev.status || "",
+      evidence:     parseEvidence(ev)
+    };
+    CL_RATINGS.forEach(i  => { record[`cleanlinessRating${i}`] = Number(ev[`cleanlinessRating${i}`])||0; });
+    FAC_RATINGS.forEach(i => { record[`facilitiesRating${i}`]  = Number(ev[`facilitiesRating${i}`]) ||0; });
+    const avg = overallAvg(record);
+    record.status = record.rawStatus === "resolved" ? "resolved" : avg < 3 ? "pending" : "no_action";
+    evaluations.push(record);
+  });
+  renderAll();
+});
+
+function renderAll() {
+  renderStatCards();
+  renderSubmissionStatus();
+  renderRatingDistribution();
+  renderRespondentPies();
+  renderClDimensions();
+  renderFacDimensions();
+  renderMonthlyTrend();
+}
+
+function renderStatCards() {
+  document.getElementById("stat-total").textContent = evaluations.length;
+  const avgSat = evaluations.length ? Math.round((evaluations.reduce((s,e)=>s+overallAvg(e),0)/evaluations.length/5)*100) : 0;
+  document.getElementById("stat-avg-satisfaction").textContent = `${avgSat}%`;
+  const pending = evaluations.filter(e=>e.status==="pending").length;
+  document.getElementById("stat-pending").textContent = pending;
+  document.getElementById("stat-pending-sub").textContent = pending === 1 ? "Awaiting Action" : "Awaiting Action";
+  const totalImages = evaluations.reduce((s,e)=>s+e.evidence.filter(i=>i.type==="image").length,0);
+  const totalVideos = evaluations.reduce((s,e)=>s+e.evidence.filter(i=>i.type==="video").length,0);
+  document.getElementById("stat-total-evidence").textContent = totalImages+totalVideos;
+  document.getElementById("stat-total-evidence-sub").textContent = `${totalImages} images · ${totalVideos} videos`;
+}
+
+const STATUS_META = {
+  pending:   { label:"Pending",            color:"#f59e0b" },
+  no_action: { label:"No Action Required", color:"#2563eb" },
+  resolved:  { label:"Resolved",           color:"#10b981" }
+};
+const STATUS_VBAR_MAX_H = 200;
+
+function renderSubmissionStatus() {
+  const el = document.getElementById("status-breakdown-chart");
+  if (!evaluations.length) { el.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
+  const cats = ["Comfort Room","Surroundings","Laboratories"];
+  const statusOrder = ["pending","no_action","resolved"];
+  const totals = {}; cats.forEach(c => { totals[c] = evaluations.filter(e=>e.cleanlinessCategory===c).length; });
+  const groupsHtml = statusOrder.map(statusKey => {
+    const meta = STATUS_META[statusKey];
+    const cols = cats.map(c => {
+      const count = evaluations.filter(e=>e.cleanlinessCategory===c&&e.status===statusKey).length;
+      const pct = totals[c] ? Math.round((count/totals[c])*100) : 0;
+      const h = Math.max(1, Math.round((pct/100)*STATUS_VBAR_MAX_H));
+      return `<div class="status-vbar-col" title="${c} — ${meta.label}: ${count} of ${totals[c]} (${pct}%)"><div class="status-vbar-value">${pct}%</div><div class="status-vbar-fill" style="height:${h}px;background:${CAT_COLORS[c]};"></div></div>`;
+    }).join("");
+    return `<div class="status-vbar-group">${cols}</div>`;
+  }).join("");
+  const yAxis = [100,75,50,25,0].map(pct => { const top=STATUS_VBAR_MAX_H-(pct/100)*STATUS_VBAR_MAX_H; return `<span style="top:${top}px;">${pct}%</span>`; }).join("");
+  const xLabels = statusOrder.map(s=>`<div class="status-vbar-label">${STATUS_META[s].label}</div>`).join("");
+  const legend = cats.map(c=>`<div class="status-vbar-legend-item"><span class="status-vbar-legend-swatch" style="background:${CAT_COLORS[c]};"></span><span>${c}</span></div>`).join("");
+  el.innerHTML = `<div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;"><div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div><div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div></div><div class="status-vbar-labels">${xLabels}</div><div class="status-vbar-legend">${legend}</div>`;
+}
+
+function renderRatingDistribution() {
+  const el = document.getElementById("rating-distribution-chart");
+  const total = evaluations.length;
+  if (!total) { el.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
+  const counts = {5:0,4:0,3:0,2:0,1:0};
+  evaluations.forEach(e => { const r=Math.max(1,Math.min(5,Math.round(overallAvg(e)))); counts[r]++; });
+  const ratings=[5,4,3,2,1], colors=["#2563eb","#38bdf8","#f97316","#fb923c","#dc2626"];
+  el.innerHTML = ratings.map((r,i) => {
+    const pct = total ? Math.round((counts[r]/total)*100) : 0;
+    return `<div class="bar-row"><div class="bar-label">${r} ★</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${colors[i]};"></div></div><div class="bar-value">${counts[r]} (${pct}%)</div></div>`;
+  }).join("");
+}
+
+function sexDonutSegmentPath(cx,cy,radius,startPct,endPct) {
+  const span=endPct-startPct; if (span<=0) return "";
+  const sa=-90+(startPct/100)*360, ea=-90+(endPct/100)*360;
+  if (span>=99.99) {
+    const sr=sa*Math.PI/180, mr=(sa+180)*Math.PI/180;
+    const x1=cx+radius*Math.cos(sr),y1=cy+radius*Math.sin(sr),xm=cx+radius*Math.cos(mr),ym=cy+radius*Math.sin(mr);
+    return `M ${x1} ${y1} A ${radius} ${radius} 0 1 1 ${xm} ${ym} A ${radius} ${radius} 0 1 1 ${x1} ${y1}`;
+  }
+  const sr=sa*Math.PI/180,er=ea*Math.PI/180,x1=cx+radius*Math.cos(sr),y1=cy+radius*Math.sin(sr),x2=cx+radius*Math.cos(er),y2=cy+radius*Math.sin(er);
+  return `M ${x1} ${y1} A ${radius} ${radius} 0 ${span>50?1:0} 1 ${x2} ${y2}`;
+}
+
+function renderSexDistributionDonut() {
+  const el = document.getElementById("sex-distribution-chart");
+  const size=190,cx=size/2,cy=size/2,radius=70,sw=18,total=evaluations.length;
+  if (!total) { el.innerHTML=`<div class="evidence-donut-wrap"><div class="evidence-donut-visual" style="width:${size}px;height:${size}px;"><svg viewBox="0 0 ${size} ${size}" class="evidence-donut-svg" style="width:${size}px;height:${size}px;"><circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#eef2f7" stroke-width="${sw}"></circle></svg><div class="evidence-donut-center"><strong>0</strong><span>Respondents</span></div></div><div class="evidence-bar-legend"><div class="lb-empty" style="padding:0;">No data yet.</div></div></div>`; return; }
+  const counts={Male:0,Female:0,Other:0};
+  evaluations.forEach(e => { counts[bucketSex(e.sex)]++; });
+  const entries=["Male","Female","Other"].map(key=>({key,color:SEX_COLORS[key],count:counts[key],pct:total?Math.round((counts[key]/total)*100):0})).filter(s=>s.count>0);
+  let cum=0;
+  const segsSvg=entries.map(seg => {
+    const startPct=cum; cum+=seg.pct;
+    const d=sexDonutSegmentPath(cx,cy,radius,startPct,Math.min(cum,100));
+    if (!d) return "";
+    return `<path d="${d}" fill="none" stroke="${seg.color}" stroke-width="${sw}" stroke-linecap="${entries.length>1?"butt":"round"}"><title>${seg.key}: ${seg.count} (${seg.pct}%)</title></path>`;
+  }).join("");
+  el.innerHTML=`<div class="evidence-donut-wrap"><div class="evidence-donut-visual" style="width:${size}px;height:${size}px;"><svg viewBox="0 0 ${size} ${size}" class="evidence-donut-svg" style="width:${size}px;height:${size}px;"><circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#eef2f7" stroke-width="${sw}"></circle>${segsSvg}</svg><div class="evidence-donut-center"><strong>${total}</strong><span>Respondents</span></div></div><div class="evidence-bar-legend">${entries.map(seg=>`<div class="evidence-bar-row" title="${seg.key}: ${seg.count} (${seg.pct}% of ${total} total)"><div class="evidence-bar-row-top"><span class="evidence-bar-row-label"><span class="dot" style="background:${seg.color};"></span>${seg.key}</span><span class="evidence-bar-row-value">${seg.count} <span style="color:#94a3b8;font-weight:600;">(${seg.pct}%)</span></span></div><div class="evidence-bar-track"><div class="evidence-bar-fill" style="width:${seg.pct}%;background:${seg.color};"></div></div></div>`).join("")}</div></div>`;
+}
+
+function renderUserCategoryChart() {
+  const wrapId="chart-user-category-wrap",canvasId="chart-user-category",wrap=document.getElementById(wrapId);
+  if (userCategoryChart) { userCategoryChart.destroy(); userCategoryChart=null; }
+  if (!evaluations.length) { wrap.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
+  if (!document.getElementById(canvasId)) wrap.innerHTML=`<canvas id="${canvasId}"></canvas>`;
+  const datasets=["Comfort Room","Surroundings","Laboratories"].map(cat => {
+    const catEvals=evaluations.filter(e=>e.cleanlinessCategory===cat),catTotal=catEvals.length;
+    return { label:cat, data:USER_CATEGORY_BUCKETS.map(b=>catTotal?Number(((catEvals.filter(e=>e.userCategory===b).length/catTotal)*100).toFixed(1)):0), borderColor:CAT_COLORS[cat],backgroundColor:CAT_COLORS[cat],pointBackgroundColor:CAT_COLORS[cat],pointRadius:4,pointHoverRadius:6,borderWidth:2,tension:0.3,fill:false };
+  });
+  userCategoryChart=safeRenderChart(wrapId,canvasId,canvas=>new Chart(canvas,{type:"line",data:{labels:USER_CATEGORY_BUCKETS,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"top",labels:{font:{family:"'DM Sans', sans-serif",size:12}}},tooltip:{callbacks:{label:item=>`${item.dataset.label}: ${item.formattedValue}%`}}},scales:{y:{beginAtZero:true,min:0,max:100,ticks:{callback:v=>v+"%"}}}}}));
+}
+
+function renderClDimensions() {
+  const wrapId="chart-cl-dimensions-wrap",canvasId="chart-cl-dimensions",wrap=document.getElementById(wrapId);
+  if (clDimChart) { clDimChart.destroy(); clDimChart=null; }
+  if (!evaluations.length) { wrap.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
+  if (!document.getElementById(canvasId)) wrap.innerHTML=`<canvas id="${canvasId}"></canvas>`;
+  const computed=CL_RATINGS.map(i => {
+    const vals=evaluations.map(e=>e[`cleanlinessRating${i}`]).filter(v=>v>0);
+    const avg=vals.length?vals.reduce((a,v)=>a+v,0)/vals.length:0;
+    return {id:i,avg,pct:(avg/5)*100,count:vals.length,label:CL_LABELS[i]||`Q${i}`};
+  });
+  clDimChart=safeRenderChart(wrapId,canvasId,canvas=>new Chart(canvas,{type:"bar",data:{labels:computed.map(d=>`Q${d.id}`),datasets:[{data:computed.map(d=>Number(d.avg.toFixed(2))),backgroundColor:computed.map(d=>d.pct>=80?"#10b981":d.pct>=60?"#2563eb":d.pct>=40?"#f59e0b":"#ef4444"),borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:items=>computed[items[0].dataIndex].label,label:item=>{const d=computed[item.dataIndex];return `Avg ${d.avg.toFixed(2)}/5 — ${d.count} response${d.count!==1?"s":""}`;} }}},scales:{y:{beginAtZero:true,max:5}}}}));
+}
+
+function renderFacDimensions() {
+  const wrapId="chart-fac-dimensions-wrap",canvasId="chart-fac-dimensions",wrap=document.getElementById(wrapId);
+  if (facDimChart) { facDimChart.destroy(); facDimChart=null; }
+  if (!evaluations.length) { wrap.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
+  if (!document.getElementById(canvasId)) wrap.innerHTML=`<canvas id="${canvasId}"></canvas>`;
+  const computed=FAC_RATINGS.map(i => {
+    const vals=evaluations.map(e=>e[`facilitiesRating${i}`]).filter(v=>v>0);
+    const avg=vals.length?vals.reduce((a,v)=>a+v,0)/vals.length:0;
+    return {id:i,avg,pct:(avg/5)*100,count:vals.length,label:FAC_LABELS[i]||`Q${i}`};
+  });
+  facDimChart=safeRenderChart(wrapId,canvasId,canvas=>new Chart(canvas,{type:"bar",data:{labels:computed.map(d=>`Q${d.id}`),datasets:[{data:computed.map(d=>Number(d.avg.toFixed(2))),backgroundColor:computed.map(d=>d.pct>=80?"#10b981":d.pct>=60?"#2563eb":d.pct>=40?"#f59e0b":"#ef4444"),borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:items=>computed[items[0].dataIndex].label,label:item=>{const d=computed[item.dataIndex];return `Avg ${d.avg.toFixed(2)}/5 — ${d.count} response${d.count!==1?"s":""}`;} }}},scales:{y:{beginAtZero:true,max:5}}}}));
+}
+
+function safeRenderChart(wrapId,canvasId,buildFn) {
+  if (typeof Chart==="undefined") { const w=document.getElementById(wrapId); if(w) w.innerHTML=`<div class="chart-error">Chart library failed to load.</div>`; return null; }
+  try { return buildFn(document.getElementById(canvasId)); }
+  catch(err) { console.error(`Failed to render chart "${canvasId}":`,err); const w=document.getElementById(wrapId); if(w) w.innerHTML=`<div class="chart-error">Couldn't render this chart.</div>`; return null; }
+}
+
+function renderRespondentPies() { renderSexDistributionDonut(); renderUserCategoryChart(); }
+
+// ── Monthly trend (single office, 6 months) ────────────────────────────────
+function renderMonthlyTrend() {
+  const wrap = document.getElementById("monthly-trend-wrap");
+  if (!evaluations.length) { wrap.innerHTML=`<div class="trend-empty">No evaluations yet.</div>`; return; }
+
+  const now = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push({ month:d.getMonth(), year:d.getFullYear(), label:MONTH_NAMES[d.getMonth()] });
+  }
+
+  const series = months.map(m => {
+    const evals = evaluations.filter(e => {
+      if (!e.timestamp) return false;
+      const d = new Date(e.timestamp);
+      return d.getMonth()===m.month && d.getFullYear()===m.year;
+    });
+    const avg = evals.length ? evals.reduce((s,e)=>s+overallAvg(e),0)/evals.length : null;
+    return { label:m.label, avg, count:evals.length };
+  });
+
+  const maxAvg = Math.max(...series.filter(s=>s.avg!==null).map(s=>s.avg), 0);
+  const MAX_BAR_H = 140;
+
+  const cols = series.map(s => {
+    const h = s.avg===null ? 2 : Math.max(4, Math.round((s.avg/5)*MAX_BAR_H));
+    const color = s.avg===null ? "#e2e8f0" : s.avg>=4?"#10b981":s.avg>=3?"#2563eb":s.avg>=2?"#f59e0b":"#ef4444";
+    const label = s.avg===null ? "—" : `${s.avg.toFixed(2)}`;
+    return `<div class="trend-col" title="${s.label}: ${label} avg (${s.count} submissions)">
+      <div class="trend-val">${label}</div>
+      <div class="trend-bar" style="height:${h}px;background:${color};width:40px;"></div>
+      <div class="trend-label">${s.label}</div>
+    </div>`;
+  }).join("");
+
+  wrap.innerHTML = `<div class="trend-chart">${cols}</div>`;
+}
+</script>
+</body>
+</html>
