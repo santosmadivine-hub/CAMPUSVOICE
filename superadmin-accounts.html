@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Accounts | Super Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .page-container { flex:1; padding:28px 32px 24px; overflow-y:auto; display:flex; flex-direction:column; gap:22px; }
+  .card { background:#fff; border:1px solid #ede9fe; border-radius:14px; box-shadow:0 4px 14px rgba(124,58,237,.06); padding:22px; }
+  .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media(max-width:640px){ .stat-grid{grid-template-columns:1fr;} }
+  .stat-card { position:relative; background:#fff; border:1px solid #ede9fe; border-top:4px solid #7c3aed; border-radius:14px; padding:18px 50px 18px 18px; box-shadow:0 4px 14px rgba(124,58,237,.07); display:flex; flex-direction:column; gap:4px; transition:transform .25s,box-shadow .25s; }
+  .stat-card:hover { transform:translateY(-3px); box-shadow:0 10px 24px rgba(124,58,237,.14); }
+  .stat-icon { position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:9px; background:#f5f3ff; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .stat-label { font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+  .stat-value { font-family:'Syne',sans-serif; font-weight:700; font-size:28px; color:#0f172a; }
+  .stat-sub { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; }
+  .toolbar-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+  .btn { border:none; cursor:pointer; border-radius:10px; padding:10px 16px; font-weight:600; font-family:'DM Sans',sans-serif; font-size:13px; transition:background .2s,transform .2s; }
+  .btn:hover:not(:disabled) { transform:translateY(-2px); }
+  .btn-add { background:linear-gradient(160deg,#8b5cf6,#7c3aed); color:#fff; box-shadow:0 4px 12px rgba(124,58,237,.28); }
+  .btn-add:disabled { opacity:.6; cursor:default; }
+  .btn-secondary { background:#e2e8f0; color:#0f172a; }
+  .btn-secondary:hover:not(:disabled) { background:#ede9fe; color:#5b21b6; }
+  .search-wrap { display:flex; align-items:center; gap:8px; height:40px; background:#f8fafc; border:1px solid #ede9fe; border-radius:10px; padding:0 12px; flex:1; min-width:200px; transition:border-color .2s; }
+  .search-wrap:focus-within { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.12); background:#fff; }
+  .search-wrap input { flex:1; border:none; outline:none; background:transparent; font-family:'DM Sans',sans-serif; font-size:13px; color:#0f172a; }
+  .search-wrap input::placeholder { color:#94a3b8; }
+  .table-wrap { overflow-x:auto; border-radius:12px; border:1px solid #ede9fe; }
+  .acc-table { width:100%; border-collapse:collapse; background:#fff; }
+  .acc-table th { text-align:left; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#475569; padding:12px 16px; border-bottom:2px solid #ede9fe; background:#faf5ff; white-space:nowrap; position:sticky; top:0; }
+  .acc-table td { padding:12px 16px; border-bottom:1px solid #faf5ff; font-family:'DM Sans',sans-serif; font-size:13px; color:#334155; vertical-align:middle; }
+  .acc-table tbody tr:hover td { background:#faf5ff; }
+  .acc-table tbody tr:hover td:first-child { box-shadow:inset 4px 0 0 #7c3aed; }
+  .acc-table tbody tr:last-child td { border-bottom:none; }
+  .row-idx { color:#94a3b8; font-size:12px; }
+  .empty-row td { text-align:center; color:#94a3b8; padding:36px 0 !important; }
+  .avatar-cell { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#7c3aed,#a78bfa); display:flex; align-items:center; justify-content:center; font-size:14px; color:#fff; font-weight:700; flex-shrink:0; }
+  .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:6px; font-weight:600; font-size:12px; white-space:nowrap; }
+  .badge-active { background:#dcfce7; color:#166534; }
+  .badge-inactive { background:#fee2e2; color:#991b1b; }
+  .btn-edit, .btn-toggle, .btn-pwd { background:none; border:none; font-family:'DM Sans',sans-serif; font-weight:600; font-size:12px; cursor:pointer; padding:4px 8px; border-radius:7px; transition:background .2s; }
+  .btn-edit { color:#5b21b6; }
+  .btn-edit:hover { background:#ede9fe; }
+  .btn-toggle { color:#0369a1; }
+  .btn-toggle:hover { background:#e0f2fe; }
+  .btn-toggle.deactivate { color:#dc2626; }
+  .btn-toggle.deactivate:hover { background:#fee2e2; }
+  .btn-pwd { color:#059669; }
+  .btn-pwd:hover { background:#dcfce7; }
+  /* Modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,27,50,.5); align-items:center; justify-content:center; z-index:999; padding:20px; backdrop-filter:blur(4px); }
+  .modal-overlay.open { display:flex; }
+  @keyframes cvModalIn { from{opacity:0;transform:translateY(10px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+  .modal-content { background:#fff; border-radius:20px; width:100%; max-width:460px; box-shadow:0 32px 80px rgba(15,27,50,.26); border:1px solid #ede9fe; max-height:90vh; overflow-y:auto; animation:cvModalIn .22s cubic-bezier(.2,.9,.3,1.1); display:flex; flex-direction:column; }
+  .modal-header { display:flex; align-items:center; gap:14px; padding:22px 24px 18px; border-bottom:1px solid #faf5ff; }
+  .modal-header-icon { width:44px; height:44px; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:19px; background:linear-gradient(135deg,#ede9fe,#ddd6fe); }
+  .modal-header-icon.edit-mode { background:linear-gradient(135deg,#fef3c7,#fde68a); }
+  .modal-header-icon.pwd-mode { background:linear-gradient(135deg,#dcfce7,#bbf7d0); }
+  .modal-header-text h3 { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; margin:0; color:#0f172a; }
+  .modal-header-text p { font-family:'DM Sans',sans-serif; font-size:12px; color:#94a3b8; margin:3px 0 0; }
+  .modal-close { margin-left:auto; background:none; border:none; font-size:20px; cursor:pointer; color:#94a3b8; padding:4px; border-radius:6px; transition:background .2s; }
+  .modal-close:hover { background:#f1f5f9; }
+  .modal-body { padding:22px 24px; display:flex; flex-direction:column; gap:16px; }
+  .form-group label { display:block; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+  .form-group input, .form-group select { width:100%; box-sizing:border-box; padding:11px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px; color:#0f172a; background:#f8fafc; transition:border-color .2s,box-shadow .2s; outline:none; }
+  .form-group input:focus, .form-group select:focus { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.12); background:#fff; }
+  .form-group .hint { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; margin-top:4px; }
+  .modal-footer { padding:16px 24px 22px; display:flex; gap:10px; justify-content:flex-end; border-top:1px solid #faf5ff; }
+  .btn-save { background:linear-gradient(160deg,#8b5cf6,#7c3aed); color:#fff; box-shadow:0 4px 12px rgba(124,58,237,.25); }
+  .btn-save:disabled { opacity:.6; cursor:default; transform:none !important; }
+  .btn-cancel { background:#e2e8f0; color:#0f172a; }
+  .btn-cancel:hover:not(:disabled) { background:#ede9fe; color:#5b21b6; }
+  .info-banner { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:12px 16px; font-family:'DM Sans',sans-serif; font-size:12px; color:#5b21b6; }
+  .msg-error { color:#dc2626; font-family:'DM Sans',sans-serif; font-size:13px; padding:8px 12px; background:#fee2e2; border-radius:8px; display:none; }
+  .msg-error.show { display:block; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar-overlay"></div>
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+    <div id="topbar-mount"></div>
+    <div class="page-container">
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-icon">🔑</div><div class="stat-label">Total Accounts</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">Admin FC role</div></div>
+        <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-label">Active</div><div class="stat-value" id="statActive">—</div><div class="stat-sub">Currently enabled</div></div>
+        <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-label">Inactive</div><div class="stat-value" id="statInactive">—</div><div class="stat-sub">Currently disabled</div></div>
+      </div>
+
+      <div class="info-banner">
+        🔑 <strong>Admin FC Accounts:</strong> These accounts can log in to the Admin FC dashboard to manage Facilities &amp; Cleanliness evaluations. They share the same <code>accounts</code> collection. Changes take effect immediately.
+      </div>
+
+      <div class="card">
+        <div class="toolbar-row">
+          <div class="search-wrap">
+            <span style="color:#94a3b8;font-size:14px;">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search accounts…">
+          </div>
+          <button class="btn btn-add" id="addBtn">＋ Create Account</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="acc-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th></th>
+                <th>Display Name</th>
+                <th>Username</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="accBody">
+              <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- CREATE / EDIT MODAL -->
+<div class="modal-overlay" id="accModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-header-icon" id="modalIcon">🔑</div>
+      <div class="modal-header-text">
+        <h3 id="modalTitle">Create Account</h3>
+        <p id="modalSub">The new account can sign in to Admin FC immediately.</p>
+      </div>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="inpDisplayName">Display Name</label>
+        <input type="text" id="inpDisplayName" placeholder="e.g. Admin FC Staff" maxlength="80">
+      </div>
+      <div class="form-group">
+        <label for="inpUsername">Username</label>
+        <input type="text" id="inpUsername" placeholder="e.g. adminfc2" maxlength="40">
+        <div class="hint" id="emailPreview">Email will be: <strong id="emailPreviewVal">—</strong></div>
+      </div>
+      <div class="form-group" id="pwdGroup">
+        <label for="inpPassword">Password</label>
+        <input type="password" id="inpPassword" placeholder="Min. 6 characters" maxlength="80">
+      </div>
+      <div class="form-group" id="statusGroup" style="display:none;">
+        <label for="inpStatus">Status</label>
+        <select id="inpStatus">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="msg-error" id="modalError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-cancel" id="cancelBtn">Cancel</button>
+      <button class="btn btn-save" id="saveBtn">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal-overlay" id="pwdModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-header-icon pwd-mode">🔒</div>
+      <div class="modal-header-text">
+        <h3>Change Password</h3>
+        <p id="pwdModalSub">Set a new password for this account.</p>
+      </div>
+      <button class="modal-close" id="pwdModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="inpNewPwd">New Password</label>
+        <input type="password" id="inpNewPwd" placeholder="Min. 6 characters" maxlength="80">
+      </div>
+      <div class="msg-error" id="pwdError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-cancel" id="pwdCancelBtn">Cancel</button>
+      <button class="btn btn-save" id="pwdSaveBtn">Change Password</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import {
+  guard, db, auth, collection, doc, getDoc, setDoc, updateDoc, onSnapshot,
+  query, where, signOut, createUserWithEmailAndPassword, updatePassword,
+  serverTimestamp, firebaseConfig
+} from './cv-core.js';
+import {
+  initializeApp, getApps, deleteApp
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {
+  getAuth, signOut as fbSignOut, updatePassword as fbUpdatePassword
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { buildSidebar, buildTopbar } from './shared.js';
+
+const session = await guard(['superadmin']);
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'accounts');
+document.getElementById('topbar-mount').innerHTML  = buildTopbar('Accounts', 'superadmin');
+
+const accCol  = query(collection(db, 'accounts'), where('role', '==', 'adminfc'));
+let allAccounts = [];
+let searchTerm  = '';
+let editId      = null;    // null = create, string = edit existing account
+let pwdTargetUid = null;
+
+function slugify(s) { return String(s).trim().toLowerCase().replace(/[^a-z0-9_.-]/g, ''); }
+
+// Stats
+function updateStats() {
+  document.getElementById('statTotal').textContent   = allAccounts.length;
+  document.getElementById('statActive').textContent  = allAccounts.filter(a => (a.status||'active')==='active').length;
+  document.getElementById('statInactive').textContent= allAccounts.filter(a => (a.status||'active')==='inactive').length;
+}
+
+// Table
+function renderTable() {
+  const tbody = document.getElementById('accBody');
+  const term  = searchTerm.trim().toLowerCase();
+  const list  = term
+    ? allAccounts.filter(a => (a.displayName||'').toLowerCase().includes(term) || (a.username||'').toLowerCase().includes(term))
+    : allAccounts;
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">${term ? 'No accounts match your search.' : 'No Admin FC accounts yet. Click "＋ Create Account" to add one.'}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((a, i) => {
+    const initials = (a.displayName || a.username || '?').charAt(0).toUpperCase();
+    const status   = (a.status || 'active');
+    const toggleLabel = status === 'active' ? '🔴 Deactivate' : '🟢 Activate';
+    const toggleClass = status === 'active' ? 'deactivate' : '';
+    return `
+      <tr>
+        <td class="row-idx">${i + 1}</td>
+        <td><div class="avatar-cell">${initials}</div></td>
+        <td style="font-weight:600;">${escHtml(a.displayName || '—')}</td>
+        <td style="color:#64748b;">@${escHtml(a.username || '—')}</td>
+        <td><span class="badge badge-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="btn-edit"   onclick="openEdit('${a.id}')">✏️ Edit</button>
+          <button class="btn-toggle ${toggleClass}" onclick="toggleStatus('${a.id}', '${status}')">${toggleLabel}</button>
+          <button class="btn-pwd"    onclick="openPwd('${a.id}', '${escAttr(a.displayName || a.username || '')}')">🔒 Password</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+onSnapshot(accCol, snap => {
+  allAccounts = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.displayName||'').localeCompare(b.displayName||''));
+  updateStats();
+  renderTable();
+});
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchTerm = e.target.value;
+  renderTable();
+});
+
+// Username → email preview
+document.getElementById('inpUsername').addEventListener('input', e => {
+  const slug = slugify(e.target.value);
+  document.getElementById('emailPreviewVal').textContent = slug ? `${slug}@campusvoice.isufst` : '—';
+});
+
+// Modal helpers
+function showModal(modal) { modal.classList.add('open'); }
+function hideModal(modal) { modal.classList.remove('open'); }
+function showError(elId, msg) {
+  const el = document.getElementById(elId);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearError(elId) {
+  const el = document.getElementById(elId);
+  el.textContent = '';
+  el.classList.remove('show');
+}
+
+function openCreate() {
+  editId = null;
+  document.getElementById('modalTitle').textContent  = 'Create Account';
+  document.getElementById('modalSub').textContent    = 'The new account can sign in to Admin FC immediately.';
+  document.getElementById('modalIcon').className     = 'modal-header-icon';
+  document.getElementById('saveBtn').textContent     = 'Create Account';
+  document.getElementById('inpDisplayName').value   = '';
+  document.getElementById('inpUsername').value      = '';
+  document.getElementById('inpPassword').value      = '';
+  document.getElementById('emailPreviewVal').textContent = '—';
+  document.getElementById('inpUsername').disabled   = false;
+  document.getElementById('pwdGroup').style.display = '';
+  document.getElementById('statusGroup').style.display = 'none';
+  clearError('modalError');
+  showModal(document.getElementById('accModal'));
+}
+
+window.openEdit = (id) => {
+  const a = allAccounts.find(x => x.id === id);
+  if (!a) return;
+  editId = id;
+  document.getElementById('modalTitle').textContent  = 'Edit Account';
+  document.getElementById('modalSub').textContent    = 'Password is unchanged — use "Change Password" if needed.';
+  document.getElementById('modalIcon').className     = 'modal-header-icon edit-mode';
+  document.getElementById('saveBtn').textContent     = 'Save Changes';
+  document.getElementById('inpDisplayName').value   = a.displayName || '';
+  document.getElementById('inpUsername').value      = a.username || '';
+  document.getElementById('emailPreviewVal').textContent = a.email || `${a.username}@campusvoice.isufst`;
+  document.getElementById('inpUsername').disabled   = true;  // username/email must not change
+  document.getElementById('pwdGroup').style.display = 'none';
+  document.getElementById('statusGroup').style.display = '';
+  document.getElementById('inpStatus').value        = a.status || 'active';
+  clearError('modalError');
+  showModal(document.getElementById('accModal'));
+};
+
+function closeAccModal() {
+  hideModal(document.getElementById('accModal'));
+  editId = null;
+}
+
+document.getElementById('addBtn').addEventListener('click', openCreate);
+document.getElementById('modalClose').addEventListener('click', closeAccModal);
+document.getElementById('cancelBtn').addEventListener('click', closeAccModal);
+document.getElementById('accModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('accModal')) closeAccModal();
+});
+
+// Save (create or edit)
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  clearError('modalError');
+  const displayName = document.getElementById('inpDisplayName').value.trim();
+  const username    = slugify(document.getElementById('inpUsername').value);
+  const password    = document.getElementById('inpPassword').value;
+  const status      = document.getElementById('inpStatus').value || 'active';
+
+  if (!displayName) { showError('modalError', 'Display name is required.'); return; }
+  if (!username)    { showError('modalError', 'Username is required.'); return; }
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving…';
+
+  try {
+    if (editId) {
+      // Edit — only displayName and status can change (username/email immutable)
+      await updateDoc(doc(db, 'accounts', editId), {
+        displayName, status,
+        updatedAt: serverTimestamp(),
+        updatedBy: session.uid
+      });
+      closeAccModal();
+    } else {
+      // Create — need new Firebase Auth user via secondary app
+      if (!password || password.length < 6) { showError('modalError', 'Password must be at least 6 characters.'); return; }
+
+      const email = `${username}@campusvoice.isufst`;
+
+      // Check username uniqueness
+      const idxSnap = await getDoc(doc(db, 'account_index', username));
+      if (idxSnap.exists()) { showError('modalError', 'Username is already taken.'); return; }
+
+      // Create Auth user via secondary app so Super Admin stays signed in
+      const secondaryApp = initializeApp(firebaseConfig, 'sa-create-' + Date.now());
+      const secondaryAuth = getAuth(secondaryApp);
+      let newUid;
+      try {
+        const cred = await (await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'))
+          .createUserWithEmailAndPassword(secondaryAuth, email, password);
+        newUid = cred.user.uid;
+        await fbSignOut(secondaryAuth);
+      } finally {
+        await deleteApp(secondaryApp).catch(() => {});
+      }
+
+      // Write Firestore account doc
+      await setDoc(doc(db, 'accounts', newUid), {
+        uid: newUid, email, username, displayName,
+        role: 'adminfc', status: 'active',
+        createdAt: serverTimestamp(),
+        createdBy: session.uid,
+        updatedAt: serverTimestamp(),
+        updatedBy: session.uid
+      });
+
+      // Write account_index for username lookup
+      await setDoc(doc(db, 'account_index', username), { uid: newUid, email });
+
+      closeAccModal();
+    }
+  } catch (err) {
+    let msg = err.message || 'An error occurred.';
+    if (err.code === 'auth/email-already-in-use') msg = 'That username is already registered as an account.';
+    if (err.code === 'auth/weak-password') msg = 'Password is too weak. Please use at least 6 characters.';
+    showError('modalError', msg);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = editId ? 'Save Changes' : 'Create Account';
+  }
+});
+
+// Toggle active / inactive
+window.toggleStatus = async (id, currentStatus) => {
+  const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+  const acc = allAccounts.find(a => a.id === id);
+  const name = acc?.displayName || acc?.username || 'this account';
+  if (!confirm(`${newStatus === 'inactive' ? 'Deactivate' : 'Activate'} "${name}"?`)) return;
+  try {
+    await updateDoc(doc(db, 'accounts', id), {
+      status: newStatus,
+      updatedAt: serverTimestamp(),
+      updatedBy: session.uid
+    });
+  } catch (err) {
+    alert('Failed to update status: ' + err.message);
+  }
+};
+
+// Change password modal
+window.openPwd = (id, name) => {
+  pwdTargetUid = id;
+  document.getElementById('pwdModalSub').textContent = `Set a new password for "${name}".`;
+  document.getElementById('inpNewPwd').value = '';
+  clearError('pwdError');
+  showModal(document.getElementById('pwdModal'));
+};
+
+function closePwdModal() {
+  hideModal(document.getElementById('pwdModal'));
+  pwdTargetUid = null;
+}
+document.getElementById('pwdModalClose').addEventListener('click', closePwdModal);
+document.getElementById('pwdCancelBtn').addEventListener('click', closePwdModal);
+document.getElementById('pwdModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('pwdModal')) closePwdModal();
+});
+
+document.getElementById('pwdSaveBtn').addEventListener('click', async () => {
+  clearError('pwdError');
+  const newPwd = document.getElementById('inpNewPwd').value;
+  if (!newPwd || newPwd.length < 6) { showError('pwdError', 'Password must be at least 6 characters.'); return; }
+  if (!pwdTargetUid) return;
+
+  const btn = document.getElementById('pwdSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    // Look up the account to get email
+    const accSnap = await getDoc(doc(db, 'accounts', pwdTargetUid));
+    if (!accSnap.exists()) throw new Error('Account not found.');
+    const accData = accSnap.data();
+    const email   = accData.email || `${accData.username}@campusvoice.isufst`;
+
+    // Sign in via secondary app then update password
+    const secondaryApp = initializeApp(firebaseConfig, 'sa-pwd-' + Date.now());
+    const secondaryAuth = getAuth(secondaryApp);
+    try {
+      const { signInWithEmailAndPassword: saSignIn } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
+      // We can't sign in without the current password — use Admin SDK approach.
+      // Since we don't have Admin SDK here, we use sendPasswordResetEmail as a
+      // fallback to let the account holder reset it themselves, OR we store a
+      // flag that forces a reset on next login (simplest client-only approach).
+      // For now we update the account doc with a pendingPwdReset flag and the
+      // new hashed password is managed by Firebase directly.
+      //
+      // Real-time password change without Admin SDK: not possible from client SDK
+      // without the user being signed in. We inform the Super Admin.
+      await fbSignOut(secondaryAuth);
+      throw { code: 'client-only', message: 'Direct password reset requires Firebase Admin SDK. Please use the Firebase Console to reset this account\'s password, or ask the account holder to use "Forgot Password" on the login page.' };
+    } finally {
+      await deleteApp(secondaryApp).catch(() => {});
+    }
+  } catch (err) {
+    if (err.code === 'client-only') {
+      showError('pwdError', err.message);
+    } else {
+      showError('pwdError', err.message || 'Failed to change password.');
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = 'Change Password';
+  }
+});
+
+// Utils
+function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(str) { return String(str).replace(/'/g,"&#39;").replace(/"/g,'&quot;'); }
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

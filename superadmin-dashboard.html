@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Dashboard | Super Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+.dashboard-container { flex:1; padding:28px 32px 24px; overflow-y:auto; display:flex; flex-direction:column; gap:24px; }
+.stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+@media(max-width:900px){ .stat-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:520px){ .stat-grid{grid-template-columns:1fr;} }
+.stat-card {
+  position:relative; background:#fff; border:1px solid #ede9fe;
+  border-top:4px solid #7c3aed; border-radius:16px; padding:20px 54px 20px 20px;
+  box-shadow:0 4px 14px rgba(124,58,237,.08); display:flex; flex-direction:column;
+  gap:5px; transition:transform .25s,box-shadow .25s;
+}
+.stat-card:hover { transform:translateY(-4px); box-shadow:0 12px 28px rgba(124,58,237,.18); }
+.stat-icon { position:absolute; top:16px; right:16px; width:38px; height:38px; border-radius:10px; background:#f5f3ff; display:flex; align-items:center; justify-content:center; font-size:17px; }
+.stat-label { font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+.stat-value { font-family:'Syne',sans-serif; font-weight:700; font-size:30px; color:#0f172a; line-height:1.1; }
+.stat-sub { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; }
+.section-title { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; color:#0f172a; margin-bottom:4px; }
+.card { background:#fff; border:1px solid #ede9fe; border-radius:14px; box-shadow:0 4px 14px rgba(124,58,237,.06); padding:22px; }
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+@media(max-width:700px){ .two-col{grid-template-columns:1fr;} }
+.quick-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:14px; }
+.quick-btn {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  padding:20px 14px; background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%);
+  border:1.5px solid #ddd6fe; border-radius:14px; text-decoration:none; color:#0f172a;
+  transition:all .25s; cursor:pointer; font-family:'Syne',sans-serif;
+}
+.quick-btn:hover { border-color:#a78bfa; box-shadow:0 4px 12px rgba(124,58,237,.15); transform:translateY(-2px); }
+.qa-icon { font-size:28px; line-height:1; }
+.qa-label { font-family:'Syne',sans-serif; font-weight:600; font-size:13px; color:#0f172a; text-align:center; }
+.office-list { display:flex; flex-direction:column; gap:8px; margin-top:12px; max-height:280px; overflow-y:auto; }
+.office-row {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:10px 14px; background:#fafafa; border:1px solid #f0ebff; border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:13px; color:#334155;
+}
+.office-name { font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.badge { display:inline-flex; align-items:center; gap:5px; padding:2px 10px; border-radius:6px; font-size:12px; font-weight:600; white-space:nowrap; }
+.badge-active { background:#dcfce7; color:#166534; }
+.badge-inactive { background:#fee2e2; color:#991b1b; }
+.empty-state { text-align:center; color:#94a3b8; padding:30px 0; font-family:'DM Sans',sans-serif; font-size:14px; }
+.accounts-list { display:flex; flex-direction:column; gap:8px; margin-top:12px; max-height:280px; overflow-y:auto; }
+.account-row {
+  display:flex; align-items:center; gap:12px; padding:10px 14px;
+  background:#fafafa; border:1px solid #f0ebff; border-radius:10px;
+  font-family:'DM Sans',sans-serif; font-size:13px;
+}
+.account-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#7c3aed,#a78bfa); display:flex; align-items:center; justify-content:center; font-size:14px; color:#fff; font-weight:700; flex-shrink:0; }
+.account-info { flex:1; min-width:0; }
+.account-name { font-weight:600; color:#0f172a; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.account-email { font-size:11px; color:#94a3b8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar-overlay"></div>
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+    <div id="topbar-mount"></div>
+    <div class="dashboard-container">
+
+      <div class="stat-grid" id="statGrid">
+        <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-label">Total Offices</div><div class="stat-value" id="statOffices">—</div><div class="stat-sub">In fc_offices</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Active Offices</div><div class="stat-value" id="statActiveOffices">—</div><div class="stat-sub">Status = active</div></div>
+        <div class="stat-card"><div class="stat-icon">🔑</div><div class="stat-label">Admin FC Accounts</div><div class="stat-value" id="statAccounts">—</div><div class="stat-sub">Total accounts</div></div>
+        <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-label">Active Accounts</div><div class="stat-value" id="statActiveAccounts">—</div><div class="stat-sub">Currently enabled</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="section-title">Quick Actions</div>
+          <div class="quick-grid">
+            <a class="quick-btn" href="superadmin-office-mgmt.html"><div class="qa-icon">🏢</div><div class="qa-label">Manage Offices</div></a>
+            <a class="quick-btn" href="superadmin-accounts.html"><div class="qa-icon">🔑</div><div class="qa-label">Manage Accounts</div></a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">System Info</div>
+          <div style="margin-top:12px;font-family:'DM Sans',sans-serif;font-size:13px;color:#475569;display:flex;flex-direction:column;gap:10px;">
+            <div>🔗 <strong>Shared Database</strong> — Offices are stored in <code>fc_offices</code> and sync automatically with Admin FC in real time.</div>
+            <div>👥 <strong>Accounts</strong> — Admin FC accounts in the <code>accounts</code> collection. Changes take effect immediately.</div>
+            <div>🛡️ <strong>Role</strong> — Only Super Admin can add or remove offices and manage Admin FC accounts.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="section-title">Offices Overview</div>
+          <div class="office-list" id="officesList"><div class="empty-state">Loading…</div></div>
+        </div>
+        <div class="card">
+          <div class="section-title">Admin FC Accounts</div>
+          <div class="accounts-list" id="accountsList"><div class="empty-state">Loading…</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import {
+  guard, db, collection, query, where, onSnapshot, getDocs
+} from './cv-core.js';
+import { buildSidebar, buildTopbar } from './shared.js';
+
+const session = await guard(['superadmin']);
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'dashboard');
+document.getElementById('topbar-mount').innerHTML  = buildTopbar('Dashboard', 'superadmin');
+
+const fcOffices  = collection(db, 'fc_offices');
+const fcAccounts = query(collection(db, 'accounts'), where('role', '==', 'adminfc'));
+
+let officesData  = [];
+let accountsData = [];
+
+function updateStats() {
+  document.getElementById('statOffices').textContent        = officesData.length;
+  document.getElementById('statActiveOffices').textContent  = officesData.filter(o => (o.status || 'active') === 'active').length;
+  document.getElementById('statAccounts').textContent       = accountsData.length;
+  document.getElementById('statActiveAccounts').textContent = accountsData.filter(a => (a.status || 'active') === 'active').length;
+}
+
+function renderOffices() {
+  const el = document.getElementById('officesList');
+  if (!officesData.length) { el.innerHTML = '<div class="empty-state">No offices yet.</div>'; return; }
+  el.innerHTML = officesData.map(o => `
+    <div class="office-row">
+      <span class="office-name">🏢 ${o.name || '(unnamed)'}</span>
+      <span class="badge ${(o.status || 'active') === 'active' ? 'badge-active' : 'badge-inactive'}">${(o.status || 'active') === 'active' ? 'Active' : 'Inactive'}</span>
+    </div>`).join('');
+}
+
+function renderAccounts() {
+  const el = document.getElementById('accountsList');
+  if (!accountsData.length) { el.innerHTML = '<div class="empty-state">No Admin FC accounts yet.</div>'; return; }
+  el.innerHTML = accountsData.map(a => {
+    const initials = (a.displayName || a.username || '?').charAt(0).toUpperCase();
+    return `<div class="account-row">
+      <div class="account-avatar">${initials}</div>
+      <div class="account-info">
+        <div class="account-name">${a.displayName || a.username || '(no name)'}</div>
+        <div class="account-email">@${a.username || '—'}</div>
+      </div>
+      <span class="badge ${(a.status || 'active') === 'active' ? 'badge-active' : 'badge-inactive'}">${(a.status || 'active') === 'active' ? 'Active' : 'Inactive'}</span>
+    </div>`;
+  }).join('');
+}
+
+onSnapshot(fcOffices, snap => {
+  officesData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  updateStats(); renderOffices();
+});
+
+onSnapshot(fcAccounts, snap => {
+  accountsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  updateStats(); renderAccounts();
+});
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

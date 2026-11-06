@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Office Management | Super Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  .page-container { flex:1; padding:28px 32px 24px; overflow-y:auto; display:flex; flex-direction:column; gap:22px; }
+  .card { background:#fff; border:1px solid #ede9fe; border-radius:14px; box-shadow:0 4px 14px rgba(124,58,237,.06); padding:22px; }
+  .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media(max-width:640px){ .stat-grid{grid-template-columns:1fr;} }
+  .stat-card { position:relative; background:#fff; border:1px solid #ede9fe; border-top:4px solid #7c3aed; border-radius:14px; padding:18px 50px 18px 18px; box-shadow:0 4px 14px rgba(124,58,237,.07); display:flex; flex-direction:column; gap:4px; transition:transform .25s,box-shadow .25s; }
+  .stat-card:hover { transform:translateY(-3px); box-shadow:0 10px 24px rgba(124,58,237,.14); }
+  .stat-icon { position:absolute; top:14px; right:14px; width:34px; height:34px; border-radius:9px; background:#f5f3ff; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .stat-label { font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+  .stat-value { font-family:'Syne',sans-serif; font-weight:700; font-size:28px; color:#0f172a; }
+  .stat-sub { font-family:'DM Sans',sans-serif; font-size:11px; color:#94a3b8; }
+  .toolbar-row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+  .btn { border:none; cursor:pointer; border-radius:10px; padding:10px 16px; font-weight:600; font-family:'DM Sans',sans-serif; font-size:13px; transition:background .2s,transform .2s; }
+  .btn:hover:not(:disabled) { transform:translateY(-2px); }
+  .btn-add { background:linear-gradient(160deg,#8b5cf6,#7c3aed); color:#fff; box-shadow:0 4px 12px rgba(124,58,237,.28); }
+  .btn-add:disabled { opacity:.6; cursor:default; }
+  .btn-secondary { background:#e2e8f0; color:#0f172a; }
+  .btn-secondary:hover:not(:disabled) { background:#ede9fe; color:#5b21b6; }
+  .search-wrap { display:flex; align-items:center; gap:8px; height:40px; background:#f8fafc; border:1px solid #ede9fe; border-radius:10px; padding:0 12px; flex:1; min-width:200px; transition:border-color .2s; }
+  .search-wrap:focus-within { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.12); background:#fff; }
+  .search-wrap input { flex:1; border:none; outline:none; background:transparent; font-family:'DM Sans',sans-serif; font-size:13px; color:#0f172a; }
+  .search-wrap input::placeholder { color:#94a3b8; }
+  .table-wrap { overflow-x:auto; border-radius:12px; border:1px solid #ede9fe; }
+  .offices-table { width:100%; border-collapse:collapse; background:#fff; }
+  .offices-table th { text-align:left; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#475569; padding:12px 16px; border-bottom:2px solid #ede9fe; background:#faf5ff; white-space:nowrap; position:sticky; top:0; }
+  .offices-table td { padding:12px 16px; border-bottom:1px solid #faf5ff; font-family:'DM Sans',sans-serif; font-size:13px; color:#334155; vertical-align:middle; }
+  .offices-table tbody tr:hover td { background:#faf5ff; }
+  .offices-table tbody tr:hover td:first-child { box-shadow:inset 4px 0 0 #7c3aed; }
+  .offices-table tbody tr:last-child td { border-bottom:none; }
+  .row-idx { color:#94a3b8; font-size:12px; }
+  .empty-row td { text-align:center; color:#94a3b8; padding:36px 0 !important; }
+  .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:6px; font-weight:600; font-size:12px; white-space:nowrap; }
+  .badge-active { background:#dcfce7; color:#166534; }
+  .badge-inactive { background:#fee2e2; color:#991b1b; }
+  .btn-edit, .btn-delete { background:none; border:none; font-family:'DM Sans',sans-serif; font-weight:600; font-size:12px; cursor:pointer; padding:4px 8px; border-radius:7px; transition:background .2s; }
+  .btn-edit { color:#5b21b6; }
+  .btn-edit:hover { background:#ede9fe; }
+  .btn-delete { color:#dc2626; }
+  .btn-delete:hover { background:#fee2e2; }
+  /* Modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,27,50,.5); align-items:center; justify-content:center; z-index:999; padding:20px; backdrop-filter:blur(4px); }
+  .modal-overlay.open { display:flex; }
+  @keyframes cvModalIn { from{opacity:0;transform:translateY(10px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+  .modal-content { background:#fff; border-radius:20px; width:100%; max-width:440px; box-shadow:0 32px 80px rgba(15,27,50,.26); border:1px solid #ede9fe; max-height:90vh; overflow-y:auto; animation:cvModalIn .22s cubic-bezier(.2,.9,.3,1.1); display:flex; flex-direction:column; }
+  .modal-header { display:flex; align-items:center; gap:14px; padding:22px 24px 18px; border-bottom:1px solid #faf5ff; }
+  .modal-header-icon { width:44px; height:44px; border-radius:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:19px; background:linear-gradient(135deg,#ede9fe,#ddd6fe); }
+  .modal-header-icon.edit-mode { background:linear-gradient(135deg,#fef3c7,#fde68a); }
+  .modal-header-text h3 { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; margin:0; color:#0f172a; }
+  .modal-header-text p { font-family:'DM Sans',sans-serif; font-size:12px; color:#94a3b8; margin:3px 0 0; }
+  .modal-close { margin-left:auto; background:none; border:none; font-size:20px; cursor:pointer; color:#94a3b8; padding:4px; border-radius:6px; transition:background .2s; }
+  .modal-close:hover { background:#f1f5f9; }
+  .modal-body { padding:22px 24px; display:flex; flex-direction:column; gap:16px; }
+  .form-group label { display:block; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+  .form-group input, .form-group select { width:100%; box-sizing:border-box; padding:11px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:14px; color:#0f172a; background:#f8fafc; transition:border-color .2s,box-shadow .2s; outline:none; }
+  .form-group input:focus, .form-group select:focus { border-color:#7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,.12); background:#fff; }
+  .modal-footer { padding:16px 24px 22px; display:flex; gap:10px; justify-content:flex-end; border-top:1px solid #faf5ff; }
+  .btn-save { background:linear-gradient(160deg,#8b5cf6,#7c3aed); color:#fff; box-shadow:0 4px 12px rgba(124,58,237,.25); }
+  .btn-save:disabled { opacity:.6; cursor:default; }
+  .btn-cancel { background:#e2e8f0; color:#0f172a; }
+  .btn-cancel:hover:not(:disabled) { background:#ede9fe; color:#5b21b6; }
+  .info-banner { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:12px 16px; font-family:'DM Sans',sans-serif; font-size:12px; color:#5b21b6; }
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <div class="sidebar-overlay"></div>
+  <div id="sidebar-mount"></div>
+  <div class="main-content">
+    <div id="topbar-mount"></div>
+    <div class="page-container">
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-label">Total Offices</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">In fc_offices</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Active</div><div class="stat-value" id="statActive">—</div><div class="stat-sub">Currently active</div></div>
+        <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-label">Inactive</div><div class="stat-value" id="statInactive">—</div><div class="stat-sub">Currently inactive</div></div>
+      </div>
+
+      <div class="info-banner">
+        🔗 <strong>Live sync with Admin FC:</strong> Any office you add, edit, or delete here will automatically appear or disappear in Admin FC's office list in real time — they share the same <code>fc_offices</code> collection.
+      </div>
+
+      <div class="card">
+        <div class="toolbar-row">
+          <div class="search-wrap">
+            <span style="color:#94a3b8;font-size:14px;">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search offices…">
+          </div>
+          <button class="btn btn-add" id="addBtn">＋ Add Office</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="offices-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Office Name</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="officesBody">
+              <tr class="empty-row"><td colspan="5">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="officeModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-header-icon" id="modalIcon">🏢</div>
+      <div class="modal-header-text">
+        <h3 id="modalTitle">Add Office</h3>
+        <p id="modalSub">The new office will immediately appear in Admin FC.</p>
+      </div>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="officeName">Office Name</label>
+        <input type="text" id="officeName" placeholder="e.g. Registrar's Office" maxlength="120">
+      </div>
+      <div class="form-group">
+        <label for="officeStatus">Status</label>
+        <select id="officeStatus">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-cancel" id="cancelBtn">Cancel</button>
+      <button class="btn btn-save" id="saveBtn">Save Office</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import {
+  guard, db, collection, doc, addDoc, updateDoc, deleteDoc,
+  onSnapshot, serverTimestamp
+} from './cv-core.js';
+import { buildSidebar, buildTopbar } from './shared.js';
+
+const session = await guard(['superadmin']);
+document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'office-mgmt');
+document.getElementById('topbar-mount').innerHTML  = buildTopbar('Office Management', 'superadmin');
+
+const fcOffices = collection(db, 'fc_offices');
+let allOffices  = [];
+let searchTerm  = '';
+let editId      = null;
+
+// Stats
+function updateStats() {
+  document.getElementById('statTotal').textContent   = allOffices.length;
+  document.getElementById('statActive').textContent  = allOffices.filter(o => (o.status||'active')==='active').length;
+  document.getElementById('statInactive').textContent= allOffices.filter(o => (o.status||'active')==='inactive').length;
+}
+
+// Render table
+function renderTable() {
+  const tbody = document.getElementById('officesBody');
+  const term  = searchTerm.trim().toLowerCase();
+  const list  = term ? allOffices.filter(o => (o.name||'').toLowerCase().includes(term)) : allOffices;
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">${term ? 'No offices match your search.' : 'No offices yet. Click "＋ Add Office" to create one.'}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((o, i) => {
+    const created = o.createdAt?.toDate
+      ? o.createdAt.toDate().toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })
+      : '—';
+    const status = (o.status || 'active');
+    return `
+      <tr>
+        <td class="row-idx">${i + 1}</td>
+        <td style="font-weight:600;">${escHtml(o.name || '(unnamed)')}</td>
+        <td><span class="badge badge-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
+        <td>${created}</td>
+        <td>
+          <button class="btn-edit" onclick="openEdit('${o.id}')">✏️ Edit</button>
+          <button class="btn-delete" onclick="confirmDelete('${o.id}', '${escAttr(o.name || '')}')">🗑 Delete</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// Live snapshot
+onSnapshot(fcOffices, snap => {
+  allOffices = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.name||'').localeCompare(b.name||''));
+  updateStats();
+  renderTable();
+});
+
+// Search
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchTerm = e.target.value;
+  renderTable();
+});
+
+// Modal helpers
+function openModal(isEdit = false) {
+  document.getElementById('officeModal').classList.add('open');
+  document.getElementById('modalIcon').className = 'modal-header-icon' + (isEdit ? ' edit-mode' : '');
+  document.getElementById('modalTitle').textContent = isEdit ? 'Edit Office' : 'Add Office';
+  document.getElementById('modalSub').textContent   = isEdit
+    ? 'Changes sync with Admin FC immediately.'
+    : 'The new office will immediately appear in Admin FC.';
+}
+function closeModal() {
+  document.getElementById('officeModal').classList.remove('open');
+  document.getElementById('officeName').value = '';
+  document.getElementById('officeStatus').value = 'active';
+  editId = null;
+}
+
+document.getElementById('addBtn').addEventListener('click', () => {
+  editId = null;
+  openModal(false);
+});
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('cancelBtn').addEventListener('click', closeModal);
+document.getElementById('officeModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('officeModal')) closeModal();
+});
+
+// Global edit / delete
+window.openEdit = (id) => {
+  const o = allOffices.find(x => x.id === id);
+  if (!o) return;
+  editId = id;
+  document.getElementById('officeName').value = o.name || '';
+  document.getElementById('officeStatus').value = o.status || 'active';
+  openModal(true);
+};
+
+window.confirmDelete = async (id, name) => {
+  if (!confirm(`Delete "${name}"?\n\nThis will also remove it from Admin FC immediately.`)) return;
+  try {
+    await deleteDoc(doc(db, 'fc_offices', id));
+  } catch (err) {
+    alert('Delete failed: ' + err.message);
+  }
+};
+
+// Save
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const name   = document.getElementById('officeName').value.trim();
+  const status = document.getElementById('officeStatus').value;
+
+  if (!name) { alert('Please enter an office name.'); return; }
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving…';
+
+  try {
+    if (editId) {
+      await updateDoc(doc(db, 'fc_offices', editId), {
+        name, status,
+        updatedAt: serverTimestamp(),
+        updatedBy: session.uid
+      });
+    } else {
+      await addDoc(fcOffices, {
+        name, status,
+        createdAt:  serverTimestamp(),
+        createdBy:  session.uid,
+        updatedAt:  serverTimestamp(),
+        updatedBy:  session.uid
+      });
+    }
+    closeModal();
+  } catch (err) {
+    alert('Save failed: ' + err.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save Office';
+  }
+});
+
+// Utils
+function escHtml(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(str) { return str.replace(/'/g,"&#39;").replace(/"/g,'&quot;'); }
+</script>
+<script src="shared.js"></script>
+</body>
+</html>
