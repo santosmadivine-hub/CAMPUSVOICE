@@ -1,11 +1,13 @@
 // Subtitles per role. Keys are the lowercase page titles.
 const PAGE_SUBTITLES = {
   superadmin: {
-    'dashboard':         'System Overview — Offices and Administrator Accounts',
-    'offices overview':  'Per-Office Evaluation Performance Across All Registered Offices',
-    'office management': 'Add, Edit, and Remove Campus Offices',
-    'accounts':          'Create and Manage Administrator FC Accounts',
-    'settings':          'Your Profile and System Information'
+    'dashboard':             'System Overview — Offices and Administrator Accounts',
+    'offices overview':      'Per-Office Evaluation Performance Across All Registered Offices',
+    'office management':     'Add, Edit, and Remove Campus Offices',
+    'accounts':              'Create and Manage Administrator FC Accounts',
+    'evaluation management': 'Review and Manage All Facilities and Cleanliness Evaluations',
+    'analytics':             'Analyze Evaluation Results and Performance Trends',
+    'settings':              'Your Profile and System Information'
   },
   admin1: {
     'dashboard':             'Overview of Campus Evaluation Results and Activities',
@@ -90,10 +92,12 @@ function buildSidebar(role, activePage) {
   ];
 
   const navSuperAdmin = [
-    { id: 'dashboard',       icon: '📊', label: 'Dashboard',           href: 'superadmin-dashboard.html' },
-    { id: 'offices-overview', icon: '🗂️', label: 'Offices Overview',    href: 'superadmin-offices-overview.html' },
-    { id: 'office-mgmt',     icon: '🏢', label: 'Office Management',   href: 'superadmin-office-mgmt.html' },
-    { id: 'accounts',        icon: '🔑', label: 'Accounts',            href: 'superadmin-accounts.html' },
+    { id: 'dashboard',       icon: '📊', label: 'Dashboard',              href: 'superadmin-dashboard.html' },
+    { id: 'offices-overview', icon: '🗂️', label: 'Offices Overview',      href: 'superadmin-offices-overview.html' },
+    { id: 'office-mgmt',     icon: '🏢', label: 'Office Management',      href: 'superadmin-office-mgmt.html' },
+    { id: 'accounts',        icon: '🔑', label: 'Accounts',               href: 'superadmin-accounts.html' },
+    { id: 'eval-mgmt',       icon: '📋', label: 'Evaluation Management',  href: 'superadmin-eval-mgmt.html' },
+    { id: 'analytics',       icon: '📈', label: 'Analytics',              href: 'superadmin-analytics.html' },
   ];
 
   const nav =
