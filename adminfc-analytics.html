@@ -418,7 +418,7 @@ document.addEventListener("click", (e) => {
 const EVAL_COLLECTION = "facilities_cleanliness_evaluations";
 const OFFICE_COLLECTION = "fc_offices";
 const CL_RATINGS = [1,2,3,4,5];
-const FAC_RATINGS = [1,2,3,4,5];
+const FAC_RATINGS = [1,2,3,4,5,6,7,8];
 const CL_LABELS = { 1:"The area is clean and tidy.", 2:"There are no unpleasant odors.", 3:"The area is well-maintained.", 4:"Cleaning supplies are available.", 5:"The area is properly sanitized." };
 const FAC_LABELS = { 1:"Equipment/resources are available.", 2:"Equipment/resources are working properly.", 3:"The facility has enough resources.", 4:"The facility is clean and well-maintained.", 5:"Furniture is in good condition." };
 const PIE_COLORS = ["#2563eb","#FB923C","#F87171","#f59e0b","#ef4444","#06b6d4","#ec4899"];
@@ -506,7 +506,7 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snap) => {
     CL_RATINGS.forEach(i => { record[`cleanlinessRating${i}`] = Number(ev[`cleanlinessRating${i}`])||0; });
     FAC_RATINGS.forEach(i => { record[`facilitiesRating${i}`] = Number(ev[`facilitiesRating${i}`])||0; });
     const avg = overallAvg(record);
-    record.status = record.rawStatus === "resolved" ? "resolved" : avg < 3 ? "pending" : "no_action";
+    record.status = ["resolved","pending","no_action"].includes(record.rawStatus) ? record.rawStatus : (avg < 3 ? "pending" : "no_action");
     evaluations.push(record);
   });
   renderAll();

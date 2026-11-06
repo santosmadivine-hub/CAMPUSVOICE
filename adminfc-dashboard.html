@@ -181,13 +181,13 @@ function clAvgOf(ev) {
 }
 function facAvgOf(ev) {
   let sum = 0, count = 0;
-  for (let i = 1; i <= 5; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
+  for (let i = 1; i <= 8; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
   return count > 0 ? sum / count : 0;
 }
 function overallAvgOf(ev) {
   let sum = 0, count = 0;
   for (let i = 1; i <= 5; i++) { const v = Number(ev[`cleanlinessRating${i}`]); if (v > 0) { sum += v; count++; } }
-  for (let i = 1; i <= 5; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
+  for (let i = 1; i <= 8; i++) { const v = Number(ev[`facilitiesRating${i}`]); if (v > 0) { sum += v; count++; } }
   return count > 0 ? sum / count : 0;
 }
 function parseEvalStatus(avg) {
@@ -228,7 +228,7 @@ onSnapshot(collection(db, "facilities_cleanliness_evaluations"), snap => {
     record.clAvg    = clAvgOf(record);
     record.facAvg   = facAvgOf(record);
     record.overall  = overallAvgOf(record);
-    record.status   = data.status || parseEvalStatus(record.overall);
+    record.status   = ["resolved","pending","no_action"].includes(data.status) ? data.status : parseEvalStatus(record.overall);
     evaluations.push(record);
   });
   document.getElementById("total-badge").textContent = `Total: ${evaluations.length}`;
