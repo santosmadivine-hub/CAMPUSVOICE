@@ -70,10 +70,10 @@
 </style>
 </head>
 <body>
-<div class="app-layout">
-  <div class="sidebar-overlay"></div>
+<div class="layout">
   <div id="sidebar-mount"></div>
-  <div class="main-content">
+  <div class="sidebar-overlay"></div>
+  <main class="main fade-in">
     <div id="topbar-mount"></div>
     <div class="page-container">
 
@@ -115,7 +115,7 @@
       </div>
 
     </div>
-  </div>
+  </main>
 </div>
 
 <!-- ADD / EDIT MODAL -->
@@ -149,12 +149,12 @@
   </div>
 </div>
 
+<script src="shared.js"></script>
 <script type="module">
 import {
   guard, db, collection, doc, addDoc, updateDoc, deleteDoc,
   onSnapshot, serverTimestamp
 } from './cv-core.js';
-import { buildSidebar, buildTopbar } from './shared.js';
 
 const session = await guard(['superadmin']);
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'office-mgmt');
@@ -301,6 +301,5 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
 function escHtml(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function escAttr(str) { return str.replace(/'/g,"&#39;").replace(/"/g,'&quot;'); }
 </script>
-<script src="shared.js"></script>
 </body>
 </html>

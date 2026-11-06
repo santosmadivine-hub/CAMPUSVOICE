@@ -129,10 +129,10 @@
 </style>
 </head>
 <body>
-<div class="app-layout">
-  <div class="sidebar-overlay"></div>
+<div class="layout">
   <div id="sidebar-mount"></div>
-  <div class="main-content">
+  <div class="sidebar-overlay"></div>
+  <main class="main fade-in">
     <div id="topbar-mount"></div>
     <div class="page-container">
 
@@ -164,7 +164,7 @@
       </div>
 
     </div>
-  </div>
+  </main>
 </div>
 
 <!-- Detail Modal -->
@@ -184,13 +184,13 @@
   </div>
 </div>
 
+<script src="shared.js"></script>
 <script type="module">
 import {
   guard, db,
   collection, query, where, orderBy, limit,
   getDocs, onSnapshot
 } from './cv-core.js';
-import { buildSidebar, buildTopbar } from './shared.js';
 
 await guard(['superadmin']);
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'offices-overview');
@@ -487,6 +487,5 @@ onSnapshot(collection(db, 'fc_offices'), async snap => {
   renderCards();
 });
 </script>
-<script src="shared.js"></script>
 </body>
 </html>

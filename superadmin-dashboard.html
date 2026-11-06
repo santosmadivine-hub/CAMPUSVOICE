@@ -60,10 +60,10 @@
 </style>
 </head>
 <body>
-<div class="app-layout">
-  <div class="sidebar-overlay"></div>
+<div class="layout">
   <div id="sidebar-mount"></div>
-  <div class="main-content">
+  <div class="sidebar-overlay"></div>
+  <main class="main fade-in">
     <div id="topbar-mount"></div>
     <div class="dashboard-container">
 
@@ -105,16 +105,16 @@
       </div>
 
     </div>
-  </div>
+  </main>
 </div>
 
+<script src="shared.js"></script>
 <script type="module">
 import {
-  guard, db, collection, query, where, onSnapshot, getDocs
+  guard, db, collection, query, where, onSnapshot
 } from './cv-core.js';
-import { buildSidebar, buildTopbar } from './shared.js';
 
-const session = await guard(['superadmin']);
+await guard(['superadmin']);
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'dashboard');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Dashboard', 'superadmin');
 
@@ -167,6 +167,5 @@ onSnapshot(fcAccounts, snap => {
   updateStats(); renderAccounts();
 });
 </script>
-<script src="shared.js"></script>
 </body>
 </html>
