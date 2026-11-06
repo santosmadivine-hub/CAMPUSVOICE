@@ -38,9 +38,15 @@ const PAGE_SUBTITLES = {
     'multimedia feedback':   'View and Manage Evaluation Evidence', // old title, kept so existing pages still work
     'analytics':             'Analyze Facility Evaluation Results and Trends'
   },
+  fc_office: {
+    'fc dashboard':          'Your Assigned Office — Facilities &amp; Cleanliness Data',
+    'evaluation management': 'Review Evaluations for Your Office',
+    'reports':               'Generate Reports for Your Office',
+    'multimedia':            'View Evidence Photos for Your Office',
+    'analytics':             'Office Performance Trends and Ratings',
+  },
   adminfc: {
     'dashboard':             'Overview of All Facilities and Cleanliness Evaluation Results',
-    'office dashboard':      'Evaluation Data for Your Assigned Office',
     'office management':     'Manage Campus Offices and Evaluation Areas',
     'evaluation management': 'Review and Manage Facility Evaluations',
     'reports':               'Generate and Review Facility Reports',
@@ -83,13 +89,21 @@ function buildSidebar(role, activePage) {
   ];
 
   const navAdminFC = [
-    { id: 'dashboard', icon: '🏠', label: 'Dashboard', href: 'adminfc-dashboard.html' },
+    { id: 'dashboard', icon: '🏠', label: 'Overview Dashboard', href: 'adminfc-dashboard.html' },
     { id: 'office-mgmt', icon: '🏢', label: 'Office Management', href: 'adminfc-office-mgmt.html' },
     { id: 'eval-mgmt', icon: '📋', label: 'Evaluation Management', href: 'adminfc-eval-mgmt.html' },
     { id: 'question-mgmt', icon: '❓', label: 'Question Management', href: 'adminfc-question-mgmt.html' },
     { id: 'reports', icon: '📊', label: 'Reports', href: 'adminfc-reports.html' },
     { id: 'multimedia', icon: '📷', label: 'Multimedia', href: 'adminfc-multimedia.html' },
     { id: 'analytics', icon: '📈', label: 'Analytics', href: 'adminfc-analytics.html' },
+  ];
+
+  const navFCOffice = [
+    { id: 'fc-dashboard', icon: '🏠', label: 'Dashboard',           href: 'fc-office-dashboard.html' },
+    { id: 'eval-mgmt',    icon: '📋', label: 'Evaluations',         href: 'adminfc-eval-mgmt.html' },
+    { id: 'reports',      icon: '📊', label: 'Reports',             href: 'adminfc-reports.html' },
+    { id: 'multimedia',   icon: '📷', label: 'Multimedia',          href: 'adminfc-multimedia.html' },
+    { id: 'analytics',    icon: '📈', label: 'Analytics',           href: 'adminfc-analytics.html' },
   ];
 
   const navSuperAdmin = [
@@ -108,6 +122,8 @@ function buildSidebar(role, activePage) {
       ? navAdmin1
       : role === 'adminfc'
       ? navAdminFC
+      : role === 'fc_office'
+      ? navFCOffice
       : role === 'admin2'
       ? navAdmin2
       : navAdmin3;
@@ -117,7 +133,7 @@ function buildSidebar(role, activePage) {
       ? 'active-sa'
       : role === 'admin1'
       ? 'active-a1'
-      : role === 'adminfc'
+      : role === 'adminfc' || role === 'fc_office'
       ? 'active-afc'
       : role === 'admin2'
       ? 'active-a2'
@@ -130,6 +146,8 @@ function buildSidebar(role, activePage) {
       ? '⚙️ Admin 1 — Services'
       : role === 'adminfc'
       ? '🤝 Admin FC — Facilities &amp; Cleanliness'
+      : role === 'fc_office'
+      ? '🏢 FC Office Administrator'
       : role === 'admin2'
       ? '🏛️ Admin 2 — Cleanliness'
       : '🏢 Admin 3 — Facilities';
@@ -139,7 +157,7 @@ function buildSidebar(role, activePage) {
       ? 'role-superadmin'
       : role === 'admin1'
       ? 'role-admin1'
-      : role === 'adminfc'
+      : role === 'adminfc' || role === 'fc_office'
       ? 'role-adminfc'
       : role === 'admin2'
       ? 'role-admin2'
@@ -150,7 +168,7 @@ function buildSidebar(role, activePage) {
       ? 'Super Admin'
       : role === 'admin1'
       ? 'Admin 1'
-      : role === 'adminfc'
+      : role === 'adminfc' || role === 'fc_office'
       ? 'Admin FC'
       : role === 'admin2'
       ? 'Admin 2'
@@ -206,12 +224,14 @@ function buildTopbar(pageTitle, role, subtitle) {
       ? 'Admin 1 – Services'
       : role === 'adminfc'
       ? 'Admin FC – Facilities &amp; Cleanliness'
+      : role === 'fc_office'
+      ? 'FC Office Administrator'
       : role === 'admin2'
       ? 'Admin 2 – Cleanliness'
       : 'Admin 3 – Facilities';
 
   // Use the optional 3rd argument if given, otherwise look it up by role + page title
-  const roleSubtitles = PAGE_SUBTITLES[role] || PAGE_SUBTITLES.admin3;
+  const roleSubtitles = PAGE_SUBTITLES[role] || PAGE_SUBTITLES.adminfc;
   const subText =
     subtitle ||
     roleSubtitles[String(pageTitle).trim().toLowerCase()] ||
