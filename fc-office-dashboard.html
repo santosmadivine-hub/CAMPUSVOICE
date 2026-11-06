@@ -191,7 +191,7 @@
 <script src="shared.js"></script>
 <script type="module">
 import { guard as cvGuard, db } from "./cv-core.js";
-const session = await cvGuard(["adminfc"]);
+const session = await cvGuard(["fc_office"]);
 
 import { collection, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 

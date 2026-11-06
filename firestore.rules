@@ -56,8 +56,9 @@ service cloud.firestore {
     function isAdmin2() { return role() == 'admin2'; }
     function isAdmin3() { return role() == 'admin3'; }
     function isAdminFC() { return role() == 'adminfc'; }
+    function isFCOffice() { return role() == 'fc_office'; }
     function isSuperAdmin() { return role() == 'superadmin'; }
-    function isAnyAdmin() { return role() in ['superadmin', 'admin1', 'admin2', 'admin3', 'adminfc']; }
+    function isAnyAdmin() { return role() in ['superadmin', 'admin1', 'admin2', 'admin3', 'adminfc', 'fc_office']; }
 
     function isOffice() { return role() == 'office'; }
 
@@ -98,7 +99,7 @@ service cloud.firestore {
       allow create: if isAdmin1() || isSuperAdmin()
                     || (signedIn()
                         && request.auth.uid == uid
-                        && request.resource.data.role in ['admin1', 'admin2', 'admin3', 'adminfc', 'superadmin']
+                        && request.resource.data.role in ['admin1', 'admin2', 'admin3', 'adminfc', 'fc_office', 'superadmin']
                         && request.resource.data.status == 'active'
                         && request.resource.data.officeId == '');
 
@@ -140,7 +141,7 @@ service cloud.firestore {
                                 && request.resource.data.uid == request.auth.uid
                                 && (resource == null || resource.data.uid == request.auth.uid)
                                 && (
-                                  request.resource.data.role in ['admin1', 'admin2', 'admin3', 'adminfc', 'superadmin']
+                                  request.resource.data.role in ['admin1', 'admin2', 'admin3', 'adminfc', 'fc_office', 'superadmin']
                                   || (request.resource.data.role == 'office' && accountDoc().role == 'office')
                                 ));
 
@@ -404,21 +405,21 @@ service cloud.firestore {
     }
 
     match /facilities_cleanliness_evaluations/{docId} {
-      allow get: if isAdminFC() || isAdmin1()
+      allow get: if isAdminFC() || isFCOffice() || isAdmin1()
                  || (signedIn() && resource.data.get('userId', '') == request.auth.uid);
-      allow list: if isAdminFC() || isAdmin1();
+      allow list: if isAdminFC() || isFCOffice() || isAdmin1();
       allow create: if signedIn()
                     && request.resource.data.get('userId', '') == request.auth.uid;
-      allow update, delete: if isAdminFC() || isAdmin1();
+      allow update, delete: if isAdminFC() || isFCOffice() || isAdmin1();
     }
 
     match /fc_saved_reports/{docId} {
-      allow read, write: if isAdminFC() || isAdmin1();
+      allow read, write: if isAdminFC() || isFCOffice() || isAdmin1();
     }
 
     match /reportSettingsAdminFC/{docId} {
       allow read: if signedIn();
-      allow write: if isAdminFC() || isAdmin1();
+      allow write: if isAdminFC() || isFCOffice() || isAdmin1();
     }
 
     /* ---------------------------------------------------------------- *

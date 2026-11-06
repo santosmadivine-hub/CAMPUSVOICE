@@ -307,7 +307,7 @@ const session = await guard(['superadmin']);
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'accounts');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Accounts', 'superadmin');
 
-const accCol = query(collection(db, 'accounts'), where('role', '==', 'adminfc'));
+const accCol = query(collection(db, 'accounts'), where('role', '==', 'fc_office'));
 const offCol = collection(db, 'fc_offices');
 
 let allAccounts  = [];
@@ -495,7 +495,7 @@ document.getElementById('c-save').addEventListener('click', async () => {
     // Write Firestore account doc
     await setDoc(doc(db, 'accounts', newUid), {
       uid: newUid, email, username, displayName,
-      role: 'adminfc', status: 'active',
+      role: 'fc_office', status: 'active',
       linkedOfficeId, linkedOfficeName,
       createdAt: serverTimestamp(), createdBy: session.uid,
       updatedAt: serverTimestamp(), updatedBy: session.uid
