@@ -699,6 +699,9 @@ onSnapshot(collection(db, EVAL_COLLECTION), snap => {
       f6: Number(ev.facilitiesRating6) || 0,
       f7: Number(ev.facilitiesRating7) || 0,
       f8: Number(ev.facilitiesRating8) || 0,
+      // Snapshots of question text at time of submission — prevents history from changing when admin edits questions
+      clSnapshots: Array.from({length: 5}, (_, i) => ev[`cleanlinessQuestion${i + 1}`] || ""),
+      facSnapshots: Array.from({length: 8}, (_, i) => ev[`facilitiesQuestion${i + 1}`] || ""),
     };
     return rec;
   });
@@ -879,14 +882,23 @@ function openDetailModal(evalId) {
   if (!e) return;
   const date = e.date ? new Date(e.date).toLocaleString() : "-";
   const statusLabel = (STATUS_META[e.status] || STATUS_META.pending).label;
-  const clRows = CL_QUESTIONS.map((q, i) => {
-    const val = Number(e[q.field] ?? e[`cl${i+1}`]) || 0;
-    return `<div class="modal-row"><span>${i + 1}. ${q.label}</span><span>${val}</span></div>`;
-  }).join("") || `<div class="modal-row"><span style="color:#94a3b8;font-style:italic;">No cleanliness questions configured.</span><span></span></div>`;
-  const facRows = FAC_QUESTIONS.map((q, i) => {
-    const val = Number(e[q.field] ?? e[`f${i+1}`]) || 0;
-    return `<div class="modal-row"><span>${i + 1}. ${q.label}</span><span>${val}</span></div>`;
-  }).join("") || `<div class="modal-row"><span style="color:#94a3b8;font-style:italic;">No facilities questions configured.</span><span></span></div>`;
+  // Build question rows using saved snapshots (from submission time) so history
+  // never changes when admin adds, edits, or reorders questions later.
+  // Falls back to current CL_QUESTIONS/FAC_QUESTIONS for evaluations submitted
+  // before snapshot saving was introduced.
+  function buildQuestionRows(snapshots, currentQuestions, ratingPrefix, altPrefix) {
+    const hasSnapshots = snapshots && snapshots.some(s => s);
+    const items = hasSnapshots
+      ? snapshots.map((label, i) => ({ label: label || currentQuestions[i]?.label || `Q${i + 1}`, i })).filter(it => it.label)
+      : currentQuestions.map((q, i) => ({ label: q.label, i }));
+    if (!items.length) return `<div class="modal-row"><span style="color:#94a3b8;font-style:italic;">No questions recorded.</span><span></span></div>`;
+    return items.map(({ label, i }) => {
+      const val = Number(e[`${ratingPrefix}${i + 1}`] ?? e[`${altPrefix}${i + 1}`]) || 0;
+      return `<div class="modal-row"><span>${i + 1}. ${label}</span><span>${val}</span></div>`;
+    }).join("");
+  }
+  const clRows = buildQuestionRows(e.clSnapshots, CL_QUESTIONS, "cleanlinessRating", "cl");
+  const facRows = buildQuestionRows(e.facSnapshots, FAC_QUESTIONS, "facilitiesRating", "f");
   document.getElementById("detail-modal-body").innerHTML = `
     <div class="modal-row"><span>Office</span><span>${e.officeName}</span></div>
     <div class="modal-row"><span>Category</span><span>${catPillHtml(e.cleanlinessCategory)}</span></div>
