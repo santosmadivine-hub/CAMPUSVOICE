@@ -275,17 +275,6 @@
       </div>
     </div>
 
-    <div class="analytics-grid">
-      <div class="card">
-        <div class="card-title">Submission Status <span class="card-sub">— by category</span></div>
-        <div id="status-breakdown-chart"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Rating Distribution <span class="card-sub">— all offices</span></div>
-        <div class="bar-chart" id="rating-distribution-chart" style="margin-top: 12px;"></div>
-      </div>
-    </div>
-
     <div class="pie-row">
       <div class="card">
         <div class="card-title">Respondents by Sex</div>
@@ -471,8 +460,6 @@ onSnapshot(collection(db, EVAL_COLLECTION), (snap) => {
 
 function renderAll() {
   renderStatCards();
-  renderSubmissionStatus();
-  renderRatingDistribution();
   renderRespondentPies();
   renderClDimensions();
   renderFacDimensions();
@@ -500,69 +487,6 @@ const STATUS_META = {
 };
 const STATUS_VBAR_MAX_H = 200;
 
-function renderSubmissionStatus() {
-  const el = document.getElementById("status-breakdown-chart");
-  if (!evaluations.length) { el.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
-
-  const cats = ["Comfort Room","Surroundings","Laboratories"];
-  const statusOrder = ["pending","no_action","resolved"];
-  const totals = {};
-  cats.forEach(c => { totals[c] = evaluations.filter(e=>e.cleanlinessCategory===c).length; });
-
-  const groupsHtml = statusOrder.map(statusKey => {
-    const meta = STATUS_META[statusKey];
-    const cols = cats.map(c => {
-      const count = evaluations.filter(e=>e.cleanlinessCategory===c&&e.status===statusKey).length;
-      const pct = totals[c] ? Math.round((count/totals[c])*100) : 0;
-      const h = Math.max(1, Math.round((pct/100)*STATUS_VBAR_MAX_H));
-      return `<div class="status-vbar-col" title="${c} — ${meta.label}: ${count} of ${totals[c]} (${pct}%)"><div class="status-vbar-value">${pct}%</div><div class="status-vbar-fill" style="height:${h}px;background:${CAT_COLORS[c]};"></div></div>`;
-    }).join("");
-    return `<div class="status-vbar-group">${cols}</div>`;
-  }).join("");
-
-  const yAxis = [100,75,50,25,0].map(pct => {
-    const top = STATUS_VBAR_MAX_H-(pct/100)*STATUS_VBAR_MAX_H;
-    return `<span style="top:${top}px;">${pct}%</span>`;
-  }).join("");
-
-  const xLabels = statusOrder.map(s=>`<div class="status-vbar-label">${STATUS_META[s].label}</div>`).join("");
-  const legend = cats.map(c=>`<div class="status-vbar-legend-item"><span class="status-vbar-legend-swatch" style="background:${CAT_COLORS[c]};"></span><span>${c}</span></div>`).join("");
-
-  el.innerHTML = `
-    <div class="status-vbar-wrap" style="height:${STATUS_VBAR_MAX_H}px;">
-      <div class="status-vbar-yaxis" style="height:${STATUS_VBAR_MAX_H}px;">${yAxis}</div>
-      <div class="status-vbar-chart" style="height:${STATUS_VBAR_MAX_H}px;">${groupsHtml}</div>
-    </div>
-    <div class="status-vbar-labels">${xLabels}</div>
-    <div class="status-vbar-legend">${legend}</div>`;
-}
-
-function renderRatingDistribution() {
-  const el = document.getElementById("rating-distribution-chart");
-  const total = evaluations.length;
-  if (!total) { el.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
-
-  const counts = {5:0,4:0,3:0,2:0,1:0};
-  evaluations.forEach(e => { const r=Math.max(1,Math.min(5,Math.round(overallAvg(e)))); counts[r]++; });
-  const ratings=[5,4,3,2,1], labels=["5 Stars","4 Stars","3 Stars","2 Stars","1 Star"], colors=["#2563eb","#38bdf8","#f97316","#fb923c","#dc2626"];
-  const W=420, H=220, PAD_LEFT=40, PAD_BOTTOM=30, PAD_TOP=24;
-  const plotH=H-PAD_BOTTOM-PAD_TOP, plotW=W-PAD_LEFT-20, BAR_W=50, GAP=16;
-  const totalBarWidth=ratings.length*BAR_W+(ratings.length-1)*GAP;
-  const startX=PAD_LEFT+(plotW-totalBarWidth)/2;
-
-  const gridLines=[0,25,50,75,100].map(p => {
-    const gy=H-PAD_BOTTOM-(p/100)*plotH;
-    return `<line x1="${PAD_LEFT}" y1="${gy}" x2="${W-20}" y2="${gy}" stroke="#f1f5f9" stroke-width="1"/><text x="${PAD_LEFT-8}" y="${gy+4}" text-anchor="end" font-size="10" fill="#94a3b8">${p}%</text>`;
-  }).join("");
-
-  const bars=ratings.map((rating,i) => {
-    const count=counts[rating], pct=(count/total)*100;
-    const x=startX+i*(BAR_W+GAP), barH=(pct/100)*plotH, y=H-PAD_BOTTOM-barH;
-    return `<rect x="${x}" y="${y}" width="${BAR_W}" height="${barH}" rx="8" fill="${colors[i]}"><title>${labels[i]}: ${count} (${pct.toFixed(1)}%)</title></rect><text x="${x+BAR_W/2}" y="${H-PAD_BOTTOM+18}" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">${rating}★</text>`;
-  }).join("");
-
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:500px;height:auto;display:block;margin:0 auto;">${gridLines}<line x1="${PAD_LEFT}" y1="${H-PAD_BOTTOM}" x2="${W-20}" y2="${H-PAD_BOTTOM}" stroke="#e2e8f0" stroke-width="1.5"/>${bars}</svg>`;
-}
 
 function sexDonutSegmentPath(cx,cy,radius,startPct,endPct) {
   const span=endPct-startPct; if (span<=0) return "";
