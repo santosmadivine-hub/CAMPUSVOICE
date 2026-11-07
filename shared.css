@@ -213,40 +213,57 @@ body.sidebar-open {
   transform:translateX(4px);
 }
 
+/* ── Active nav item — shared base ── */
+.nav-item[class*="active-"]{
+  color:#ffffff;
+  font-weight:600;
+  transform:translateX(2px);
+  position:relative;
+}
+/* left accent bar */
+.nav-item[class*="active-"]::after{
+  content:"";
+  position:absolute;
+  left:0; top:14%; bottom:14%;
+  width:4px;
+  border-radius:0 4px 4px 0;
+  background:#fff;
+  opacity:0.9;
+}
+
+/* Admin 1 — blue */
 .nav-item.active-a1{
-  background:rgba(59,130,246,0.25);
-  color:#ffffff;
-  border-color:rgba(59,130,246,0.5);
-
-  box-shadow:
-    0 8px 20px rgba(59,130,246,0.15);
+  background:rgba(37,99,235,0.55);
+  border-color:rgba(96,165,250,0.7);
+  box-shadow:0 6px 18px rgba(37,99,235,0.35);
 }
 
+/* Admin 2 — blue */
 .nav-item.active-a2{
-  background:rgba(59,130,246,0.25);
-  color:#ffffff;
-  border-color:rgba(59,130,246,0.5);
-
-  box-shadow:
-    0 8px 20px rgba(59,130,246,0.15);
+  background:rgba(37,99,235,0.55);
+  border-color:rgba(96,165,250,0.7);
+  box-shadow:0 6px 18px rgba(37,99,235,0.35);
 }
 
+/* Admin 3 — blue */
 .nav-item.active-a3{
-  background:rgba(59,130,246,0.25);
-  color:#ffffff;
-  border-color:rgba(59,130,246,0.5);
-
-  box-shadow:
-    0 8px 20px rgba(59,130,246,0.15);
+  background:rgba(37,99,235,0.55);
+  border-color:rgba(96,165,250,0.7);
+  box-shadow:0 6px 18px rgba(37,99,235,0.35);
 }
 
+/* Super Admin — purple */
 .nav-item.active-sa{
-  background:rgba(124,58,237,0.3);
-  color:#ffffff;
-  border-color:rgba(167,139,250,0.5);
+  background:rgba(109,40,217,0.60);
+  border-color:rgba(167,139,250,0.75);
+  box-shadow:0 6px 18px rgba(109,40,217,0.35);
+}
 
-  box-shadow:
-    0 8px 20px rgba(124,58,237,0.2);
+/* Admin FC / FC Office — teal-blue */
+.nav-item.active-afc{
+  background:rgba(2,132,199,0.60);
+  border-color:rgba(56,189,248,0.75);
+  box-shadow:0 6px 18px rgba(2,132,199,0.35);
 }
 
 .nav-icon{
@@ -580,15 +597,24 @@ body.sidebar-open {
 
   .nav-icon { transition: transform .25s ease; }
   .nav-item:hover .nav-icon { transform: scale(1.2) rotate(-6deg); }
+  .nav-item[class*="active-"] .nav-icon { transform: scale(1.18); }
 
   .nav-item:not([class*="active-"]):hover {
     background: rgba(255,255,255,.14);
     border-color: rgba(255,255,255,.18);
     box-shadow: 0 6px 16px rgba(0,0,0,.18);
   }
-  .nav-item[class*="active-"]:hover {
-    background: rgba(59,130,246,.38);
-    box-shadow: 0 10px 24px rgba(59,130,246,.28);
+  .nav-item.active-a1:hover, .nav-item.active-a2:hover, .nav-item.active-a3:hover {
+    background: rgba(37,99,235,.65);
+    box-shadow: 0 10px 24px rgba(37,99,235,.35);
+  }
+  .nav-item.active-sa:hover {
+    background: rgba(109,40,217,.70);
+    box-shadow: 0 10px 24px rgba(109,40,217,.35);
+  }
+  .nav-item.active-afc:hover {
+    background: rgba(2,132,199,.70);
+    box-shadow: 0 10px 24px rgba(2,132,199,.35);
   }
 
   /* Logout button */

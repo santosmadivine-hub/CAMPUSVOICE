@@ -96,6 +96,7 @@ function buildSidebar(role, activePage) {
     { id: 'reports', icon: '📊', label: 'Reports', href: 'adminfc-reports.html' },
     { id: 'multimedia', icon: '📷', label: 'Multimedia', href: 'adminfc-multimedia.html' },
     { id: 'analytics', icon: '📈', label: 'Analytics', href: 'adminfc-analytics.html' },
+    { id: 'settings',  icon: '⚙️', label: 'Settings',  href: 'adminfc-settings.html' },
   ];
 
   const navFCOffice = [
