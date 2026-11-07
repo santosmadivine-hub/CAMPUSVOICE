@@ -352,20 +352,10 @@
     </div>
     <div style="padding:18px 24px 4px;">
       <div id="status-edit-info"></div>
-      <div class="edit-field" style="margin-top:14px;">
-        <label>New Status</label>
-        <div style="display:flex;gap:8px;margin-top:4px;">
-          <button type="button" class="status-toggle-opt" data-val="pending"   style="flex:1;padding:10px 8px;border-radius:11px;border:1.5px solid #e2e8f0;background:#f8fafc;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;transition:all .2s;">⏳ Pending</button>
-          <button type="button" class="status-toggle-opt" data-val="no_action" style="flex:1;padding:10px 8px;border-radius:11px;border:1.5px solid #e2e8f0;background:#f8fafc;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;transition:all .2s;">🙅 No Action</button>
-          <button type="button" class="status-toggle-opt" data-val="resolved"  style="flex:1;padding:10px 8px;border-radius:11px;border:1.5px solid #e2e8f0;background:#f8fafc;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;transition:all .2s;">✅ Resolved</button>
-        </div>
-        <input type="hidden" id="status-edit-value">
-      </div>
     </div>
     <div class="modal-footer" style="display:flex;gap:10px;padding:16px 24px 20px;border-top:1px solid #f0f9ff;margin-top:16px;">
       <button class="btn btn-secondary" id="status-edit-cancel" style="flex:1;">Cancel</button>
-      <button class="btn" id="status-mark-resolved" style="flex:1;background:#dcfce7;color:#166534;border:1.5px solid #bbf7d0;font-weight:700;display:none;">✅ Mark as Resolved</button>
-      <button class="btn btn-primary"   id="status-edit-save"   style="flex:1;">Save Changes</button>
+      <button class="btn" id="status-mark-resolved" style="flex:1;background:#dcfce7;color:#166534;border:1.5px solid #bbf7d0;font-weight:700;">✅ Mark as Resolved</button>
     </div>
   </div>
 </div>
@@ -911,35 +901,8 @@ document.getElementById("detail-modal-close").addEventListener("click", () => de
 detailModal.addEventListener("click", ev => { if (ev.target === detailModal) detailModal.classList.remove("open"); });
 
 // ── Status Edit Modal ──
-const statusEditModal   = document.getElementById("status-edit-modal");
-const statusEditValue   = document.getElementById("status-edit-value");
-let statusEditingId     = null;
-
-const STATUS_COLORS = {
-  pending:   { border: "#f59e0b", bg: "#fef3c7", color: "#b45309" },
-  no_action: { border: "#6366f1", bg: "#e0e7ff", color: "#4338ca" },
-  resolved:  { border: "#16a34a", bg: "#dcfce7", color: "#166534" }
-};
-
-function setStatusToggleOpt(val) {
-  statusEditValue.value = val;
-  document.querySelectorAll(".status-toggle-opt").forEach(btn => {
-    const c = STATUS_COLORS[btn.dataset.val] || {};
-    if (btn.dataset.val === val) {
-      btn.style.borderColor = c.border || "#2563eb";
-      btn.style.background  = c.bg    || "#dbeafe";
-      btn.style.color       = c.color || "#1e40af";
-    } else {
-      btn.style.borderColor = "#e2e8f0";
-      btn.style.background  = "#f8fafc";
-      btn.style.color       = "#64748b";
-    }
-  });
-}
-
-document.querySelectorAll(".status-toggle-opt").forEach(btn => {
-  btn.addEventListener("click", () => setStatusToggleOpt(btn.dataset.val));
-});
+const statusEditModal = document.getElementById("status-edit-modal");
+let statusEditingId   = null;
 
 function openEditStatusModal(evalId) {
   const e = evaluations.find(x => x.id === evalId);
@@ -954,7 +917,6 @@ function openEditStatusModal(evalId) {
     <div class="modal-row"><span>Date</span><span>${date}</span></div>
     <div class="modal-row"><span>Current Status</span><span>${(STATUS_META[e.status] || STATUS_META.pending).label}</span></div>
   `;
-  setStatusToggleOpt(e.status || "pending");
   document.getElementById("status-mark-resolved").style.display = e.status === "pending" ? "" : "none";
   statusEditModal.classList.add("open");
 }
@@ -967,9 +929,7 @@ document.getElementById("status-mark-resolved").addEventListener("click", async 
   const record = evaluations.find(x => x.id === statusEditingId);
   if (!record) return;
   const resolveBtn = document.getElementById("status-mark-resolved");
-  const saveBtn    = document.getElementById("status-edit-save");
   resolveBtn.disabled = true; resolveBtn.textContent = "Saving…";
-  saveBtn.disabled = true;
   try {
     await updateDoc(doc(db, EVAL_COLLECTION, record.id), {
       status: "resolved",
@@ -977,14 +937,13 @@ document.getElementById("status-mark-resolved").addEventListener("click", async 
       feedbackUpdatedBy: ADMIN_SENDER_ID
     });
     try { await updateDoc(doc(db, HISTORY_COLLECTION, record.id), { status: "resolved" }); } catch {}
-    await sendStatusNotification(record, "resolved");
+    await notifyUserOfStatusChange(record, "resolved");
     closeStatusEditModal();
   } catch (err) {
     console.error("Failed to mark resolved:", err);
     resolveBtn.textContent = "✅ Mark as Resolved";
   } finally {
     resolveBtn.disabled = false;
-    saveBtn.disabled = false;
   }
 });
 document.getElementById("status-edit-close").addEventListener("click",  closeStatusEditModal);
@@ -1012,31 +971,6 @@ async function notifyUserOfStatusChange(record, newStatus) {
   }
 }
 
-document.getElementById("status-edit-save").addEventListener("click", async () => {
-  if (!statusEditingId) return;
-  const record = evaluations.find(x => x.id === statusEditingId);
-  if (!record) return;
-  const newStatus = statusEditValue.value;
-  if (!newStatus) { alert("Please select a status."); return; }
-
-  const saveBtn = document.getElementById("status-edit-save");
-  saveBtn.disabled = true; saveBtn.textContent = "Saving…";
-  try {
-    const statusChanged = record.status !== newStatus;
-    await updateDoc(doc(db, EVAL_COLLECTION, record.id), {
-      status: newStatus,
-      feedbackUpdatedAt: Date.now(),
-      feedbackUpdatedBy: ADMIN_SENDER_ID
-    });
-    if (statusChanged) await notifyUserOfStatusChange(record, newStatus);
-    closeStatusEditModal();
-  } catch (err) {
-    alert("Failed to save changes. Please try again.");
-    console.error(err);
-  } finally {
-    saveBtn.disabled = false; saveBtn.textContent = "Save Changes";
-  }
-});
 
 // ── Edit Form Modal ──
 const formModal = document.getElementById("form-modal");
