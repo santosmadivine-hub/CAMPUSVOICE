@@ -68,40 +68,43 @@
     <div class="dashboard-container">
 
       <div class="stat-grid" id="statGrid">
-        <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-label">Total Offices</div><div class="stat-value" id="statOffices">—</div><div class="stat-sub">In fc_offices</div></div>
-        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Active Offices</div><div class="stat-value" id="statActiveOffices">—</div><div class="stat-sub">Status = active</div></div>
-        <div class="stat-card"><div class="stat-icon">🔑</div><div class="stat-label">Admin FC Accounts</div><div class="stat-value" id="statAccounts">—</div><div class="stat-sub">Total accounts</div></div>
-        <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-label">Active Accounts</div><div class="stat-value" id="statActiveAccounts">—</div><div class="stat-sub">Currently enabled</div></div>
+        <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-label">Total Offices</div><div class="stat-value" id="statOffices">—</div><div class="stat-sub">Registered offices</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Active Offices</div><div class="stat-value" id="statActiveOffices">—</div><div class="stat-sub">Currently enabled</div></div>
+        <div class="stat-card"><div class="stat-icon">🔑</div><div class="stat-label">FC Office Accounts</div><div class="stat-value" id="statAccounts">—</div><div class="stat-sub">Accounts created</div></div>
+        <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-label">Active Accounts</div><div class="stat-value" id="statActiveAccounts">—</div><div class="stat-sub">Currently active</div></div>
       </div>
 
-      <div class="two-col">
-        <div class="card">
-          <div class="section-title">Quick Actions</div>
-          <div class="quick-grid">
-            <a class="quick-btn" href="superadmin-office-mgmt.html"><div class="qa-icon">🏢</div><div class="qa-label">Manage Offices</div></a>
-            <a class="quick-btn" href="superadmin-accounts.html"><div class="qa-icon">🔑</div><div class="qa-label">Manage Accounts</div></a>
-          </div>
+      <!-- FC Office Accounts Table -->
+      <div class="card" style="margin-top:24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div class="section-title" style="margin:0;">FC Office Accounts</div>
+          <a href="superadmin-accounts.html" style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#2563eb;text-decoration:none;">Manage →</a>
         </div>
-
-        <div class="card">
-          <div class="section-title">System Info</div>
-          <div style="margin-top:12px;font-family:'DM Sans',sans-serif;font-size:13px;color:#475569;display:flex;flex-direction:column;gap:10px;">
-            <div>🔗 <strong>Shared Database</strong> — Offices are stored in <code>fc_offices</code> and sync automatically with Admin FC in real time.</div>
-            <div>👥 <strong>Accounts</strong> — Admin FC accounts in the <code>accounts</code> collection. Changes take effect immediately.</div>
-            <div>🛡️ <strong>Role</strong> — Only Super Admin can add or remove offices and manage Admin FC accounts.</div>
-          </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-family:'DM Sans',sans-serif;font-size:13px;" id="accounts-table">
+            <thead>
+              <tr style="border-bottom:2px solid #e2e8f0;">
+                <th style="text-align:left;padding:8px 12px;color:#64748b;font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.05em;">Name</th>
+                <th style="text-align:left;padding:8px 12px;color:#64748b;font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.05em;">Username</th>
+                <th style="text-align:left;padding:8px 12px;color:#64748b;font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.05em;">Gmail</th>
+                <th style="text-align:left;padding:8px 12px;color:#64748b;font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.05em;">Linked Office</th>
+                <th style="text-align:left;padding:8px 12px;color:#64748b;font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.05em;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="accounts-tbody">
+              <tr><td colspan="5" style="padding:20px;text-align:center;color:#94a3b8;">Loading…</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div class="two-col">
-        <div class="card">
-          <div class="section-title">Offices Overview</div>
-          <div class="office-list" id="officesList"><div class="empty-state">Loading…</div></div>
+      <!-- Offices Coverage -->
+      <div class="card" style="margin-top:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div class="section-title" style="margin:0;">Offices Coverage</div>
+          <a href="superadmin-office-mgmt.html" style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#2563eb;text-decoration:none;">Manage →</a>
         </div>
-        <div class="card">
-          <div class="section-title">Admin FC Accounts</div>
-          <div class="accounts-list" id="accountsList"><div class="empty-state">Loading…</div></div>
-        </div>
+        <div id="offices-coverage" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;"></div>
       </div>
 
     </div>
@@ -119,7 +122,7 @@ document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Dashboard', 'superadmin');
 
 const fcOffices  = collection(db, 'fc_offices');
-const fcAccounts = query(collection(db, 'accounts'), where('role', '==', 'adminfc'));
+const fcAccounts = query(collection(db, 'accounts'), where('role', '==', 'fc_office'));
 
 let officesData  = [];
 let accountsData = [];
@@ -131,40 +134,63 @@ function updateStats() {
   document.getElementById('statActiveAccounts').textContent = accountsData.filter(a => (a.status || 'active') === 'active').length;
 }
 
-function renderOffices() {
-  const el = document.getElementById('officesList');
-  if (!officesData.length) { el.innerHTML = '<div class="empty-state">No offices yet.</div>'; return; }
-  el.innerHTML = officesData.map(o => `
-    <div class="office-row">
-      <span class="office-name">🏢 ${o.name || '(unnamed)'}</span>
-      <span class="badge ${(o.status || 'active') === 'active' ? 'badge-active' : 'badge-inactive'}">${(o.status || 'active') === 'active' ? 'Active' : 'Inactive'}</span>
-    </div>`).join('');
+function renderAccountsTable() {
+  const tbody = document.getElementById('accounts-tbody');
+  if (!accountsData.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:#94a3b8;">No FC office accounts created yet.</td></tr>';
+    return;
+  }
+  const sorted = [...accountsData].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  tbody.innerHTML = sorted.map(a => {
+    const isActive = (a.status || 'active') === 'active';
+    const badgeStyle = isActive
+      ? 'background:#dcfce7;color:#166534;'
+      : 'background:#fee2e2;color:#991b1b;';
+    return `<tr style="border-bottom:1px solid #f1f5f9;">
+      <td style="padding:10px 12px;font-weight:600;color:#0f172a;">${a.displayName || '(no name)'}</td>
+      <td style="padding:10px 12px;color:#475569;font-family:monospace;">@${a.username || '—'}</td>
+      <td style="padding:10px 12px;color:#475569;">${a.email || '—'}</td>
+      <td style="padding:10px 12px;color:#1d4ed8;font-weight:500;">🏢 ${a.linkedOfficeName || '—'}</td>
+      <td style="padding:10px 12px;"><span style="padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;${badgeStyle}">${isActive ? 'Active' : 'Inactive'}</span></td>
+    </tr>`;
+  }).join('');
 }
 
-function renderAccounts() {
-  const el = document.getElementById('accountsList');
-  if (!accountsData.length) { el.innerHTML = '<div class="empty-state">No Admin FC accounts yet.</div>'; return; }
-  el.innerHTML = accountsData.map(a => {
-    const initials = (a.displayName || a.username || '?').charAt(0).toUpperCase();
-    return `<div class="account-row">
-      <div class="account-avatar">${initials}</div>
-      <div class="account-info">
-        <div class="account-name">${a.displayName || a.username || '(no name)'}</div>
-        <div class="account-email">@${a.username || '—'}</div>
+function renderOfficesCoverage() {
+  const el = document.getElementById('offices-coverage');
+  if (!officesData.length) {
+    el.innerHTML = '<div style="color:#94a3b8;font-family:\'DM Sans\',sans-serif;font-size:13px;">No offices yet.</div>';
+    return;
+  }
+  const linkedOfficeNames = new Set(accountsData.map(a => a.linkedOfficeName).filter(Boolean));
+  el.innerHTML = officesData.map(o => {
+    const name     = o.name || '(unnamed)';
+    const isActive = (o.status || 'active') === 'active';
+    const hasAcct  = linkedOfficeNames.has(name);
+    const acctCount = accountsData.filter(a => a.linkedOfficeName === name).length;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid ${hasAcct ? '#bbf7d0' : '#e2e8f0'};background:${hasAcct ? '#f0fdf4' : '#f8fafc'};">
+      <div style="font-size:22px;">${hasAcct ? '✅' : '⬜'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:11px;color:${hasAcct ? '#16a34a' : '#94a3b8'};margin-top:2px;">
+          ${hasAcct ? `${acctCount} account${acctCount > 1 ? 's' : ''} linked` : 'No account linked'}
+          · <span style="color:${isActive ? '#16a34a' : '#dc2626'}">${isActive ? 'Active' : 'Inactive'}</span>
+        </div>
       </div>
-      <span class="badge ${(a.status || 'active') === 'active' ? 'badge-active' : 'badge-inactive'}">${(a.status || 'active') === 'active' ? 'Active' : 'Inactive'}</span>
     </div>`;
   }).join('');
 }
 
+function renderAll() { updateStats(); renderAccountsTable(); renderOfficesCoverage(); }
+
 onSnapshot(fcOffices, snap => {
   officesData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  updateStats(); renderOffices();
+  renderAll();
 });
 
 onSnapshot(fcAccounts, snap => {
   accountsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  updateStats(); renderAccounts();
+  renderAll();
 });
 </script>
 </body>
