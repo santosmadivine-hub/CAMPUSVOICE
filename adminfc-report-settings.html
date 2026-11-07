@@ -191,16 +191,12 @@
 
 <script src="shared.js"></script>
 
-<!-- 1) Initialize Firebase FIRST (the core module below uses getApp()) -->
 <script type="module">
-/* Firebase Authentication session + role gate.
-   Imported first so the persisted sign-in is attached to Firestore before any
-   query runs, and so a visitor without the right role never reaches this page.
-   Firestore Security Rules enforce the same boundary server-side. */
 import { guard as cvGuard } from "./cv-core.js";
-await cvGuard(["adminfc"]);
-
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// 1. Initialize Firebase before any module that calls getApp()
 getApps().length || initializeApp({
   apiKey: "AIzaSyBGLm1iZIMEfNfZIWbGXs8teGwJXHmLr1E",
   authDomain: "kristal-adb78.firebaseapp.com",
@@ -210,14 +206,13 @@ getApps().length || initializeApp({
   appId: "1:1016283938031:web:54c4d13409d9784ad7af1a",
   measurementId: "G-LK8D1CBQ2J"
 });
-</script>
 
-<!-- 2) Settings editor -->
-<script type="module">
-import { GROUPS, ALL, DEFAULTS, curRef, defRef, headerHtml, footerHtml, signaturesHtml }
-  from "./adminfc-report-settings.js";
-import { getDoc, setDoc, onSnapshot }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// 2. Guard check
+await cvGuard(["adminfc"]);
+
+// 3. Dynamic import so adminfc-report-settings.js runs AFTER Firebase is ready
+const { GROUPS, ALL, DEFAULTS, curRef, defRef, headerHtml, footerHtml, signaturesHtml }
+  = await import("./adminfc-report-settings.js");
 
 const $ = id => document.getElementById(id);
 
@@ -314,7 +309,7 @@ $("rsSave").onclick = async () => {
   catch (err) { alert("❌ Failed to save: " + err.message); }
 };
 $("rsSaveDefault").onclick = async () => {
-  if (!confirm("Use the current form values as the default that "Reset to Default" restores?")) return;
+  if (!confirm('Use the current form values as the default that "Reset to Default" restores?')) return;
   const p = payload();
   if (tooBig(p)) { alert("❌ The images are too large. Please use smaller images."); return; }
   try { await setDoc(defRef, p); alert("✅ Default saved."); }
