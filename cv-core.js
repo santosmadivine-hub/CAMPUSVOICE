@@ -622,16 +622,16 @@ export function validatePassword(password) {
 }
 
 /**
- * A Gmail address, specifically — @gmail.com or its @googlemail.com alias.
+ * Accepts @gmail.com, @googlemail.com, and @isufst.edu.ph addresses.
  * Lives here, not cv-accounts.js, for the same reason validatePassword does:
  * this module's own changeOwnEmail() needs it without a circular import.
  */
-const GMAIL_PATTERN = /^[a-z0-9](?:[a-z0-9._%+-]{0,63})@(gmail\.com|googlemail\.com)$/i;
+const GMAIL_PATTERN = /^[a-z0-9](?:[a-z0-9._%+-]{0,63})@(gmail\.com|googlemail\.com|isufst\.edu\.ph)$/i;
 
 export function validateGmailAddress(email) {
   const value = String(email || "").trim();
-  if (!value) return "Gmail address is required.";
-  if (!GMAIL_PATTERN.test(value)) return "Enter a valid Gmail address (it must end in @gmail.com).";
+  if (!value) return "Email address is required.";
+  if (!GMAIL_PATTERN.test(value)) return "Enter a valid email address (@gmail.com or @isufst.edu.ph).";
   return null;
 }
 
