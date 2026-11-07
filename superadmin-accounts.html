@@ -164,8 +164,7 @@
       <div class="field-error" id="c-error"></div>
 
       <div class="banner banner-warn" style="margin:14px 0 0;">
-        Write the password down before saving — Firebase Authentication stores it in a form
-        nobody can read back, so it cannot be shown again after this modal closes.
+        The credentials will be emailed to the office Gmail automatically after saving. Keep a copy just in case — the password cannot be shown again after this modal closes.
       </div>
     </div>
 
@@ -187,7 +186,7 @@
       </div>
     </div>
     <div class="modal-body">
-      <p>Give these credentials to the Admin FC staff member. They sign in at the admin login page using their Gmail address or username.</p>
+      <p>Give these credentials to the Admin FC staff member. They sign in at the FC Office login page using their Gmail address or username.</p>
       <div class="credential-box">
         <div class="credential-row">
           <span class="credential-key">Name</span>
@@ -210,9 +209,11 @@
           <span class="credential-val" id="done-office"></span>
         </div>
       </div>
+      <div id="done-email-status" style="margin-top:14px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;display:none;"></div>
     </div>
     <div class="modal-actions">
       <button class="btn" id="done-copy">📋 Copy credentials</button>
+      <button class="btn" id="done-resend" style="display:none;">📧 Resend Email</button>
       <button class="btn btn-primary" id="done-close">Done</button>
     </div>
   </div>
@@ -291,6 +292,45 @@
 </div>
 
 <script src="shared.js"></script>
+<!-- EmailJS — sends credentials to the new account's Gmail automatically -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  /* ── EmailJS configuration ─────────────────────────────────────
+   * 1. Sign up free at https://www.emailjs.com/
+   * 2. Add a Gmail service  → copy the Service ID here
+   * 3. Create an email template with these variables:
+   *      {{to_name}}   {{to_email}}  {{username}}
+   *      {{password}}  {{office}}    {{login_url}}
+   *    Set "To Email" field to  {{to_email}}
+   * 4. Copy the Template ID and your Public Key here
+   * ─────────────────────────────────────────────────────────────*/
+  const EMAILJS_SERVICE_ID  = 'service_ydnym2q';
+  const EMAILJS_TEMPLATE_ID = 'template_53d8t75';
+  const EMAILJS_PUBLIC_KEY  = 'c0YNL3_mCHJFrjGSf';
+  const LOGIN_URL = window.location.origin + '/fc-office-login.html';
+
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+  async function sendWelcomeEmail({ name, username, email, password, office }) {
+    if (!EMAILJS_SERVICE_ID || EMAILJS_SERVICE_ID === 'YOUR_SERVICE_ID') {
+      return { ok: false, reason: 'EmailJS not configured yet — credentials shown above.' };
+    }
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_name:   name,
+        to_email:  email,
+        username:  username,
+        password:  password,
+        office:    office || '—',
+        login_url: LOGIN_URL
+      });
+      return { ok: true };
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      return { ok: false, reason: err?.text || err?.message || 'Unknown error' };
+    }
+  }
+</script>
 <script type="module">
 import {
   guard, db, collection, doc, getDoc, setDoc, updateDoc, onSnapshot,
@@ -514,7 +554,32 @@ document.getElementById('c-save').addEventListener('click', async () => {
     document.getElementById('done-password').textContent = password;
     document.getElementById('done-office').textContent   = linkedOfficeName || '—';
     document.getElementById('done-subtitle').textContent = `Account for ${displayName} created successfully.`;
+
+    // Reset email status UI
+    const emailStatusEl = document.getElementById('done-email-status');
+    const resendBtn     = document.getElementById('done-resend');
+    emailStatusEl.style.display = 'block';
+    emailStatusEl.style.background = '#f1f5f9';
+    emailStatusEl.style.color = '#475569';
+    emailStatusEl.textContent = '📧 Sending credentials to ' + email + '…';
+    resendBtn.style.display = 'none';
+
     document.getElementById('done-modal').classList.add('open');
+
+    // Send welcome email (non-blocking — modal is already open)
+    sendWelcomeEmail(lastCreated).then(result => {
+      if (result.ok) {
+        emailStatusEl.style.background = '#dcfce7';
+        emailStatusEl.style.color = '#166534';
+        emailStatusEl.textContent = '✅ Credentials emailed to ' + email;
+        resendBtn.style.display = 'none';
+      } else {
+        emailStatusEl.style.background = '#fef3c7';
+        emailStatusEl.style.color = '#92400e';
+        emailStatusEl.textContent = '⚠️ Email not sent — ' + (result.reason || 'check console');
+        resendBtn.style.display = '';
+      }
+    });
 
   } catch (err) {
     let msg = err.message || 'An error occurred.';
@@ -538,6 +603,28 @@ document.getElementById('done-copy').addEventListener('click', () => {
     `Office: ${lastCreated.office || '—'}`
   ].join('\n');
   navigator.clipboard.writeText(text).catch(() => {});
+});
+
+document.getElementById('done-resend').addEventListener('click', async () => {
+  if (!lastCreated) return;
+  const emailStatusEl = document.getElementById('done-email-status');
+  const resendBtn     = document.getElementById('done-resend');
+  emailStatusEl.style.background = '#f1f5f9';
+  emailStatusEl.style.color = '#475569';
+  emailStatusEl.textContent = '📧 Resending to ' + lastCreated.email + '…';
+  resendBtn.disabled = true;
+  const result = await sendWelcomeEmail(lastCreated);
+  resendBtn.disabled = false;
+  if (result.ok) {
+    emailStatusEl.style.background = '#dcfce7';
+    emailStatusEl.style.color = '#166534';
+    emailStatusEl.textContent = '✅ Credentials emailed to ' + lastCreated.email;
+    resendBtn.style.display = 'none';
+  } else {
+    emailStatusEl.style.background = '#fef3c7';
+    emailStatusEl.style.color = '#92400e';
+    emailStatusEl.textContent = '⚠️ Email not sent — ' + (result.reason || 'check console');
+  }
 });
 
 document.getElementById('done-close').addEventListener('click', () => {
