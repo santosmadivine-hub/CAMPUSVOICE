@@ -199,19 +199,6 @@ function buildSidebar(role, activePage) {
         `).join('')}
       </nav>
 
-      ${role === 'adminfc' ? `
-      <div class="sidebar-quick-tools">
-        <div class="sidebar-quick-label">Quick Tools</div>
-        <div class="sidebar-quick-grid">
-          <a href="adminfc-analytics.html"    class="sidebar-quick-btn" title="Analytics">    <span>📈</span><span>Analytics</span></a>
-          <a href="adminfc-office-mgmt.html"  class="sidebar-quick-btn" title="Office Mgmt">  <span>🏢</span><span>Offices</span></a>
-          <a href="adminfc-eval-mgmt.html"    class="sidebar-quick-btn" title="Eval Mgmt">    <span>📋</span><span>Evals</span></a>
-          <a href="adminfc-multimedia.html"   class="sidebar-quick-btn" title="Multimedia">   <span>🎞️</span><span>Media</span></a>
-          <a href="adminfc-reports.html"      class="sidebar-quick-btn" title="Reports">      <span>📁</span><span>Reports</span></a>
-          <a href="adminfc-settings.html"     class="sidebar-quick-btn" title="Settings">     <span>⚙️</span><span>Settings</span></a>
-        </div>
-      </div>` : ''}
-
       <div class="sidebar-footer">
         <a class="logout-btn" href="index.html" aria-label="Logout ${userName}" title="Logout">
           <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
