@@ -108,7 +108,6 @@ function buildSidebar(role, activePage) {
 
   const navSuperAdmin = [
     { id: 'dashboard',       icon: '📊', label: 'Dashboard',              href: 'superadmin-dashboard.html' },
-    { id: 'offices-overview', icon: '🗂️', label: 'Offices Overview',      href: 'superadmin-offices-overview.html' },
     { id: 'office-mgmt',     icon: '🏢', label: 'Office Management',      href: 'superadmin-office-mgmt.html' },
     { id: 'accounts',        icon: '🔑', label: 'Accounts',               href: 'superadmin-accounts.html' },
     { id: 'eval-mgmt',       icon: '📋', label: 'Evaluation Management',  href: 'superadmin-eval-mgmt.html' },
