@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -424,7 +424,7 @@ const FAC_LABELS = { 1:"Equipment/resources are available.", 2:"Equipment/resour
 const PIE_COLORS = ["#2563eb","#FB923C","#F87171","#f59e0b","#ef4444","#06b6d4","#ec4899"];
 const SEX_COLORS = { Male:"#2563eb", Female:"#ec4899", Other:"#94a3b8" };
 const USER_CATEGORY_BUCKETS = ["Student","Faculty/Staff","Visitor","Guest"];
-const CAT_COLORS = { "Comfort Room":"#0284c7", "Surroundings":"#16a34a", "Laboratories":"#7c3aed" };
+const CAT_COLORS = { "Comfort Room":"#0284c7", "Surroundings":"#16a34a", "Laboratories/Rooms":"#7c3aed" };
 
 let evaluations = [];
 let offices = {};
@@ -547,7 +547,7 @@ function renderSubmissionStatus() {
   const el = document.getElementById("status-breakdown-chart");
   if (!evaluations.length) { el.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
 
-  const cats = ["Comfort Room","Surroundings","Laboratories"];
+  const cats = ["Comfort Room","Surroundings","Laboratories/Rooms"];
   const statusOrder = ["pending","no_action","resolved"];
   const totals = {};
   cats.forEach(c => { totals[c] = evaluations.filter(e=>e.cleanlinessCategory===c).length; });
@@ -646,7 +646,7 @@ function renderUserCategoryChart() {
   if (!evaluations.length) { wrap.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
   if (!document.getElementById(canvasId)) wrap.innerHTML=`<canvas id="${canvasId}"></canvas>`;
   const total=evaluations.length;
-  const datasets=["Comfort Room","Surroundings","Laboratories"].map(cat => {
+  const datasets=["Comfort Room","Surroundings","Laboratories/Rooms"].map(cat => {
     const catEvals=evaluations.filter(e=>e.cleanlinessCategory===cat), catTotal=catEvals.length;
     return {
       label:cat,

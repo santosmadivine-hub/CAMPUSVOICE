@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -106,7 +106,7 @@
   .cat-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; }
   .cat-pill.comfort { background:#e0f2fe; color:#0369a1; }
   .cat-pill.surroundings { background:#dcfce7; color:#15803d; }
-  .cat-pill.laboratories { background:#ede9fe; color:#6d28d9; }
+  .cat-pill.Laboratories/Rooms { background:#ede9fe; color:#6d28d9; }
 
   /* Status Badge */
   .status-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:6px; font-family:'DM Sans',sans-serif; font-weight:600; font-size:12px; white-space:nowrap; }
@@ -247,7 +247,7 @@
           <div class="eval-stat-pill-sub">Submissions</div>
         </div>
         <div class="eval-stat-pill" data-icon="🔬">
-          <div class="eval-stat-pill-label">Laboratories</div>
+          <div class="eval-stat-pill-label">Laboratories/Rooms</div>
           <span id="stat-labs">0</span>
           <div class="eval-stat-pill-sub">Submissions</div>
         </div>
@@ -278,7 +278,7 @@
           <button class="category-tab active" data-cat="all">All <span class="tab-count" id="cat-count-all">0</span></button>
           <button class="category-tab" data-cat="Comfort Room">🚿 Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
           <button class="category-tab cat-surroundings" data-cat="Surroundings">🌿 Surroundings <span class="tab-count" id="cat-count-surroundings">0</span></button>
-          <button class="category-tab cat-labs" data-cat="Laboratories">🔬 Laboratories <span class="tab-count" id="cat-count-labs">0</span></button>
+          <button class="category-tab cat-labs" data-cat="Laboratories/Rooms">🔬 Laboratories/Rooms <span class="tab-count" id="cat-count-labs">0</span></button>
         </div>
 
         <!-- Status Tabs -->
@@ -376,7 +376,7 @@
         <select id="form-cleanliness-cat">
           <option value="Comfort Room">Comfort Room</option>
           <option value="Surroundings">Surroundings</option>
-          <option value="Laboratories">Laboratories</option>
+          <option value="Laboratories/Rooms">Laboratories/Rooms</option>
         </select>
       </div>
       <div class="edit-field">
@@ -589,7 +589,7 @@ function getEvaluatorName(e) {
 }
 
 function catPillHtml(cat) {
-  const cls = cat === "Surroundings" ? "surroundings" : cat === "Laboratories" ? "laboratories" : "comfort";
+  const cls = cat === "Surroundings" ? "surroundings" : cat === "Laboratories/Rooms" ? "Laboratories/Rooms" : "comfort";
   return `<span class="cat-pill ${cls}">${cat || "—"}</span>`;
 }
 
@@ -740,14 +740,14 @@ function renderSubmissions() {
   document.getElementById("stat-total").textContent = all.length;
   document.getElementById("stat-comfort").textContent = all.filter(e => e.cleanlinessCategory === "Comfort Room").length;
   document.getElementById("stat-surroundings").textContent = all.filter(e => e.cleanlinessCategory === "Surroundings").length;
-  document.getElementById("stat-labs").textContent = all.filter(e => e.cleanlinessCategory === "Laboratories").length;
+  document.getElementById("stat-labs").textContent = all.filter(e => e.cleanlinessCategory === "Laboratories/Rooms").length;
   document.getElementById("stat-pending").textContent = all.filter(e => e.status === "pending").length;
   document.getElementById("stat-resolved").textContent = all.filter(e => e.status === "resolved").length;
 
   document.getElementById("cat-count-all").textContent = all.length;
   document.getElementById("cat-count-comfort").textContent = all.filter(e => e.cleanlinessCategory === "Comfort Room").length;
   document.getElementById("cat-count-surroundings").textContent = all.filter(e => e.cleanlinessCategory === "Surroundings").length;
-  document.getElementById("cat-count-labs").textContent = all.filter(e => e.cleanlinessCategory === "Laboratories").length;
+  document.getElementById("cat-count-labs").textContent = all.filter(e => e.cleanlinessCategory === "Laboratories/Rooms").length;
 
   const pendingCount = scoped.filter(e => e.status === "pending").length;
   const noActionCount = scoped.filter(e => e.status === "no_action").length;

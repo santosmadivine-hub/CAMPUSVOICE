@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -242,7 +242,7 @@ const CL_LABELS  = { 1:"The area is clean and tidy.", 2:"There are no unpleasant
 const FAC_LABELS = { 1:"Equipment/resources are available.", 2:"Equipment/resources are working properly.", 3:"The facility has enough resources.", 4:"The facility is clean and well-maintained.", 5:"Furniture is in good condition." };
 const SEX_COLORS = { Male:"#2563eb", Female:"#ec4899", Other:"#94a3b8" };
 const USER_CATEGORY_BUCKETS = ["Student","Faculty/Staff","Visitor","Guest"];
-const CAT_COLORS = { "Comfort Room":"#0284c7", "Surroundings":"#16a34a", "Laboratories":"#7c3aed" };
+const CAT_COLORS = { "Comfort Room":"#0284c7", "Surroundings":"#16a34a", "Laboratories/Rooms":"#7c3aed" };
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 let evaluations = [];
@@ -361,7 +361,7 @@ const STATUS_VBAR_MAX_H = 200;
 function renderSubmissionStatus() {
   const el = document.getElementById("status-breakdown-chart");
   if (!evaluations.length) { el.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
-  const cats = ["Comfort Room","Surroundings","Laboratories"];
+  const cats = ["Comfort Room","Surroundings","Laboratories/Rooms"];
   const statusOrder = ["pending","no_action","resolved"];
   const totals = {}; cats.forEach(c => { totals[c] = evaluations.filter(e=>e.cleanlinessCategory===c).length; });
   const groupsHtml = statusOrder.map(statusKey => {
@@ -427,7 +427,7 @@ function renderUserCategoryChart() {
   if (userCategoryChart) { userCategoryChart.destroy(); userCategoryChart=null; }
   if (!evaluations.length) { wrap.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
   if (!document.getElementById(canvasId)) wrap.innerHTML=`<canvas id="${canvasId}"></canvas>`;
-  const datasets=["Comfort Room","Surroundings","Laboratories"].map(cat => {
+  const datasets=["Comfort Room","Surroundings","Laboratories/Rooms"].map(cat => {
     const catEvals=evaluations.filter(e=>e.cleanlinessCategory===cat),catTotal=catEvals.length;
     return { label:cat, data:USER_CATEGORY_BUCKETS.map(b=>catTotal?Number(((catEvals.filter(e=>e.userCategory===b).length/catTotal)*100).toFixed(1)):0), borderColor:CAT_COLORS[cat],backgroundColor:CAT_COLORS[cat],pointBackgroundColor:CAT_COLORS[cat],pointRadius:4,pointHoverRadius:6,borderWidth:2,tension:0.3,fill:false };
   });

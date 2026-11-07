@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -50,16 +50,16 @@
   .category-tab { border:1px solid #bae6fd; background:#fff; color:#0369a1; padding:9px 16px; border-radius:999px; cursor:pointer; font-weight:700; font-size:13px; font-family:'DM Sans',sans-serif; transition:background .2s,color .2s,transform .2s,border-color .2s,box-shadow .2s; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; }
   .category-tab:not(.active):hover { background:#f0f9ff; border-color:#0284c7; box-shadow:0 6px 14px rgba(2,132,199,.15); transform:translateY(-2px); }
   .category-tab[data-category="Surroundings"]:not(.active):hover { background:#f0fdf4; border-color:#16a34a; color:#15803d; }
-  .category-tab[data-category="Laboratories"]:not(.active):hover { background:#f5f3ff; border-color:#7c3aed; color:#6d28d9; }
+  .category-tab[data-category="Laboratories/Rooms"]:not(.active):hover { background:#f5f3ff; border-color:#7c3aed; color:#6d28d9; }
   .category-tab.active { background:#0284c7; border-color:#0284c7; color:#fff; box-shadow:0 4px 14px rgba(2,132,199,.3); }
   .category-tab.active[data-category="Surroundings"] { background:#16a34a; border-color:#16a34a; box-shadow:0 4px 14px rgba(22,163,74,.3); }
-  .category-tab.active[data-category="Laboratories"] { background:#7c3aed; border-color:#7c3aed; box-shadow:0 4px 14px rgba(124,58,237,.3); }
+  .category-tab.active[data-category="Laboratories/Rooms"] { background:#7c3aed; border-color:#7c3aed; box-shadow:0 4px 14px rgba(124,58,237,.3); }
   .category-tab .tab-count { background:rgba(255,255,255,.35); border-radius:4px; padding:1px 7px; font-size:11px; }
   .category-tab:not(.active) .tab-count { background:#f1f5f9; color:#64748b; }
   .category-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; }
   .category-pill.comfort-room { background:#e0f2fe; color:#0369a1; }
   .category-pill.surroundings { background:#dcfce7; color:#15803d; }
-  .category-pill.laboratories { background:#ede9fe; color:#6d28d9; }
+  .category-pill.Laboratories/Rooms { background:#ede9fe; color:#6d28d9; }
 
   /* Stat cards */
   .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px; }
@@ -164,7 +164,7 @@
         <button class="category-tab active" data-category="all">All Categories <span class="tab-count" id="cat-count-all">0</span></button>
         <button class="category-tab" data-category="Comfort Room">🚿 Comfort Room <span class="tab-count" id="cat-count-comfort">0</span></button>
         <button class="category-tab" data-category="Surroundings">🌿 Surroundings <span class="tab-count" id="cat-count-surroundings">0</span></button>
-        <button class="category-tab" data-category="Laboratories">🔬 Laboratories <span class="tab-count" id="cat-count-labs">0</span></button>
+        <button class="category-tab" data-category="Laboratories/Rooms">🔬 Laboratories/Rooms <span class="tab-count" id="cat-count-labs">0</span></button>
       </div>
 
       <div class="toolbar-row">
@@ -233,7 +233,7 @@ document.getElementById("topbar-mount").innerHTML  = buildTopbar("Multimedia Evi
 document.getElementById("banner-office-name").textContent = linkedOfficeName || "No Office Linked";
 
 const EVAL_COLLECTION = "facilities_cleanliness_evaluations";
-const FC_CATEGORIES   = ["Comfort Room", "Surroundings", "Laboratories"];
+const FC_CATEGORIES   = ["Comfort Room", "Surroundings", "Laboratories/Rooms"];
 const DEFAULT_CATEGORY = "Comfort Room";
 
 let evaluations = [], mediaItems = [], evalRawData = {};
@@ -266,8 +266,8 @@ function parseTimestamp(data) {
 function escapeHtml(str) { const div = document.createElement("div"); div.textContent = str; return div.innerHTML; }
 
 function categoryPillHtml(category) {
-  const cls = category === "Surroundings" ? "surroundings" : category === "Laboratories" ? "laboratories" : "comfort-room";
-  const icon = category === "Surroundings" ? "🌿" : category === "Laboratories" ? "🔬" : "🚿";
+  const cls = category === "Surroundings" ? "surroundings" : category === "Laboratories/Rooms" ? "Laboratories/Rooms" : "comfort-room";
+  const icon = category === "Surroundings" ? "🌿" : category === "Laboratories/Rooms" ? "🔬" : "🚿";
   return `<span class="category-pill ${cls}">${icon} ${escapeHtml(category)}</span>`;
 }
 
@@ -323,7 +323,7 @@ function renderMediaGrid() {
   document.getElementById("cat-count-all").textContent          = evaluations.length;
   document.getElementById("cat-count-comfort").textContent      = evaluations.filter(e => e.category === "Comfort Room").length;
   document.getElementById("cat-count-surroundings").textContent = evaluations.filter(e => e.category === "Surroundings").length;
-  document.getElementById("cat-count-labs").textContent         = evaluations.filter(e => e.category === "Laboratories").length;
+  document.getElementById("cat-count-labs").textContent         = evaluations.filter(e => e.category === "Laboratories/Rooms").length;
 
   const categoryScoped = mediaForCategory(categoryFilter);
   document.getElementById("stat-total-files").textContent  = categoryScoped.length;

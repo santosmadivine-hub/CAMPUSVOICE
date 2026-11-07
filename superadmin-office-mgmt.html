@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -61,7 +61,7 @@
   .cat-filter-tab.active { color:#fff; background:#7c3aed; box-shadow:0 4px 10px rgba(124,58,237,.26); }
   .cat-filter-tab[data-cat="Comfort Room"].active  { background:#0284c7; box-shadow:0 4px 10px rgba(2,132,199,.26); }
   .cat-filter-tab[data-cat="Surroundings"].active  { background:#16a34a; box-shadow:0 4px 10px rgba(22,163,74,.26); }
-  .cat-filter-tab[data-cat="Laboratories"].active  { background:#7c3aed; box-shadow:0 4px 10px rgba(124,58,237,.26); }
+  .cat-filter-tab[data-cat="Laboratories/Rooms"].active  { background:#7c3aed; box-shadow:0 4px 10px rgba(124,58,237,.26); }
   .tab-count { background:rgba(255,255,255,.3); border-radius:4px; padding:1px 5px; font-size:11px; }
   .cat-filter-tab:not(.active) .tab-count { background:#f1f5f9; color:#64748b; }
 
@@ -90,7 +90,7 @@
   .cat-pill { display:inline-flex; align-items:center; gap:3px; padding:3px 7px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; margin:1px 2px 1px 0; }
   .cat-pill.comfort     { background:#e0f2fe; color:#0369a1; }
   .cat-pill.surroundings{ background:#dcfce7; color:#15803d; }
-  .cat-pill.laboratories{ background:#ede9fe; color:#6d28d9; }
+  .cat-pill.Laboratories/Rooms{ background:#ede9fe; color:#6d28d9; }
 
   /* ── Info banner ── */
   .info-banner { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:12px 16px; font-family:'DM Sans',sans-serif; font-size:12px; color:#5b21b6; }
@@ -130,7 +130,7 @@
   .cat-check-pill:hover { border-color:#ddd6fe; background:#faf5ff; }
   .cat-check-pill.checked.comfort      { border-color:#0284c7; background:#e0f2fe; color:#0369a1; }
   .cat-check-pill.checked.surroundings { border-color:#16a34a; background:#dcfce7; color:#15803d; }
-  .cat-check-pill.checked.laboratories { border-color:#7c3aed; background:#ede9fe; color:#6d28d9; }
+  .cat-check-pill.checked.Laboratories/Rooms { border-color:#7c3aed; background:#ede9fe; color:#6d28d9; }
 
   .modal-footer { display:flex; gap:10px; padding:16px 24px 20px; border-top:1px solid #faf5ff; }
   .modal-footer .btn, .modal-footer .btn-danger-sm { flex:1; height:44px; font-size:14px; border-radius:12px; }
@@ -177,7 +177,7 @@
           <button class="cat-filter-tab active" data-cat="all">All <span class="tab-count" id="tab-all">0</span></button>
           <button class="cat-filter-tab" data-cat="Comfort Room">🚿 Comfort Room <span class="tab-count" id="tab-comfort">0</span></button>
           <button class="cat-filter-tab" data-cat="Surroundings">🌿 Surroundings <span class="tab-count" id="tab-surroundings">0</span></button>
-          <button class="cat-filter-tab" data-cat="Laboratories">🔬 Laboratories/Rooms <span class="tab-count" id="tab-labs">0</span></button>
+          <button class="cat-filter-tab" data-cat="Laboratories/Rooms">🔬 Laboratories/Rooms <span class="tab-count" id="tab-labs">0</span></button>
         </div>
 
         <div class="table-wrap">
@@ -226,7 +226,7 @@
         <div class="cat-check-group">
           <div class="cat-check-pill comfort"      data-cat="Comfort Room" id="pill-comfort">🚿 Comfort Room</div>
           <div class="cat-check-pill surroundings" data-cat="Surroundings" id="pill-surroundings">🌿 Surroundings</div>
-          <div class="cat-check-pill laboratories" data-cat="Laboratories" id="pill-labs">🔬 Laboratories/Rooms</div>
+          <div class="cat-check-pill Laboratories/Rooms" data-cat="Laboratories/Rooms" id="pill-labs">🔬 Laboratories/Rooms</div>
         </div>
         <div class="field-hint">Select which evaluation types this office appears in on the mobile app.</div>
       </div>
@@ -284,7 +284,7 @@ document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Office Management', 'superadmin');
 
 const fcOffices = collection(db, 'fc_offices');
-const ALL_CATS  = ['Comfort Room', 'Surroundings', 'Laboratories'];
+const ALL_CATS  = ['Comfort Room', 'Surroundings', 'Laboratories/Rooms'];
 
 let offices    = [];
 let searchTerm = '';
@@ -299,8 +299,8 @@ function officeCategories(o) {
 function catPillsHtml(cats) {
   if (!cats.length) return `<span style="color:#94a3b8;font-size:12px;">—</span>`;
   return cats.map(c => {
-    const cls  = c === 'Surroundings' ? 'surroundings' : c === 'Laboratories' ? 'laboratories' : 'comfort';
-    const icon = c === 'Surroundings' ? '🌿' : c === 'Laboratories' ? '🔬' : '🚿';
+    const cls  = c === 'Surroundings' ? 'surroundings' : c === 'Laboratories/Rooms' ? 'Laboratories/Rooms' : 'comfort';
+    const icon = c === 'Surroundings' ? '🌿' : c === 'Laboratories/Rooms' ? '🔬' : '🚿';
     return `<span class="cat-pill ${cls}">${icon} ${c}</span>`;
   }).join('');
 }
@@ -318,7 +318,7 @@ function renderOffices() {
   const active  = offices.filter(o => (o.status || 'active') === 'active').length;
   const comfort = offices.filter(o => officeCategories(o).includes('Comfort Room')).length;
   const surr    = offices.filter(o => officeCategories(o).includes('Surroundings')).length;
-  const labs    = offices.filter(o => officeCategories(o).includes('Laboratories')).length;
+  const labs    = offices.filter(o => officeCategories(o).includes('Laboratories/Rooms')).length;
 
   document.getElementById('stat-total').textContent       = offices.length;
   document.getElementById('stat-active').textContent      = active;
@@ -381,7 +381,7 @@ document.getElementById('search-input').addEventListener('input', ev => {
 });
 
 // ── Category pill toggles ──────────────────────────────────────────────────
-const PILL_MAP = { 'Comfort Room': 'pill-comfort', 'Surroundings': 'pill-surroundings', 'Laboratories': 'pill-labs' };
+const PILL_MAP = { 'Comfort Room': 'pill-comfort', 'Surroundings': 'pill-surroundings', 'Laboratories/Rooms': 'pill-labs' };
 
 function setPillChecked(cat, checked) {
   const pill = document.getElementById(PILL_MAP[cat]);

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -388,7 +388,7 @@ function renderOfficeOverview() {
   }).join('');
 }
 
-const CAT_COLORS   = { "Comfort Room":"#0284c7", "Surroundings":"#16a34a", "Laboratories":"#7c3aed" };
+const CAT_COLORS   = { "Comfort Room":"#0284c7", "Surroundings":"#16a34a", "Laboratories/Rooms":"#7c3aed" };
 const STATUS_META  = { pending:{label:"Pending"}, no_action:{label:"No Action Required"}, resolved:{label:"Resolved"} };
 const STATUS_VBAR_MAX_H = 200;
 
@@ -402,7 +402,7 @@ function overallAvgOf(e) {
 function renderSubmissionStatus() {
   const el = document.getElementById('status-breakdown-chart');
   if (!evalsData.length) { el.innerHTML = '<div class="lb-empty">No evaluations yet.</div>'; return; }
-  const cats = ["Comfort Room","Surroundings","Laboratories"];
+  const cats = ["Comfort Room","Surroundings","Laboratories/Rooms"];
   const statusOrder = ["pending","no_action","resolved"];
   const totals = {};
   cats.forEach(c => { totals[c] = evalsData.filter(e => e.cleanlinessCategory === c).length; });
