@@ -28,7 +28,7 @@
 .card-header-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .badge-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(37,99,235,0.12);color:#3b82f6;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:6px 14px;border-radius:999px}
 .line-chart-wrap{margin-top:12px}
-#line-chart-svg{width:100%;height:220px;display:block}
+#line-chart-svg{width:100%;height:300px;display:block}
 .donut-wrap{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap;padding:12px 0;flex:1}
 .donut-wrap svg{flex-shrink:1;width:230px;height:230px}
 .donut-legend{display:flex;flex-direction:column;gap:12px}
@@ -133,7 +133,7 @@
             <div class="badge-pill" id="total-badge">Total: 0</div>
           </div>
           <div class="line-chart-wrap" style="margin-top:14px;">
-            <svg id="line-chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none" style="width:100%;height:200px;display:block;overflow:visible;"></svg>
+            <svg id="line-chart-svg" viewBox="0 0 600 280" preserveAspectRatio="none" style="width:100%;height:300px;display:block;overflow:visible;"></svg>
           </div>
         </div>
         <div class="card">
@@ -279,7 +279,7 @@ function renderLineTrend() {
   const svg = document.getElementById("line-chart-svg");
   if (!svg) return;
   svg.innerHTML = "";
-  const W = 600, H = 200, PAD = { t: 20, r: 24, b: 40, l: 48 };
+  const W = 600, H = 280, PAD = { t: 24, r: 28, b: 44, l: 52 };
   const days = 7;
   const now = new Date(); now.setHours(23, 59, 59, 999);
   const labels = [], counts = [];
@@ -289,28 +289,61 @@ function renderLineTrend() {
     labels.push(dayStart.toLocaleDateString("en-US", { weekday: "short" }));
     counts.push(evaluations.filter(e => e.timestamp >= dayStart.getTime() && e.timestamp <= dayEnd.getTime()).length);
   }
-  const maxVal = Math.max(...counts, 1);
-  const niceMax = maxVal <= 10 ? 10 : maxVal <= 25 ? 25 : maxVal <= 50 ? 50 : maxVal <= 100 ? 100 : Math.ceil(maxVal / 25) * 25;
+
+  // Nice Y-axis ceiling: at least 5, then round up to nearest clean interval
+  const rawMax = Math.max(...counts, 1);
+  const interval = rawMax <= 5 ? 1 : rawMax <= 10 ? 2 : rawMax <= 25 ? 5 : rawMax <= 50 ? 10 : 25;
+  const niceMax  = Math.max(Math.ceil(rawMax / interval) * interval, interval * 5);
+  const tickCount = Math.min(niceMax / interval, 6);
+  const yTicks = Array.from({ length: tickCount + 1 }, (_, i) => Math.round((i / tickCount) * niceMax));
+
   const xStep  = (W - PAD.l - PAD.r) / (days - 1);
   const yScale = v => PAD.t + (H - PAD.t - PAD.b) * (1 - v / niceMax);
-  const cx = i => PAD.l + i * xStep;
-  svg.innerHTML = `<defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb" stop-opacity="0.18"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0.01"/></linearGradient></defs>`;
-  const yTicks = [0, 25, 50, 75, 100].map(t => Math.round((t / 100) * niceMax));
+  const cx     = i => PAD.l + i * xStep;
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#2563eb" stop-opacity="0.22"/>
+        <stop offset="100%" stop-color="#2563eb" stop-opacity="0.02"/>
+      </linearGradient>
+    </defs>`;
+
+  // Grid lines + Y-axis labels
   yTicks.forEach(val => {
     const y = yScale(val);
-    svg.innerHTML += `<line x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}" stroke="#e8eef6" stroke-width="1"/>`;
-    svg.innerHTML += `<text x="${PAD.l - 8}" y="${y + 4}" font-size="11" fill="#94a3b8" text-anchor="end" font-family="DM Sans,sans-serif">${val}</text>`;
+    svg.innerHTML += `<line x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}" stroke="#e8eef6" stroke-width="1.2"/>`;
+    svg.innerHTML += `<text x="${PAD.l - 10}" y="${y + 4}" font-size="12" fill="#94a3b8" text-anchor="end" font-family="DM Sans,sans-serif">${val}</text>`;
   });
-  const areaPath = `M ${cx(0)},${yScale(counts[0])} L ${counts.map((v,i)=>`${cx(i)},${yScale(v)}`).join(" L ")} L ${cx(days-1)},${yScale(0)} L ${cx(0)},${yScale(0)} Z`;
-  svg.innerHTML += `<path d="${areaPath}" fill="url(#areaGrad)"/>`;
-  let linePath = `M ${cx(0)},${yScale(counts[0])}`;
+
+  // Smooth area fill
+  let areaD = `M ${cx(0)},${yScale(counts[0])}`;
   for (let i = 1; i < counts.length; i++) {
     const cpX = (cx(i-1) + cx(i)) / 2;
-    linePath += ` C ${cpX},${yScale(counts[i-1])} ${cpX},${yScale(counts[i])} ${cx(i)},${yScale(counts[i])}`;
+    areaD += ` C ${cpX},${yScale(counts[i-1])} ${cpX},${yScale(counts[i])} ${cx(i)},${yScale(counts[i])}`;
   }
-  svg.innerHTML += `<path d="${linePath}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>`;
-  counts.forEach((v, i) => { svg.innerHTML += `<circle cx="${cx(i)}" cy="${yScale(v)}" r="5" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>`; });
-  labels.forEach((l, i) => { svg.innerHTML += `<text x="${cx(i)}" y="${H - 6}" font-size="12" fill="#94a3b8" text-anchor="middle" font-family="DM Sans,sans-serif">${l}</text>`; });
+  areaD += ` L ${cx(days-1)},${yScale(0)} L ${cx(0)},${yScale(0)} Z`;
+  svg.innerHTML += `<path d="${areaD}" fill="url(#areaGrad)"/>`;
+
+  // Smooth line
+  let lineD = `M ${cx(0)},${yScale(counts[0])}`;
+  for (let i = 1; i < counts.length; i++) {
+    const cpX = (cx(i-1) + cx(i)) / 2;
+    lineD += ` C ${cpX},${yScale(counts[i-1])} ${cpX},${yScale(counts[i])} ${cx(i)},${yScale(counts[i])}`;
+  }
+  svg.innerHTML += `<path d="${lineD}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+  // Data points — filled blue dot with white ring
+  counts.forEach((v, i) => {
+    svg.innerHTML += `<circle cx="${cx(i)}" cy="${yScale(v)}" r="7" fill="#2563eb" opacity="0.15"/>`;
+    svg.innerHTML += `<circle cx="${cx(i)}" cy="${yScale(v)}" r="5" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>`;
+    if (v > 0) svg.innerHTML += `<text x="${cx(i)}" y="${yScale(v) - 11}" font-size="11" fill="#2563eb" font-weight="700" text-anchor="middle" font-family="DM Sans,sans-serif">${v}</text>`;
+  });
+
+  // X-axis labels
+  labels.forEach((l, i) => {
+    svg.innerHTML += `<text x="${cx(i)}" y="${H - 8}" font-size="12.5" fill="#64748b" text-anchor="middle" font-family="DM Sans,sans-serif" font-weight="500">${l}</text>`;
+  });
 }
 
 function renderAvgRatingPie() {
