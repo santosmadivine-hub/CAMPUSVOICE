@@ -112,6 +112,7 @@ function buildSidebar(role, activePage) {
     { id: 'accounts',        icon: '🔑', label: 'Accounts',               href: 'superadmin-accounts.html' },
     { id: 'eval-mgmt',       icon: '📋', label: 'Evaluation Management',  href: 'superadmin-eval-mgmt.html' },
     { id: 'analytics',       icon: '📈', label: 'Analytics',              href: 'superadmin-analytics.html' },
+    { id: 'settings',        icon: '⚙️', label: 'Settings',               href: 'superadmin-settings.html' },
   ];
 
   const nav =
