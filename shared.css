@@ -176,6 +176,12 @@ body.sidebar-open {
   border:1px solid rgba(59,130,246,0.4);
 }
 
+.role-adminfc{
+  background:rgba(2,132,199,0.25);
+  color:#ffffff;
+  border:1px solid rgba(56,189,248,0.45);
+}
+
 .nav{
   flex:1;
   padding:12px 10px;
