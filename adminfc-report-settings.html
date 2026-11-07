@@ -192,7 +192,7 @@
 <script src="shared.js"></script>
 
 <script type="module">
-import { guard as cvGuard } from "./cv-core.js";
+import { guard as cvGuard, toast } from "./cv-core.js";
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -259,7 +259,7 @@ onSnapshot(curRef, snap => {
   if (formDirty) return;
   draft = snap.exists() ? { ...DEFAULTS, ...snap.data() } : { ...DEFAULTS };
   fillForm();
-}, err => alert("Could not load report settings: " + err.message));
+}, err => toast("❌ Could not load report settings: " + err.message, true));
 
 /* ---------- editing ---------- */
 const card = $("rsCard");
@@ -272,7 +272,7 @@ card.addEventListener("change", async e => {
   try {
     draft[k] = await fileToDataUrl(e.target.files[0], +e.target.dataset.max || 400);
     formDirty = true; fillForm();
-  } catch { alert("Could not read that image."); }
+  } catch { toast("❌ Could not read that image.", true); }
 });
 card.addEventListener("click", e => {
   const k = e.target.dataset.clear; if (!k) return;
@@ -304,16 +304,16 @@ const tooBig = p => JSON.stringify(p).length > 900000;   // Firestore documents 
 
 $("rsSave").onclick = async () => {
   const p = payload();
-  if (tooBig(p)) { alert("❌ The images are too large. Please use smaller images."); return; }
-  try { await setDoc(curRef, p); formDirty = false; alert("✅ Header & footer settings saved."); }
-  catch (err) { alert("❌ Failed to save: " + err.message); }
+  if (tooBig(p)) { toast("❌ The images are too large. Please use smaller images.", true); return; }
+  try { await setDoc(curRef, p); formDirty = false; toast("✅ Header & footer settings saved."); }
+  catch (err) { toast("❌ Failed to save: " + err.message, true); }
 };
 $("rsSaveDefault").onclick = async () => {
   if (!confirm('Use the current form values as the default that "Reset to Default" restores?')) return;
   const p = payload();
-  if (tooBig(p)) { alert("❌ The images are too large. Please use smaller images."); return; }
-  try { await setDoc(defRef, p); alert("✅ Default saved."); }
-  catch (err) { alert("❌ Failed to save default: " + err.message); }
+  if (tooBig(p)) { toast("❌ The images are too large. Please use smaller images.", true); return; }
+  try { await setDoc(defRef, p); toast("✅ Default saved."); }
+  catch (err) { toast("❌ Failed to save default: " + err.message, true); }
 };
 $("rsReset").onclick = async () => {
   try {
@@ -321,7 +321,8 @@ $("rsReset").onclick = async () => {
     if (!confirm("Replace the current settings with the default?")) return;
     draft = snap.exists() ? { ...DEFAULTS, ...snap.data() } : { ...DEFAULTS };
     await setDoc(curRef, payload()); formDirty = false; fillForm();
-  } catch (err) { alert("❌ Failed to reset: " + err.message); }
+    toast("✅ Settings reset to default.");
+  } catch (err) { toast("❌ Failed to reset: " + err.message, true); }
 };
 
 /* ---------- back to reports ---------- */
