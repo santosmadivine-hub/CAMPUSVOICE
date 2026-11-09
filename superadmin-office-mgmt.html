@@ -90,7 +90,7 @@
   .cat-pill { display:inline-flex; align-items:center; gap:3px; padding:3px 7px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; margin:1px 2px 1px 0; }
   .cat-pill.comfort     { background:#e0f2fe; color:#0369a1; }
   .cat-pill.surroundings{ background:#dcfce7; color:#15803d; }
-  .cat-pill.Laboratories/Rooms{ background:#ede9fe; color:#6d28d9; }
+  .cat-pill.labs{ background:#ede9fe; color:#6d28d9; }
 
   /* ── Info banner ── */
   .info-banner { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:12px 16px; font-family:'DM Sans',sans-serif; font-size:12px; color:#5b21b6; }
@@ -130,7 +130,7 @@
   .cat-check-pill:hover { border-color:#ddd6fe; background:#faf5ff; }
   .cat-check-pill.checked.comfort      { border-color:#0284c7; background:#e0f2fe; color:#0369a1; }
   .cat-check-pill.checked.surroundings { border-color:#16a34a; background:#dcfce7; color:#15803d; }
-  .cat-check-pill.checked.Laboratories/Rooms { border-color:#7c3aed; background:#ede9fe; color:#6d28d9; }
+  .cat-check-pill.checked.labs { border-color:#7c3aed; background:#ede9fe; color:#6d28d9; }
 
   .modal-footer { display:flex; gap:10px; padding:16px 24px 20px; border-top:1px solid #faf5ff; }
   .modal-footer .btn, .modal-footer .btn-danger-sm { flex:1; height:44px; font-size:14px; border-radius:12px; }
@@ -218,7 +218,7 @@
     <div class="modal-body">
       <div class="edit-field">
         <label>Office Name</label>
-        <input type="text" id="form-name" placeholder="e.g. Registrar's Office" maxlength="120">
+        <input type="text" id="form-name" placeholder="e.g. REGISTRAR'S OFFICE" maxlength="120" style="text-transform:uppercase;">
       </div>
 
       <div class="edit-field">
@@ -226,7 +226,7 @@
         <div class="cat-check-group">
           <div class="cat-check-pill comfort"      data-cat="Comfort Room" id="pill-comfort">🚿 Comfort Room</div>
           <div class="cat-check-pill surroundings" data-cat="Surroundings" id="pill-surroundings">🌿 Surroundings</div>
-          <div class="cat-check-pill Laboratories/Rooms" data-cat="Laboratories/Rooms" id="pill-labs">🔬 Laboratories/Rooms</div>
+          <div class="cat-check-pill labs" data-cat="Laboratories/Rooms" id="pill-labs">🔬 Laboratories/Rooms</div>
         </div>
         <div class="field-hint">Select which evaluation types this office appears in on the mobile app.</div>
       </div>
@@ -299,7 +299,7 @@ function officeCategories(o) {
 function catPillsHtml(cats) {
   if (!cats.length) return `<span style="color:#94a3b8;font-size:12px;">—</span>`;
   return cats.map(c => {
-    const cls  = c === 'Surroundings' ? 'surroundings' : c === 'Laboratories/Rooms' ? 'Laboratories/Rooms' : 'comfort';
+    const cls  = c === 'Surroundings' ? 'surroundings' : c === 'Laboratories/Rooms' ? 'labs' : 'comfort';
     const icon = c === 'Surroundings' ? '🌿' : c === 'Laboratories/Rooms' ? '🔬' : '🚿';
     return `<span class="cat-pill ${cls}">${icon} ${c}</span>`;
   }).join('');
@@ -442,17 +442,30 @@ function closeFormModal() {
   editingId = null;
 }
 
+// Auto-uppercase as user types
+document.getElementById('form-name').addEventListener('input', ev => {
+  const el = ev.target;
+  const pos = el.selectionStart;
+  el.value = el.value.toUpperCase();
+  el.setSelectionRange(pos, pos);
+});
+
 document.getElementById('form-cancel').addEventListener('click', closeFormModal);
 document.getElementById('form-modal-close').addEventListener('click', closeFormModal);
 formModal.addEventListener('click', ev => { if (ev.target === formModal) closeFormModal(); });
 
 document.getElementById('form-save').addEventListener('click', async () => {
-  const name       = document.getElementById('form-name').value.trim();
+  const name       = document.getElementById('form-name').value.trim().toUpperCase();
   const status     = document.getElementById('form-status').value;
   const categories = getCheckedCategories();
 
   if (!name)             { alert('Office name is required.'); return; }
   if (!categories.length){ alert('Please select at least one category.'); return; }
+
+  const duplicate = offices.find(o =>
+    o.name.trim().toUpperCase() === name.toUpperCase() && o.id !== editingId
+  );
+  if (duplicate) { alert(`❌ "${name}" already exists. Please use a different name.`); return; }
 
   const btn = document.getElementById('form-save');
   btn.disabled = true;
