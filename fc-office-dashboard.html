@@ -201,6 +201,16 @@ const acct = acctSnap.exists() ? acctSnap.data() : {};
 const linkedOfficeName = acct.linkedOfficeName || null;
 const linkedOfficeId   = acct.linkedOfficeId   || null;
 
+// Load this office's allowed categories from fc_offices
+let allowedCategories = ["Comfort Room", "Surroundings", "Laboratories/Rooms"];
+if (linkedOfficeId) {
+  const officeSnap = await getDoc(doc(db, "fc_offices", linkedOfficeId));
+  if (officeSnap.exists()) {
+    const cats = officeSnap.data().categories;
+    if (Array.isArray(cats) && cats.length) allowedCategories = cats;
+  }
+}
+
 // ── Build chrome ───────────────────────────────────────────────────────────
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("fc_office", "fc-dashboard");
 document.getElementById("topbar-mount").innerHTML  = buildTopbar(
@@ -220,7 +230,7 @@ if (linkedOfficeName) {
 document.getElementById("ctx-user").textContent = acct.username || acct.name || session.email || "Admin FC";
 
 // ── Constants ──────────────────────────────────────────────────────────────
-const CL_CATS   = ["Comfort Room", "Surroundings", "Laboratories/Rooms"];
+const CL_CATS   = allowedCategories; // only the categories assigned to this office
 const CAT_COLOR = { "Comfort Room": "#2563eb", "Surroundings": "#10b981", "Laboratories/Rooms": "#f59e0b" };
 const CAT_CLASS = { "Comfort Room": "comfort", "Surroundings": "surround", "Laboratories/Rooms": "labs" };
 const STATUS_COLOR = { pending: "#f59e0b", no_action: "#6366f1", resolved: "#10b981" };
