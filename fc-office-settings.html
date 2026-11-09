@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusVoice – Settings | FC Office</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="cv-office.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <div id="sidebar-mount"></div>
+  <div class="sidebar-overlay"></div>
+
+  <main class="main fade-in">
+
+    <div id="topbar-mount"></div>
+
+    <div class="page">
+
+      <!-- ===================== Profile ===================== -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2 class="card-title">👤 Profile</h2>
+            <div class="card-sub">Your photo and account identity.</div>
+          </div>
+        </div>
+
+        <div class="settings-avatar-row">
+          <div class="settings-avatar" id="settings-avatar">
+            <img id="settings-avatar-img" alt="Profile photo" style="display:none;">
+            <span id="settings-avatar-fallback" class="avatar-fallback"></span>
+          </div>
+          <div class="settings-avatar-actions">
+            <input type="file" id="settings-photo-input" accept="image/*" style="display:none;">
+            <div class="settings-avatar-btns">
+              <button class="btn btn-sm btn-primary" type="button" id="settings-photo-btn">Change Photo</button>
+              <button class="btn btn-sm btn-danger" type="button" id="settings-photo-remove" style="display:none;">Remove</button>
+            </div>
+            <div class="field-hint">JPG or PNG, up to 5MB.</div>
+            <div class="field-error" id="settings-photo-error"></div>
+          </div>
+        </div>
+
+        <div class="settings-identity" style="margin-top:14px;">
+          <div class="detail-row"><span class="detail-label">Office</span><span class="detail-value" id="settings-office-name">—</span></div>
+          <div class="detail-row"><span class="detail-label">Categories</span><span class="detail-value" id="settings-categories">—</span></div>
+        </div>
+
+        <div class="form-grid" style="margin-top:14px;">
+          <label class="field">
+            <span class="field-label">Username *</span>
+            <input type="text" id="settings-username" class="input input-mono" autocomplete="off">
+            <span class="field-hint">Lowercase letters, numbers, dots and dashes.</span>
+          </label>
+          <label class="field">
+            <span class="field-label">Gmail Address *</span>
+            <input type="email" id="settings-email" class="input" autocomplete="off">
+            <span class="field-hint">This is what you sign in with — changing it is a bigger step.</span>
+          </label>
+          <label class="field full">
+            <span class="field-label">Current Password</span>
+            <input type="password" id="identity-password" class="input" autocomplete="current-password">
+            <span class="field-hint">Only needed if you change your Gmail address.</span>
+          </label>
+        </div>
+
+        <div class="field-error" id="identity-error"></div>
+        <div class="banner banner-info" id="identity-note" style="display:none; margin-top:10px;"></div>
+
+        <div style="margin-top:14px;">
+          <button class="btn btn-primary" type="button" id="identity-save">Save Changes</button>
+        </div>
+      </div>
+
+      <!-- ===================== Change Password ===================== -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2 class="card-title">🔑 Change Password</h2>
+            <div class="card-sub">Confirm your current password, then choose a new one.</div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <label class="field full">
+            <span class="field-label">Current Password *</span>
+            <input type="password" id="pw-current" class="input" autocomplete="current-password">
+          </label>
+          <label class="field full">
+            <span class="field-label">New Password *</span>
+            <input type="password" id="pw-new" class="input" autocomplete="new-password">
+            <span class="field-hint">At least 8 characters, with a letter and a number.</span>
+          </label>
+          <label class="field full">
+            <span class="field-label">Confirm New Password *</span>
+            <input type="password" id="pw-confirm" class="input" autocomplete="new-password">
+          </label>
+        </div>
+        <div class="field-error" id="pw-error"></div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" type="button" id="pw-save">Save New Password</button>
+        </div>
+      </div>
+
+      <!-- ===================== About App ===================== -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2 class="card-title">ℹ️ About App</h2>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px;">
+          <img src="1.png" alt="CampusVoice Logo"
+               style="width:130px;height:130px;border-radius:28px;object-fit:cover;box-shadow:0 8px 24px rgba(37,99,235,.22);">
+          <div style="text-align:center;">
+            <div class="about-app-name">CampusVoice</div>
+            <div class="about-app-version">Version 1.0 · ISUFST-SEC</div>
+          </div>
+        </div>
+
+        <p class="about-app-desc">
+          CampusVoice is a mobile and web-based school evaluation system for the
+          Iloilo State University of Fisheries Science and Technology – San Enrique
+          Campus (ISUFST-SEC). It lets students, staff and visitors evaluate campus
+          offices and facilities, and gives each office its own dashboard and analytics.
+        </p>
+
+        <div class="about-section-title">Developers</div>
+        <div class="dev-grid">
+          <div class="dev-card">
+            <div class="dev-avatar"><span class="avatar-fallback">DS</span></div>
+            <div class="dev-name">Ma. Divine Santos</div>
+            <div class="dev-role">Hacker</div>
+          </div>
+          <div class="dev-card">
+            <div class="dev-avatar"><span class="avatar-fallback">SP</span></div>
+            <div class="dev-name">Sweedene Shane Padillo</div>
+            <div class="dev-role">Hipster</div>
+          </div>
+          <div class="dev-card">
+            <div class="dev-avatar"><span class="avatar-fallback">KP</span></div>
+            <div class="dev-name">Kristal Jean Porras</div>
+            <div class="dev-role">Handler</div>
+          </div>
+          <div class="dev-card">
+            <div class="dev-avatar"><span class="avatar-fallback">MS</span></div>
+            <div class="dev-name">Maarrianne Faith Subaldo</div>
+            <div class="dev-role">Hustler</div>
+          </div>
+        </div>
+
+        <div class="about-section-title">Adviser</div>
+        <div class="adviser-section">
+          <div class="dev-card adviser-card">
+            <div class="dev-avatar"><span class="avatar-fallback">WB</span></div>
+            <div class="dev-name">Weena J. Bulnes</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="shared.js"></script>
+
+<script type="module">
+import {
+  guard as cvGuard, db,
+  escapeHtml, friendlyError, toast,
+  uploadProfilePhoto, updateOwnProfilePhoto,
+  changeOwnPassword, changeOwnEmail, avatarInitial
+} from "./cv-core.js";
+
+import { changeAccountUsername } from "./cv-accounts.js";
+import { getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const session = await cvGuard(["fc_office"]);
+
+// Load linked office info from accounts doc
+const acctSnap = await getDoc(doc(db, "accounts", session.uid));
+const acct = acctSnap.exists() ? acctSnap.data() : {};
+const linkedOfficeName = acct.linkedOfficeName || null;
+const linkedOfficeId   = acct.linkedOfficeId   || null;
+
+// Load categories from fc_offices
+let categories = [];
+if (linkedOfficeId) {
+  const officeSnap = await getDoc(doc(db, "fc_offices", linkedOfficeId));
+  if (officeSnap.exists()) {
+    const cats = officeSnap.data().categories;
+    if (Array.isArray(cats) && cats.length) categories = cats;
+  }
+}
+
+document.getElementById("sidebar-mount").innerHTML = buildSidebar("fc_office", "settings");
+document.getElementById("topbar-mount").innerHTML  = buildTopbar("Settings", "fc_office", "Profile, password and app information");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
+
+const el = (id) => document.getElementById(id);
+
+// Office info (read-only)
+el("settings-office-name").textContent = linkedOfficeName || "No office linked";
+el("settings-categories").textContent  = categories.length ? categories.join(", ") : "—";
+
+/* ------------------------------------------------------------------ *
+ * Profile — photo
+ * ------------------------------------------------------------------ */
+const avatarImg      = el("settings-avatar-img");
+const avatarFallback = el("settings-avatar-fallback");
+const photoInput     = el("settings-photo-input");
+const photoBtn       = el("settings-photo-btn");
+const photoRemoveBtn = el("settings-photo-remove");
+const photoError     = el("settings-photo-error");
+
+avatarFallback.textContent = avatarInitial(session);
+
+function renderAvatar(url) {
+  if (url) {
+    avatarImg.src = url;
+    avatarImg.style.display = "block";
+    avatarFallback.style.display = "none";
+    photoRemoveBtn.style.display = "inline-flex";
+  } else {
+    avatarImg.removeAttribute("src");
+    avatarImg.style.display = "none";
+    avatarFallback.style.display = "flex";
+    photoRemoveBtn.style.display = "none";
+  }
+}
+renderAvatar(session.photoURL || "");
+
+photoBtn.addEventListener("click", () => photoInput.click());
+
+photoInput.addEventListener("change", async () => {
+  const file = photoInput.files?.[0];
+  photoInput.value = "";
+  if (!file) return;
+
+  photoError.textContent = "";
+  photoBtn.disabled = true;
+  photoBtn.textContent = "Uploading…";
+
+  try {
+    const url = await uploadProfilePhoto(file);
+    await updateOwnProfilePhoto(url);
+    session.photoURL = url;
+    renderAvatar(url);
+    toast("✅ Profile photo updated.");
+  } catch (err) {
+    photoError.textContent = err.message || friendlyError(err);
+  } finally {
+    photoBtn.disabled = false;
+    photoBtn.textContent = "Change Photo";
+  }
+});
+
+photoRemoveBtn.addEventListener("click", async () => {
+  photoError.textContent = "";
+  photoRemoveBtn.disabled = true;
+
+  try {
+    await updateOwnProfilePhoto(null);
+    session.photoURL = "";
+    renderAvatar("");
+    toast("Profile photo removed.");
+  } catch (err) {
+    photoError.textContent = err.message || friendlyError(err);
+  } finally {
+    photoRemoveBtn.disabled = false;
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * Username + Gmail address
+ * ------------------------------------------------------------------ */
+const usernameInput    = el("settings-username");
+const emailInput       = el("settings-email");
+const identityPassword = el("identity-password");
+const identityError    = el("identity-error");
+const identityNote     = el("identity-note");
+const identitySaveBtn  = el("identity-save");
+
+usernameInput.value = session.username || "";
+emailInput.value    = session.email    || "";
+
+function showIdentityNote(message) {
+  identityNote.textContent = message;
+  identityNote.style.display = "block";
+}
+
+identitySaveBtn.addEventListener("click", async () => {
+  const nextUsername = usernameInput.value.trim().toLowerCase();
+  const nextEmail    = emailInput.value.trim().toLowerCase();
+  const password     = identityPassword.value;
+
+  identityError.textContent = "";
+  identityNote.style.display = "none";
+
+  if (!nextUsername || !nextEmail) {
+    identityError.textContent = "Username and Gmail address are both required.";
+    return;
+  }
+
+  const usernameChanged = nextUsername !== session.username;
+  const emailChanged    = nextEmail !== (session.email || "").toLowerCase();
+
+  if (!usernameChanged && !emailChanged) {
+    toast("Nothing to save — no changes were made.");
+    return;
+  }
+
+  if (emailChanged && !password) {
+    identityError.textContent = "Enter your current password to change your Gmail address.";
+    return;
+  }
+
+  identitySaveBtn.disabled = true;
+  identitySaveBtn.textContent = "Saving…";
+
+  try {
+    if (usernameChanged) {
+      const result = await changeAccountUsername(session.uid, nextUsername);
+      if (result.changed) {
+        session.username = result.username;
+        usernameInput.value = result.username;
+      }
+    }
+
+    if (emailChanged) {
+      const result = await changeOwnEmail(password, nextEmail);
+      identityPassword.value = "";
+
+      if (result.verified) {
+        session.email = result.email;
+        emailInput.value = result.email;
+        toast("✅ Gmail address updated.");
+      } else {
+        emailInput.value = session.email || "";
+        showIdentityNote(
+          `We sent a verification link to ${result.email}. Your sign-in email will ` +
+          `change once you click it — until then, keep signing in with ${session.email}.`
+        );
+      }
+    } else if (usernameChanged) {
+      toast("✅ Username updated.");
+    }
+
+  } catch (err) {
+    identityError.textContent = err.message || friendlyError(err);
+    if (usernameChanged && session.username === nextUsername) {
+      toast(`Username saved as "${nextUsername}", but the Gmail change did not go through.`, true);
+    }
+  } finally {
+    identitySaveBtn.disabled = false;
+    identitySaveBtn.textContent = "Save Changes";
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * Change Password
+ * ------------------------------------------------------------------ */
+const pwCurrent = el("pw-current");
+const pwNew     = el("pw-new");
+const pwConfirm = el("pw-confirm");
+const pwError   = el("pw-error");
+const pwSaveBtn = el("pw-save");
+
+pwSaveBtn.addEventListener("click", async () => {
+  const current = pwCurrent.value;
+  const next    = pwNew.value;
+  const confirm = pwConfirm.value;
+
+  pwError.textContent = "";
+
+  if (!current || !next || !confirm) {
+    pwError.textContent = "Fill in all three fields.";
+    return;
+  }
+  if (next !== confirm) {
+    pwError.textContent = "New password and confirmation do not match.";
+    return;
+  }
+
+  pwSaveBtn.disabled = true;
+  pwSaveBtn.textContent = "Saving…";
+
+  try {
+    await changeOwnPassword(current, next);
+    pwCurrent.value = "";
+    pwNew.value = "";
+    pwConfirm.value = "";
+    toast("✅ Password changed successfully.");
+  } catch (err) {
+    pwError.textContent = err.message || friendlyError(err);
+  } finally {
+    pwSaveBtn.disabled = false;
+    pwSaveBtn.textContent = "Save New Password";
+  }
+});
+</script>
+
+</body>
+</html>

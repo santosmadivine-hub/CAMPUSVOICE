@@ -72,8 +72,6 @@
   .chart-wrap-wide { position:relative; height:260px; margin-top:8px; }
 .card-header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
-/* Line chart */
-#line-chart-svg { width: 100%; height: 190px; display: block; overflow: visible; }
 
 /* Donut */
 .donut-wrap { display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 10px 0; flex: 1; }
@@ -144,27 +142,7 @@
         <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-label">Total Evaluations</div><div class="stat-value" id="stat-total">0</div><div class="stat-sub">for this office</div></div>
         <div class="stat-card"><div class="stat-icon">🧹</div><div class="stat-label">Cleanliness Avg</div><div class="stat-value" id="stat-cl-avg">—</div><div class="stat-sub">average score / 5</div></div>
         <div class="stat-card"><div class="stat-icon">🏗️</div><div class="stat-label">Facilities Avg</div><div class="stat-value" id="stat-fac-avg">—</div><div class="stat-sub">average score / 5</div></div>
-        <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-label">Pending Reviews</div><div class="stat-value" id="stat-pending">0</div><div class="stat-sub">need attention</div></div>
         <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Total Evaluators</div><div class="stat-value" id="stat-evaluators">0</div><div class="stat-sub">unique respondents</div></div>
-      </div>
-
-      <!-- Trend + Category breakdown -->
-      <div class="charts-grid">
-        <div class="card">
-          <div class="card-header-row">
-            <div>
-              <div class="card-title">Submission Trend <span style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:400;color:#94a3b8;">— Last 7 days</span></div>
-              <div style="margin-top:4px;width:32px;height:3px;background:#2563eb;border-radius:2px;"></div>
-            </div>
-            <div class="badge-pill" id="total-badge">0 total</div>
-          </div>
-          <svg id="line-chart-svg" viewBox="0 0 600 190" preserveAspectRatio="none" style="margin-top:12px;"></svg>
-        </div>
-        <div class="card">
-          <div class="card-title">By Category</div>
-          <div class="card-sub">Submission count per cleanliness category</div>
-          <div id="cat-bars" style="margin-top:12px;"></div>
-        </div>
       </div>
 
       <!-- Evaluations Over Time -->
@@ -317,8 +295,6 @@ let eotMetric = "avg";
 
 function renderAll() {
   renderStats();
-  renderTrend();
-  renderCatBars();
   renderDonut();
   renderRecent();
   renderEvalsOverTime();
@@ -409,7 +385,6 @@ document.querySelector(".trend-toggle")?.addEventListener("click", ev => {
 
 function renderStats() {
   document.getElementById("stat-total").textContent   = evaluations.length;
-  document.getElementById("total-badge").textContent  = `${evaluations.length} total`;
   document.getElementById("recent-badge").textContent = `${Math.min(evaluations.length, 10)} shown`;
 
   const withCl  = evaluations.filter(e => e.clAvg  > 0);
@@ -418,64 +393,8 @@ function renderStats() {
   const facAvg  = withFac.length ? (withFac.reduce((s, e) => s + e.facAvg, 0) / withFac.length).toFixed(2) : null;
   document.getElementById("stat-cl-avg").textContent  = clAvg  ? `${clAvg}/5`  : "—";
   document.getElementById("stat-fac-avg").textContent = facAvg ? `${facAvg}/5` : "—";
-  document.getElementById("stat-pending").textContent = evaluations.filter(e => e.status === "pending").length;
   const uniqueEvaluators = new Set(evaluations.map(e => e.userId).filter(Boolean)).size;
   document.getElementById("stat-evaluators").textContent = uniqueEvaluators;
-}
-
-function renderTrend() {
-  const svg = document.getElementById("line-chart-svg");
-  if (!svg) return;
-  const W = 600, H = 190, PAD = { t: 18, r: 20, b: 36, l: 42 };
-  const days = 7;
-  const now = new Date(); now.setHours(23, 59, 59, 999);
-  const labels = [], counts = [];
-  for (let d = days - 1; d >= 0; d--) {
-    const s = new Date(now); s.setDate(now.getDate() - d); s.setHours(0, 0, 0, 0);
-    const e = new Date(s); e.setHours(23, 59, 59, 999);
-    labels.push(s.toLocaleDateString("en-US", { weekday: "short" }));
-    counts.push(evaluations.filter(ev => ev.timestamp >= s.getTime() && ev.timestamp <= e.getTime()).length);
-  }
-  const maxVal  = Math.max(...counts, 1);
-  const niceMax = maxVal <= 5 ? 5 : maxVal <= 10 ? 10 : maxVal <= 25 ? 25 : maxVal <= 50 ? 50 : Math.ceil(maxVal / 25) * 25;
-  const xStep   = (W - PAD.l - PAD.r) / (days - 1);
-  const yScale  = v => PAD.t + (H - PAD.t - PAD.b) * (1 - v / niceMax);
-  const cx      = i => PAD.l + i * xStep;
-  let html = `<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb" stop-opacity=".16"/><stop offset="100%" stop-color="#2563eb" stop-opacity=".01"/></linearGradient></defs>`;
-  [0, .25, .5, .75, 1].map(t => Math.round(t * niceMax)).forEach(val => {
-    const y = yScale(val);
-    html += `<line x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}" stroke="#e8eef6" stroke-width="1"/>`;
-    html += `<text x="${PAD.l - 7}" y="${y + 4}" font-size="10" fill="#94a3b8" text-anchor="end" font-family="DM Sans,sans-serif">${val}</text>`;
-  });
-  const area = `M ${cx(0)},${yScale(counts[0])} ${counts.map((v, i) => `L ${cx(i)},${yScale(v)}`).join(" ")} L ${cx(days-1)},${yScale(0)} L ${cx(0)},${yScale(0)} Z`;
-  html += `<path d="${area}" fill="url(#ag)"/>`;
-  let line = `M ${cx(0)},${yScale(counts[0])}`;
-  for (let i = 1; i < counts.length; i++) {
-    const m = (cx(i-1) + cx(i)) / 2;
-    line += ` C ${m},${yScale(counts[i-1])} ${m},${yScale(counts[i])} ${cx(i)},${yScale(counts[i])}`;
-  }
-  html += `<path d="${line}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>`;
-  counts.forEach((v, i) => { html += `<circle cx="${cx(i)}" cy="${yScale(v)}" r="4.5" fill="#fff" stroke="#2563eb" stroke-width="2.5"/>`; });
-  labels.forEach((l, i) => { html += `<text x="${cx(i)}" y="${H - 5}" font-size="11" fill="#94a3b8" text-anchor="middle" font-family="DM Sans,sans-serif">${l}</text>`; });
-  svg.innerHTML = html;
-}
-
-function renderCatBars() {
-  const el = document.getElementById("cat-bars");
-  if (!evaluations.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📂</div><div class="empty-text">No data yet.</div></div>`;
-    return;
-  }
-  const max = Math.max(...CL_CATS.map(c => evaluations.filter(e => e.cleanlinessCategory === c).length), 1);
-  el.innerHTML = CL_CATS.map(c => {
-    const count = evaluations.filter(e => e.cleanlinessCategory === c).length;
-    const pct   = Math.round((count / max) * 100);
-    return `<div class="cat-bar-row">
-      <div class="cat-bar-label">${c}</div>
-      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;background:${CAT_COLOR[c]};"></div></div>
-      <div class="cat-bar-count">${count}</div>
-    </div>`;
-  }).join("");
 }
 
 function renderDonut() {

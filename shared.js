@@ -44,6 +44,7 @@ const PAGE_SUBTITLES = {
     'reports':               'Generate Reports for Your Office',
     'multimedia':            'View Evidence Photos for Your Office',
     'analytics':             'Office Performance Trends and Ratings',
+    'settings':              'Profile, Password and App Information',
   },
   adminfc: {
     'dashboard':             'Overview of All Facilities and Cleanliness Evaluation Results',
@@ -104,6 +105,7 @@ function buildSidebar(role, activePage) {
     { id: 'eval-mgmt',    icon: '📋', label: 'Evaluations',         href: 'fc-office-eval-mgmt.html' },
     { id: 'multimedia',   icon: '📷', label: 'Multimedia',          href: 'fc-office-multimedia.html' },
     { id: 'analytics',    icon: '📈', label: 'Analytics',           href: 'fc-office-analytics.html' },
+    { id: 'settings',     icon: '⚙️', label: 'Settings',            href: 'fc-office-settings.html' },
   ];
 
   const navSuperAdmin = [
