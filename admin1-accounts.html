@@ -230,8 +230,11 @@
         </div>
       </div>
     </div>
+      <div id="done-email-status" style="margin-top:14px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;display:none;"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn" id="done-copy">📋 Copy credentials</button>
+      <button class="btn" id="done-resend" style="display:none;">📧 Resend Email</button>
       <button class="btn btn-primary" id="done-close">Done</button>
     </div>
   </div>
@@ -289,6 +292,33 @@
 </div>
 
 <script src="shared.js"></script>
+<!-- EmailJS — sends credentials to the new account's Gmail automatically -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  const EMAILJS_SERVICE_ID  = 'service_ydnym2q';
+  const EMAILJS_TEMPLATE_ID = 'template_8xrtkal';
+  const EMAILJS_PUBLIC_KEY  = 'c0YNL3_mCHJFrjGSf';
+  const LOGIN_URL = window.location.origin + '/office-login.html';
+
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+  async function sendWelcomeEmail({ name, username, email, password, office }) {
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        name:       name,
+        user_name:  username,
+        email:      email,
+        password:   password,
+        office_name: office || '—',
+        login_url:  LOGIN_URL
+      });
+      return { ok: true };
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      return { ok: false, reason: err?.text || err?.message || 'Unknown error' };
+    }
+  }
+</script>
 
 <script type="module">
 import {
@@ -316,6 +346,7 @@ const el = (id) => document.getElementById(id);
 let offices = [];
 let accounts = [];
 let rows = [];
+let lastCreated = null;
 
 /* ------------------------------------------------------------------ *
  * Modal plumbing
@@ -590,7 +621,35 @@ el("c-save").addEventListener("click", async () => {
     el("done-username").textContent = result.username;
     el("done-email").textContent    = result.email;
     el("done-password").textContent = password;
+
+    // Reset email status UI
+    const emailStatusEl = el("done-email-status");
+    const resendBtn     = el("done-resend");
+    emailStatusEl.style.display = "block";
+    emailStatusEl.style.background = "#f1f5f9";
+    emailStatusEl.style.color = "#475569";
+    emailStatusEl.textContent = "📧 Sending credentials to " + result.email + "…";
+    resendBtn.style.display = "none";
+
     openModal("done-modal");
+
+    // Store for resend
+    lastCreated = { name: inCharge || result.officeName, username: result.username, email: result.email, password, office: result.officeName };
+
+    // Send welcome email (non-blocking — modal is already open)
+    sendWelcomeEmail(lastCreated).then(res => {
+      if (res.ok) {
+        emailStatusEl.style.background = "#dcfce7";
+        emailStatusEl.style.color = "#166534";
+        emailStatusEl.textContent = "✅ Credentials emailed to " + result.email;
+        resendBtn.style.display = "none";
+      } else {
+        emailStatusEl.style.background = "#fef3c7";
+        emailStatusEl.style.color = "#92400e";
+        emailStatusEl.textContent = "⚠️ Email not sent — " + (res.reason || "check console");
+        resendBtn.style.display = "";
+      }
+    });
 
     await reload();
 
@@ -603,7 +662,29 @@ el("c-save").addEventListener("click", async () => {
   }
 });
 
-el("done-close").addEventListener("click", () => closeModal("done-modal"));
+el("done-close").addEventListener("click", () => { closeModal("done-modal"); lastCreated = null; });
+
+el("done-resend").addEventListener("click", async () => {
+  if (!lastCreated) return;
+  const emailStatusEl = el("done-email-status");
+  const resendBtn     = el("done-resend");
+  emailStatusEl.style.background = "#f1f5f9";
+  emailStatusEl.style.color = "#475569";
+  emailStatusEl.textContent = "📧 Resending to " + lastCreated.email + "…";
+  resendBtn.disabled = true;
+  const res = await sendWelcomeEmail(lastCreated);
+  resendBtn.disabled = false;
+  if (res.ok) {
+    emailStatusEl.style.background = "#dcfce7";
+    emailStatusEl.style.color = "#166534";
+    emailStatusEl.textContent = "✅ Credentials emailed to " + lastCreated.email;
+    resendBtn.style.display = "none";
+  } else {
+    emailStatusEl.style.background = "#fef3c7";
+    emailStatusEl.style.color = "#92400e";
+    emailStatusEl.textContent = "⚠️ Email not sent — " + (res.reason || "check console");
+  }
+});
 el("done-copy").addEventListener("click", async () => {
   const text =
     `CampusVoice office account\n` +
