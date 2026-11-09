@@ -229,6 +229,17 @@ import {
 const acctSnap = await getDoc(doc(db, "accounts", session.uid));
 const acct = acctSnap.exists() ? acctSnap.data() : {};
 const linkedOfficeName = acct.linkedOfficeName || null;
+const linkedOfficeId   = acct.linkedOfficeId   || null;
+
+// Load this office's allowed categories
+let allowedCategories = ["Comfort Room", "Surroundings", "Laboratories/Rooms"];
+if (linkedOfficeId) {
+  const officeSnap = await getDoc(doc(db, "fc_offices", linkedOfficeId));
+  if (officeSnap.exists()) {
+    const cats = officeSnap.data().categories;
+    if (Array.isArray(cats) && cats.length) allowedCategories = cats;
+  }
+}
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("fc_office", "analytics");
 document.getElementById("topbar-mount").innerHTML  = buildTopbar("Analytics", "fc_office",
@@ -361,7 +372,7 @@ const STATUS_VBAR_MAX_H = 200;
 function renderSubmissionStatus() {
   const el = document.getElementById("status-breakdown-chart");
   if (!evaluations.length) { el.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
-  const cats = ["Comfort Room","Surroundings","Laboratories/Rooms"];
+  const cats = allowedCategories;
   const statusOrder = ["pending","no_action","resolved"];
   const totals = {}; cats.forEach(c => { totals[c] = evaluations.filter(e=>e.cleanlinessCategory===c).length; });
   const groupsHtml = statusOrder.map(statusKey => {
@@ -427,7 +438,7 @@ function renderUserCategoryChart() {
   if (userCategoryChart) { userCategoryChart.destroy(); userCategoryChart=null; }
   if (!evaluations.length) { wrap.innerHTML=`<div class="lb-empty">No evaluations yet.</div>`; return; }
   if (!document.getElementById(canvasId)) wrap.innerHTML=`<canvas id="${canvasId}"></canvas>`;
-  const datasets=["Comfort Room","Surroundings","Laboratories/Rooms"].map(cat => {
+  const datasets=allowedCategories.map(cat => {
     const catEvals=evaluations.filter(e=>e.cleanlinessCategory===cat),catTotal=catEvals.length;
     return { label:cat, data:USER_CATEGORY_BUCKETS.map(b=>catTotal?Number(((catEvals.filter(e=>e.userCategory===b).length/catTotal)*100).toFixed(1)):0), borderColor:CAT_COLORS[cat],backgroundColor:CAT_COLORS[cat],pointBackgroundColor:CAT_COLORS[cat],pointRadius:4,pointHoverRadius:6,borderWidth:2,tension:0.3,fill:false };
   });

@@ -226,6 +226,25 @@ import {
 const acctSnap = await getDoc(doc(db, "accounts", session.uid));
 const acct = acctSnap.exists() ? acctSnap.data() : {};
 const linkedOfficeName = acct.linkedOfficeName || null;
+const linkedOfficeId   = acct.linkedOfficeId   || null;
+
+// Load this office's allowed categories
+let allowedCategories = ["Comfort Room", "Surroundings", "Laboratories/Rooms"];
+if (linkedOfficeId) {
+  const officeSnap = await getDoc(doc(db, "fc_offices", linkedOfficeId));
+  if (officeSnap.exists()) {
+    const cats = officeSnap.data().categories;
+    if (Array.isArray(cats) && cats.length) allowedCategories = cats;
+  }
+}
+
+// Hide category tabs not assigned to this office
+["Comfort Room", "Surroundings", "Laboratories/Rooms"].forEach(cat => {
+  if (!allowedCategories.includes(cat)) {
+    const btn = document.querySelector(`#category-tabs [data-category="${CSS.escape(cat)}"]`);
+    if (btn) btn.style.display = "none";
+  }
+});
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("fc_office", "multimedia");
 document.getElementById("topbar-mount").innerHTML  = buildTopbar("Multimedia Evidence", "fc_office",
@@ -233,8 +252,8 @@ document.getElementById("topbar-mount").innerHTML  = buildTopbar("Multimedia Evi
 document.getElementById("banner-office-name").textContent = linkedOfficeName || "No Office Linked";
 
 const EVAL_COLLECTION = "facilities_cleanliness_evaluations";
-const FC_CATEGORIES   = ["Comfort Room", "Surroundings", "Laboratories/Rooms"];
-const DEFAULT_CATEGORY = "Comfort Room";
+const FC_CATEGORIES   = allowedCategories;
+const DEFAULT_CATEGORY = allowedCategories[0] || "Comfort Room";
 
 let evaluations = [], mediaItems = [], evalRawData = {};
 let searchTerm = "", typeFilter = "", dateFilter = "", categoryFilter = "all";
