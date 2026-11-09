@@ -24,7 +24,7 @@ import {
   updateEmail, verifyBeforeUpdateEmail
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, collection, collectionGroup, doc, getDoc, getDocs,
+  getFirestore, collection, collectionGroup, doc, getDoc, getDocs, getDocsFromServer,
   setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where,
   orderBy, limit, writeBatch, runTransaction, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -49,7 +49,7 @@ export const db   = getFirestore(app);
 export const auth = getAuth(app);
 
 export {
-  collection, collectionGroup, doc, getDoc, getDocs, setDoc, updateDoc,
+  collection, collectionGroup, doc, getDoc, getDocs, getDocsFromServer, setDoc, updateDoc,
   deleteDoc, addDoc, onSnapshot, query, where, orderBy, limit, writeBatch,
   runTransaction, serverTimestamp, signOut, onAuthStateChanged,
   signInWithEmailAndPassword, createUserWithEmailAndPassword,

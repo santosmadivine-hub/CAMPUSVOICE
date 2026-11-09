@@ -229,7 +229,6 @@
           <span class="credential-val" id="done-password"></span>
         </div>
       </div>
-    </div>
       <div id="done-email-status" style="margin-top:14px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;display:none;"></div>
     </div>
     <div class="modal-actions">
@@ -253,6 +252,12 @@
 
     <div class="modal-body">
       <div class="form-grid">
+        <label class="field full">
+          <span class="field-label">Office In-Charge *</span>
+          <input type="text" id="e-incharge" class="input" autocomplete="off">
+          <span class="field-hint">Full name of the person responsible for this office.</span>
+        </label>
+
         <label class="field full">
           <span class="field-label">Username *</span>
           <input type="text" id="e-username" class="input input-mono" autocomplete="off">
@@ -324,7 +329,7 @@
 import {
   guard, fetchOffices, escapeHtml, formatDate, formatDateTime,
   friendlyError, toast, SUPER_ADMIN,
-  db, PATHS, collectionGroup, getDocs
+  db, PATHS, collectionGroup, getDocs, updateDoc
 } from "./cv-core.js";
 
 import {
@@ -711,7 +716,9 @@ function openEdit(uid) {
 
   editUid = uid;
   el("edit-subtitle").textContent = account.officeName;
+  el("e-incharge").value = account.inCharge || "";
   el("e-username").value = account.username;
+  el("e-incharge").classList.remove("has-error");
   el("e-username").classList.remove("has-error");
   el("e-office").classList.remove("has-error");
   el("e-error").textContent = "";
@@ -737,13 +744,21 @@ el("e-save").addEventListener("click", async () => {
   const account = accounts.find(a => a.uid === editUid);
   if (!account) { closeModal("edit-modal"); return; }
 
-  const nextUsername = slugUsername(el("e-username").value);
+  const nextInCharge  = el("e-incharge").value.trim();
+  const nextUsername  = slugUsername(el("e-username").value);
   const targetOfficeId = el("e-office").value;
   const target = offices.find(o => o.id === targetOfficeId);
 
   el("e-error").textContent = "";
+  el("e-incharge").classList.remove("has-error");
   el("e-username").classList.remove("has-error");
   el("e-office").classList.remove("has-error");
+
+  if (!nextInCharge) {
+    el("e-error").textContent = "Office in-charge name is required.";
+    el("e-incharge").classList.add("has-error");
+    return;
+  }
 
   const usernameError = validateUsername(nextUsername);
   if (usernameError) {
@@ -763,6 +778,9 @@ el("e-save").addEventListener("click", async () => {
   btn.textContent = "Saving…";
 
   try {
+    if (nextInCharge !== account.inCharge) {
+      await updateDoc(PATHS.account(editUid), { inCharge: nextInCharge, updatedAt: Date.now() });
+    }
     if (nextUsername !== account.username) {
       await changeAccountUsername(editUid, nextUsername);
     }

@@ -28,7 +28,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
-  db, auth, firebaseConfig, PATHS, doc, getDoc, getDocs, setDoc, updateDoc,
+  db, auth, firebaseConfig, PATHS, doc, getDoc, getDocs, getDocsFromServer, setDoc, updateDoc,
   deleteDoc, query, where, collection, writeBatch, runTransaction,
   toMillis, normalizeName, friendlyError, fetchOffice, fetchOffices,
   validatePassword, validateGmailAddress
@@ -92,7 +92,7 @@ export function suggestPassword() {
  * -------------------------------------------------------------------------- */
 
 export async function fetchAccounts() {
-  const snap = await getDocs(PATHS.accounts());
+  const snap = await getDocsFromServer(PATHS.accounts());
   return snap.docs.map(d => {
     const a = d.data() || {};
     return {
