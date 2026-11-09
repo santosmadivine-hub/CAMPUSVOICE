@@ -102,7 +102,7 @@ function buildSidebar(role, activePage) {
 
   const navFCOffice = [
     { id: 'fc-dashboard', icon: '🏠', label: 'Dashboard',           href: 'fc-office-dashboard.html' },
-    { id: 'eval-mgmt',    icon: '📋', label: 'Evaluations',         href: 'fc-office-eval-mgmt.html' },
+    { id: 'eval-mgmt',    icon: '📋', label: 'Evaluations Management',         href: 'fc-office-eval-mgmt.html' },
     { id: 'multimedia',   icon: '📷', label: 'Multimedia',          href: 'fc-office-multimedia.html' },
     { id: 'analytics',    icon: '📈', label: 'Analytics',           href: 'fc-office-analytics.html' },
     { id: 'settings',     icon: '⚙️', label: 'Settings',            href: 'fc-office-settings.html' },
