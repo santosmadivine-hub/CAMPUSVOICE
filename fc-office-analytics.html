@@ -106,16 +106,6 @@
   .evidence-bar-fill { height:100%; border-radius:4px; transition:width .3s,filter .2s; }
   .evidence-bar-row:hover .evidence-bar-fill { filter:brightness(1.08); }
 
-  /* Monthly trend (single office) */
-  .trend-wrap { margin-top:12px; overflow-x:auto; }
-  .trend-chart { display:flex; align-items:flex-end; gap:12px; min-height:160px; padding:0 8px 8px; border-bottom:1px solid #e2e8f0; }
-  .trend-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; min-width:40px; }
-  .trend-bar { width:100%; max-width:48px; border-radius:6px 6px 0 0; min-height:2px; transition:height .3s,filter .2s; }
-  .trend-col:hover .trend-bar { filter:brightness(1.08); }
-  .trend-label { font-family:'DM Sans',sans-serif; font-size:11px; color:#64748b; white-space:nowrap; }
-  .trend-val { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:#334155; }
-  .trend-col:hover .trend-val { color:#2563eb; }
-  .trend-empty { color:#94a3b8; padding:30px 0; font-family:'DM Sans',sans-serif; font-size:14px; text-align:center; font-style:italic; }
 
   @media(max-width:1200px){.stat-grid-alt{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:900px){.analytics-grid,.pie-row{grid-template-columns:1fr;}}
@@ -203,12 +193,6 @@
         <div class="chart-wrap" id="chart-fac-dimensions-wrap">
           <canvas id="chart-fac-dimensions"></canvas>
         </div>
-      </div>
-
-      <!-- Monthly trend (single office) -->
-      <div class="card">
-        <div class="card-title">Monthly Trend <span class="card-sub">— avg overall score (last 6 months)</span></div>
-        <div class="trend-wrap" id="monthly-trend-wrap"></div>
       </div>
 
     </div>
@@ -346,7 +330,6 @@ function renderAll() {
   renderRespondentPies();
   renderClDimensions();
   renderFacDimensions();
-  renderMonthlyTrend();
 }
 
 function renderStatCards() {
@@ -479,44 +462,6 @@ function safeRenderChart(wrapId,canvasId,buildFn) {
 
 function renderRespondentPies() { renderSexDistributionDonut(); renderUserCategoryChart(); }
 
-// ── Monthly trend (single office, 6 months) ────────────────────────────────
-function renderMonthlyTrend() {
-  const wrap = document.getElementById("monthly-trend-wrap");
-  if (!evaluations.length) { wrap.innerHTML=`<div class="trend-empty">No evaluations yet.</div>`; return; }
-
-  const now = new Date();
-  const months = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-    months.push({ month:d.getMonth(), year:d.getFullYear(), label:MONTH_NAMES[d.getMonth()] });
-  }
-
-  const series = months.map(m => {
-    const evals = evaluations.filter(e => {
-      if (!e.timestamp) return false;
-      const d = new Date(e.timestamp);
-      return d.getMonth()===m.month && d.getFullYear()===m.year;
-    });
-    const avg = evals.length ? evals.reduce((s,e)=>s+overallAvg(e),0)/evals.length : null;
-    return { label:m.label, avg, count:evals.length };
-  });
-
-  const maxAvg = Math.max(...series.filter(s=>s.avg!==null).map(s=>s.avg), 0);
-  const MAX_BAR_H = 140;
-
-  const cols = series.map(s => {
-    const h = s.avg===null ? 2 : Math.max(4, Math.round((s.avg/5)*MAX_BAR_H));
-    const color = s.avg===null ? "#e2e8f0" : s.avg>=4?"#10b981":s.avg>=3?"#2563eb":s.avg>=2?"#f59e0b":"#ef4444";
-    const label = s.avg===null ? "—" : `${s.avg.toFixed(2)}`;
-    return `<div class="trend-col" title="${s.label}: ${label} avg (${s.count} submissions)">
-      <div class="trend-val">${label}</div>
-      <div class="trend-bar" style="height:${h}px;background:${color};width:40px;"></div>
-      <div class="trend-label">${s.label}</div>
-    </div>`;
-  }).join("");
-
-  wrap.innerHTML = `<div class="trend-chart">${cols}</div>`;
-}
 </script>
 </body>
 </html>

@@ -65,6 +65,11 @@
 .card:hover { border-color: #7dd3fc; box-shadow: 0 10px 24px rgba(15,23,42,.09); }
 .card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: #0f172a; }
 .card-sub { font-family: 'DM Sans', sans-serif; font-size: 12px; color: #94a3b8; }
+  /* Evaluations Over Time chart */
+  .trend-toggle { display:flex; gap:8px; margin:10px 0 4px; }
+  .trend-btn { border:1.5px solid #bae6fd; background:#fff; color:#0369a1; padding:6px 14px; border-radius:999px; cursor:pointer; font-weight:700; font-size:12px; font-family:'DM Sans',sans-serif; transition:background .2s,color .2s,border-color .2s; }
+  .trend-btn.active { background:#2563eb; border-color:#2563eb; color:#fff; }
+  .chart-wrap-wide { position:relative; height:260px; margin-top:8px; }
 .card-header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
 /* Line chart */
@@ -140,6 +145,7 @@
         <div class="stat-card"><div class="stat-icon">🧹</div><div class="stat-label">Cleanliness Avg</div><div class="stat-value" id="stat-cl-avg">—</div><div class="stat-sub">average score / 5</div></div>
         <div class="stat-card"><div class="stat-icon">🏗️</div><div class="stat-label">Facilities Avg</div><div class="stat-value" id="stat-fac-avg">—</div><div class="stat-sub">average score / 5</div></div>
         <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-label">Pending Reviews</div><div class="stat-value" id="stat-pending">0</div><div class="stat-sub">need attention</div></div>
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Total Evaluators</div><div class="stat-value" id="stat-evaluators">0</div><div class="stat-sub">unique respondents</div></div>
       </div>
 
       <!-- Trend + Category breakdown -->
@@ -158,6 +164,21 @@
           <div class="card-title">By Category</div>
           <div class="card-sub">Submission count per cleanliness category</div>
           <div id="cat-bars" style="margin-top:12px;"></div>
+        </div>
+      </div>
+
+      <!-- Evaluations Over Time -->
+      <div class="card" style="margin-bottom:0;">
+        <div>
+          <div class="card-title">Evaluations Over Time <span class="card-sub" id="eot-sub">— average rating per submission date</span></div>
+          <div style="margin-top:5px;width:36px;height:3px;background:#2563eb;border-radius:2px;"></div>
+        </div>
+        <div class="trend-toggle" role="group">
+          <button class="trend-btn active" data-metric="avg">Average rating</button>
+          <button class="trend-btn" data-metric="count">Number of evaluations</button>
+        </div>
+        <div class="chart-wrap-wide">
+          <canvas id="chart-eot"></canvas>
         </div>
       </div>
 
@@ -188,6 +209,7 @@
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="shared.js"></script>
 <script type="module">
 import { guard as cvGuard, db } from "./cv-core.js";
@@ -274,6 +296,7 @@ onSnapshot(collection(db, "facilities_cleanliness_evaluations"), snap => {
       officeName:            data.officeName || "Unknown",
       cleanlinessCategory:   data.cleanlinessCategory || "Comfort Room",
       evaluatorName:         data.evaluatorName || data.userName || data.name || "",
+      userId:                data.userId || "",
       timestamp:             getTimestampMillis(data.timestamp ?? data.date ?? data.submittedAt) ?? 0,
       status:                data.status || null,
     };
@@ -289,13 +312,100 @@ onSnapshot(collection(db, "facilities_cleanliness_evaluations"), snap => {
 }, err => console.error("Failed to load evaluations:", err));
 
 // ── Render all ─────────────────────────────────────────────────────────────
+let eotChart = null;
+let eotMetric = "avg";
+
 function renderAll() {
   renderStats();
   renderTrend();
   renderCatBars();
   renderDonut();
   renderRecent();
+  renderEvalsOverTime();
 }
+
+function renderEvalsOverTime() {
+  if (eotChart) { eotChart.destroy(); eotChart = null; }
+  const wrap = document.getElementById("chart-eot")?.parentElement;
+  if (!wrap) return;
+
+  if (!evaluations.length) {
+    wrap.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-family:'DM Sans',sans-serif;font-size:14px;">No evaluations yet.</div>`;
+    return;
+  }
+  if (!document.getElementById("chart-eot")) wrap.innerHTML = `<canvas id="chart-eot"></canvas>`;
+
+  // Group by day
+  const byDay = {};
+  evaluations.forEach(e => {
+    if (!e.timestamp) return;
+    const d = new Date(e.timestamp);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (!byDay[key]) byDay[key] = { sum: 0, count: 0 };
+    byDay[key].sum += (e.clAvg + e.facAvg) / 2;
+    byDay[key].count++;
+  });
+  const days = Object.keys(byDay).sort();
+  const labels = days.map(k => {
+    const [y, m, d] = k.split("-").map(Number);
+    return new Date(y, m-1, d).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+  });
+
+  const byCount = eotMetric === "count";
+  document.getElementById("eot-sub").textContent = byCount
+    ? "— number of evaluations per submission date"
+    : "— average rating per submission date";
+
+  const data = days.map(k => byCount ? byDay[k].count : +(byDay[k].sum / byDay[k].count).toFixed(2));
+
+  const canvas = document.getElementById("chart-eot");
+  eotChart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: "#2563eb",
+        backgroundColor: "rgba(37,99,235,0.12)",
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 8,
+        pointBackgroundColor: "#2563eb",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#0b1220", padding: 12, cornerRadius: 8, displayColors: false,
+          callbacks: {
+            label: ctx => byCount
+              ? `${ctx.raw} evaluation${ctx.raw !== 1 ? "s" : ""}`
+              : `Avg rating: ${ctx.raw} / 5`,
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: "#f1f5f9" }, ticks: { font: { family: "'DM Sans', sans-serif", size: 11 }, color: "#94a3b8" } },
+        y: { beginAtZero: true, max: byCount ? undefined : 5, grid: { color: "#f1f5f9" }, ticks: { font: { family: "'DM Sans', sans-serif", size: 11 }, color: "#94a3b8" } }
+      }
+    }
+  });
+}
+
+// Toggle avg / count
+document.querySelector(".trend-toggle")?.addEventListener("click", ev => {
+  const btn = ev.target.closest(".trend-btn");
+  if (!btn) return;
+  eotMetric = btn.dataset.metric;
+  document.querySelectorAll(".trend-btn").forEach(b => b.classList.toggle("active", b === btn));
+  renderEvalsOverTime();
+});
 
 function renderStats() {
   document.getElementById("stat-total").textContent   = evaluations.length;
@@ -309,6 +419,8 @@ function renderStats() {
   document.getElementById("stat-cl-avg").textContent  = clAvg  ? `${clAvg}/5`  : "—";
   document.getElementById("stat-fac-avg").textContent = facAvg ? `${facAvg}/5` : "—";
   document.getElementById("stat-pending").textContent = evaluations.filter(e => e.status === "pending").length;
+  const uniqueEvaluators = new Set(evaluations.map(e => e.userId).filter(Boolean)).size;
+  document.getElementById("stat-evaluators").textContent = uniqueEvaluators;
 }
 
 function renderTrend() {
