@@ -459,12 +459,9 @@ if (linkedOfficeId) {
   }
 }
 
-// Hide category chips and stat pills that don't apply to this office
-const CAT_CHIP_IDS = {
-  "Comfort Room":       "cat-count-comfort",
-  "Surroundings":       "cat-count-surroundings",
-  "Laboratories/Rooms": "cat-count-labs",
-};
+// Hide (not remove) category chips and stat pills that don't apply to this office.
+// We hide rather than remove so renderSubmissions can still call getElementById
+// on these elements without crashing.
 const CAT_STAT_IDS = {
   "Comfort Room":       "stat-comfort",
   "Surroundings":       "stat-surroundings",
@@ -472,10 +469,10 @@ const CAT_STAT_IDS = {
 };
 ["Comfort Room", "Surroundings", "Laboratories/Rooms"].forEach(cat => {
   if (!allowedCategories.includes(cat)) {
-    // Remove the category filter chip button
-    document.querySelector(`#category-tabs [data-cat="${CSS.escape(cat)}"]`)?.remove();
-    // Remove the stat pill
-    document.getElementById(CAT_STAT_IDS[cat])?.closest(".eval-stat-pill")?.remove();
+    const chip = document.querySelector(`#category-tabs [data-cat="${CSS.escape(cat)}"]`);
+    if (chip) chip.style.display = "none";
+    const pill = document.getElementById(CAT_STAT_IDS[cat])?.closest(".eval-stat-pill");
+    if (pill) pill.style.display = "none";
   }
 });
 
