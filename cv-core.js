@@ -212,10 +212,14 @@ export async function guard(allowedRoles) {
 export async function logout() {
   // Read the role BEFORE clearing the cache, so each account type lands back
   // on its own sign-in page rather than a shared one.
-  const wasOffice = cachedSession?.role === "office";
+  const role = cachedSession?.role;
   clearSessionCache();
   try { await signOut(auth); } catch (err) { console.error(err); }
-  location.replace(wasOffice ? "office-login.html" : "index.html");
+  location.replace(
+    role === "office"    ? "office-login.html"    :
+    role === "fc_office" ? "fc-office-login.html" :
+    "index.html"
+  );
 }
 
 /* ----------------------------------------------------------------------------

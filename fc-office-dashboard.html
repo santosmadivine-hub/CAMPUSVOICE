@@ -108,6 +108,22 @@
 .empty-state .empty-icon { font-size: 36px; margin-bottom: 10px; }
 .empty-state .empty-text { font-size: 14px; }
 
+/* Welcome banner */
+.welcome-banner{position:relative;overflow:hidden;display:flex;flex-direction:row;align-items:center;gap:22px;min-height:120px;padding:28px 36px;border-radius:20px;background:linear-gradient(120deg,#1d4ed8,#2563eb 55%,#3b82f6);box-shadow:0 14px 32px rgba(37,99,235,.30)}
+.welcome-banner::before,.welcome-banner::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.12)}
+.welcome-banner::before{width:280px;height:280px;right:-70px;top:-110px}
+.welcome-banner::after{width:140px;height:140px;right:50px;bottom:-80px;background:rgba(255,255,255,.08)}
+.welcome-avatar{position:relative;z-index:1;width:90px;height:90px;flex-shrink:0;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.18);border:3px solid rgba(255,255,255,.65);display:flex;align-items:center;justify-content:center}
+.welcome-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.welcome-avatar .avatar-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:32px;color:#fff}
+.welcome-text{position:relative;z-index:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+.welcome-banner-title{font-family:'Syne',sans-serif;font-weight:700;font-size:24px;color:#fff}
+.welcome-banner-sub{font-family:'DM Sans',sans-serif;font-size:15px;color:rgba(255,255,255,.85)}
+.wave-emoji{display:inline-block;transform-origin:70% 70%;animation:welcome-wave 2.4s ease-in-out infinite}
+@keyframes welcome-wave{0%{transform:rotate(0deg)}10%{transform:rotate(14deg)}20%{transform:rotate(-8deg)}30%{transform:rotate(14deg)}40%{transform:rotate(-4deg)}50%{transform:rotate(10deg)}60%,100%{transform:rotate(0deg)}}
+@media(prefers-reduced-motion:reduce){.wave-emoji{animation:none}}
+@media(max-width:600px){.welcome-banner{padding:20px 20px;gap:14px;min-height:auto}.welcome-avatar{width:68px;height:68px}.welcome-banner-title{font-size:18px}.welcome-banner-sub{font-size:13px}}
+
 @keyframes cvRise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .stat-card, .charts-grid > .card, .card { animation: cvRise .45s cubic-bezier(.2,.7,.2,1) backwards; }
 @media (max-width: 1024px) { .stat-grid { grid-template-columns: repeat(2,1fr); } .charts-grid { grid-template-columns: 1fr; } }
@@ -121,6 +137,12 @@
   <main class="main fade-in">
     <div id="topbar-mount"></div>
     <div class="page">
+
+      <!-- Welcome banner -->
+      <div class="welcome-banner" id="welcomeBanner" style="display:none;">
+        <div class="welcome-avatar" id="welcomeAvatar"></div>
+        <div class="welcome-text" id="welcomeText"></div>
+      </div>
 
       <!-- Office context -->
       <div class="office-context" id="office-ctx">
@@ -190,7 +212,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="shared.js"></script>
 <script type="module">
-import { guard as cvGuard, db } from "./cv-core.js";
+import { guard as cvGuard, db, escapeHtml, avatarInitial } from "./cv-core.js";
 const session = await cvGuard(["fc_office"]);
 
 import { collection, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -228,6 +250,17 @@ if (linkedOfficeName) {
   document.getElementById("ctx-status").style.cssText = "background:#fef3c7;color:#d97706;";
 }
 document.getElementById("ctx-user").textContent = acct.username || acct.name || session.email || "Admin FC";
+
+// ── Welcome banner ─────────────────────────────────────────────────────────
+const welcomeName = session.displayName || acct.username || acct.name || session.email || "FC Admin";
+const avatarInner = session.photoURL
+  ? `<img src="${escapeHtml(session.photoURL)}" alt="avatar">`
+  : `<span class="avatar-fallback">${escapeHtml(avatarInitial(session))}</span>`;
+document.getElementById("welcomeAvatar").innerHTML = avatarInner;
+document.getElementById("welcomeText").innerHTML =
+  `<div class="welcome-banner-title"><span class="wave-emoji">👋</span> Hello, ${escapeHtml(welcomeName)}!</div>` +
+  `<div class="welcome-banner-sub">Welcome back to CampusVoice</div>`;
+document.getElementById("welcomeBanner").style.display = "flex";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const CL_CATS   = allowedCategories; // only the categories assigned to this office

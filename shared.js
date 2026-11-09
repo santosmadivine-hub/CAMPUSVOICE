@@ -102,7 +102,7 @@ function buildSidebar(role, activePage) {
 
   const navFCOffice = [
     { id: 'fc-dashboard', icon: '🏠', label: 'Dashboard',           href: 'fc-office-dashboard.html' },
-    { id: 'eval-mgmt',    icon: '📋', label: 'Evaluations Management',         href: 'fc-office-eval-mgmt.html' },
+    { id: 'eval-mgmt',    icon: '📋', label: 'Evaluations',         href: 'fc-office-eval-mgmt.html' },
     { id: 'multimedia',   icon: '📷', label: 'Multimedia',          href: 'fc-office-multimedia.html' },
     { id: 'analytics',    icon: '📈', label: 'Analytics',           href: 'fc-office-analytics.html' },
     { id: 'settings',     icon: '⚙️', label: 'Settings',            href: 'fc-office-settings.html' },
@@ -201,7 +201,7 @@ function buildSidebar(role, activePage) {
       </nav>
 
       <div class="sidebar-footer">
-        <a class="logout-btn" href="index.html" aria-label="Logout ${userName}" title="Logout">
+        <a class="logout-btn" href="${role === 'fc_office' ? 'fc-office-login.html' : 'index.html'}" aria-label="Logout ${userName}" title="Logout">
           <svg class="logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
@@ -311,11 +311,12 @@ document.addEventListener('click', function (e) {
 
   e.preventDefault();
 
+  const fallbackHref = link.getAttribute('href') || 'index.html';
   import('./cv-core.js')
     .then(m => m.logout())
     .catch(err => {
       console.error('Could not sign out cleanly:', err);
-      window.location.replace('index.html');
+      window.location.replace(fallbackHref);
     });
 });
 
