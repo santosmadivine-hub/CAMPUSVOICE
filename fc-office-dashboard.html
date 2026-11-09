@@ -144,20 +144,6 @@
         <div class="welcome-text" id="welcomeText"></div>
       </div>
 
-      <!-- Office context -->
-      <div class="office-context" id="office-ctx">
-        <div class="office-context-icon">🏢</div>
-        <div class="office-context-info">
-          <div class="office-context-name" id="ctx-office-name">Loading…</div>
-          <div class="office-context-meta">
-            <span id="ctx-user">—</span>
-            <span class="sep">·</span>
-            <span>Facilities &amp; Cleanliness Admin</span>
-            <span class="sep">·</span>
-            <span class="office-badge" id="ctx-status">Active</span>
-          </div>
-        </div>
-      </div>
 
       <!-- Stat cards -->
       <div class="stat-grid">
@@ -240,16 +226,6 @@ document.getElementById("topbar-mount").innerHTML  = buildTopbar(
   linkedOfficeName ? "Facilities &amp; Cleanliness Evaluation Overview" : "No office linked to this account"
 );
 
-// ── Office context section ─────────────────────────────────────────────────
-if (linkedOfficeName) {
-  document.getElementById("ctx-office-name").textContent = linkedOfficeName;
-} else {
-  document.getElementById("office-ctx").classList.add("office-no-link");
-  document.getElementById("ctx-office-name").textContent = "No Office Linked";
-  document.getElementById("ctx-status").textContent = "Unlinked";
-  document.getElementById("ctx-status").style.cssText = "background:#fef3c7;color:#d97706;";
-}
-document.getElementById("ctx-user").textContent = acct.username || acct.name || session.email || "Admin FC";
 
 // ── Welcome banner ─────────────────────────────────────────────────────────
 const welcomeName = session.displayName || acct.username || acct.name || session.email || "FC Admin";
