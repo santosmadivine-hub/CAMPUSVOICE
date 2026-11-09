@@ -119,7 +119,6 @@
                 <th>Gmail Address</th>
                 <th>Status</th>
                 <th>Created</th>
-                <th>Last Sign-in</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -482,7 +481,6 @@ function render() {
               ? `<span class="badge-pill ${a.status === "active" ? "badge-active" : "badge-inactive"}">${a.status === "active" ? "Active" : "Deactivated"}</span>`
               : `<span class="badge-pill badge-warn">Cannot sign in</span>`}</td>
         <td class="cell-muted">${a?.createdAt ? escapeHtml(formatDate(a.createdAt)) : "—"}</td>
-        <td class="cell-muted">${a?.lastLoginAt ? escapeHtml(formatDateTime(a.lastLoginAt)) : "never"}</td>
         <td class="cell-actions"><div class="row-actions">${actions}</div></td>
       </tr>`;
   }).join("");

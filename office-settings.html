@@ -50,6 +50,18 @@
           <div class="detail-row"><span class="detail-label">Office</span><span class="detail-value" id="settings-office-name">—</span></div>
         </div>
 
+        <div class="form-grid" style="margin-top:14px;">
+          <label class="field full">
+            <span class="field-label">Office In-Charge *</span>
+            <input type="text" id="settings-incharge" class="input" autocomplete="off">
+            <span class="field-hint">Full name of the person responsible for this office.</span>
+          </label>
+        </div>
+        <div class="field-error" id="incharge-error"></div>
+        <div style="margin-top:10px;">
+          <button class="btn btn-primary" type="button" id="incharge-save">Save In-Charge</button>
+        </div>
+
         <div class="mood-legend">
           <div class="mood-legend-title">What does the icon on your Dashboard mean?</div>
           <div class="mood-legend-sub">
@@ -130,7 +142,7 @@
         </div>
 
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px;">
-          <img src="5.png" alt="CampusVoice Logo"
+          <img src="1.png" alt="CampusVoice Logo"
                style="width:130px;height:130px;border-radius:28px;object-fit:cover;box-shadow:0 8px 24px rgba(37,99,235,.22);">
           <div style="text-align:center;">
             <div class="about-app-name">CampusVoice</div>
@@ -149,22 +161,22 @@
         <div class="about-section-title">Developers</div>
         <div class="dev-grid" id="cv-developer-list">
           <div class="dev-card">
-            <div class="dev-avatar"><img src="14.png"></div>
+            <div class="dev-avatar"><span class="avatar-fallback">DS</span></div>
             <div class="dev-name">Ma. Divine Santos</div>
             <div class="dev-role">Hacker</div>
           </div>
           <div class="dev-card">
-            <div class="dev-avatar"><img src="15.png"></div>
+            <div class="dev-avatar"><span class="avatar-fallback">SP</span></div>
             <div class="dev-name">Sweedene Shane Padillo</div>
             <div class="dev-role">Hipster</div>
           </div>
           <div class="dev-card">
-            <div class="dev-avatar"><img src="16.png"></div>
+            <div class="dev-avatar"><span class="avatar-fallback">KP</span></div>
             <div class="dev-name">Kristal Jean Porras</div>
             <div class="dev-role">Handler</div>
           </div>
           <div class="dev-card">
-            <div class="dev-avatar"><img src="18.png"></div>
+            <div class="dev-avatar"><span class="avatar-fallback">MS</span></div>
             <div class="dev-name">Maarrianne Faith Subaldo</div>
             <div class="dev-role">Hustler</div>
           </div>
@@ -173,7 +185,7 @@
         <div class="about-section-title">Adviser</div>
         <div class="adviser-section">
           <div class="dev-card adviser-card">
-            <div class="dev-avatar"><img src="17.png"></div>
+            <div class="dev-avatar"><span class="avatar-fallback">WB</span></div>
             <div class="dev-name">Weena J. Bulnes</div>
           </div>
         </div>
@@ -189,7 +201,7 @@
 import {
   guard, mountOfficeChrome, escapeHtml, friendlyError, toast,
   uploadProfilePhoto, updateOwnProfilePhoto, changeOwnPassword, changeOwnEmail,
-  avatarInitial
+  avatarInitial, db, PATHS, getDoc, doc, updateDoc
 } from "./cv-core.js";
 
 import { changeAccountUsername } from "./cv-accounts.js";
@@ -209,6 +221,40 @@ const el = (id) => document.getElementById(id);
  * Profile — identity + photo
  * ------------------------------------------------------------------ */
 el("settings-office-name").textContent = session.officeName || "—";
+
+/* ------------------------------------------------------------------ *
+ * In-Charge name
+ * ------------------------------------------------------------------ */
+const acctSnap = await getDoc(doc(db, "accounts", session.uid));
+const currentInCharge = acctSnap.exists() ? (acctSnap.data().inCharge || "") : "";
+el("settings-incharge").value = currentInCharge;
+
+el("incharge-save").addEventListener("click", async () => {
+  const nextInCharge = el("settings-incharge").value.trim();
+  el("incharge-error").textContent = "";
+
+  if (!nextInCharge) {
+    el("incharge-error").textContent = "In-charge name is required.";
+    return;
+  }
+  if (nextInCharge === currentInCharge) {
+    toast("Nothing to save — no changes were made.");
+    return;
+  }
+
+  el("incharge-save").disabled = true;
+  el("incharge-save").textContent = "Saving…";
+
+  try {
+    await updateDoc(doc(db, "accounts", session.uid), { inCharge: nextInCharge, updatedAt: Date.now() });
+    toast("✅ In-charge name updated.");
+  } catch (err) {
+    el("incharge-error").textContent = err.message || friendlyError(err);
+  } finally {
+    el("incharge-save").disabled = false;
+    el("incharge-save").textContent = "Save In-Charge";
+  }
+});
 
 const avatarImg      = el("settings-avatar-img");
 const avatarFallback = el("settings-avatar-fallback");
