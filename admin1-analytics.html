@@ -1128,9 +1128,10 @@ function normalizeSex(item) {
 function normalizeClientType(item) {
   const raw = (item.clientType ?? item.client_type ?? item.ClientType ?? "").toString().trim().toLowerCase();
   if (!raw) return null;
+  if (raw.includes("student")) return "Student";
+  if (raw.includes("employee")) return "Employee";
   if (raw.includes("citizen")) return "Citizen";
-  if (raw.includes("business")) return "Business";
-  if (raw.includes("government")) return "Government";
+  if (raw.includes("others") || raw.includes("other")) return "Others";
   return null;
 }
 
@@ -1245,25 +1246,27 @@ function renderKPIs(rows) {
 function renderClientType(rows) {
   const wrap = document.getElementById("clientTypeWrap");
 
-  let citizen = 0, business = 0, government = 0, unknown = 0;
+  let student = 0, employee = 0, citizen = 0, others = 0, unknown = 0;
   rows.forEach(r => {
     const ct = normalizeClientType(r);
-    if (ct === "Citizen") citizen++;
-    else if (ct === "Business") business++;
-    else if (ct === "Government") government++;
+    if (ct === "Student") student++;
+    else if (ct === "Employee") employee++;
+    else if (ct === "Citizen") citizen++;
+    else if (ct === "Others") others++;
     else unknown++;
   });
 
-  const known = citizen + business + government;
+  const known = student + employee + citizen + others;
 
   if (!known) {
     wrap.innerHTML = `<div class="an-empty"><div class="icon">👥</div>No client type data recorded yet.</div>`;
     return;
   }
 
-  const citizenPct   = (citizen   / known) * 100;
-  const businessPct  = (business  / known) * 100;
-  const governmentPct = (government / known) * 100;
+  const studentPct  = (student  / known) * 100;
+  const employeePct = (employee / known) * 100;
+  const citizenPct  = (citizen  / known) * 100;
+  const othersPct   = (others   / known) * 100;
 
   const CX = 90, CY = 90, R = 80;
 
@@ -1280,9 +1283,10 @@ function renderClientType(rows) {
 
   let svgSlices = "";
   let startPct = 0;
-  if (citizen > 0)    { svgSlices += `<path class="cv-hover" data-tt-title="Citizen" data-tt-lines='["${citizen} of ${known} respondents","${citizenPct.toFixed(1)}% share"]' d="${arcPath(startPct, startPct + citizenPct)}" fill="#2563eb"/>`; startPct += citizenPct; }
-  if (business > 0)   { svgSlices += `<path class="cv-hover" data-tt-title="Business" data-tt-lines='["${business} of ${known} respondents","${businessPct.toFixed(1)}% share"]' d="${arcPath(startPct, startPct + businessPct)}" fill="#f97316"/>`; startPct += businessPct; }
-  if (government > 0) { svgSlices += `<path class="cv-hover" data-tt-title="Government" data-tt-lines='["${government} of ${known} respondents","${governmentPct.toFixed(1)}% share"]' d="${arcPath(startPct, startPct + governmentPct)}" fill="#38bdf8"/>`; }
+  if (student > 0)  { svgSlices += `<path class="cv-hover" data-tt-title="Student" data-tt-lines='["${student} of ${known} respondents","${studentPct.toFixed(1)}% share"]' d="${arcPath(startPct, startPct + studentPct)}" fill="#2563eb"/>`; startPct += studentPct; }
+  if (employee > 0) { svgSlices += `<path class="cv-hover" data-tt-title="Employee" data-tt-lines='["${employee} of ${known} respondents","${employeePct.toFixed(1)}% share"]' d="${arcPath(startPct, startPct + employeePct)}" fill="#f97316"/>`; startPct += employeePct; }
+  if (citizen > 0)  { svgSlices += `<path class="cv-hover" data-tt-title="Citizen" data-tt-lines='["${citizen} of ${known} respondents","${citizenPct.toFixed(1)}% share"]' d="${arcPath(startPct, startPct + citizenPct)}" fill="#38bdf8"/>`; startPct += citizenPct; }
+  if (others > 0)   { svgSlices += `<path class="cv-hover" data-tt-title="Others" data-tt-lines='["${others} of ${known} respondents","${othersPct.toFixed(1)}% share"]' d="${arcPath(startPct, startPct + othersPct)}" fill="#a855f7"/>`; }
 
   wrap.innerHTML = `
     <svg class="pie-svg" viewBox="0 0 180 180">
@@ -1290,25 +1294,32 @@ function renderClientType(rows) {
       ${svgSlices}
     </svg>
     <div class="pie-legend">
-      ${citizen > 0 ? `<div class="pie-legend-item">
+      ${student > 0 ? `<div class="pie-legend-item">
         <div class="pie-legend-dot" style="background:#2563eb;"></div>
+        <div>
+          <div class="pie-legend-label">Student</div>
+          <div class="pie-legend-val">${student} (${studentPct.toFixed(0)}%)</div>
+        </div>
+      </div>` : ""}
+      ${employee > 0 ? `<div class="pie-legend-item">
+        <div class="pie-legend-dot" style="background:#f97316;"></div>
+        <div>
+          <div class="pie-legend-label">Employee</div>
+          <div class="pie-legend-val">${employee} (${employeePct.toFixed(0)}%)</div>
+        </div>
+      </div>` : ""}
+      ${citizen > 0 ? `<div class="pie-legend-item">
+        <div class="pie-legend-dot" style="background:#38bdf8;"></div>
         <div>
           <div class="pie-legend-label">Citizen</div>
           <div class="pie-legend-val">${citizen} (${citizenPct.toFixed(0)}%)</div>
         </div>
       </div>` : ""}
-      ${business > 0 ? `<div class="pie-legend-item">
-        <div class="pie-legend-dot" style="background:#f97316;"></div>
+      ${others > 0 ? `<div class="pie-legend-item">
+        <div class="pie-legend-dot" style="background:#a855f7;"></div>
         <div>
-          <div class="pie-legend-label">Business</div>
-          <div class="pie-legend-val">${business} (${businessPct.toFixed(0)}%)</div>
-        </div>
-      </div>` : ""}
-      ${government > 0 ? `<div class="pie-legend-item">
-        <div class="pie-legend-dot" style="background:#38bdf8;"></div>
-        <div>
-          <div class="pie-legend-label">Government</div>
-          <div class="pie-legend-val">${government} (${governmentPct.toFixed(0)}%)</div>
+          <div class="pie-legend-label">Others</div>
+          <div class="pie-legend-val">${others} (${othersPct.toFixed(0)}%)</div>
         </div>
       </div>` : ""}
       ${unknown ? `<div class="pie-legend-item"><div class="pie-legend-dot" style="background:#e2e8f0;"></div><div><div class="pie-legend-label" style="color:#94a3b8;">Unspecified</div><div class="pie-legend-val">${unknown}</div></div></div>` : ""}
