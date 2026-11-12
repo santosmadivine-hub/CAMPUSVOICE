@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -195,6 +195,7 @@ import {
 await guard(['superadmin']);
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'offices-overview');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Offices Overview', 'superadmin');
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 /* ─── State ─────────────────────────────────────────── */
 let allOffices   = [];   // from fc_offices

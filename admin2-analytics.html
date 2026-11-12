@@ -475,6 +475,7 @@ document.getElementById("sidebar-mount").innerHTML =
 
 document.getElementById("topbar-mount").innerHTML =
   buildTopbar("Analytics", "admin2");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 document.getElementById("ot-dropdown-btn").addEventListener("click", (e) => {
   e.stopPropagation();

@@ -182,6 +182,7 @@ import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "dashboard");
 document.getElementById("topbar-mount").innerHTML  = buildTopbar("Dashboard", "adminfc");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // Welcome banner
 const welcomeName = session.displayName || session.username || "Admin FC";

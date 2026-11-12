@@ -44,8 +44,17 @@ textarea{min-height:70px;resize:vertical;padding:10px 12px;border:1px solid #dbe
 .lh-text .uni{font-family:'Times New Roman',Times,serif;font-size:11.5pt;font-weight:bold;color:#0f172a}
 .lh-text .addr1{font-family:'Times New Roman',Times,serif;font-size:9.5pt;color:#000}
 .lh-text .dept{font-family:Arial,Helvetica,sans-serif;font-size:11pt;font-weight:bold;text-transform:uppercase;color:#1f4e9c}
-.lh-text .addr{font-family:Arial,Helvetica,sans-serif;font-size:7.5pt;color:#222;white-space:nowrap}
+.lh-text .addr{font-family:Arial,Helvetica,sans-serif;font-size:7.5pt;color:#222;}
 .lh-divider{border:none;border-top:2px solid #1f4e9c;margin:3px 0 8px}
+@media screen and (max-width:700px){
+  #reportPreview,#commentsPreview{overflow-x:auto}
+  .lh-row{flex-wrap:wrap;justify-content:center;gap:6px}
+  .lh-logo-box{width:60px!important;height:60px!important}
+  .lh-text .uni{font-size:9.5pt}
+  .lh-text .dept{font-size:8.5pt}
+  .lh-text .addr,.lh-text .addr1{word-break:break-word;white-space:normal}
+  .generated-report-header,.generated-report-content,.generated-report-footer{padding-left:8mm;padding-right:8mm}
+}
 .csm-doc-title{text-align:center;font-size:11.5pt;font-weight:bold;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
 .csm-sigs{display:flex;gap:40px;margin-top:8px;margin-bottom:16px;font-size:10.5pt}
 .csm-sig-block{flex:1}
@@ -240,6 +249,7 @@ const $ = id => document.getElementById(id);
 
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin1','report-settings');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Report Settings','admin1');
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 
 let draft = {};

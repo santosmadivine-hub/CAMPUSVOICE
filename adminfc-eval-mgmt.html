@@ -481,6 +481,7 @@ const db = getFirestore(app);
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "eval-mgmt");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Evaluation Management", "adminfc");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // ── Constants ──
 const EVAL_COLLECTION = "facilities_cleanliness_evaluations";

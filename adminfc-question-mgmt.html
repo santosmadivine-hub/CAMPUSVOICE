@@ -284,6 +284,7 @@ const db = getFirestore(initializeApp(firebaseConfig));
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "question-mgmt");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Question Management", "adminfc");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 const QUESTIONS_COLLECTION = "fc_evaluation_questions";
 

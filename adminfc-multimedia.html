@@ -748,6 +748,7 @@ const db = getFirestore(app);
 
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('adminfc', 'multimedia');
 document.getElementById('topbar-mount').innerHTML = buildTopbar('Multimedia Evidence', 'adminfc');
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 const EVAL_COLLECTION = "facilities_cleanliness_evaluations";
 const FC_CATEGORIES = ["Comfort Room", "Surroundings", "Laboratories/Rooms"];

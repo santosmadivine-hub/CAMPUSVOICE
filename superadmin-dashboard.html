@@ -179,6 +179,7 @@ import {
 const session = await guard(['superadmin']);
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'dashboard');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Dashboard', 'superadmin');
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // Welcome banner
 const welcomeName = session.displayName || session.username || 'Super Admin';

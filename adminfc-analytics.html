@@ -405,6 +405,7 @@ const db = getFirestore(app);
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "analytics");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Analytics", "adminfc");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 document.getElementById("ot-dropdown-btn").addEventListener("click", (e) => {
   e.stopPropagation();

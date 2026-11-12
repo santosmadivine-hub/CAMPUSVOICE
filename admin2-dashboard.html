@@ -542,6 +542,7 @@ buildSidebar("admin2", "dashboard");
 
 document.getElementById("topbar-mount").innerHTML =
 buildTopbar("Dashboard", "admin2");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // ======================
 // FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS

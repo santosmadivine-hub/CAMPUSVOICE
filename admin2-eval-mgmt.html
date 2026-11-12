@@ -681,6 +681,7 @@ document.getElementById("sidebar-mount").innerHTML =
 
 document.getElementById("topbar-mount").innerHTML =
   buildTopbar("Evaluation Management", "admin2");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // ======================
 // FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS

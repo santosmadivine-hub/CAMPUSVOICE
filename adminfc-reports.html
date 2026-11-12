@@ -164,6 +164,15 @@
   .lh-text .dept { font-size: 11pt; font-weight: bold; text-transform: uppercase; color: #000000; }
   .lh-text .addr { font-size: 8.5pt; color: #64748b; }
   .lh-divider { border: none; border-top: 2.5px solid #1a3a6b; margin: 2px 0 6px; }
+@media screen and (max-width:700px){
+  #reportPreview,#commentsPreview{overflow-x:auto}
+  .lh-row{flex-wrap:wrap;justify-content:center;gap:6px}
+  .lh-logo-box{width:60px!important;height:60px!important}
+  .lh-text .uni{font-size:9.5pt}
+  .lh-text .dept{font-size:8.5pt}
+  .lh-text .addr,.lh-text .addr1{word-break:break-word;white-space:normal}
+  .generated-report-header,.generated-report-content,.generated-report-footer{padding-left:8mm;padding-right:8mm}
+}
 
   .official-title { text-align: center; font-size: 13.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
   .official-meta { font-size: 11.5pt; line-height: 1.5; margin-bottom: 8px; }
@@ -464,6 +473,7 @@ const QUESTIONS_COLLECTION  = "fc_evaluation_questions";
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc", "reports");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Reports", "adminfc");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // Local helpers (adminfc-report-settings.js does NOT expose these on window.ReportSettings)
 const esc = v => String(v ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));

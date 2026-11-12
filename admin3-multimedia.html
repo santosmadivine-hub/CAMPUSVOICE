@@ -860,6 +860,7 @@ const EVAL_COLLECTION = "facility_evaluations";
 
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin3', 'multimedia');
 document.getElementById('topbar-mount').innerHTML = buildTopbar('Multimedia Feedback', 'admin3');
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // ======================
 // STATE

@@ -1119,6 +1119,7 @@ document.getElementById("sidebar-mount").innerHTML =
 
 document.getElementById("topbar-mount").innerHTML =
   buildTopbar("Analytics", "admin3");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // Office Trend dropdown open/close (elements are static, so wire once)
 document.getElementById("ot-dropdown-btn").addEventListener("click", (e) => {

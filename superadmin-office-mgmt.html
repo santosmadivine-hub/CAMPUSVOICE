@@ -282,6 +282,7 @@ import {
 const session = await guard(['superadmin']);
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'office-mgmt');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Office Management', 'superadmin');
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 const fcOffices = collection(db, 'fc_offices');
 const ALL_CATS  = ['Comfort Room', 'Surroundings', 'Laboratories/Rooms'];

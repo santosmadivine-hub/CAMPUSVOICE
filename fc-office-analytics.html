@@ -229,6 +229,7 @@ if (linkedOfficeId) {
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("fc_office", "analytics");
 document.getElementById("topbar-mount").innerHTML  = buildTopbar("Analytics", "fc_office",
   linkedOfficeName ? `Office: ${linkedOfficeName}` : "Office Performance");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 document.getElementById("banner-office-name").textContent = linkedOfficeName || "No Office Linked";
 
 const EVAL_COLLECTION = "facilities_cleanliness_evaluations";

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -346,6 +346,7 @@ import { getAuth, signOut as fbSignOut } from 'https://www.gstatic.com/firebasej
 const session = await guard(['superadmin']);
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('superadmin', 'accounts');
 document.getElementById('topbar-mount').innerHTML  = buildTopbar('Accounts', 'superadmin');
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 const accCol = query(collection(db, 'accounts'), where('role', '==', 'fc_office'));
 const offCol = collection(db, 'fc_offices');

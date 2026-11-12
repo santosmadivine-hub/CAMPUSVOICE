@@ -480,6 +480,7 @@ const CAT_STAT_IDS = {
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("fc_office", "eval-mgmt");
 document.getElementById("topbar-mount").innerHTML  = buildTopbar("Evaluation Management", "fc_office",
   linkedOfficeName ? `Office: ${linkedOfficeName}` : "Evaluation Submissions");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 document.getElementById("banner-office-name").textContent = linkedOfficeName || "No Office Linked";
 
 // ── Constants ──────────────────────────────────────────────────────────────

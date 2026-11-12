@@ -875,6 +875,7 @@ const db = getFirestore(app);
 // Build UI
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin3", "office-mgmt");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Office Management", "admin3");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // ======================
 // STATE

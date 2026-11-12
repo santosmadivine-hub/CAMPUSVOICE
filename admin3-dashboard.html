@@ -765,6 +765,7 @@ const db = getFirestore(app);
 // Build UI
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin3", "dashboard");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Dashboard", "admin3");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // ======================
 // STATE

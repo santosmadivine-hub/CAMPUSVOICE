@@ -226,6 +226,7 @@ const db = getFirestore(initializeApp(firebaseConfig));
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("adminfc","office-mgmt");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Office Management","adminfc");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 let offices = [];
 let searchTerm = "";

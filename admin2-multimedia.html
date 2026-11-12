@@ -892,6 +892,7 @@ const db = getFirestore(app);
 
 document.getElementById('sidebar-mount').innerHTML = buildSidebar('admin2', 'multimedia');
 document.getElementById('topbar-mount').innerHTML = buildTopbar('Multimedia Feedback', 'admin2');
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // ======================
 // FIRESTORE COLLECTION NAME / SCHEMA CONSTANTS

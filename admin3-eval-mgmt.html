@@ -1342,6 +1342,7 @@ document.getElementById("sidebar-mount").innerHTML =
 
 document.getElementById("topbar-mount").innerHTML =
   buildTopbar("Evaluation Management", "admin3");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // ======================
 // STATE

@@ -225,6 +225,7 @@ document.getElementById("topbar-mount").innerHTML  = buildTopbar(
   linkedOfficeName || "Office Dashboard", "fc_office",
   linkedOfficeName ? "Facilities &amp; Cleanliness Evaluation Overview" : "No office linked to this account"
 );
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 
 // ── Welcome banner ─────────────────────────────────────────────────────────

@@ -449,6 +449,7 @@ const db = getFirestore(app);
 // Build UI
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin2", "office-mgmt");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Office Management", "admin2");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 // ComfortRoomEvalActivity / SurroundingsEvalActivity both set
 // TOTAL_QUESTIONS = 5 and only ever write rating1...rating5.

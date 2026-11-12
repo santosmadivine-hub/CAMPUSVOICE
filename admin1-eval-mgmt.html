@@ -486,6 +486,7 @@ const db = getFirestore(app);
 
 document.getElementById("sidebar-mount").innerHTML = buildSidebar("admin1", "eval-mgmt");
 document.getElementById("topbar-mount").innerHTML = buildTopbar("Evaluation Management", "admin1");
+if (typeof window.initSidebarToggle === "function") window.initSidebarToggle();
 
 const table = document.getElementById("evaluationTable");
 const searchInput = document.getElementById("searchInput");
