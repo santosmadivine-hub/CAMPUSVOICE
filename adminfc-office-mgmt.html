@@ -144,7 +144,7 @@
   .cat-pill { display:inline-flex; align-items:center; gap:3px; padding:3px 7px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap; margin:1px 2px 1px 0; }
   .cat-pill.comfort { background:#e0f2fe; color:#0369a1; }
   .cat-pill.surroundings { background:#dcfce7; color:#15803d; }
-  .cat-pill.Laboratories/Rooms { background:#ede9fe; color:#6d28d9; }
+  .cat-pill.labs { background:#ede9fe; color:#6d28d9; }
 
   /* Category checkbox pills in modal */
   .cat-check-group { display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
@@ -157,7 +157,7 @@
   .cat-check-pill:hover { border-color:#7dd3fc; background:#f0f9ff; }
   .cat-check-pill.checked.comfort { border-color:#0284c7; background:#e0f2fe; color:#0369a1; }
   .cat-check-pill.checked.surroundings { border-color:#16a34a; background:#dcfce7; color:#15803d; }
-  .cat-check-pill.checked.Laboratories/Rooms { border-color:#7c3aed; background:#ede9fe; color:#6d28d9; }
+  .cat-check-pill.checked.labs { border-color:#7c3aed; background:#ede9fe; color:#6d28d9; }
 
   @media(max-width:1200px){.stat-grid{grid-template-columns:repeat(3,1fr);}}
   @media(max-width:900px){.stat-grid{grid-template-columns:1fr 1fr;}}
@@ -167,6 +167,7 @@
 <body>
 <div class="layout">
   <div id="sidebar-mount"></div>
+  <div class="sidebar-overlay"></div>
   <main class="main fade-in">
     <div id="topbar-mount"></div>
     <div style="margin-top:28px;">

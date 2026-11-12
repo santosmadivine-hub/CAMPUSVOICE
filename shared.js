@@ -1,4 +1,4 @@
-// Subtitles per role. Keys are the lowercase page titles.
+﻿// Subtitles per role. Keys are the lowercase page titles.
 const PAGE_SUBTITLES = {
   superadmin: {
     'dashboard':             'System Overview — Offices and Administrator Accounts',
@@ -275,12 +275,14 @@ function initSidebarToggle() {
     hamburger.classList.toggle('active');
     sidebar.classList.toggle('active');
     document.body.classList.toggle('sidebar-open');
+    if (overlay) overlay.classList.toggle('active');
   };
 
   const closeSidebar = () => {
     hamburger.classList.remove('active');
     sidebar.classList.remove('active');
     document.body.classList.remove('sidebar-open');
+    if (overlay) overlay.classList.remove('active');
   };
 
   hamburger.addEventListener('click', toggleSidebar);
