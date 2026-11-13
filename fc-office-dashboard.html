@@ -284,6 +284,10 @@ onSnapshot(collection(db, "facilities_cleanliness_evaluations"), snap => {
       officeName:            data.officeName || "Unknown",
       cleanlinessCategory:   data.cleanlinessCategory || "Comfort Room",
       evaluatorName:         data.evaluatorName || data.userName || data.name || "",
+      userCategory:          data.userCategory || data.clientType || "",
+      sex:                   data.sex || "",
+      course:                data.course || "",
+      year:                  data.year || "",
       userId:                data.userId || "",
       timestamp:             getTimestampMillis(data.timestamp ?? data.date ?? data.submittedAt) ?? 0,
       status:                data.status || null,
@@ -450,7 +454,10 @@ function renderRecent() {
     const sc   = STATUS_COLOR[e.status] || "#94a3b8";
     const sl   = STATUS_LABEL[e.status] || e.status || "—";
     const cc   = CAT_CLASS[e.cleanlinessCategory] || "comfort";
-    const name = e.evaluatorName || "—";
+    const name = e.evaluatorName ||
+      (e.userCategory
+        ? e.userCategory + (e.sex ? " \u2022 " + e.sex : "") + (e.course ? " \u2022 " + e.course : "") + (e.year ? " " + e.year : "")
+        : (e.sex || "—"));
     return `<tr>
       <td style="color:#94a3b8;font-size:12px;">${i + 1}</td>
       <td><span class="cat-pill ${cc}">${e.cleanlinessCategory}</span></td>
